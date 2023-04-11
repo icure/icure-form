@@ -5,6 +5,7 @@ import { FormValuesContainer } from '../../iqr-form-loader/formValuesContainer'
 
 export const render: Renderer = (
 	form: Form,
+	skin: string,
 	props: { [key: string]: unknown },
 	formsValueContainer?: FormValuesContainer,
 	formValuesContainerChanged?: (newValue: FormValuesContainer) => void,

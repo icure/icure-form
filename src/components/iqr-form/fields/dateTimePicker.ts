@@ -7,6 +7,7 @@ import { Content } from '@icure/api'
 
 export class DateTimePicker extends LitElement {
 	@property() label = ''
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	@property() valueProvider?: () => VersionedValue[] = undefined
 	@property() metaProvider?: () => VersionedMeta[] = undefined
@@ -27,18 +28,31 @@ export class DateTimePicker extends LitElement {
 	render() {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues?.length ? versionedValues : [undefined]).map((versionedValue, idx) => {
-			return html`<iqr-text-field
-				.labels="${this.labels}"
-				labelPosition=${this.labelPosition}
-				label="${this.label}"
-				schema="date-time"
-				value=${this.value}
-				.valueProvider=${this.valueProvider}
-				.valueProvider=${() => versionedValue}
-				.metaProvider=${() => this.metaProvider?.()?.[idx]}
-				.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}
-				.handleMetaChanged=${this.handleMetaChanged}
-			></iqr-text-field>`
+			return this.skin === 'kendo'
+				? html`<iqr-text-field-kendo
+						.labels="${this.labels}"
+						labelPosition=${this.labelPosition}
+						label="${this.label}"
+						schema="date-time"
+						value=${this.value}
+						.valueProvider=${this.valueProvider}
+						.valueProvider=${() => versionedValue}
+						.metaProvider=${() => this.metaProvider?.()?.[idx]}
+						.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}
+						.handleMetaChanged=${this.handleMetaChanged}
+				  ></iqr-text-field-kendo>`
+				: html`<iqr-text-field
+						.labels="${this.labels}"
+						labelPosition=${this.labelPosition}
+						label="${this.label}"
+						schema="date-time"
+						value=${this.value}
+						.valueProvider=${this.valueProvider}
+						.valueProvider=${() => versionedValue}
+						.metaProvider=${() => this.metaProvider?.()?.[idx]}
+						.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}
+						.handleMetaChanged=${this.handleMetaChanged}
+				  ></iqr-text-field>`
 		})
 	}
 }

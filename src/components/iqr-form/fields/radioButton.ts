@@ -7,6 +7,7 @@ import { OptionCode } from '../../common'
 
 export class RadioButton extends LitElement {
 	@property() label = ''
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	@property() labels?: Labels = undefined
 	@property() options?: OptionCode[] = []
@@ -22,16 +23,23 @@ export class RadioButton extends LitElement {
 	}
 
 	render(): TemplateResult {
-		return html`
-			<iqr-form-radio-button
-				type="radio"
-				.labels="${this.labels}"
-				labelPosition="${this.labelPosition}"
-				label="${this.label}"
-				.options="${this.options}"
-				value="${this.value}"
-			></iqr-form-radio-button>
-		`
+		return this.skin === 'kendo'
+			? html` <iqr-form-radio-button-kendo
+					type="radio"
+					.labels="${this.labels}"
+					labelPosition="${this.labelPosition}"
+					label="${this.label}"
+					.options="${this.options}"
+					value="${this.value}"
+			  ></iqr-form-radio-button-kendo>`
+			: html` <iqr-form-radio-button
+					type="radio"
+					.labels="${this.labels}"
+					labelPosition="${this.labelPosition}"
+					label="${this.label}"
+					.options="${this.options}"
+					value="${this.value}"
+			  ></iqr-form-radio-button>`
 	}
 }
 

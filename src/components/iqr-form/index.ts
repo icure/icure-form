@@ -1,5 +1,5 @@
 // Import the LitElement base class and html helper function
-import { html, LitElement } from 'lit'
+import { CSSResultGroup, html, LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
 
 import { Form } from './model'
@@ -28,9 +28,8 @@ import { FormValuesContainer } from '../iqr-form-loader/formValuesContainer'
 // Extend the LitElement base class
 class IqrForm extends LitElement {
 	@property() form?: Form
-	@property() skin = 'material'
-	@property() theme = 'default'
 	@property() renderer = 'form'
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	@property() formValuesContainer?: FormValuesContainer = undefined
 	@property() formValuesContainerChanged?: (newValue: FormValuesContainer) => void = undefined
@@ -48,14 +47,14 @@ class IqrForm extends LitElement {
 	}
 
 	static get styles() {
-		return [baseCss, kendoCss]
+		return [baseCss]
 	}
 
 	render() {
 		const renderer: Renderer | undefined = this.renderer === 'form' ? renderAsForm : this.renderer === 'form' ? renderAsCard : undefined
 
 		return renderer && this.form
-			? renderer(this.form, { labelPosition: this.labelPosition }, this.formValuesContainer, (newValue) => this.formValuesContainerChanged?.(newValue))
+			? renderer(this.form, this.skin, { labelPosition: this.labelPosition }, this.formValuesContainer, (newValue) => this.formValuesContainerChanged?.(newValue))
 			: this.form
 			? html`<p>unknown renderer</p>`
 			: html`<p>missing form</p>`
@@ -68,3 +67,14 @@ class IqrForm extends LitElement {
 
 // Register the new element with the browser.
 customElements.define('iqr-form', IqrForm)
+
+export class IqrFormKendo extends IqrForm {
+	static get theme(): string {
+		return 'kendo'
+	}
+
+	static get styles(): CSSResultGroup[] {
+		return [...IqrForm.styles, kendoCss]
+	}
+}
+customElements.define('iqr-form-kendo', IqrFormKendo)

@@ -7,6 +7,7 @@ import { Content } from '@icure/api'
 
 export class NumberField extends LitElement {
 	@property() label = ''
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	@property() labels?: Labels = undefined
 	@property() value?: string = ''
@@ -27,17 +28,29 @@ export class NumberField extends LitElement {
 	render() {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues?.length ? versionedValues : [undefined]).map((versionedValue, idx) => {
-			return html`<iqr-text-field
-				labelPosition="${this.labelPosition}"
-				label="${this.label}"
-				.labels="${this.labels}"
-				value="${this.value}"
-				schema="decimal"
-				.valueProvider=${() => versionedValue}
-				.metaProvider=${() => this.metaProvider?.()?.[idx]}
-				.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}
-				.handleMetaChanged=${this.handleMetaChanged}
-			></iqr-text-field>`
+			return this.skin === 'kendo'
+				? html`<iqr-text-field-kendo
+						labelPosition="${this.labelPosition}"
+						label="${this.label}"
+						.labels="${this.labels}"
+						value="${this.value}"
+						schema="decimal"
+						.valueProvider=${() => versionedValue}
+						.metaProvider=${() => this.metaProvider?.()?.[idx]}
+						.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}
+						.handleMetaChanged=${this.handleMetaChanged}
+				  ></iqr-text-field-kendo>`
+				: html`<iqr-text-field
+						labelPosition="${this.labelPosition}"
+						label="${this.label}"
+						.labels="${this.labels}"
+						value="${this.value}"
+						schema="decimal"
+						.valueProvider=${() => versionedValue}
+						.metaProvider=${() => this.metaProvider?.()?.[idx]}
+						.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}
+						.handleMetaChanged=${this.handleMetaChanged}
+				  ></iqr-text-field>`
 		})
 	}
 }

@@ -4,6 +4,7 @@ import '../../iqr-label'
 
 export class Label extends LitElement {
 	@property() label = ''
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	static get styles(): CSSResultGroup[] {
 		return [

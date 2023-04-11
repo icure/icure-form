@@ -16,6 +16,7 @@ export class DropdownField extends LitElement {
 		[LabelPosition.float]: '',
 	}
 	@property() label = ''
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	@property() options?: OptionCode[] = []
 
@@ -35,11 +36,20 @@ export class DropdownField extends LitElement {
 
 	render(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
-		return (versionedValues?.length ? versionedValues : [undefined]).map(
-			(versionedValue, idx) =>
-				html`
-					<iqr-dropdown-field label="${this.label}" .options="${this.options}" .valueProvider="${() => versionedValue}" labelPosition=${this.labelPosition}></iqr-dropdown-field>
-				`,
+		return (versionedValues?.length ? versionedValues : [undefined]).map((versionedValue, idx) =>
+			this.skin === 'kendo'
+				? html`<iqr-dropdown-field-kendo
+						label="${this.label}"
+						.options="${this.options}"
+						.valueProvider="${() => versionedValue}"
+						labelPosition=${this.labelPosition}
+				  ></iqr-dropdown-field-kendo>`
+				: html`<iqr-dropdown-field
+						label="${this.label}"
+						.options="${this.options}"
+						.valueProvider="${() => versionedValue}"
+						labelPosition=${this.labelPosition}
+				  ></iqr-dropdown-field>`,
 		)
 	}
 	//.handleValueChanged=${(language: string, value: { asString: string; content?: Content }) => this.handleValueChanged?.(versionedValue?.id, language, value)}

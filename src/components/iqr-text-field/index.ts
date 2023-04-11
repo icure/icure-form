@@ -1,5 +1,5 @@
 // Import the LitElement base class and html helper function
-import { html, LitElement } from 'lit'
+import { CSSResultGroup, html, LitElement } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { EditorState, Plugin, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
@@ -504,3 +504,10 @@ class IqrTextField extends LitElement {
 
 // Register the new element with the browser.
 customElements.define('iqr-text-field', IqrTextField)
+
+export class IqrTextFieldKendo extends IqrTextField {
+	static get styles(): CSSResultGroup[] {
+		return [...IqrTextField.styles, kendoCss]
+	}
+}
+customElements.define('iqr-text-field-kendo', IqrTextFieldKendo)

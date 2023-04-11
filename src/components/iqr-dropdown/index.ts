@@ -31,7 +31,7 @@ class IqrDropdownField extends LitElement {
 	@property() handleValueChanged?: (id: string | undefined, language: string, value: { asString: string; content?: Content }, codes: CodeStub) => void = undefined
 
 	static get styles(): CSSResultGroup[] {
-		return [baseCss, kendoCss]
+		return [baseCss]
 	}
 
 	togglePopup(): void {
@@ -99,3 +99,10 @@ class IqrDropdownField extends LitElement {
 }
 
 customElements.define('iqr-dropdown-field', IqrDropdownField)
+
+export class IqrDropdownFieldKendo extends IqrDropdownField {
+	static get styles(): CSSResultGroup[] {
+		return [...IqrDropdownField.styles, kendoCss]
+	}
+}
+customElements.define('iqr-dropdown-field-kendo', IqrDropdownFieldKendo)

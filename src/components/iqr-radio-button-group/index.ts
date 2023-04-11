@@ -84,3 +84,10 @@ class IqrRadioButtonGroup extends LitElement {
 }
 
 customElements.define('iqr-form-radio-button', IqrRadioButtonGroup)
+
+export class IqrRadioButtonGroupKendo extends IqrRadioButtonGroup {
+	static get styles(): CSSResultGroup[] {
+		return [...IqrRadioButtonGroup.styles, kendoCss]
+	}
+}
+customElements.define('iqr-form-radio-button-kendo', IqrRadioButtonGroupKendo)

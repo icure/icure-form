@@ -7,6 +7,7 @@ import { OptionCode } from '../../common'
 
 export class CheckBox extends LitElement {
 	@property() label = ''
+	@property() skin = 'material'
 	@property() labelPosition?: string = undefined
 	@property() labels?: Labels = undefined
 	@property() options?: OptionCode[] = []
@@ -22,16 +23,23 @@ export class CheckBox extends LitElement {
 	}
 
 	render(): TemplateResult {
-		return html`
-			<iqr-form-radio-button
-				type="checkbox"
-				.labels="${this.labels}"
-				labelPosition="${this.labelPosition}"
-				label="${this.label}"
-				.options="${this.options}"
-				value="${this.value}"
-			></iqr-form-radio-button>
-		`
+		return this.skin === 'kendo'
+			? html`<iqr-form-radio-button-kendo
+					type="checkbox"
+					.labels="${this.labels}"
+					labelPosition="${this.labelPosition}"
+					label="${this.label}"
+					.options="${this.options}"
+					value="${this.value}"
+			  ></iqr-form-radio-button-kendo>`
+			: html`<iqr-form-radio-button
+					type="checkbox"
+					.labels="${this.labels}"
+					labelPosition="${this.labelPosition}"
+					label="${this.label}"
+					.options="${this.options}"
+					value="${this.value}"
+			  ></iqr-form-radio-button>`
 	}
 }
 

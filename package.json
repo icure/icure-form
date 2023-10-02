@@ -1,6 +1,6 @@
 {
 	"name": "@medispring/form",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"description": "Parser YAML to dynamic HTML form",
 	"main": "lib/index.js",
 	"scripts": {
@@ -70,7 +70,7 @@
 		"yaml": "2.2.2"
 	},
 	"devDependencies": {
-		"@icure/api": "^4.2.39",
+		"@icure/api": "5.3.7",
 		"@types/jest": "^27.0.2",
 		"@types/markdown-it": "^12.2.3",
 		"@types/uuid": "^9.0.1",

@@ -508,18 +508,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@icure/api@npm:^4.2.39":
-  version: 4.2.39
-  resolution: "@icure/api@npm:4.2.39"
+"@icure/api@npm:5.3.7":
+  version: 5.3.7
+  resolution: "@icure/api@npm:5.3.7"
   dependencies:
     date-fns: ^2.23.0
     libphonenumber-js: ^1.7.18
-    lodash: ^4.17.20
+    lodash: ^4.17.21
     moment: ^2.22.1
     text-encoding: ^0.7.0
     uuid: ^8.3.2
     uuid-encoder: ^1.1.0
-  checksum: 18ad251566456a3c5264875940242515c4d9bc05f0bed4a98d74f6a4faa372eaa2a8266430cd19016d3fa8226858ea5b3620c2c125bbae7ea80cc1aca8257de3
+  checksum: 4d9cc565ab04c5e0b95e5d2df780b9bd2ddb085309d5adbf2b1c9cb793531d54c0915e9b06bee7f60fd2243fb09fe289caecc9b8ef3d015c81801d846dfb4ad1
   languageName: node
   linkType: hard
 
@@ -1394,7 +1394,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@medispring/form@workspace:."
   dependencies:
-    "@icure/api": ^4.2.39
+    "@icure/api": 5.3.7
     "@types/jest": ^27.0.2
     "@types/markdown-it": ^12.2.3
     "@types/node": ^18.16.3

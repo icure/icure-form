@@ -14,6 +14,8 @@ type FieldType =
 	| 'checkbox'
 	| 'label'
 
+//todo: create abstract class for all fields + delete useless properties
+
 export abstract class Field {
 	clazz = 'field' as const
 	field: string
@@ -33,6 +35,8 @@ export abstract class Field {
 	hideCondition?: string
 	now?: boolean
 	translate?: boolean
+	sortable?: boolean
+	sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean }
 	width?: number
 	styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
 
@@ -223,7 +227,10 @@ export abstract class Field {
 					json.value,
 					json.hideCondition,
 					json.translate,
+					json.sortable,
+					json.sortOptions,
 					json.width,
+					json.styleOptions,
 				)
 			case 'radio-button':
 				return new RadioButton(
@@ -238,6 +245,8 @@ export abstract class Field {
 					json.value,
 					json.hideCondition,
 					json.translate,
+					json.sortable,
+					json.sortOptions,
 					json.width,
 					json.styleOptions,
 				)
@@ -254,6 +263,8 @@ export abstract class Field {
 					json.value,
 					json.hideCondition,
 					json.translate,
+					json.sortable,
+					json.sortOptions,
 					json.width,
 					json.styleOptions,
 				)
@@ -578,6 +589,8 @@ export class DropdownField extends Field {
 		value?: string,
 		hideCondition?: string,
 		translate?: boolean,
+		sortable?: boolean,
+		sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean },
 		width?: number,
 		styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string },
 	) {
@@ -602,6 +615,8 @@ export class DropdownField extends Field {
 			width,
 			styleOptions,
 		)
+		this.sortable = sortable ?? false
+		this.sortOptions = sortOptions ?? undefined
 	}
 }
 
@@ -618,6 +633,8 @@ export class RadioButton extends Field {
 		value?: string,
 		hideCondition?: string,
 		translate?: boolean,
+		sortable?: boolean,
+		sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean },
 		width?: number,
 		styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string },
 	) {
@@ -642,6 +659,8 @@ export class RadioButton extends Field {
 			width,
 			styleOptions,
 		)
+		this.sortable = sortable ?? false
+		this.sortOptions = sortOptions ?? undefined
 	}
 }
 
@@ -658,6 +677,8 @@ export class CheckBox extends Field {
 		value?: string,
 		hideCondition?: string,
 		translate?: boolean,
+		sortable?: boolean,
+		sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean },
 		width?: number,
 		styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string },
 	) {
@@ -682,6 +703,8 @@ export class CheckBox extends Field {
 			width,
 			styleOptions,
 		)
+		this.sortable = sortable ?? false
+		this.sortOptions = sortOptions ?? undefined
 	}
 }
 export class Label extends Field {
@@ -827,6 +850,7 @@ export class Launcher {
 export enum Trigger {
 	INIT = 'INIT',
 	CHANGE = 'CHANGE',
+	SORT = 'SORT',
 	CLICK = 'CLICK',
 	VISIBLE = 'VISIBLE',
 	ERROR = 'ERROR',
@@ -851,6 +875,7 @@ export class State {
 export enum StateToUpdate {
 	VALUE = 'VALUE',
 	VISIBLE = 'VISIBLE',
+	OPTIONS = 'OPTIONS',
 	READONLY = 'READONLY',
 	CLAZZ = 'CLAZZ',
 	REQUIRED = 'REQUIRED',

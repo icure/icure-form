@@ -110,17 +110,26 @@ sections:
         type: checkbox
         shortLabel: accompaniedBy
         options:
-          partner: abortion-forms.field-options.PARTNER
+          none: abortion-forms.field-options.NONE
           father: abortion-forms.field-options.FATHER
+          other: abortion-forms.field-options.OTHER
+          partner: abortion-forms.field-options.PARTNER
           mother: abortion-forms.field-options.MOTHER
           friend: abortion-forms.field-options.FRIEND
           educator: abortion-forms.field-options.EDUCATOR
-          other: abortion-forms.field-options.OTHER
+          empty: abortion-forms.field-options.EMPTY
         styleOptions:
           direction: column
           columns: 3
         rows: 3
         columns: 1
+        sortable: true
+        sortOptions:
+          other: 2
+          none: 1
+          empty: -1
+          asc: true
+          alpha: false
         codifications:
           - MS-ABORTION-COMPANION-TYPE
         tags:

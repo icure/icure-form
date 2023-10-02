@@ -12,7 +12,7 @@ export function extractLauncherByNameAndTrigger(actions: Action, name: string, t
 	return actions.launchers.find((launcher: Launcher) => launcher.name === name && launcher.triggerer === trigger)
 }
 export class ActionManager {
-	actions: Action[] = []
+	public actions: Action[] = []
 	formValuesContainer: FormValuesContainer
 	stateUpdaters: { [name: string]: (state: StateToUpdate, result: any) => void } = {}
 	readyChildrenCount: Map<string, { total: number; count: number; parent: string }> = new Map()
@@ -110,5 +110,9 @@ export class ActionManager {
 				}
 			}
 		}
+	}
+
+	public hasActionsToLaunch(trigger: Trigger, name: string): boolean {
+		return extractActions(this.actions || [], name, trigger).length > 0
 	}
 }

@@ -39,7 +39,19 @@ module.exports = ({ mode }) => {
 					exclude: /node_modules/,
 				},
 				{
-					test: /\.css|\.s([ca])ss$/,
+					test: /\.s([ca])ss$/,
+					use: [
+						{
+							loader: 'lit-scss-loader',
+							options: {
+								minify: true, // defaults to false
+							},
+						},
+						'sass-loader',
+					],
+				},
+				{
+					test: /\.css$/,
 					use: [
 						{
 							loader: 'lit-scss-loader',
@@ -49,8 +61,13 @@ module.exports = ({ mode }) => {
 						},
 						'extract-loader',
 						'css-loader',
-						'sass-loader',
 					],
+				},
+				{
+					test: /\.m?js/,
+					resolve: {
+						fullySpecified: false,
+					},
 				},
 			],
 		},

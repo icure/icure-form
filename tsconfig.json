@@ -11,8 +11,8 @@
 		"target": "es6",
 		"lib": ["es5", "es6", "es7", "es2017", "es2020", "dom"],
 		"moduleResolution": "node",
-		"rootDirs": ["tmp"],
-		"baseUrl": "tmp",
+		"rootDirs": ["src"],
+		"baseUrl": "src",
 		"experimentalDecorators": true,
 		"allowJs": true,
 		"forceConsistentCasingInFileNames": true,
@@ -23,7 +23,7 @@
 		"suppressImplicitAnyIndexErrors": true,
 		"noUnusedLocals": true,
 		"allowSyntheticDefaultImports": true,
-		"strict": true,
+		"strict": false,
 		"esModuleInterop": true,
 		"emitDecoratorMetadata": true
 	}

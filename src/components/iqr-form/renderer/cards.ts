@@ -1,8 +1,8 @@
 import { html, TemplateResult } from 'lit'
 import { Field, Form, Group } from '../model'
 import { Renderer } from './index'
-import { FormValuesContainer } from '../../iqr-form-loader/formValuesContainer'
 import { CodeStub, HealthcareParty } from '@icure/api'
+import { FormValuesContainer } from '../../../models'
 
 export const render: Renderer = (
 	form: Form,
@@ -37,27 +37,30 @@ export const render: Renderer = (
 								multiline="${fg.multiline}"
 								rows="${fg.rows || 1}"
 								grows="${fg.grows || false}"
+								.translationProvider=${translationProvider}
+								.ownersProvider=${ownersProvider}
+								.codesProvider=${codesProvider}
 						  ></iqr-form-textfield>`
 						: fg.type === 'measure-field'
-						? html`<iqr-form-measure-field label="${fg.field}" .labels="${fg.labels}"></iqr-form-measure-field>`
+						? html`<iqr-form-measure-field label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-measure-field>`
 						: fg.type === 'number-field'
-						? html`<iqr-form-number-field label="${fg.field}" .labels="${fg.labels}"></iqr-form-number-field>`
+						? html`<iqr-form-number-field label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-number-field>`
 						: fg.type === 'date-picker'
-						? html`<iqr-form-date-picker label="${fg.field}" .labels="${fg.labels}"></iqr-form-date-picker>`
+						? html`<iqr-form-date-picker label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-date-picker>`
 						: fg.type === 'time-picker'
-						? html`<iqr-form-time-picker label="${fg.field}" .labels="${fg.labels}"></iqr-form-time-picker>`
+						? html`<iqr-form-time-picker label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-time-picker>`
 						: fg.type === 'date-time-picker'
-						? html`<iqr-form-date-time-picker label="${fg.field}" .labels="${fg.labels}"></iqr-form-date-time-picker>`
+						? html`<iqr-form-date-time-picker label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-date-time-picker>`
 						: fg.type === 'multiple-choice'
-						? html`<iqr-form-multiple-choice label="${fg.field}" .labels="${fg.labels}"></iqr-form-multiple-choice>`
+						? html`<iqr-form-multiple-choice label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-multiple-choice>`
 						: fg.type === 'dropdown-field'
-						? html`<iqr-form-dropdown-field .labels="${fg.labels}" .labels="${fg.labels}"></iqr-form-dropdown-field>`
+						? html`<iqr-form-dropdown-field .labels="${fg.labels}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-dropdown-field>`
 						: fg.type === 'radio-button'
-						? html`<iqr-form-radio-button label="${fg.field}" .labels="${fg.labels}"></iqr-form-radio-button>`
+						? html`<iqr-form-radio-button label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-radio-button>`
 						: fg.type === 'checkbox'
-						? html`<iqr-form-checkbox label="${fg.field}" .labels="${fg.labels}"></iqr-form-checkbox>`
+						? html`<iqr-form-checkbox label="${fg.field}" .translationProvider=${translationProvider} .labels="${fg.labels}"></iqr-form-checkbox>`
 						: fg.type === 'label'
-						? html`<iqr-form-label labelPosition=${props.labelPosition} label="${fg.field}"></iqr-form-label>`
+						? html`<iqr-form-label labelPosition=${props.labelPosition} .translationProvider=${translationProvider} label="${fg.field}"></iqr-form-label>`
 						: ''
 			  }
 					</div>`

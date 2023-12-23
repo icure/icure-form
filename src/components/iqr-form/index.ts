@@ -1,20 +1,20 @@
 // Import the LitElement base class and html helper function
-import { html, LitElement } from 'lit'
+import { html } from 'lit'
 import { property } from 'lit/decorators.js'
 
 import { Form } from './model'
 
-import './fields/textfield'
-import './fields/measureField'
-import './fields/numberField'
-import './fields/datePicker'
-import './fields/timePicker'
-import './fields/dateTimePicker'
-import './fields/multipleChoice'
-import './fields/dropdown'
-import './fields/radioButton'
-import './fields/checkbox'
-import './fields/label'
+import './fields/text-field/textfield'
+import './fields/measure-field/measureField'
+import './fields/number-field/numberField'
+import './fields/date-picker/datePicker'
+import './fields/date-picker/timePicker'
+import './fields/date-picker/dateTimePicker'
+import './fields/multiple-choice/multipleChoice'
+import './fields/dropdown/dropdown'
+import './fields/button-group/radioButton'
+import './fields/button-group/checkbox'
+import './fields/label/label'
 // @ts-ignore
 import baseCss from './styles/style.scss'
 // @ts-ignore
@@ -23,11 +23,12 @@ import { Renderer } from './renderer'
 
 import { render as renderAsCard } from './renderer/cards'
 import { render as renderAsForm } from './renderer/form'
-import { FormValuesContainer } from '../iqr-form-loader/formValuesContainer'
 import { CodeStub } from '@icure/api'
+import { ActionedField, OptionCode } from '../common'
+import { FormValuesContainer } from '../../models'
 
 // Extend the LitElement base class
-class IqrForm extends LitElement {
+class IqrForm extends ActionedField {
 	@property() form?: Form
 	@property() skin = 'material'
 	@property() theme = 'default'
@@ -38,6 +39,7 @@ class IqrForm extends LitElement {
 	@property() formValuesContainerChanged?: (newValue: FormValuesContainer) => void = undefined
 	@property() translationProvider: (text: string) => string = (text) => text
 	@property() codesProvider: (codifications: string[], searchTerm: string) => Promise<CodeStub[]> = () => Promise.resolve([])
+	@property() optionsProvider: (codifications: string[], searchTerm: string) => Promise<OptionCode[]> = () => Promise.resolve([])
 
 	constructor() {
 		super()
@@ -58,6 +60,9 @@ class IqrForm extends LitElement {
 	render() {
 		const renderer: Renderer | undefined = this.renderer === 'form' ? renderAsForm : this.renderer === 'form' ? renderAsCard : undefined
 
+		if (!this.display) {
+			return html``
+		}
 		return renderer && this.form
 			? renderer(
 					this.form,
@@ -67,6 +72,9 @@ class IqrForm extends LitElement {
 					this.translationProvider,
 					() => [],
 					this.codesProvider,
+					this.optionsProvider,
+					this.actionManager,
+					this.editable,
 			  )
 			: this.form
 			? html`<p>unknown renderer</p>`
@@ -74,7 +82,9 @@ class IqrForm extends LitElement {
 	}
 
 	firstUpdated() {
-		//Do nothing
+		if (this.actionManager && this.form && this.formValuesContainer) {
+			this.registerStateUpdater(this.form.form || 'main-form')
+		}
 	}
 }
 

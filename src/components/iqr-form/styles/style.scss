@@ -1,8 +1,8 @@
 .iqr-form {
 	display: flex;
 	flex-flow: row wrap;
-	align-items: center;
-	
+	align-items: start;
+
 	h2 {
 		width: 100%;
 		font-size: 2em;
@@ -14,24 +14,30 @@
 		font-size: 1.2em;
 		font-weight: normal;
 		color: #282829;
-		margin: 1em
+		margin: 1em;
 	}
 
-	iqr-form-textfield, iqr-form-date-picker, iqr-form-number-field, iqr-form-measure-field, iqr-form-time-picker, iqr-form-date-time-picker, iqr-form-multiple-choice, iqr-form-dropdown-field, iqr-form-dropdown-field, iqr-form-radio-button, iqr-form-checkbox {
-		flex: var(--grows) 1 calc(var(--width) - 20px);
-		margin: 0em 10PX 10PX 10PX;
+	iqr-form-textfield,
+	iqr-form-date-picker,
+	iqr-form-number-field,
+	iqr-form-measure-field,
+	iqr-form-time-picker,
+	iqr-form-date-time-picker,
+	iqr-form-multiple-choice,
+	iqr-form-dropdown-field,
+	iqr-form-dropdown-field,
+	iqr-form-radio-button,
+	iqr-form-checkbox {
+		margin: 0em 10px 10px 10px;
 	}
 
 	iqr-form-radio-button {
-		flex: var(--grows) 1 calc(var(--width) - 20px);
 		margin: 0em 10px 8px 10px;
 	}
 
 	iqr-form-checkbox {
-		flex: var(--grows) 1 calc(var(--width) - 20px);
 		margin: 0em 10px 11px 10px;
 	}
-
 
 	.group {
 		flex: 1 1 calc(var(--width) - 2em);
@@ -45,4 +51,3 @@
 		justify-content: flex-start;
 	}
 }
-

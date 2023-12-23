@@ -1,18 +1,18 @@
 import { css, html, LitElement } from 'lit'
-import { IccHcpartyXApi } from '@icure/api'
-// @ts-ignore
+import { CodeStub, IccHcpartyXApi, sleep } from '@icure/api'
 import * as YAML from 'yaml'
-import '../src/components/iqr-text-field'
-import '../src/components/iqr-dropdown'
+import '../src/components/iqr-form/fields/text-field/iqr-text-field'
+import '../src/components/iqr-form/fields/dropdown/iqr-dropdown'
+import '../src/components/iqr-form/fields/date-picker/iqr-date-picker'
 import '../src/components/iqr-form'
 import MiniSearch, { SearchResult } from 'minisearch'
-//@ts-ignore
 import { DatePicker, DateTimePicker, Form, Group, MeasureField, MultipleChoice, NumberField, Section, TextField, TimePicker } from '../src/components/iqr-form/model'
 import { codes } from './codes'
 // @ts-ignore
-import yamlForm from './form.yaml'
-import { FormValuesContainer } from '../src/components/iqr-form-loader/formValuesContainer'
+import yamlForm from './gp.yaml'
 import { makeFormValuesContainer } from './form-values-container'
+import { customElement, property } from 'lit/decorators.js'
+import { ContactFormValuesContainer, ActionManager } from '../src/models'
 
 const icd10 = [
 	['I', new RegExp('^[AB][0–9]')],
@@ -58,10 +58,23 @@ const icpc2 = {
 	Z: 'XXI',
 }
 
+const ultrasound = [
+	{ id: 'ULTRASOUND-EVALUATION|01|1', code: '01', type: 'ULTRASOUND_EVALUATION', version: '1', label: { en: 'abortion-forms.field-options.EMPTY-CAVITY' } },
+	{ id: 'ULTRASOUND-EVALUATION|02|1', code: '02', type: 'ULTRASOUND_EVALUATION', version: '1', label: { en: 'abortion-forms.field-options.CLOTS' } },
+	{ id: 'ULTRASOUND-EVALUATION|03|1', code: '03', type: 'ULTRASOUND_EVALUATION', version: '1', label: { en: 'abortion-forms.field-options.RETENTION' } },
+	{ id: 'ULTRASOUND-EVALUATION|04|1', code: '04', type: 'ULTRASOUND_EVALUATION', version: '1', label: { en: 'abortion-forms.field-options.NON-PROGRESSIVE-PREGNANCY' } },
+	{ id: 'ULTRASOUND-EVALUATION|05|1', code: '05', type: 'ULTRASOUND_EVALUATION', version: '1', label: { en: 'abortion-forms.field-options.PROGRESSIVE-PREGNANCY' } },
+	{ id: 'ULTRASOUND-EVALUATION|06|1', code: '06', type: 'ULTRASOUND_EVALUATION', version: '1', label: { en: 'abortion-forms.field-options.DIFFUSE-IMAGE' } },
+]
+
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
+const localName = 'demo-app'
+
+@customElement(localName)
 class DemoApp extends LitElement {
 	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
+	@property() formValuesContainer: ContactFormValuesContainer = makeFormValuesContainer()
 
 	private miniSearch: MiniSearch = new MiniSearch({
 		fields: ['text'], // fields to index for full-text search
@@ -70,9 +83,9 @@ class DemoApp extends LitElement {
 			term.length === 1 || stopWords.has(term)
 				? null
 				: term
-						.normalize('NFD')
-						.replace(/[\u0300-\u036f]/g, '')
-						.toLowerCase(),
+					.normalize('NFD')
+					.replace(/[\u0300-\u036f]/g, '')
+					.toLowerCase(),
 	})
 
 	static get styles() {
@@ -88,9 +101,12 @@ class DemoApp extends LitElement {
 				margin-bottom: 0;
 				font-family: 'Roboto', Helvetica, sans-serif;
 			}
+
+			* {
+				box-sizing: border-box;
+			}
 		`
 	}
-
 	async firstUpdated() {
 		this.miniSearch.addAll(codes.map((x) => ({ id: x.id, code: x.code, text: x.label?.fr, links: x.links })))
 	}
@@ -122,13 +138,13 @@ class DemoApp extends LitElement {
 						.filter((t) => !res.some((x) => x.text === t.text)),
 				)
 				res.length < 20 &&
-					res.push(
-						...this.miniSearch
-							.search(normalisedTerms.join(' '), { prefix: true })
-							.filter((x) => normalisedTerms.every((t) => x.terms.some((mt) => mt.startsWith(t))))
-							.map((s) => Object.assign(s, { terms }))
-							.filter((t) => !res.some((x) => x.text === t.text)),
-					)
+				res.push(
+					...this.miniSearch
+						.search(normalisedTerms.join(' '), { prefix: true })
+						.filter((x) => normalisedTerms.every((t) => x.terms.some((mt) => mt.startsWith(t))))
+						.map((s) => Object.assign(s, { terms }))
+						.filter((t) => !res.some((x) => x.text === t.text)),
+				)
 				normalisedTerms = normalisedTerms.slice(1)
 				terms = terms.slice(1)
 			}
@@ -146,11 +162,39 @@ class DemoApp extends LitElement {
 	async ownersProvider(terms: string[]) {
 		const longestTerm = terms.reduce((w, t) => (w.length >= t.length ? w : t), '')
 		const candidates = await this.hcpApi.findByName(longestTerm)
-		return (candidates.rows || []).map((x) => ({ id: x.id, text: [x.firstName, x.lastName].filter((x) => x?.length).join(' ') }))
+		return (candidates.rows || []).map((x) => ({
+			id: x.id,
+			text: [x.firstName, x.lastName].filter((x) => x?.length).join(' '),
+		}))
+	}
+	async sleep(ms: number): Promise<any> {
+		return new Promise((resolve) => setTimeout(resolve, ms))
+	}
+
+	async optionsProvider() {
+		await sleep(5000)
+		return Promise.resolve([
+			{
+				id: 1,
+				text: 'Dylan Friedrich',
+			},
+		])
+	}
+
+	translationProvider(stringToTranslate: string) {
+		return stringToTranslate
+	}
+	async codesProvider(codifications: string[]): Promise<CodeStub[]> {
+		const codes: CodeStub[] = []
+		if (codifications.find((code) => code === 'ULTRASOUND-EVALUATION')) {
+			ultrasound.map((x) => codes.push(new CodeStub(x)))
+		}
+		return codes
 	}
 
 	render() {
 		// noinspection DuplicatedCode
+		// @ts-ignore
 		const form = new Form(
 			'Waiting room GP',
 			[
@@ -167,13 +211,13 @@ class DemoApp extends LitElement {
 					new Group(
 						'You can group fields together',
 						[
-							new TextField('This field is a TextField', 'TextField', 1, true, 2, undefined, undefined, ['CD-ITEM|diagnosis|1']),
-							new NumberField('This field is a NumberField', 'NumberField', 1, true, 2),
-							new MeasureField('This field is a MeasureField', 'MeasureField', 2, true, 1),
-							new DatePicker('This field is a DatePicker', 'DatePicker', 3, true, 2),
-							new TimePicker('This field is a TimePicker', 'TimePicker', 3, true, 2),
-							new DateTimePicker('This field is a DateTimePicker', 'DateTimePicker', 3, true, 2),
-							new MultipleChoice('This field is a MultipleChoice', 'MultipleChoice', 4, true, 2),
+							new TextField('This field is a TextField', 'groupTextField', 1, true, 2, undefined, undefined, ['CD-ITEM|diagnosis|1']),
+							new NumberField('This field is a NumberField', 'groupNumberField', 1, true, 2),
+							new MeasureField('This field is a MeasureField', 'groupMeasureField', 1, true, 2),
+							new DatePicker('This field is a DatePicker', 'groupDatePicker', 3, true, 2),
+							new TimePicker('This field is a TimePicker', 'groupTimePicker', 3, true, 2),
+							new DateTimePicker('This field is a DateTimePicker', 'groupDateTimePicker', 3, true, 2),
+							new MultipleChoice('This field is a MultipleChoice', 'groupMultipleChoice', 4, true, 2),
 						],
 						1,
 						1,
@@ -181,12 +225,12 @@ class DemoApp extends LitElement {
 					new Group(
 						'And you can add tags and codes',
 						[
-							new TextField('This field is a TextField with rows and columns', 'TextField', 1, true, 1, 'text-document', ['CD-ITEM|diagnosis|1'], ['BE-THESAURUS', 'ICD10'], {
+							new TextField('This field is a TextField with rows and columns', 'tagTextField', 1, true, 1, 'text-document', ['CD-ITEM|diagnosis|1'], ['BE-THESAURUS', 'ICD10'], {
 								option: 'blink',
 							}),
-							new NumberField('This field is a NumberField', 'NumberField', 1, true, 1, ['CD-ITEM|parameter|1', 'CD-PARAMETER|bmi|1'], [], { option: 'bang' }),
-							new MeasureField('This field is a MeasureField', 'MeasureField', 1, true, 1, ['CD-ITEM|parameter|1', 'CD-PARAMETER|heartbeat|1'], [], { unit: 'bpm' }),
-							new MultipleChoice('This field is a MultipleChoice', 'MultipleChoice', 4, true, 4, [], ['KATZ'], { many: 'no' }),
+							new NumberField('This field is a NumberField', 'tagNumberField', 1, true, 1, ['CD-ITEM|parameter|1', 'CD-PARAMETER|bmi|1'], [], { option: 'bang' }),
+							new MeasureField('This field is a MeasureField', 'tagMeasureField', 1, true, 1, ['CD-ITEM|parameter|1', 'CD-PARAMETER|heartbeat|1'], [], { unit: 'bpm' }),
+							new MultipleChoice('This field is a MultipleChoice', 'tagMultipleChoice', 4, true, 4, [], ['KATZ'], { many: 'no' }),
 						],
 						1,
 						1,
@@ -196,50 +240,29 @@ class DemoApp extends LitElement {
 			],
 			'Fill in the patient information inside the waiting room',
 		)
-		const shortForm = new Form(
-			'Semantic example',
-			[
-				new Section('Completion & Links', [
-					new TextField('This field is a TextField', 'TextField', 1, true, 1, 'text-document', ['CD-ITEM|diagnosis|1'], [], {
-						codeColorProvider: this.codeColorProvider,
-						suggestionStopWords: stopWords,
-						ownersProvider: this.ownersProvider.bind(this),
-						linksProvider: this.linksProvider.bind(this),
-						suggestionProvider: this.suggestionProvider.bind(this),
-					}),
-				]),
-			],
-			'Fill in the patient information inside the waiting room',
-		)
-		let formValuesContainer: FormValuesContainer = makeFormValuesContainer()
+
+		const editable = true
+		const gpForm = Form.parse(YAML.parse(yamlForm))
+		const actionManager: ActionManager = new ActionManager(gpForm, this.formValuesContainer, editable)
+
 		return html`
-			<iqr-text-field
-				suggestions
-				links
-				.codeColorProvider="${this.codeColorProvider.bind(this)}"
-				.suggestionStopWords="${stopWords}"
-				.ownersProvider="${this.ownersProvider.bind(this)}"
-				.linksProvider="${this.linksProvider.bind(this)}"
-				.suggestionProvider="${this.suggestionProvider.bind(this)}"
-				value="[Céphalée de tension](c-ICPC://N01,c-ICD://G05.8,i-he://1234) persistante avec [migraine ophtalmique](c-ICPC://N02) associée. [Grosse fatigue](c-ICPC://K56). A suivi un [protocole de relaxation](x-doc://5678)"
-				owner="M. Mennechet"
-			></iqr-text-field>
 			<iqr-form
-				.form="${shortForm}"
+				.form="${gpForm}"
+				.editable="${editable}"
 				labelPosition="above"
 				skin="kendo"
 				theme="gray"
 				renderer="form"
-				.formValuesContainer="${formValuesContainer}"
-				.formValuesContainerChanged="${(newVal: FormValuesContainer) => {
-					formValuesContainer = newVal
-				}}"
+				.formValuesContainer="${this.formValuesContainer}"
+				.actionManager="${actionManager}"
+				.formValuesContainerChanged="${(newVal: ContactFormValuesContainer) => {
+			console.log(newVal)
+		}}"
+				.ownersProvider="${this.ownersProvider.bind(this)}"
+				.translationProvider="${this.translationProvider.bind(this)}"
+				.codesProvider="${this.codesProvider.bind(this)}"
+				.optionsProvider="${this.optionsProvider.bind(this)}"
 			></iqr-form>
-			<iqr-form .form="${form}" labelPosition="above" skin="kendo" theme="gray" renderer="form"></iqr-form>
-			<h3>A Yaml syntax is also available</h3>
-			<pre>${yamlForm}</pre>
-			<h3>is interpreted as</h3>
-			<iqr-form .form="${Form.parse(YAML.parse(yamlForm))}" labelPosition="above" skin="kendo" theme="gray" renderer="form"></iqr-form>
 		`
 	}
 }

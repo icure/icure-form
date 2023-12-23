@@ -1,9 +1,8 @@
 import parse from 'date-fns/parse'
 import { CodeStub, Contact, Content, normalizeCode, Service } from '@icure/api'
 import { Field } from '../components/iqr-form/model'
-import { ServicesHistory } from '../components/iqr-form-loader'
-import { FormValuesContainer } from '../components/iqr-form-loader'
 import { VersionedMeta, VersionedValue } from '../components'
+import { FormValuesContainer, ServiceWithContact, VersionedData } from '../models'
 
 export function fuzzyDate(epochOrLongCalendar?: number): Date | undefined {
 	if (!epochOrLongCalendar && epochOrLongCalendar !== 0) {
@@ -16,6 +15,15 @@ export function fuzzyDate(epochOrLongCalendar?: number): Date | undefined {
 	} else {
 		return new Date(epochOrLongCalendar)
 	}
+}
+
+export function DateAsIcureDate(date: Date): number {
+	return parseInt(
+		`${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}:${date
+			.getMinutes()
+			.toString()
+			.padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`,
+	)
 }
 
 export function currentTime() {
@@ -78,7 +86,7 @@ export function isServiceContentEqual(content1: { [language: string]: Content },
 	return Object.keys(content1).reduce((isEqual, lng) => isEqual && isContentEqual(content1[lng], content2[lng]), true as boolean)
 }
 
-export function convertServicesToVersionedValues(versions: ServicesHistory, extractValueFromContent: (content: Content) => string): VersionedValue[] {
+export function convertServicesToVersionedValues(versions: VersionedData<ServiceWithContact>, extractValueFromContent: (content: Content) => string): VersionedValue[] {
 	return Object.entries(versions).map(([key, value]) => ({
 		id: key,
 		versions: value.map((s) => ({
@@ -89,7 +97,7 @@ export function convertServicesToVersionedValues(versions: ServicesHistory, extr
 	}))
 }
 
-export function convertServicesToVersionedMetas(versions: ServicesHistory): VersionedMeta[] {
+export function convertServicesToVersionedMetas(versions: VersionedData<ServiceWithContact>): VersionedMeta[] {
 	return Object.entries(versions).map(([key, value]) => ({
 		id: key,
 		metas: value.map((s) => ({
@@ -101,7 +109,7 @@ export function convertServicesToVersionedMetas(versions: ServicesHistory): Vers
 	}))
 }
 
-export function getVersions(formsValueContainer: FormValuesContainer, field: Field): ServicesHistory {
+export function getVersions(formsValueContainer: FormValuesContainer, field: Field): VersionedData<ServiceWithContact> {
 	return (
 		formsValueContainer?.getVersions((svc) =>
 			field.tags?.length ? field.tags.every((t) => (svc.tags || []).some((tt) => normalizeCode(tt).id === t)) : svc.label === field.label(),

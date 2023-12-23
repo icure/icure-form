@@ -4,19 +4,38 @@
 	"description": "",
 	"main": "lib/index.js",
 	"scripts": {
-		"start": "node lit-inject-scss.js src tmp && webpack-dev-server",
-		"build": "node lit-inject-scss.js src tmp && jq '{include:[\"tmp\"], compilerOptions:.compilerOptions}' < tsconfig.json > tsconfig.tmp.json && tsc -p tsconfig.tmp.json && rm -r tmp",
+		"start": "webpack serve --mode development",
+		"build": "node lit-inject-scss.js src tmp && jq '{include:[\"tmp\"], compilerOptions:.compilerOptions}' < tsconfig.json > tsconfig.tmp.json && tsc -p tsconfig.tmp.json",
 		"dist": "webpack --env.mode production",
 		"prepare": "rm -r lib && yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
 		"publish": "yarn version patch && yarn run prepare && cd dist && yarn npm publish --tolerate-republish --access public && cd ..",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "jest",
+		"lint:commit": "eslint . --ext .ts",
+		"pre-commit": "lint-staged"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "GPL-3.0",
+	"keywords": [
+		"litElement",
+		"ProseMirror",
+		"node",
+		"typescript"
+	],
+	"jest": {
+		"preset": "ts-jest",
+		"testEnvironment": "node",
+		"testRegex": "(/test/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+		"moduleFileExtensions": [
+			"ts",
+			"tsx",
+			"js",
+			"jsx",
+			"json",
+			"node",
+			"yaml"
+		]
+	},
 	"husky": {
 		"hooks": {
-			"pre-commit": "lint-staged"
+			"pre-commit": "npm run pre-commit"
 		}
 	},
 	"lint-staged": {
@@ -25,9 +44,13 @@
 			"git add"
 		]
 	},
+	"author": "",
+	"license": "GPL-3.0",
+	"access": "public",
 	"dependencies": {
 		"@types/node": "^18.16.3",
 		"@webcomponents/webcomponentsjs": "^2.7.0",
+		"app-datepicker": "^6.0.0-rc.33",
 		"fast-deep-equal": "^3.1.3",
 		"lit": "^2.6.1",
 		"markdown-it": "^13.0.1",
@@ -44,12 +67,12 @@
 		"prosemirror-view": "1.30.1",
 		"simple-statistics": "^7.8.3",
 		"uuid": "^9.0.0",
-		"yaml": "^1.10.2"
+		"yaml": "2.2.2"
 	},
 	"devDependencies": {
-		"@icure/api": "^4.2.39",
+		"@icure/api": "5.3.7",
+		"@types/jest": "^27.0.2",
 		"@types/markdown-it": "^12.2.3",
-		"@types/mocha": "^10.0.1",
 		"@types/uuid": "^9.0.1",
 		"@typescript-eslint/eslint-plugin": "^5.54.1",
 		"@typescript-eslint/parser": "^5.54.1",
@@ -68,21 +91,22 @@
 		"extract-loader": "^5.1.0",
 		"html-webpack-plugin": "^5.5.0",
 		"husky": "^8.0.3",
+		"jest": "^27.1.0",
 		"lint-staged": "^13.1.2",
 		"lit-scss-loader": "^2.0.1",
 		"minisearch": "^6.0.1",
-		"mocha": "^10.2.0",
 		"prettier": "^2.8.4",
 		"pretty-quick": "^3.1.3",
 		"raw-loader": "^4.0.2",
 		"sass": "^1.58.3",
 		"sass-loader": "^13.2.0",
+		"ts-jest": "^27.0.4",
 		"ts-loader": "^9.4.2",
 		"ts-node": "^10.9.1",
 		"typescript": "^4.9.5",
-		"webpack": "^5.75.0",
-		"webpack-cli": "^4.10.0",
-		"webpack-dev-server": "^4.11.1"
+		"webpack": "5.88.2",
+		"webpack-cli": "5.1.4",
+		"webpack-dev-server": "4.15.1"
 	},
 	"resolutions": {
 		"prosemirror-model": "1.19.0",
@@ -100,5 +124,10 @@
 			"last 1 firefox version",
 			"last 1 safari version"
 		]
+	},
+	"types": "./lib/index.d.ts",
+	"directories": {
+		"lib": "lib",
+		"test": "test"
 	}
 }

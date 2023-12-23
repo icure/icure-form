@@ -1,5 +1,5 @@
-import { LabelizedField } from './labelizedField'
 import { property } from 'lit/decorators.js'
+import { LabelizedField } from './labelizedField'
 
 export abstract class TranslatedField extends LabelizedField {
 	@property() translate = true

@@ -19,6 +19,7 @@
     },
     "rules": {
         "semi": ["error", "never", { "beforeStatementContinuationChars": "never"}],
+				"@typescript-eslint/no-explicit-any": "off",
         "prettier/prettier": [
             "error",
             {
@@ -29,6 +30,5 @@
         "jsx-a11y/no-static-element-interactions": 0,
 				"@typescript-eslint/ban-ts-comment": 0,
 			"@typescript-eslint/no-namespace": 0
-    },
-    
+    }
 }

@@ -54,7 +54,7 @@ export class IqrRadioButtonGroup extends OptionsField<string, VersionedValue> {
 		}
 	}
 	render(): TemplateResult {
-		if (!this.display) {
+		if (!this.displayed) {
 			return html``
 		}
 		if (this.translate) {

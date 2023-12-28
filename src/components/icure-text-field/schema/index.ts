@@ -6,18 +6,6 @@ import { getMeasureSpec, MeasureSchema } from './measure-schema'
 import { DecimalSchema, getDecimalSpec } from './decimal-schema'
 import { getItemsListSpec, ItemsListSchema } from './items-list'
 
-export type IqrTextFieldSchema =
-	| DocumentSchema
-	| TokensSchema
-	| ItemsListSchema
-	| StyledSchema
-	| InlineSchema
-	| DateSchema
-	| TimeSchema
-	| DateTimeSchema
-	| DecimalSchema
-	| MeasureSchema
-
 export function createSchema(
 	type: IqrTextFieldSchema,
 	colorProvider: (type: string, code: string, isCode: boolean) => string,

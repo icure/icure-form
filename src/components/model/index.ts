@@ -1,5 +1,30 @@
-import { IqrTextFieldSchema } from '../fields/text-field'
-import { Labels } from '../../../models'
+import { DocumentSchema, InlineSchema, StyledSchema } from '../icure-text-field/schema/markdown-schema'
+import { TokensSchema } from '../icure-text-field/schema/token-schema'
+import { ItemsListSchema } from '../icure-text-field/schema/items-list'
+import { DateSchema, DateTimeSchema, TimeSchema } from '../icure-text-field/schema/date-time-schema'
+import { DecimalSchema } from '../icure-text-field/schema/decimal-schema'
+import { MeasureSchema } from '../icure-text-field/schema/measure-schema'
+
+export interface OptionCode {
+	id: string
+	label: { [key: string]: string }
+}
+
+export interface Labels {
+	[position: string]: string
+}
+
+export type IcureTextFieldSchema =
+	| DocumentSchema
+	| TokensSchema
+	| ItemsListSchema
+	| StyledSchema
+	| InlineSchema
+	| DateSchema
+	| TimeSchema
+	| DateTimeSchema
+	| DecimalSchema
+	| MeasureSchema
 
 type FieldType =
 	| 'textfield'
@@ -27,7 +52,7 @@ export abstract class Field {
 	rows?: number
 	columns?: number
 	grows?: boolean
-	schema?: IqrTextFieldSchema
+	schema?: IcureTextFieldSchema
 	tags?: string[]
 	codifications?: string[]
 	options?: { [key: string]: unknown }
@@ -73,7 +98,7 @@ export abstract class Field {
 			rows?: number
 			grows?: boolean
 			columns?: number
-			schema?: IqrTextFieldSchema
+			schema?: IcureTextFieldSchema
 			tags?: string[]
 			codifications?: string[]
 			options?: { [key: string]: unknown }
@@ -130,27 +155,41 @@ export abstract class Field {
 	}
 
 	toJson(): {
+		grows: boolean | undefined
+		schema: string | undefined
+		columns: number | undefined
+		codifications: string[] | undefined
+		sortable: boolean | undefined
+		type:
+			| 'textfield'
+			| 'measure-field'
+			| 'number-field'
+			| 'token-field'
+			| 'items-list-field'
+			| 'date-picker'
+			| 'time-picker'
+			| 'date-time-picker'
+			| 'multiple-choice'
+			| 'dropdown-field'
+			| 'radio-button'
+			| 'checkbox'
+			| 'label'
+			| 'action'
+		rows: number | undefined
+		translate: boolean | undefined
+		tags: string[] | undefined
+		labels: Labels | undefined
+		unit: string | undefined
 		field: string
-		type: FieldType
-		shortLabel?: string
-		rows?: number
-		grows?: boolean
-		columns?: number
-		schema?: IqrTextFieldSchema
-		tags?: string[]
-		codifications?: string[]
-		options?: { [p: string]: unknown }
-		labels?: Labels
-		value?: string
-		unit?: string
-		multiline?: boolean
-		hideCondition?: string
-		now?: boolean
-		translate?: boolean
-		sortable?: boolean
-		sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean }
-		width?: number
-		styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
+		styleOptions: { width: number; direction: string; columns: number; rows: number; alignItems: string } | undefined
+		sortOptions: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean } | undefined
+		multiline: boolean | undefined
+		now: boolean | undefined
+		options: { [p: string]: unknown } | undefined
+		width: number | undefined
+		shortLabel: string | undefined
+		hideCondition: string | undefined
+		value: string | undefined
 	} {
 		return {
 			field: this.field,
@@ -163,7 +202,7 @@ export abstract class Field {
 			tags: this.tags,
 			codifications: this.codifications,
 			options: this.options,
-			labels: this.labels.toJson(),
+			labels: this.labels,
 			value: this.value,
 			unit: this.unit,
 			multiline: this.multiline,
@@ -203,7 +242,7 @@ export class TextField extends Field {
 			rows?: number
 			grows?: boolean
 			columns?: number
-			schema?: IqrTextFieldSchema
+			schema?: IcureTextFieldSchema
 			tags?: string[]
 			codifications?: string[]
 			options?: { [p: string]: unknown }
@@ -884,6 +923,17 @@ export class Group {
 			width: json.width,
 		})
 	}
+
+	toJson(): any {
+		return {
+			group: this.group,
+			hideCondition: this.hideCondition,
+			fields: this.fields?.map((f: Field | Group) => f.toJson()),
+			rows: this.rows,
+			columns: this.columns,
+			width: this.width,
+		}
+	}
 }
 
 export class SubForm {
@@ -968,8 +1018,8 @@ export class Section {
 
 	toJson(): {
 		section: string
-		keywords: string[] | undefined
-		description: string | undefined
+		keywords?: string[]
+		description?: string
 		fields: any[]
 	} {
 		return {
@@ -1008,10 +1058,16 @@ export class Form {
 
 	toJson(): {
 		form: string
-		keywords: string[] | undefined
-		description: string | undefined
-		actions: { launchers: Launcher[]; expression: string; states: State[] }[] | undefined
-		sections: any[]
+		keywords?: string[]
+		description?: string
+		actions:
+			| {
+					launchers: { triggerer: string; shouldPassValue: boolean; name: string }[]
+					expression: string
+					states: { stateToUpdate: string; name: string; canLaunchLauncher: boolean }[]
+			  }[]
+			| undefined
+		sections: { section: string; keywords?: string[]; description?: string; fields: any[] }[]
 	} {
 		return {
 			form: this.form,

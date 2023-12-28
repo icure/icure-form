@@ -2,14 +2,12 @@ import { html, TemplateResult } from 'lit'
 import { state } from 'lit/decorators.js'
 import { CodeStub, Content } from '@icure/api'
 import { generateLabel } from '../../label'
-import { dropdownPicto } from '../../text-field/icure-text-field/styles/paths'
-import { OptionsField } from '../../../../common'
-import { VersionedValue } from '../../text-field'
-import { Trigger } from '../../../model'
+import { dropdownPicto } from '../icure-text-field/styles/paths'
+import { Field } from '../common'
+import { Trigger } from '../model'
 
-export class IqrDropdownField extends OptionsField<string, VersionedValue> {
+export class IcureDropdownField extends Field {
 	@state() protected displayMenu = false
-
 	@state() protected inputValue = ''
 
 	togglePopup(): void {
@@ -22,7 +20,7 @@ export class IqrDropdownField extends OptionsField<string, VersionedValue> {
 			e.preventDefault()
 			e.stopPropagation()
 			if (id) {
-				const option = (this.translate ? this.translatedOptions : this.options || []).find((option) => option.id === id)
+				const option = this.opionsPro
 				const code = !Boolean(option?.['text'])
 					? option
 					: new CodeStub({
@@ -62,12 +60,10 @@ export class IqrDropdownField extends OptionsField<string, VersionedValue> {
 	}
 
 	render(): TemplateResult {
-		if (!this.display) {
+		if (!this.displayed) {
 			return html``
 		}
-		if (this.translate) {
-			this.fetchTranslateOptions()
-		}
+
 		return html`
 			<div id="root" class="icure-text-field ${this.inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
 				${generateLabel(this.label ?? '', this.labelPosition ?? 'float', this.translationProvider)}
@@ -169,4 +165,4 @@ export class IqrDropdownField extends OptionsField<string, VersionedValue> {
 	}
 }
 
-customElements.define('icure-dropdown-field', IqrDropdownField)
+customElements.define('icure-dropdown-field', IcureDropdownField)

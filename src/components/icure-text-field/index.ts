@@ -9,12 +9,12 @@ import { keymap } from 'prosemirror-keymap'
 import { baseKeymap, chainCommands, exitCode, joinDown, joinUp, setBlockType, toggleMark } from 'prosemirror-commands'
 import { liftListItem, sinkListItem, splitListItem, wrapInList } from 'prosemirror-schema-list'
 
-import { createSchema, IqrTextFieldSchema } from './schema'
+import { createSchema } from './schema'
 import MarkdownIt from 'markdown-it'
 import { MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown'
 import { unwrapFrom, wrapInIfNeeded } from './prosemirror-commands'
 import { SelectionCompanion } from './selection-companion'
-import { Suggestion, SuggestionPalette } from './suggestion-palette'
+import { SuggestionPalette } from './suggestion-palette'
 import { caretFixPlugin } from './plugin/caret-fix-plugin'
 import { hasMark } from './prosemirror-utils'
 
@@ -26,15 +26,12 @@ import kendoCss from './styles/kendo.scss'
 import { maskPlugin } from './plugin/mask-plugin'
 import { hasContentClassPlugin } from './plugin/has-content-class-plugin'
 import { regexpPlugin } from './plugin/regexp-plugin'
-import { sorted } from '../../../../../utils/no-lodash'
+import { sorted } from '../../utils/no-lodash'
 import { generateLabel, generateLabels } from '../../label'
 import { Content, Measure } from '@icure/api'
 import { parse, format } from 'date-fns'
-import { ValuedField } from '../../../../common'
 import { StateToUpdate, Trigger } from '../../../model'
-
-export { IqrTextFieldSchema } from './schema'
-export { Suggestion } from './suggestion-palette'
+import { Field } from '../common'
 
 /** Meta holds the metadata of one version of a Service
  *
@@ -51,37 +48,8 @@ export interface Meta {
 	owner?: { id: string; descr?: string } | null
 }
 
-/** Version holds one single version of a generified Service
- *
- * revision is the revision of the version
- * modified is the date of the modification of the version
- * value is a map that contains the value of the fields of the Service
- *
- */
-export interface Version {
-	revision: string
-	modified?: number
-	value: { [language: string]: string }
-}
-
-export interface VersionedMeta {
-	id: string
-	metas: Meta[]
-}
-
-/** VersionedValue is typically used to store the history of the generified values of a service
- *
- * id is the id of the service
- * versions is an array of Version
- *
- */
-export interface VersionedValue {
-	id: string
-	versions: Version[]
-}
-
 // Extend the LitElement base class
-export class IqrTextField extends ValuedField<string, VersionedValue> {
+export class IcureTextField extends Field {
 	get _ownerSearch(): HTMLInputElement | null {
 		return this.renderRoot.querySelector('#ownerSearch')
 	}
@@ -514,4 +482,4 @@ export class IqrTextField extends ValuedField<string, VersionedValue> {
 }
 
 // Register the new element with the browser.
-customElements.define('icure-text-field', IqrTextField)
+customElements.define('icure-text-field', IcureTextField)

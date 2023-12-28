@@ -2,11 +2,11 @@ import { html } from 'lit'
 import { property } from 'lit/decorators.js'
 
 import './icure-text-field'
-import { Suggestion, VersionedMeta, VersionedValue } from './icure-text-field'
 import { Content } from '@icure/api'
-import { ValuedField } from '../../../common'
+import { Suggestion } from '../../../../models'
+import { Field } from '../../../common'
 
-class Textfield extends ValuedField<string, VersionedValue[]> {
+class Textfield extends Field {
 	//Boolean value is parsed as text, so we also need to use string type
 	@property() multiline: boolean | string = false
 	@property() rows = 1

@@ -11,9 +11,9 @@ export function extractActionsByTrigger(actions: Action[], trigger: Trigger): Ac
 export function extractLauncherByNameAndTrigger(actions: Action, name: string, trigger: Trigger): Launcher | undefined {
 	return actions.launchers.find((launcher: Launcher) => launcher.name === name && launcher.triggerer === trigger)
 }
-export class ActionManager {
+export class ActionManager<> {
 	public actions: Action[] = []
-	formValuesContainer: FormValuesContainer
+	formValuesContainer: FormValuesContainer<>
 	stateUpdaters: { [name: string]: (state: StateToUpdate, result: any) => void } = {}
 	readyChildrenCount: Map<string, { total: number; count: number; parent: string }> = new Map()
 	defaultSandbox: Map<string, any> = new Map()

@@ -1,8 +1,6 @@
 import parse from 'date-fns/parse'
 import { CodeStub, Contact, Content, normalizeCode, Service } from '@icure/api'
-import { Field } from '../components/icure-form/model'
-import { VersionedMeta, VersionedValue } from '../components'
-import { FormValuesContainer, ServiceWithContact, VersionedData } from '../models'
+import { FormValuesContainer, ServiceWithContactVersion, VersionedData } from '../models'
 
 export function fuzzyDate(epochOrLongCalendar?: number): Date | undefined {
 	if (!epochOrLongCalendar && epochOrLongCalendar !== 0) {
@@ -86,7 +84,10 @@ export function isServiceContentEqual(content1: { [language: string]: Content },
 	return Object.keys(content1).reduce((isEqual, lng) => isEqual && isContentEqual(content1[lng], content2[lng]), true as boolean)
 }
 
-export function convertServicesToVersionedValues(versions: VersionedData<ServiceWithContact>, extractValueFromContent: (content: Content) => string): VersionedValue[] {
+export function convertServicesToVersionedValues(
+	versions: VersionedData<Service, ServiceWithContactVersion>,
+	extractValueFromContent: (content: Content) => string,
+): VersionedValue[] {
 	return Object.entries(versions).map(([key, value]) => ({
 		id: key,
 		versions: value.map((s) => ({
@@ -97,7 +98,7 @@ export function convertServicesToVersionedValues(versions: VersionedData<Service
 	}))
 }
 
-export function convertServicesToVersionedMetas(versions: VersionedData<ServiceWithContact>): VersionedMeta[] {
+export function convertServicesToVersionedMetas(versions: VersionedData<Service, ServiceWithContactVersion>): VersionedMeta[] {
 	return Object.entries(versions).map(([key, value]) => ({
 		id: key,
 		metas: value.map((s) => ({

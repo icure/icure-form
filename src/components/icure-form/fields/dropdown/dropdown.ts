@@ -2,11 +2,11 @@ import { html, TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import './icure-dropdown'
 import { CodeStub, HealthcareParty } from '@icure/api'
-import { OptionCode, OptionsField } from '../../../common'
-import { VersionedValue } from '../text-field'
+import { Field, OptionCode } from '../../../common'
 
-export class DropdownField extends OptionsField<string, VersionedValue[]> {
+export class DropdownField extends Field {
 	@property() ownersProvider: (speciality: string[]) => HealthcareParty[] = () => []
+	@property() optionsProvider: (searchTerm?: string) => Promise<(OptionCode | CodeStub)[]> = async () => []
 
 	render(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
@@ -16,29 +16,16 @@ export class DropdownField extends OptionsField<string, VersionedValue[]> {
 					<icure-dropdown-field
 						.actionManager="${this.actionManager}"
 						.editable="${this.editable}"
-						label="${this.label}"
 						.translate="${this.translate}"
-						.sortable="${this.sortable}"
-						.sortOptions="${this.sortOptions}"
-						.options="${this.options}"
-						value="${this.value}"
 						.valueProvider=${() => versionedValue}
 						.handleValueChanged=${this.handleValueChanged}
-						.labelPosition=${this.labelPosition}
 						.optionsProvider=${this.optionsProvider}
 						.translationProvider=${this.translationProvider}
 						.ownersProvider=${this.ownersProvider}
 						defaultLanguage="${this.defaultLanguage}"
-						.codifications=${this.codifications}
 					></icure-dropdown-field>
 				`,
 		)
-	}
-
-	public async firstUpdated(): Promise<void> {
-		if (this.options === undefined || this.options.length === 0) {
-			this.options = ((await this.fetchInitialsOptions()) as (OptionCode | CodeStub)[]) || []
-		}
 	}
 }
 

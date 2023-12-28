@@ -1,11 +1,13 @@
 import { Field } from '../components/icure-form/model'
-import { Meta, VersionedMeta, VersionedValue } from '../components'
 import { convertServicesToVersionedMetas, convertServicesToVersionedValues, getVersions } from './icure-utils'
-import { CodeStub, Content } from '@icure/api'
-import { FormValuesContainer } from '../models'
+import { CodeStub, Content, Service } from '@icure/api'
+import { FormValuesContainer, ServiceMetadata, ServiceWithContactVersion, VersionedData } from '../models'
 import { v4 as uuid } from 'uuid'
 
-export function numberFieldValuesProvider(formValuesContainer: FormValuesContainer, field: Field): () => VersionedValue[] {
+export function numberFieldValuesProvider(
+	formValuesContainer: FormValuesContainer<Service, Content, ServiceMetadata>,
+	field: Field,
+): () => VersionedData<Service, ServiceWithContactVersion>[] {
 	return () =>
 		convertServicesToVersionedValues(getVersions(formValuesContainer, field), (content: Content) =>
 			content.numberValue || content.numberValue === 0 ? new Intl.NumberFormat('fr').format(content.numberValue) : '',

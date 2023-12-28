@@ -1,0 +1,53 @@
+.icure-form {
+	display: flex;
+	flex-flow: row wrap;
+	align-items: start;
+
+	h2 {
+		width: 100%;
+		font-size: 2em;
+		margin-top: 1em;
+	}
+
+	h3 {
+		width: 100%;
+		font-size: 1.2em;
+		font-weight: normal;
+		color: #282829;
+		margin: 1em;
+	}
+
+	icure-form-textfield,
+	icure-form-date-picker,
+	icure-form-number-field,
+	icure-form-measure-field,
+	icure-form-time-picker,
+	icure-form-date-time-picker,
+	icure-form-multiple-choice,
+	icure-form-dropdown-field,
+	icure-form-dropdown-field,
+	icure-form-radio-button,
+	icure-form-checkbox {
+		margin: 0em 10px 10px 10px;
+	}
+
+	icure-form-radio-button {
+		margin: 0em 10px 8px 10px;
+	}
+
+	icure-form-checkbox {
+		margin: 0em 10px 11px 10px;
+	}
+
+	.group {
+		flex: 1 1 calc(var(--width) - 2em);
+		margin: 1em;
+		background: #f6f6f6;
+		border-radius: 12px;
+		width: 100%;
+		display: flex;
+		flex-flow: row wrap;
+		align-items: center;
+		justify-content: flex-start;
+	}
+}

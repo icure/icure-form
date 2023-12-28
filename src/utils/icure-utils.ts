@@ -1,6 +1,6 @@
 import parse from 'date-fns/parse'
 import { CodeStub, Contact, Content, normalizeCode, Service } from '@icure/api'
-import { Field } from '../components/iqr-form/model'
+import { Field } from '../components/icure-form/model'
 import { VersionedMeta, VersionedValue } from '../components'
 import { FormValuesContainer, ServiceWithContact, VersionedData } from '../models'
 

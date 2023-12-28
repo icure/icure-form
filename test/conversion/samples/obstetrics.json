@@ -1,0 +1,2422 @@
+{
+	"name": "Grossesse",
+	"width": 1497.0,
+	"height": 1050.0,
+	"guid": "2107A27D-3CDA-4BB0-9F13-76A24CD82AF5",
+	"group": "Gynécologie 3.0",
+	"sections": [
+		{
+			"columns": 1,
+			"formColumns": [
+				{
+					"formDataList": [
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Parité",
+							"sortOrder": 1.465341783E9,
+							"label": "P",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 0,
+								"left": 158.0,
+								"top": 38.0,
+								"width": 35.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"tags": [
+								{
+									"type": "ICURE",
+									"code": "ANTEC"
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Remarque",
+							"sortOrder": 1.465341783E9,
+							"label": "Remarque",
+							"editor": {
+								"displayValueDate": false,
+								"left": 110.0,
+								"top": 69.0,
+								"width": 441.0,
+								"height": 30.0,
+								"multiline": true,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Allaitement",
+							"sortOrder": 1.465341783E9,
+							"label": "Allaitement mat.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 122.0,
+								"top": 708.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Souhait péridurale",
+							"sortOrder": 1.465341783E9,
+							"label": "Souhait péri",
+							"editor": {
+								"displayValueDate": false,
+								"left": 844.0,
+								"top": 704.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Transmission autre",
+							"sortOrder": 1.465341783E9,
+							"label": "Autres",
+							"editor": {
+								"displayValueDate": false,
+								"left": 309.0,
+								"top": 734.0,
+								"width": 446.0,
+								"height": 66.0,
+								"multiline": true,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Sexe bébé",
+							"sortOrder": 1.465341783E9,
+							"label": "Sexe bébé",
+							"editor": {
+								"menuOptions": [
+									"Vu non communiqué",
+									"conn. non souhaitée",
+									"conn. souhaitée",
+									"masculin",
+									"féminin"
+								],
+								"displayValueDate": false,
+								"left": 883.0,
+								"top": 37.0,
+								"width": 116.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Antécédent césarienne",
+							"sortOrder": 1.465341783E9,
+							"label": "Ant. césarienne",
+							"editor": {
+								"displayValueDate": false,
+								"left": 260.0,
+								"top": 208.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Percentile poids deuxième trimestre",
+							"sortOrder": 1.465341783E9,
+							"label": "%P T2",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 4,
+								"left": 1064.0,
+								"top": 13.0,
+								"width": 59.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Percentile poids troisième trimestre",
+							"sortOrder": 1.465341783E9,
+							"label": "%P 3T",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 4,
+								"left": 1068.0,
+								"top": 38.0,
+								"width": 59.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Groupe sanguin père",
+							"sortOrder": 1.465341783E9,
+							"label": "GS père",
+							"editor": {
+								"menuOptions": [
+									"A",
+									"B",
+									"AB",
+									"O"
+								],
+								"displayValueDate": false,
+								"left": 981.0,
+								"top": 208.0,
+								"width": 62.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Rhésus père",
+							"sortOrder": 1.465341783E9,
+							"label": "Rh.",
+							"editor": {
+								"menuOptions": [
+									"+",
+									"-"
+								],
+								"displayValueDate": false,
+								"left": 1072.0,
+								"top": 208.0,
+								"width": 55.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKStringTable",
+							"name": "Antécédents médicaux",
+							"sortOrder": 1.465341783E9,
+							"label": "Ant. médicaux",
+							"editor": {
+								"left": 652.0,
+								"top": 128.0,
+								"width": 476.0,
+								"height": 101.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringTableEditor"
+							},
+							"tags": [
+								{
+									"type": "ICURE",
+									"code": "ANTEC"
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Tabac",
+							"sortOrder": 1.465341783E9,
+							"label": "Tabac",
+							"editor": {
+								"displayValueDate": false,
+								"left": 339.0,
+								"top": 207.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Conclusion mère",
+							"sortOrder": 1.465341783E9,
+							"label": "Conclusion mère",
+							"editor": {
+								"displayValueDate": false,
+								"left": 110.0,
+								"top": 604.0,
+								"width": 502.0,
+								"height": 78.0,
+								"multiline": true,
+								"labelPosition": "Up",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Conclusion bébé",
+							"sortOrder": 1.465341783E9,
+							"label": "Conclusion bébé",
+							"editor": {
+								"displayValueDate": false,
+								"left": 627.0,
+								"top": 604.0,
+								"width": 502.0,
+								"height": 78.0,
+								"multiline": true,
+								"labelPosition": "Up",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "TCA",
+							"sortOrder": 1.465341783E9,
+							"label": "TCA",
+							"editor": {
+								"displayValueDate": false,
+								"left": 124.0,
+								"top": 734.0,
+								"width": 136.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "s."
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Quick",
+							"sortOrder": 1.465341783E9,
+							"label": "Quick",
+							"editor": {
+								"displayValueDate": false,
+								"left": 124.0,
+								"top": 756.0,
+								"width": 138.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "%"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Taille",
+							"sortOrder": 1.465341783E9,
+							"label": "Taille",
+							"editor": {
+								"displayValueDate": false,
+								"left": 603.0,
+								"top": 37.0,
+								"width": 49.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "cm"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Gestité",
+							"sortOrder": 1.465341783E9,
+							"label": "G",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 0,
+								"left": 109.0,
+								"top": 38.0,
+								"width": 33.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Pathologie de la thyroïde",
+							"sortOrder": 1.465341783E9,
+							"label": "Patho. thyroïde",
+							"editor": {
+								"displayValueDate": false,
+								"left": 622.0,
+								"top": 208.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Leiden",
+							"sortOrder": 1.465341783E9,
+							"label": "Leiden",
+							"editor": {
+								"displayValueDate": false,
+								"left": 622.0,
+								"top": 168.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"tags": [
+								{
+									"type": "RELEVANCE",
+									"code": "CRITICAL"
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "HTA",
+							"sortOrder": 1.465341783E9,
+							"label": "HTA",
+							"editor": {
+								"displayValueDate": false,
+								"left": 622.0,
+								"top": 148.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Diabète",
+							"sortOrder": 1.465341783E9,
+							"label": "Diabète",
+							"editor": {
+								"displayValueDate": false,
+								"left": 622.0,
+								"top": 188.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Plaquettes",
+							"sortOrder": 1.465341783E9,
+							"label": "Plaquettes",
+							"editor": {
+								"displayValueDate": false,
+								"left": 124.0,
+								"top": 778.0,
+								"width": 139.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "e3/mm3"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKStringTable",
+							"name": "Antécédents gynécologiques",
+							"sortOrder": 1.465341783E9,
+							"label": "Ant. gyn.-obst",
+							"editor": {
+								"left": 110.0,
+								"top": 128.0,
+								"width": 441.0,
+								"height": 101.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringTableEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Prise alcool",
+							"sortOrder": 1.465341783E9,
+							"label": "Prise d\u0027alcool",
+							"editor": {
+								"displayValueDate": false,
+								"left": 467.0,
+								"top": 208.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Groupe ethnique",
+							"sortOrder": 1.465341783E9,
+							"label": "Gr. ethn.",
+							"editor": {
+								"menuOptions": [
+									"caucasien",
+									"africain",
+									"asiatique"
+								],
+								"displayValueDate": false,
+								"left": 763.0,
+								"top": 208.0,
+								"width": 146.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Autre analyse",
+							"sortOrder": 1.465341783E9,
+							"label": "A. analyse",
+							"editor": {
+								"displayValueDate": false,
+								"left": 104.0,
+								"top": 313.0,
+								"width": 560.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Autres conseils",
+							"sortOrder": 1.465341783E9,
+							"label": "Autres cons.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 767.0,
+								"top": 313.0,
+								"width": 355.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "DACFAF3A-8F6D-4ED8-8082-6287AE168C13",
+							"sortOrder": 1.465341783E9,
+							"label": "Fiche liaison",
+							"editor": {
+								"action": "Gynécologie | Fiche de liaison obstétrique",
+								"left": 112.0,
+								"top": 469.0,
+								"width": 94.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "91B502A8-8E9B-42F6-A4DE-A92C0C6540F0",
+							"sortOrder": 1.465341783E9,
+							"label": "Test T21",
+							"editor": {
+								"action": "Gynécologie | labo tri 21 T1",
+								"left": 208.0,
+								"top": 469.0,
+								"width": 81.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "6A4ED4F0-3085-48CD-9F0E-0BCF1EDE5067",
+							"sortOrder": 1.465341783E9,
+							"label": "Labo 1",
+							"editor": {
+								"action": "Gynécologie | Labo 1er trimestre",
+								"left": 289.0,
+								"top": 469.0,
+								"width": 73.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "C2A1E890-8BDC-426E-A188-FF629DFD7906",
+							"sortOrder": 1.465341783E9,
+							"label": "Labo 2",
+							"editor": {
+								"action": "Gynécologie | Labo 2ème trimestre",
+								"left": 362.0,
+								"top": 469.0,
+								"width": 71.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "B6469476-F671-41AE-B6F2-1DB04E7B91FD",
+							"sortOrder": 1.465341783E9,
+							"label": "Labo 3",
+							"editor": {
+								"action": "Gynécologie | Labo 3eme trimestre",
+								"left": 435.0,
+								"top": 469.0,
+								"width": 63.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "CCB2E107-E574-4225-B4DC-B39F358106A2",
+							"sortOrder": 1.465341783E9,
+							"label": "Attest. grossesse",
+							"editor": {
+								"action": "Gynécologie | attestation de grossesse",
+								"left": 1012.0,
+								"top": 469.0,
+								"width": 109.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "9E5F463F-7076-413F-8538-011FBAA5FA09",
+							"sortOrder": 1.465341783E9,
+							"label": "Sérologie simple",
+							"editor": {
+								"action": "Gynécologie | Serologie simple",
+								"left": 500.0,
+								"top": 469.0,
+								"width": 111.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "7CD96C08-A1F7-4056-8306-D6F95202C7CA",
+							"sortOrder": 1.465341783E9,
+							"label": "Kiné",
+							"editor": {
+								"action": "Gynécologie | Demande de kiné",
+								"left": 611.0,
+								"top": 469.0,
+								"width": 77.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": true,
+							"irrelevant": true,
+							"type": "TKSubConsult",
+							"name": "DB11ACCE-71C6-41FD-966C-6174B86509BA",
+							"sortOrder": 1.465341783E9,
+							"label": "Suivi obstétrical",
+							"editor": {
+								"optionalFormGuids": [
+									"8731987C-6758-499E-8468-FA64242317CE",
+									"E332B140-13D7-4F52-A2C3-BEB7FA250178",
+									"D25ED079-B356-4844-B13A-2B5B5BA7BF96",
+									"5D18DF1D-041E-4500-A3AE-308CB4A9D8CB"
+								],
+								"compulsoryFormGuids": [],
+								"showHeader": true,
+								"left": 7.0,
+								"top": 363.0,
+								"width": 1225.0,
+								"height": 52.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "SubFormEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Rsv. ch.",
+							"sortOrder": 1.465341783E9,
+							"label": "Rsv. ch.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 109.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Conf.",
+							"sortOrder": 1.465341783E9,
+							"label": "Conf.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 170.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Info mat.",
+							"sortOrder": 1.465341783E9,
+							"label": "Info mat.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 249.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Info AM",
+							"sortOrder": 1.465341783E9,
+							"label": "Info AM",
+							"editor": {
+								"displayValueDate": false,
+								"left": 326.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Info péri",
+							"sortOrder": 1.465341783E9,
+							"label": "Info péri",
+							"editor": {
+								"displayValueDate": false,
+								"left": 402.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Nombre de fœtus",
+							"sortOrder": 1.465341783E9,
+							"label": "Nb Fœt.",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 0,
+								"left": 360.0,
+								"top": 37.0,
+								"width": 44.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Prime de naissance",
+							"sortOrder": 1.465341783E9,
+							"label": "Prime de naissance",
+							"editor": {
+								"displayValueDate": false,
+								"left": 543.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Certificat grossesse",
+							"sortOrder": 1.465341783E9,
+							"label": "Certif. gros.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 656.0,
+								"top": 335.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKStringTable",
+							"name": "Antécédents familiaux",
+							"sortOrder": 1.465341783E9,
+							"label": "Ant. familiaux",
+							"editor": {
+								"left": 652.0,
+								"top": 69.0,
+								"width": 476.0,
+								"height": 53.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "TokenFieldEditor"
+							},
+							"tags": [
+								{
+									"type": "RELEVANCE",
+									"code": "SERIOUS"
+								},
+								{
+									"type": "ICURE",
+									"code": "ANTEC"
+								}
+							],
+							"codeTypes": [
+								{
+									"type": "ICD10"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "AEA09DDA-11C6-4D45-AF4C-0E19BF9EC824",
+							"sortOrder": 1.465341783E9,
+							"label": "Reçu",
+							"editor": {
+								"action": "General | Reçu",
+								"left": 1012.0,
+								"top": 497.0,
+								"width": 109.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "F1089238-BB6B-4D07-9805-339F6E1B2F54",
+							"sortOrder": 1.465341783E9,
+							"label": "ITT",
+							"editor": {
+								"action": "Gynécologie | interruption d\u0027activité",
+								"left": 1129.0,
+								"top": 470.0,
+								"width": 103.0,
+								"height": 27.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "1AA0394C-9DF5-477C-9CBC-B49EE04DE25E",
+							"sortOrder": 1.465341783E9,
+							"label": "Echo 2",
+							"editor": {
+								"action": "Gynécologie | Echo 2",
+								"left": 883.0,
+								"top": 468.0,
+								"width": 89.0,
+								"height": 27.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "4BA415AC-1BE7-49A3-98D1-9028254837C1",
+							"sortOrder": 1.465341783E9,
+							"label": "Echo 3",
+							"editor": {
+								"action": "Gynécologie | Echo 3",
+								"left": 883.0,
+								"top": 496.0,
+								"width": 89.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Frottis vaginal remb. 2 ans",
+							"sortOrder": 1.465341783E9,
+							"label": "RCC",
+							"editor": {
+								"displayValueDate": false,
+								"left": 844.0,
+								"top": 438.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "ECBV",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"displayValueDate": false,
+								"left": 781.0,
+								"top": 438.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "4902E58E-BA37-4BCD-B760-803C54924320",
+							"sortOrder": 1.465341783E9,
+							"label": "FV",
+							"editor": {
+								"action": "Gynécologie | culture vaginale hors grossesse",
+								"left": 721.0,
+								"top": 438.0,
+								"width": 60.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "BFEAF32F-101E-411E-A011-A8216E3BDE5D",
+							"sortOrder": 1.465341783E9,
+							"label": "Anapath",
+							"editor": {
+								"action": "Gynécologie | Demande anapath",
+								"left": 883.0,
+								"top": 436.0,
+								"width": 89.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Césarienne déclenchement",
+							"sortOrder": 1.465341783E9,
+							"label": "CS/déclenchement",
+							"editor": {
+								"displayValueDate": true,
+								"left": 1018.0,
+								"top": 702.0,
+								"width": 146.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "GBS",
+							"sortOrder": 1.465341783E9,
+							"label": "GBS",
+							"editor": {
+								"menuOptions": [
+									"+",
+									"-"
+								],
+								"displayValueDate": false,
+								"left": 196.0,
+								"top": 706.0,
+								"width": 67.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKStringTable",
+							"name": "Allergies",
+							"sortOrder": 1.465341783E9,
+							"label": "Allergies",
+							"editor": {
+								"left": 110.0,
+								"top": 100.0,
+								"width": 441.0,
+								"height": 27.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "TokenFieldEditor"
+							},
+							"tags": [
+								{
+									"type": "RELEVANCE",
+									"code": "SERIOUS"
+								},
+								{
+									"type": "CD-ITEM",
+									"code": "allergy"
+								},
+								{
+									"type": "SUMEHR",
+									"code": "ALLERGY"
+								}
+							],
+							"codeTypes": [
+								{
+									"type": "ICD10"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Extra-utérine",
+							"sortOrder": 1.465341783E9,
+							"label": "EU",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 0,
+								"left": 272.0,
+								"top": 38.0,
+								"width": 32.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Fausse couche",
+							"sortOrder": 1.465341783E9,
+							"label": "FC",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 0,
+								"left": 216.0,
+								"top": 38.0,
+								"width": 31.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Pédiatre",
+							"sortOrder": 1.465341783E9,
+							"label": "Pédiatre",
+							"editor": {
+								"displayValueDate": false,
+								"left": 844.0,
+								"top": 778.0,
+								"width": 285.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Kiné",
+							"sortOrder": 1.465341783E9,
+							"label": "Kiné",
+							"editor": {
+								"displayValueDate": false,
+								"left": 844.0,
+								"top": 753.0,
+								"width": 285.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Anesthésiste",
+							"sortOrder": 1.465341783E9,
+							"label": "Anesthésiste",
+							"editor": {
+								"displayValueDate": false,
+								"left": 844.0,
+								"top": 728.0,
+								"width": 285.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Don de sang de cordon",
+							"sortOrder": 1.465341783E9,
+							"label": "Don de sang de cordon",
+							"editor": {
+								"displayValueDate": false,
+								"left": 622.0,
+								"top": 708.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "A6544D3E-AC4D-4185-A54F-FEFB2DFBD3AA",
+							"sortOrder": 1.465341783E9,
+							"label": "Mi-temps méd.",
+							"editor": {
+								"action": "Gynécologie | mi-temps médical",
+								"left": 1128.0,
+								"top": 497.0,
+								"width": 104.0,
+								"height": 27.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "DA92BDD2-59F4-446F-BD5A-413058427FBB",
+							"sortOrder": 1.465341783E9,
+							"label": "certif avion",
+							"editor": {
+								"action": "Gynécologie | voyage en avion ordonnance",
+								"left": 784.0,
+								"top": 468.0,
+								"width": 87.0,
+								"height": 27.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": true,
+							"irrelevant": true,
+							"type": "TKSubConsult",
+							"name": "45E0835A-5B8F-42F1-ABE0-87806AAA3F7B",
+							"sortOrder": 1.465341783E9,
+							"label": "Certificats",
+							"editor": {
+								"optionalFormGuids": [
+									"FFFFFFFF-FFFF-FFFF-FFFF-INCAPACITY00"
+								],
+								"compulsoryFormGuids": [],
+								"showHeader": true,
+								"left": 17.0,
+								"top": 524.0,
+								"width": 1225.0,
+								"height": 48.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "SubFormEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "Date GBS",
+							"sortOrder": 1.465341783E9,
+							"label": "Date GBS",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 325.0,
+								"top": 708.0,
+								"width": 130.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAction",
+							"name": "3B3DBF7B-25CB-4F12-B4EF-6E906DF4FD3C",
+							"sortOrder": 1.465341783E9,
+							"label": "congé maternité",
+							"editor": {
+								"action": "Gynécologie | Congé de maternité",
+								"left": 785.0,
+								"top": 496.0,
+								"width": 86.0,
+								"height": 28.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "ActionButton"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "Terme calculé",
+							"sortOrder": 1.465341783E9,
+							"label": "Term. DR",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 292.0,
+								"top": 13.0,
+								"width": 123.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"defaultValue": [],
+							"tags": [
+								{
+									"type": "CD-ITEM",
+									"code": "emergencyevaluation"
+								}
+							],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "return (!x.Datedesdernieresregles) ? null : new Date((h.dateUtils.fuzzyDateToDaysSince1970(x.Datedesdernieresregles) + 7*40 - 1)*3600000*24)",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "Terme selon ovulation",
+							"sortOrder": 1.465341783E9,
+							"label": "Terme Fiv",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 887.0,
+								"top": 13.0,
+								"width": 123.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "return (!x.Dateovulation) ? null : new Date((h.dateUtils.fuzzyDateToDaysSince1970(x.Dateovulation) + 7*38)*3600000*24)",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "terme définitif",
+							"sortOrder": 1.465341783E9,
+							"label": "T.fin.",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 1031.0,
+								"top": 364.0,
+								"width": 127.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"defaultValue": [],
+							"tags": [
+								{
+									"type": "CD-GYNECOLOGY",
+									"code": "duedate"
+								}
+							],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "return (!x.Dateovulation) ? (!x.Termecorrige) ? (!x.Datedesdernieresregles) ? null : new Date((h.dateUtils.fuzzyDateToDaysSince1970(x.Datedesdernieresregles) + 7*40 - 1)*3600000*24) : h.dateUtils.fuzzyDateToDate(x.Termecorrige) : new Date((h.dateUtils.fuzzyDateToDaysSince1970(x.Dateovulation) + 7*38)*3600000*24)\n",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Indice de masse corporelle",
+							"sortOrder": 1.465341783E9,
+							"label": "BMI",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 4,
+								"left": 706.0,
+								"top": 37.0,
+								"width": 57.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "return (!x.Poidsavantgrossesse)||(!x.Taille) ? null:x.Poidsavantgrossesse/((x.Taille/100.0)*(x.Taille/100.0))",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Groupe ABO \u0026 Rhésus",
+							"sortOrder": 1.465341783E9,
+							"label": "Groupe ABO \u0026 Rhésus",
+							"editor": {
+								"displayValueDate": false,
+								"left": 234.0,
+								"top": 437.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"ICURE\",\"GS\",{\"direction\":\"descending\",\"limit\":1}, function(services) {\n  if (services.length) {\n    resolve(false);\n  } else {\n    resolve(true); \n  }\n}, function(e) { reject(e); });",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Sous groupes Rhésus",
+							"sortOrder": 1.465341783E9,
+							"label": "Ss gr. Rh",
+							"editor": {
+								"displayValueDate": false,
+								"left": 315.0,
+								"top": 437.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"ICURE\",\"RH\",{\"direction\":\"descending\",\"limit\":1}, function(services) {\n  if (services.length) {\n    resolve(false);\n  } else {\n    resolve(true); \n  }\n}, function(e) { reject(e); });",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Sérologie Toxoplasmose (Ig M \u0026 Ig G)",
+							"sortOrder": 1.465341783E9,
+							"label": "Toxo (Ig M\u0026G)",
+							"editor": {
+								"displayValueDate": false,
+								"left": 427.0,
+								"top": 437.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"ICURE\",\"TOXO\",{\"direction\":\"descending\",\"limit\":1}, function(services) {\n  if (services.length) {\n    var i;\n    for(i\u003d0;i\u003cservices.length;i++) {\n       if (services[i].content \u0026\u0026 services[i].content.fr \u0026\u0026 services[i].content.fr.stringValue \u003d\u003d\u003d \u0027protégée\u0027) { resolve(false); return; } }\n  }\n  resolve(true);   \n}, function(e) { reject(e); });",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Sérologie Rubéole (Ig G)",
+							"sortOrder": 1.465341783E9,
+							"label": "Rubéole (Ig G)",
+							"editor": {
+								"displayValueDate": false,
+								"left": 536.0,
+								"top": 437.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"ICURE\",\"RUBEOLE\",{\"direction\":\"descending\",\"limit\":1}, function(services) {\n  if (services.length) {\n    var i;\n    for(i\u003d0;i\u003cservices.length;i++) {\n       if (services[i].content \u0026\u0026 services[i].content.fr \u0026\u0026 services[i].content.fr.stringValue \u003d\u003d\u003d \u0027protégée\u0027) { resolve(false); return; } }\n  }\n  resolve(true);   \n}, function(e) { reject(e); });",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": "Sérologie CMV",
+							"sortOrder": 1.465341783E9,
+							"label": "CMV",
+							"editor": {
+								"displayValueDate": false,
+								"left": 589.0,
+								"top": 437.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"CD-GYNECOLOGY\",\"duedate\",{\"direction\":\"descending\",\"limit\":3}, function(services) {\n  if (services.length) {\n  \tvar ddr \u003d null;\n  \tvar dov \u003d null;\n  \tvar tc \u003d null;\n  \tvar i;\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Date des dernières règles\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { ddr \u003d services[i].content.fr.instantValue; break;} }\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Date ovulation\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { dov \u003d services[i].content.fr.instantValue; break;} }\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Terme corrigé\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { tc \u003d services[i].content.fr.instantValue; break;} }\n  \tvar dueDate \u003d (!dov) ? (!tc) ? (!ddr) ? null : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(ddr) + 7*40)*3600000*24) : h.dateUtils.fuzzyDateToDate(tc) : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(dov) + 7*38)*3600000*24);\n    var today \u003d h.dateUtils.dateToDaysSince1970(h.dateUtils.new(x.consultDate));\n    var gaInDays \u003d 279+today-h.dateUtils.dateToDaysSince1970(dueDate);\n    resolve(gaInDays\u003c140);\n  } else {\n    resolve(true); \n  }\n}, function(e) { reject(e); });\n",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "AG en mois",
+							"sortOrder": 1.465341783E9,
+							"label": "AG",
+							"editor": {
+								"displayValueDate": false,
+								"left": 1004.0,
+								"top": 436.0,
+								"width": 120.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "var dueDate \u003d (!x.Dateovulation) ? (!x.Termecorrige) ? (!x.Datedesdernieresregles) ? null : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(x.Datedesdernieresregles) + 7*40)*3600000*24) : h.dateUtils.fuzzyDateToDate(x.Termecorrige) : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(x.Dateovulation) + 7*38)*3600000*24);\nif (dueDate\u003d\u003d\u003dnull) { return \"N/A\"; }\nvar today \u003d h.dateUtils.dateToDaysSince1970(new Date());\nvar days \u003d 279+today-h.dateUtils.dateToDaysSince1970(dueDate);\nreturn days\u003c30?\"moins d\u0027un mois\":days\u003c84?\"moins de trois mois\":days\u003c150?\"plus de 3 mois\":days\u003c180?\"plus de 5 mois\":\"plus de 6 mois\";\n",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "AG en semaines",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"displayValueDate": false,
+								"left": 1124.0,
+								"top": 436.0,
+								"width": 104.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "var dueDate \u003d (!x.Dateovulation) ? (!x.Termecorrige) ? (!x.Datedesdernieresregles) ? null : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(x.Datedesdernieresregles) + 7*40-1)*3600000*24) : h.dateUtils.fuzzyDateToDate(x.Termecorrige) : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(x.Dateovulation) + 7*38)*3600000*24);\nif (dueDate\u003d\u003d\u003dnull) { return \"N/A\"; }\nvar today \u003d h.dateUtils.dateToDaysSince1970(new Date());\nvar days \u003d 280+today-h.dateUtils.dateToDaysSince1970(dueDate);\nreturn \"\"+Math.floor(days/7)+\" sem.\"+Math.floor(days)%7+\" j.\"\n",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKBoolean",
+							"name": " T4 \u0026 TSH",
+							"sortOrder": 1.465341783E9,
+							"label": " T4 \u0026 TSH",
+							"editor": {
+								"displayValueDate": false,
+								"left": 668.0,
+								"top": 436.0,
+								"width": 20.0,
+								"height": 20.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "CheckBoxEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"CD-GYNECOLOGY\",\"duedate\",{\"direction\":\"descending\",\"limit\":3}, function(services) {\n  if (services.length) {\n  \tvar ddr \u003d null;\n  \tvar dov \u003d null;\n  \tvar tc \u003d null;\n  \tvar i;\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Date des dernières règles\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { ddr \u003d services[i].content.fr.instantValue; break;} }\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Date ovulation\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { dov \u003d services[i].content.fr.instantValue; break;} }\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Terme corrigé\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { tc \u003d services[i].content.fr.instantValue; break;} }\n  \tvar dueDate \u003d (!dov) ? (!tc) ? (!ddr) ? null : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(ddr) + 7*40)*3600000*24) : h.dateUtils.fuzzyDateToDate(tc) : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(dov) + 7*38)*3600000*24);\n    var today \u003d h.dateUtils.dateToDaysSince1970(h.dateUtils.new(x.consultDate));\n    var gaInDays \u003d 279+today-h.dateUtils.dateToDaysSince1970(dueDate);\n    resolve(gaInDays\u003c154);\n  } else {\n    resolve(true); \n  }\n}, function(e) { reject(e); });\n",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "Terme corrigé",
+							"sortOrder": 1.465341783E9,
+							"label": "Term. US",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 472.0,
+								"top": 13.0,
+								"width": 121.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"defaultValue": [],
+							"tags": [
+								{
+									"type": "RELEVANCE",
+									"code": "CRITICAL"
+								},
+								{
+									"type": "CD-GYNECOLOGY",
+									"code": "duedate"
+								}
+							],
+							"codeTypes": [],
+							"formulas": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "Date des dernières règles",
+							"sortOrder": 1.465341783E9,
+							"label": "DDR",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 109.0,
+								"top": 13.0,
+								"width": 123.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"defaultValue": [],
+							"tags": [
+								{
+									"type": "CD-GYNECOLOGY",
+									"code": "duedate"
+								}
+							],
+							"codeTypes": [],
+							"formulas": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKDate",
+							"name": "Date ovulation",
+							"sortOrder": 1.465341783E9,
+							"label": "Pick up",
+							"editor": {
+								"displayTime": false,
+								"showPicker": false,
+								"left": 706.0,
+								"top": 13.0,
+								"width": 123.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "DateTimeEditor"
+							},
+							"defaultValue": [],
+							"tags": [
+								{
+									"type": "CD-GYNECOLOGY",
+									"code": "duedate"
+								}
+							],
+							"codeTypes": [],
+							"formulas": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Poids avant grossesse",
+							"sortOrder": 1.465341783E9,
+							"label": "Poids av. gr.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 498.0,
+								"top": 37.0,
+								"width": 53.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "kg"
+									}
+								}
+							],
+							"tags": [
+								{
+									"type": "CD-GYNECOLOGY",
+									"code": "weightbeforepregnancy"
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Groupe sanguin",
+							"sortOrder": 9.28470871E8,
+							"label": "Gr. sanguin",
+							"editor": {
+								"menuOptions": [
+									"O ",
+									"A",
+									"B",
+									"AB"
+								],
+								"displayValueDate": false,
+								"left": 104.0,
+								"top": 233.0,
+								"width": 86.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"tags": [
+								{
+									"type": "ICURE",
+									"code": "GS"
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Rhésus",
+							"sortOrder": 9.28470871E8,
+							"label": "Rhésus",
+							"editor": {
+								"menuOptions": [
+									"+",
+									"-"
+								],
+								"displayValueDate": false,
+								"left": 104.0,
+								"top": 258.0,
+								"width": 85.0,
+								"height": 25.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"tags": [
+								{
+									"type": "ICURE",
+									"code": "RH"
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Rubéole",
+							"sortOrder": 9.28470871E8,
+							"label": "Rubéole",
+							"editor": {
+								"menuOptions": [
+									"immunisée",
+									"non immunisée",
+									"limite",
+									"virage"
+								],
+								"displayValueDate": false,
+								"left": 253.0,
+								"top": 233.0,
+								"width": 86.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "CMV",
+							"sortOrder": 9.28470871E8,
+							"label": "CMV",
+							"editor": {
+								"menuOptions": [
+									"immunisée",
+									"non immunisée",
+									"limite",
+									"virage"
+								],
+								"displayValueDate": false,
+								"left": 252.0,
+								"top": 283.0,
+								"width": 86.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "HIV",
+							"sortOrder": 9.28470871E8,
+							"label": "HIV",
+							"editor": {
+								"menuOptions": [
+									"négatif",
+									"positif"
+								],
+								"displayValueDate": false,
+								"left": 407.0,
+								"top": 283.0,
+								"width": 84.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Hépatite B",
+							"sortOrder": 9.28470871E8,
+							"label": "Hep B",
+							"editor": {
+								"menuOptions": [
+									"vacc. pr.",
+									"ag négatif",
+									"ag positif",
+									"vacc. limite"
+								],
+								"displayValueDate": false,
+								"left": 583.0,
+								"top": 233.0,
+								"width": 88.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Hépatite C",
+							"sortOrder": 9.28470871E8,
+							"label": "Hep C",
+							"editor": {
+								"menuOptions": [
+									"ac -",
+									"ac +"
+								],
+								"displayValueDate": false,
+								"left": 583.0,
+								"top": 259.0,
+								"width": 88.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Syphilis",
+							"sortOrder": 9.28470871E8,
+							"label": "Syphilis",
+							"editor": {
+								"menuOptions": [
+									"négatif",
+									"positif"
+								],
+								"displayValueDate": false,
+								"left": 582.0,
+								"top": 283.0,
+								"width": 88.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Varicelle",
+							"sortOrder": 9.28470871E8,
+							"label": "Varicelle",
+							"editor": {
+								"menuOptions": [
+									"immunisée",
+									"non immunisée",
+									"limite",
+									"virage"
+								],
+								"displayValueDate": false,
+								"left": 407.0,
+								"top": 232.0,
+								"width": 86.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Coombs",
+							"sortOrder": 9.28470871E8,
+							"label": "Coombs",
+							"editor": {
+								"menuOptions": [
+									"positif",
+									"négatif"
+								],
+								"displayValueDate": false,
+								"left": 763.0,
+								"top": 233.0,
+								"width": 105.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "PLA",
+							"sortOrder": 9.28470871E8,
+							"label": "PLA",
+							"editor": {
+								"menuOptions": [
+									"XX normal",
+									"XY normal",
+									"TRI21",
+									"TRI18",
+									"autre"
+								],
+								"displayValueDate": false,
+								"left": 988.0,
+								"top": 283.0,
+								"width": 139.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Hyperglycémie provoquée orale",
+							"sortOrder": 9.28470871E8,
+							"label": "HGPO 92-180-153",
+							"editor": {
+								"menuOptions": [
+									"normale",
+									"pathologique"
+								],
+								"displayValueDate": false,
+								"left": 988.0,
+								"top": 258.0,
+								"width": 139.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Risque de trisomie 21",
+							"sortOrder": 9.28470871E8,
+							"label": "RisqueT21",
+							"editor": {
+								"displayValueDate": false,
+								"left": 987.0,
+								"top": 233.0,
+								"width": 137.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Parvovirus",
+							"sortOrder": 9.28470871E8,
+							"label": "Parvov.",
+							"editor": {
+								"menuOptions": [
+									"immunisée",
+									"non immunisée",
+									"virage"
+								],
+								"displayValueDate": false,
+								"left": 407.0,
+								"top": 258.0,
+								"width": 86.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "mucovicidose",
+							"sortOrder": 9.28470871E8,
+							"label": "Mucov.",
+							"editor": {
+								"menuOptions": [
+									"porteur",
+									"non porteur"
+								],
+								"displayValueDate": false,
+								"left": 763.0,
+								"top": 258.0,
+								"width": 105.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Rhésus BB",
+							"sortOrder": 9.28470871E8,
+							"label": "Rhésus BB",
+							"editor": {
+								"menuOptions": [
+									"+",
+									"-"
+								],
+								"displayValueDate": false,
+								"left": 105.0,
+								"top": 282.0,
+								"width": 84.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Toxoplasmose",
+							"sortOrder": 9.28470871E8,
+							"label": "Toxo",
+							"editor": {
+								"menuOptions": [
+									"immunisée",
+									"non immunisée",
+									"virage",
+									"limite"
+								],
+								"displayValueDate": false,
+								"left": 252.0,
+								"top": 257.0,
+								"width": 86.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"importedServiceXPaths": [
+		"FFFFFFFF-FFFF-FFFF-FFFF-DOSSMED00000/Antécédents gynécologiques,Antécédents médicaux,Allergies,Rubéole,Toxoplasmose,HIV,mucovicidose,CMV,Elect.Hb,Varicelle,Parvovirus,Pelvi,Hépatite B,Hépatite C,Syphilis,Vaccin coqueluche,Groupe sanguin,Rhésus,Taille,Gestité,Parité,Fausse couche,Extra-utérine,Interruption volontaire de grossesse,HTA,Leiden,Diabète, Pathologie de la thyroïde, Antécédent césarienne,Tabac,Prise alcool,2107A27D-3CDA-4BB0-9F13-76A24CD82AF5/Antécédents gynécologiques,Antécédents médicaux,Allergies,Rubéole,Toxoplasmose,HIV,mucovicidose,CMV,Elect.Hb,Varicelle,Parvovirus,Pelvi,Hépatite B,Hépatite C,Syphilis,Vaccin coqueluche,Groupe sanguin,Rhésus,Taille,Gestité,Parité,Fausse couche,Extra-utérine,Interruption volontaire de grossesse,HTA,Leiden,Diabète, Pathologie de la thyroïde, Tabac,Prise alcool,Antécédent césarienne"
+	]
+}

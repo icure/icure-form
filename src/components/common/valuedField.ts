@@ -1,7 +1,7 @@
 import { TranslatedField } from './translatedField'
 import { property } from 'lit/decorators.js'
 import { CodeStub, Content } from '@icure/api'
-import { StateToUpdate } from '../iqr-form/model'
+import { StateToUpdate } from '../icure-form/model'
 
 export abstract class ValuedField<T, V> extends TranslatedField {
 	@property() value: T | undefined | null = undefined

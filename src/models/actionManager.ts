@@ -1,4 +1,4 @@
-import { Action, Trigger, Form, StateToUpdate, Group, Field, Section, Launcher } from '../components/iqr-form/model'
+import { Action, Trigger, Form, StateToUpdate, Group, Field, Section, Launcher } from '../components/icure-form/model'
 import { FormValuesContainer } from './formValuesContainer'
 
 export function extractActions(actions: Action[], name: string, trigger?: Trigger): Action[] {

@@ -1,4 +1,4 @@
-import { Field } from '../components/iqr-form/model'
+import { Field } from '../components/icure-form/model'
 import { OptionCode } from '../components'
 
 export function optionMapper(field: Field): OptionCode[] {

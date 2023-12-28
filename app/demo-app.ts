@@ -1,17 +1,17 @@
 import { css, html, LitElement } from 'lit'
 import { CodeStub, IccHcpartyXApi, sleep } from '@icure/api'
 import * as YAML from 'yaml'
-import '../src/components/iqr-form/fields/text-field/iqr-text-field'
-import '../src/components/iqr-form/fields/dropdown/iqr-dropdown'
-import '../src/components/iqr-form/fields/date-picker/iqr-date-picker'
-import '../src/components/iqr-form'
+import '../src/components/icure-form/fields/text-field/icure-text-field'
+import '../src/components/icure-form/fields/dropdown/icure-dropdown'
+import '../src/components/icure-form/fields/date-picker/icure-date-picker'
+import '../src/components/icure-form'
 import MiniSearch, { SearchResult } from 'minisearch'
-import { DatePicker, DateTimePicker, Form, Group, MeasureField, MultipleChoice, NumberField, Section, TextField, TimePicker } from '../src/components/iqr-form/model'
+import { DatePicker, DateTimePicker, Form, Group, MeasureField, MultipleChoice, NumberField, Section, TextField, TimePicker } from '../src/components/icure-form/model'
 import { codes } from './codes'
 // @ts-ignore
 import yamlForm from './gp.yaml'
 import { makeFormValuesContainer } from './form-values-container'
-import { customElement, property } from 'lit/decorators.js'
+import { property } from 'lit/decorators.js'
 import { ContactFormValuesContainer, ActionManager } from '../src/models'
 
 const icd10 = [
@@ -69,9 +69,6 @@ const ultrasound = [
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
-const localName = 'demo-app'
-
-@customElement(localName)
 class DemoApp extends LitElement {
 	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
 	@property() formValuesContainer: ContactFormValuesContainer = makeFormValuesContainer()
@@ -83,14 +80,14 @@ class DemoApp extends LitElement {
 			term.length === 1 || stopWords.has(term)
 				? null
 				: term
-					.normalize('NFD')
-					.replace(/[\u0300-\u036f]/g, '')
-					.toLowerCase(),
+						.normalize('NFD')
+						.replace(/[\u0300-\u036f]/g, '')
+						.toLowerCase(),
 	})
 
 	static get styles() {
 		return css`
-			iqr-text-field {
+			icure-text-field {
 				display: block;
 			}
 
@@ -138,13 +135,13 @@ class DemoApp extends LitElement {
 						.filter((t) => !res.some((x) => x.text === t.text)),
 				)
 				res.length < 20 &&
-				res.push(
-					...this.miniSearch
-						.search(normalisedTerms.join(' '), { prefix: true })
-						.filter((x) => normalisedTerms.every((t) => x.terms.some((mt) => mt.startsWith(t))))
-						.map((s) => Object.assign(s, { terms }))
-						.filter((t) => !res.some((x) => x.text === t.text)),
-				)
+					res.push(
+						...this.miniSearch
+							.search(normalisedTerms.join(' '), { prefix: true })
+							.filter((x) => normalisedTerms.every((t) => x.terms.some((mt) => mt.startsWith(t))))
+							.map((s) => Object.assign(s, { terms }))
+							.filter((t) => !res.some((x) => x.text === t.text)),
+					)
 				normalisedTerms = normalisedTerms.slice(1)
 				terms = terms.slice(1)
 			}
@@ -199,43 +196,147 @@ class DemoApp extends LitElement {
 			'Waiting room GP',
 			[
 				new Section('All fields', [
-					new TextField('This field is a TextField', 'allTextField', 1, true, 1),
-					new NumberField('This field is a NumberField', 'allNumberField', 1, true, 1),
-					new MeasureField('This field is a MeasureField', 'allMeasureField', 1, true, 1),
-					new DatePicker('This field is a DatePicker', 'allDatePicker', 2, true, 1),
-					new TimePicker('This field is a TimePicker', 'allTimePicker', 2, true, 1),
-					new DateTimePicker('This field is a DateTimePicker', 'allDateTimePicker', 3, true, 1),
-					new MultipleChoice('This field is a MultipleChoice', 'allMultipleChoice', 3, true, 1),
+					new TextField('This field is a TextField', {
+						shortLabel: 'allTextField',
+						rows: 1,
+						grows: true,
+						columns: 1,
+					}),
+					new NumberField('This field is a NumberField', {
+						shortLabel: 'allNumberField',
+						rows: 1,
+						grows: true,
+						columns: 1,
+					}),
+					new MeasureField('This field is a MeasureField', {
+						shortLabel: 'allMeasureField',
+						rows: 1,
+						grows: true,
+						columns: 1,
+					}),
+					new DatePicker('This field is a DatePicker', {
+						shortLabel: 'allDatePicker',
+						rows: 2,
+						grows: true,
+						columns: 1,
+					}),
+					new TimePicker('This field is a TimePicker', {
+						shortLabel: 'allTimePicker',
+						rows: 2,
+						grows: true,
+						columns: 1,
+					}),
+					new DateTimePicker('This field is a DateTimePicker', {
+						shortLabel: 'allDateTimePicker',
+						rows: 3,
+						grows: true,
+						columns: 1,
+					}),
+					new MultipleChoice('This field is a MultipleChoice', {
+						shortLabel: 'allMultipleChoice',
+						rows: 3,
+						grows: true,
+						columns: 1,
+					}),
 				]),
 				new Section('Grouped fields', [
-					new Group(
-						'You can group fields together',
-						[
-							new TextField('This field is a TextField', 'groupTextField', 1, true, 2, undefined, undefined, ['CD-ITEM|diagnosis|1']),
-							new NumberField('This field is a NumberField', 'groupNumberField', 1, true, 2),
-							new MeasureField('This field is a MeasureField', 'groupMeasureField', 1, true, 2),
-							new DatePicker('This field is a DatePicker', 'groupDatePicker', 3, true, 2),
-							new TimePicker('This field is a TimePicker', 'groupTimePicker', 3, true, 2),
-							new DateTimePicker('This field is a DateTimePicker', 'groupDateTimePicker', 3, true, 2),
-							new MultipleChoice('This field is a MultipleChoice', 'groupMultipleChoice', 4, true, 2),
-						],
-						1,
-						1,
-					),
-					new Group(
-						'And you can add tags and codes',
-						[
-							new TextField('This field is a TextField with rows and columns', 'tagTextField', 1, true, 1, 'text-document', ['CD-ITEM|diagnosis|1'], ['BE-THESAURUS', 'ICD10'], {
-								option: 'blink',
+					new Group('You can group fields together', {
+						fields: [
+							new TextField('This field is a TextField', {
+								shortLabel: 'groupTextField',
+								rows: 1,
+								grows: true,
+								columns: 2,
+								schema: undefined,
+								tags: undefined,
+								codifications: ['CD-ITEM|diagnosis|1'],
 							}),
-							new NumberField('This field is a NumberField', 'tagNumberField', 1, true, 1, ['CD-ITEM|parameter|1', 'CD-PARAMETER|bmi|1'], [], { option: 'bang' }),
-							new MeasureField('This field is a MeasureField', 'tagMeasureField', 1, true, 1, ['CD-ITEM|parameter|1', 'CD-PARAMETER|heartbeat|1'], [], { unit: 'bpm' }),
-							new MultipleChoice('This field is a MultipleChoice', 'tagMultipleChoice', 4, true, 4, [], ['KATZ'], { many: 'no' }),
+							new NumberField('This field is a NumberField', {
+								shortLabel: 'groupNumberField',
+								rows: 1,
+								grows: true,
+								columns: 2,
+							}),
+							new MeasureField('This field is a MeasureField', {
+								shortLabel: 'groupMeasureField',
+								rows: 1,
+								grows: true,
+								columns: 2,
+							}),
+							new DatePicker('This field is a DatePicker', {
+								shortLabel: 'groupDatePicker',
+								rows: 3,
+								grows: true,
+								columns: 2,
+							}),
+							new TimePicker('This field is a TimePicker', {
+								shortLabel: 'groupTimePicker',
+								rows: 3,
+								grows: true,
+								columns: 2,
+							}),
+							new DateTimePicker('This field is a DateTimePicker', {
+								shortLabel: 'groupDateTimePicker',
+								rows: 3,
+								grows: true,
+								columns: 2,
+							}),
+							new MultipleChoice('This field is a MultipleChoice', {
+								shortLabel: 'groupMultipleChoice',
+								rows: 4,
+								grows: true,
+								columns: 2,
+							}),
 						],
-						1,
-						1,
-						'',
-					),
+						rows: 1,
+						columns: 1,
+					}),
+					new Group('And you can add tags and codes', {
+						fields: [
+							new TextField('This field is a TextField with rows and columns', {
+								shortLabel: 'tagTextField',
+								rows: 1,
+								grows: true,
+								columns: 1,
+								schema: 'text-document',
+								tags: ['CD-ITEM|diagnosis|1'],
+								codifications: ['BE-THESAURUS', 'ICD10'],
+								options: {
+									option: 'blink',
+								},
+							}),
+							new NumberField('This field is a NumberField', {
+								shortLabel: 'tagNumberField',
+								rows: 1,
+								grows: true,
+								columns: 1,
+								tags: ['CD-ITEM|parameter|1', 'CD-PARAMETER|bmi|1'],
+								codifications: [],
+								options: { option: 'bang' },
+							}),
+							new MeasureField('This field is a MeasureField', {
+								shortLabel: 'tagMeasureField',
+								rows: 1,
+								grows: true,
+								columns: 1,
+								tags: ['CD-ITEM|parameter|1', 'CD-PARAMETER|heartbeat|1'],
+								codifications: [],
+								options: { unit: 'bpm' },
+							}),
+							new MultipleChoice('This field is a MultipleChoice', {
+								shortLabel: 'tagMultipleChoice',
+								rows: 4,
+								grows: true,
+								columns: 4,
+								tags: [],
+								codifications: ['KATZ'],
+								options: { many: 'no' },
+							}),
+						],
+						rows: 1,
+						columns: 1,
+						hideCondition: '',
+					}),
 				]),
 			],
 			'Fill in the patient information inside the waiting room',
@@ -246,7 +347,7 @@ class DemoApp extends LitElement {
 		const actionManager: ActionManager = new ActionManager(gpForm, this.formValuesContainer, editable)
 
 		return html`
-			<iqr-form
+			<icure-form
 				.form="${gpForm}"
 				.editable="${editable}"
 				labelPosition="above"
@@ -256,13 +357,13 @@ class DemoApp extends LitElement {
 				.formValuesContainer="${this.formValuesContainer}"
 				.actionManager="${actionManager}"
 				.formValuesContainerChanged="${(newVal: ContactFormValuesContainer) => {
-			console.log(newVal)
-		}}"
+					console.log(newVal)
+				}}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"
 				.translationProvider="${this.translationProvider.bind(this)}"
 				.codesProvider="${this.codesProvider.bind(this)}"
 				.optionsProvider="${this.optionsProvider.bind(this)}"
-			></iqr-form>
+			></icure-form>
 		`
 	}
 }

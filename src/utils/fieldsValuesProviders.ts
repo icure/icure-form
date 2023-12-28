@@ -1,4 +1,4 @@
-import { Field } from '../components/iqr-form/model'
+import { Field } from '../components/icure-form/model'
 import { Meta, VersionedMeta, VersionedValue } from '../components'
 import { convertServicesToVersionedMetas, convertServicesToVersionedValues, getVersions } from './icure-utils'
 import { CodeStub, Content } from '@icure/api'

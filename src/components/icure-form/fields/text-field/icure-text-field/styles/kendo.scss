@@ -1,0 +1,176 @@
+@import 'math';
+
+// theme
+$label-color: #212529;
+$color: #656565;
+$border-color: rgba(0, 0, 0, 0.08);
+$textbox-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.06) !default;
+$input-focused-text: #656565;
+$input-focused-border: rgba(0, 0, 0, 0.15);
+$input-hovered-border: rgba(0, 0, 0, 0.15);
+$accent: #656565;
+$highlight: rgba(0, 0, 0, 0.05);
+$highlight-contour: rgba(0, 0, 0, 0.1);
+$border-radius: 2px;
+
+$textbox-line-height: 1.4em !default;
+$textbox-default-width: 100%;
+$textbox-font-size: 14px !default;
+
+$input-border-width: 1px;
+$input-padding-y: 4px;
+$input-padding-x: 8px;
+
+$floating-label-transition: 0.2s ease-out !default;
+$floating-label-scale: 1 !default;
+$floating-label-height: $textbox-line-height * $floating-label-scale;
+
+//Medispring
+$font-weight-label: 500;
+
+.icure-text-field {
+	position: relative;
+	width: $textbox-default-width;
+	flex-direction: row;
+	justify-content: stretch;
+	align-items: center;
+
+	> .icure-label {
+		z-index: 1;
+		pointer-events: none;
+		line-height: $textbox-line-height;
+		cursor: text;
+		font-size: $textbox-font-size;
+		left: add-two($input-padding-x, $input-border-width);
+		transition: transform $floating-label-transition, color $floating-label-transition;
+		color: $color;
+		align-items: center;
+		height: 28px;
+		max-width: 55%;
+		min-width: 220px;
+		> span {
+			display: block;
+			word-wrap: break-word;
+			overflow: auto;
+			font-weight: $font-weight-label;
+		}
+	}
+	> .icure-input {
+		flex: 1 1 auto;
+		width: auto;
+	}
+
+	> .icure-label {
+		transform: translate(0, 0) scale(1);
+	}
+	> .icure-label.above,
+	&.has-content > .icure-label,
+	&:focus > .icure-label,
+	&:focus-within > .icure-label {
+		// persist alignment after scaling
+		$half-scale-percent: calc((1 - $floating-label-scale) * 100% / 2);
+
+		// sass-lint:disable indentation
+		// transform position to top-left corner of the textbox-container
+		// do not use single translate + calc() because of IE10/11
+		$fls: -$floating-label-scale;
+		// sass-lint:enable indentation
+
+		font-weight: 500;
+		height: $floating-label-height;
+		max-width: 100%;
+	}
+	> .icure-label.side {
+		position: relative;
+	}
+	> .icure-label.side.left {
+		order: -1;
+		margin-right: 1em;
+	}
+	> .icure-label.side.right {
+		order: 1;
+		margin-left: 1em;
+	}
+
+	.icure-input,
+	.input-container {
+		border-radius: $border-radius;
+		padding: $input-padding-y $input-padding-x;
+		width: $textbox-default-width;
+		box-sizing: border-box;
+		border-width: $input-border-width;
+		border-style: solid;
+		outline: 0;
+		font: inherit;
+		font-size: $textbox-font-size;
+		line-height: $textbox-line-height;
+		display: flex;
+		align-items: center;
+		vertical-align: middle;
+		position: relative;
+		-webkit-appearance: none;
+		background-color: #ffffff;
+		border-color: $border-color;
+		color: $color;
+		box-sizing: border-box;
+		min-width: 220px;
+		&:focus,
+		&:focus-within {
+			box-shadow: $textbox-shadow;
+		}
+		&:hover {
+			border-color: $input-hovered-border;
+			box-shadow: none;
+			&:focus,
+			&:focus-within {
+				box-shadow: $textbox-shadow;
+			}
+		}
+		.ProseMirror {
+			padding: 0;
+			font-size: $textbox-font-size;
+			line-height: $textbox-line-height;
+			color: $color;
+
+			.date {
+				padding: 1px;
+			}
+			.time {
+				padding: 1px;
+			}
+		}
+		.ProseMirror:focus .focused {
+			background-color: $highlight;
+			border-radius: 3px;
+			border-color: $highlight-contour;
+		}
+		& > svg {
+			opacity: 0.5;
+			path {
+				fill: $accent;
+			}
+		}
+		.extra {
+			height: 20px;
+			& > .info {
+				color: $accent;
+				opacity: 0.5;
+			}
+			.buttons-container .btn svg path {
+				fill: $accent;
+				opacity: 0.5;
+				&:hover {
+					fill: $accent;
+					opacity: 1;
+				}
+			}
+			// .buttons-container .menu-container .btn:hover::after {
+			// 	background: $accent;
+			// 	border-radius: $border-radius;
+			// }
+			// .buttons-container .menu-container .btn:hover::before {
+			// 	border-color:$accent transparent transparent transparent;
+			// }
+		}
+	}
+}

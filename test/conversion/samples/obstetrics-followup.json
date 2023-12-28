@@ -1,0 +1,541 @@
+{
+	"name": "SF Sage-Femme",
+	"width": 1149.0,
+	"height": 208.0,
+	"guid": "E332B140-13D7-4F52-A2C3-BEB7FA250178",
+	"group": "Gynécologie 3.0",
+	"sections": [
+		{
+			"columns": 1,
+			"formColumns": [
+				{
+					"formDataList": [
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Plainte",
+							"sortOrder": 1.465341783E9,
+							"label": "Plainte",
+							"editor": {
+								"displayValueDate": false,
+								"left": 59.0,
+								"top": 42.0,
+								"width": 538.0,
+								"height": 22.0,
+								"multiline": true,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": [
+								{
+									"type": "PLAINTE GYNECO"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Col",
+							"sortOrder": 1.465341783E9,
+							"label": "Col",
+							"editor": {
+								"menuOptions": [
+									"32mm",
+									"37mm",
+									"pap",
+									"long",
+									"mi-long",
+									"effacé",
+									"court"
+								],
+								"displayValueDate": false,
+								"left": 627.0,
+								"top": 40.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Position du col",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"menuOptions": [
+									"postérieur",
+									"médian",
+									"antérieur"
+								],
+								"displayValueDate": false,
+								"left": 724.0,
+								"top": 40.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Consistance du col",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"menuOptions": [
+									"dur",
+									"souple",
+									"mou"
+								],
+								"displayValueDate": false,
+								"left": 821.0,
+								"top": 40.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Etat du col",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"menuOptions": [
+									"fermé",
+									"dilaté"
+								],
+								"displayValueDate": false,
+								"left": 627.0,
+								"top": 63.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Dilatation du col",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"displayValueDate": false,
+								"left": 726.0,
+								"top": 65.0,
+								"width": 65.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "cm"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Examen à effectuer par un spécialiste",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"displayValueDate": false,
+								"left": 1022.0,
+								"top": 63.0,
+								"width": 115.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Position bébé",
+							"sortOrder": 1.465341783E9,
+							"label": "Pos",
+							"editor": {
+								"menuOptions": [
+									"sommet",
+									"siège",
+									"transverse"
+								],
+								"displayValueDate": false,
+								"left": 821.0,
+								"top": 63.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Engagement bébé",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"menuOptions": [
+									"mobile",
+									"engagé"
+								],
+								"displayValueDate": false,
+								"left": 918.0,
+								"top": 63.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Examen clinique",
+							"sortOrder": 1.465341783E9,
+							"label": "Ex.clin.",
+							"editor": {
+								"displayValueDate": false,
+								"left": 59.0,
+								"top": 67.0,
+								"width": 538.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Conclusion",
+							"sortOrder": 1.465341783E9,
+							"label": "Ccl",
+							"editor": {
+								"displayValueDate": false,
+								"left": 59.0,
+								"top": 181.0,
+								"width": 1078.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKAttributedString",
+							"name": "Note Psy",
+							"sortOrder": 1.465341783E9,
+							"label": "Note Psy",
+							"editor": {
+								"left": 59.0,
+								"top": 96.0,
+								"width": 1078.0,
+								"height": 76.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StyledStringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Poids",
+							"sortOrder": 1.465341783E9,
+							"label": "Poids",
+							"editor": {
+								"displayValueDate": false,
+								"left": 194.0,
+								"top": 16.0,
+								"width": 137.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "kg"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Hauteur utérine",
+							"sortOrder": 1.465341783E9,
+							"label": "HU",
+							"editor": {
+								"displayValueDate": false,
+								"left": 1061.0,
+								"top": 16.0,
+								"width": 70.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "cm"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Tension art. sys.",
+							"sortOrder": 1.465341783E9,
+							"label": "TA",
+							"editor": {
+								"displayValueDate": false,
+								"left": 456.0,
+								"top": 16.0,
+								"width": 70.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "mmHg"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMeasure",
+							"name": "Tension art. dia.",
+							"sortOrder": 1.465341783E9,
+							"label": "",
+							"editor": {
+								"displayValueDate": false,
+								"left": 527.0,
+								"top": 16.0,
+								"width": 70.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MeasureEditor"
+							},
+							"defaultValue": [
+								{
+									"measureValue": {
+										"unit": "mmHg"
+									}
+								}
+							],
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Albumine",
+							"sortOrder": 1.465341783E9,
+							"label": "Alb.",
+							"editor": {
+								"menuOptions": [
+									"0",
+									"-",
+									"+",
+									"++",
+									"+++"
+								],
+								"displayValueDate": false,
+								"left": 627.0,
+								"top": 16.0,
+								"width": 100.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Mouvement fœtus",
+							"sortOrder": 1.465341783E9,
+							"label": "MF",
+							"editor": {
+								"menuOptions": [
+									"+++",
+									"+/+",
+									"+-",
+									"++",
+									"-",
+									"+/-",
+									"+"
+								],
+								"displayValueDate": false,
+								"left": 824.0,
+								"top": 16.0,
+								"width": 97.0,
+								"height": 26.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "PopupMenuEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Rhytme cardiaque fœtus",
+							"sortOrder": 1.465341783E9,
+							"label": "RCF",
+							"editor": {
+								"displayValueDate": false,
+								"left": 956.0,
+								"top": 16.0,
+								"width": 66.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": []
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKString",
+							"name": "Age gestationnel",
+							"sortOrder": 1.465341783E9,
+							"label": "AG",
+							"editor": {
+								"displayValueDate": false,
+								"left": 59.0,
+								"top": 16.0,
+								"width": 95.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "StringEditor"
+							},
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"CD-GYNECOLOGY\",\"duedate\",{\"direction\":\"descending\",\"limit\":3}, function(services) {\n  if (services.length) {\n  \tvar ddr \u003d null;\n  \tvar dov \u003d null;\n  \tvar tc \u003d null;\n  \tvar i;\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Date des dernières règles\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { ddr \u003d services[i].content.fr.instantValue; break;} }\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Date ovulation\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { dov \u003d services[i].content.fr.instantValue; break;} }\n  \tfor (i\u003d0;i\u003cservices.length;i++) { if (services[i].label \u003d\u003d\u003d \"Terme corrigé\" \u0026\u0026 services[i].content \u0026\u0026 services[i].content.fr) { tc \u003d services[i].content.fr.instantValue; break;} }\n  \tvar dueDate \u003d (!dov) ? (!tc) ? (!ddr) ? null : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(ddr) + 7*40 - 1)*3600000*24) : h.dateUtils.fuzzyDateToDate(tc) : h.dateUtils.new((h.dateUtils.fuzzyDateToDaysSince1970(dov) + 7*38)*3600000*24);\n    var today \u003d h.dateUtils.dateToDaysSince1970(h.dateUtils.new(x.consultDate));\n    var gaInDays \u003d 280+today-h.dateUtils.dateToDaysSince1970(dueDate);\n    resolve(\"\"+ Math.floor(gaInDays/7)+\" sem. \"+Math.floor(gaInDays)%7+\" j.\");\n  } else {\n    resolve(\"N/A\"); \n  }\n}, function(e) { reject(e); });",
+									"lifecycle": "OnChange"
+								}
+							]
+						},
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKNumber",
+							"name": "Différence de poids",
+							"sortOrder": 1.465341783E9,
+							"label": "∆ poids",
+							"editor": {
+								"displayValueDate": false,
+								"precision": 0,
+								"left": 382.0,
+								"top": 16.0,
+								"width": 38.0,
+								"height": 22.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "NumberEditor"
+							},
+							"defaultValue": [],
+							"codeTypes": [],
+							"formulas": [
+								{
+									"value": "withServices(p.id,\"CD-GYNECOLOGY\",\"weightbeforepregnancy\",{\"direction\":\"descending\",\"limit\":1}, function(services) {\n  if (services.length) {\n    var pag \u003d services[0].content.fr.measureValue.value;\n    resolve(!pag||!x.Poids?null:x.Poids-pag);\n  } else {\n    resolve(null); \n  }\n}, function(e) { reject(e); });",
+									"lifecycle": "OnChange"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"importedServiceXPaths": [
+		""
+	]
+}

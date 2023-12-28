@@ -15,6 +15,7 @@ export interface FormValuesContainer {
 	setResponsible(serviceId: string, responsible: string | null): void
 	delete(serviceId: string): void
 	compute<T, S>(formula: string, sandbox?: S): Promise<T | undefined>
+	getChildren(subform: string): { [form: string]: FormValuesContainer[] }
 }
 
 /**
@@ -47,6 +48,10 @@ export class ContactFormValuesContainer implements FormValuesContainer {
 		this.contactsHistory = sortedBy(contactsHistory, 'created', 'desc')
 		this.serviceFactory = serviceFactory
 		this.interpretor = interpretor
+	}
+
+	getChildren(subform: string): { [form: string]: FormValuesContainer[] } {
+		throw new Error('Method not implemented.')
 	}
 
 	getVersions(selector: (svc: Service) => boolean): VersionedData<ServiceWithContact> {

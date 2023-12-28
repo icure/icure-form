@@ -1,7 +1,8 @@
 import { property } from 'lit/decorators.js'
 import { CodeStub } from '@icure/api'
 import { ValuedField } from './valuedField'
-import { StateToUpdate, Trigger } from '../iqr-form/model'
+import { StateToUpdate, Trigger } from '../icure-form/model'
+import { Field } from './field'
 
 export class OptionCode {
 	id: string
@@ -14,7 +15,7 @@ export class TranslatedOptionCode {
 	translatedText: string
 }
 
-export abstract class OptionsField<T, V> extends ValuedField<T, V> {
+export abstract class OptionsField extends Field {
 	@property() options?: (OptionCode | CodeStub)[] = []
 	@property() codifications?: string[] = []
 	@property() optionsProvider: (codifications: string[], searchTerm?: string) => Promise<(OptionCode | CodeStub)[]> = async () => []
@@ -31,14 +32,14 @@ export abstract class OptionsField<T, V> extends ValuedField<T, V> {
 	protected fetchTranslateOptions(): void {
 		this.translatedOptions =
 			this.options?.map((option) => {
-				if (Boolean(option?.['text'])) {
+				if (!!option?.['text']) {
 					return {
 						id: option.id,
 						text: option?.['text'],
 						translatedText: this.translateText(option?.['text'] || ''),
 					}
 				} else {
-					if (Boolean(option?.['label'])) {
+					if (!!option?.['label']) {
 						option['translatedText'] = this.translateText(option?.['label']?.[this.defaultLanguage || 'en'] || '')
 					}
 					return option

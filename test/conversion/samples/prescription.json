@@ -1,0 +1,46 @@
+{
+	"name": "Ordonnance de suivi",
+	"width": 1155.0,
+	"height": 124.0,
+	"guid": "8731987C-6758-499E-8468-FA64242317CE",
+	"group": "Gynécologie 3.0",
+	"sections": [
+		{
+			"columns": 1,
+			"formColumns": [
+				{
+					"formDataList": [
+						{
+							"subForm": false,
+							"irrelevant": true,
+							"type": "TKMedicationTable",
+							"name": "Ordonnance",
+							"sortOrder": 7.48848992E8,
+							"label": "",
+							"editor": {
+								"left": 66.0,
+								"top": 24.0,
+								"width": 1084.0,
+								"height": 95.0,
+								"multiline": false,
+								"labelPosition": "Left",
+								"readOnly": false,
+								"key": "MedicationTableEditor"
+							},
+							"tags": [
+								{
+									"type": "ICURE",
+									"code": "PRESC"
+								}
+							],
+							"codeTypes": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"importedServiceXPaths": [
+		""
+	]
+}

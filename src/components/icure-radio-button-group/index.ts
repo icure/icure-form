@@ -1,16 +1,15 @@
-import { CSSResultGroup, html, TemplateResult } from 'lit'
+import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 // @ts-ignore
 import baseCss from './styles/style.scss'
 // @ts-ignore
 import kendoCss from './styles/kendo.scss'
-import { VersionedValue } from '../../text-field'
 import { CodeStub, Content } from '@icure/api'
-import { generateLabel } from '../../label'
-import { OptionsField } from '../../../../common'
+import { Field } from '../common'
 import { Trigger } from '../../../model'
+import { generateLabels } from '../common/utils'
 
-export class IqrRadioButtonGroup extends OptionsField<string, VersionedValue> {
+export class IqrRadioButtonGroup extends Field {
 	@property() type: 'radio' | 'checkbox' = 'radio'
 	@state() protected inputValues: string[] = []
 
@@ -54,15 +53,12 @@ export class IqrRadioButtonGroup extends OptionsField<string, VersionedValue> {
 		}
 	}
 	render(): TemplateResult {
-		if (!this.displayed) {
+		if (!this.visible) {
 			return html``
-		}
-		if (this.translate) {
-			this.fetchTranslateOptions()
 		}
 		return html`
 			<div class="icure-text-field">
-				${generateLabel(this.label ?? '', this.labelPosition ?? 'float', this.translationProvider)}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
 				<div style="${this.generateStyle()}">
 					${(this.translate ? this.translatedOptions : this.options)?.map((x) => {
 						const text = this.translate

@@ -1,17 +1,19 @@
-import { html, TemplateResult } from 'lit'
-import { state } from 'lit/decorators.js'
+import { html, nothing, TemplateResult } from 'lit'
+import { property, state } from 'lit/decorators.js'
 import { CodeStub, Content } from '@icure/api'
-import { generateLabel } from '../../label'
 import { dropdownPicto } from '../icure-text-field/styles/paths'
 import { Field } from '../common'
-import { Trigger } from '../model'
+import { Code, Trigger } from '../model'
+import { generateLabels } from '../common/utils'
 
 export class IcureDropdownField extends Field {
+	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Code[]> = async () => []
+
 	@state() protected displayMenu = false
 	@state() protected inputValue = ''
 
 	togglePopup(): void {
-		if (!this.editable) return
+		if (this.readonly) return
 		this.displayMenu = !this.displayMenu
 	}
 
@@ -60,13 +62,13 @@ export class IcureDropdownField extends Field {
 	}
 
 	render(): TemplateResult {
-		if (!this.displayed) {
+		if (!this.visible) {
 			return html``
 		}
 
 		return html`
 			<div id="root" class="icure-text-field ${this.inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
-				${generateLabel(this.label ?? '', this.labelPosition ?? 'float', this.translationProvider)}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
 				<div class="icure-input" @click="${this.togglePopup}" id="test">
 					<div id="editor">${this.inputValue}</div>
 					<div id="extra" class=${'extra forced'}>

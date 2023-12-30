@@ -1,8 +1,8 @@
-import { css, CSSResultGroup, html, TemplateResult } from 'lit'
-import './icure-label'
-import { LabelizedField } from '../../../common'
+import { css, CSSResultGroup, html, LitElement, TemplateResult } from 'lit'
+import '../../../icure-label'
+import { property } from 'lit/decorators'
 
-export class Label extends LabelizedField {
+export class Label extends LitElement {
 	//override
 	static get styles(): CSSResultGroup[] {
 		return [
@@ -13,8 +13,12 @@ export class Label extends LabelizedField {
 		]
 	}
 
+	@property() label?: string
+	@property() labelPosition?: string
+	@property() visible = true
+
 	render(): TemplateResult {
-		return html`<icure-label .actionManager="${this.actionManager}" label="${this.label}" labelPosition="${this.labelPosition}"></icure-label>`
+		return html`<icure-label .visible="${this.visible}" label="${this.label}" labelPosition="${this.labelPosition}"></icure-label>`
 	}
 }
 

@@ -1,6 +1,5 @@
 import parse from 'date-fns/parse'
-import { CodeStub, Contact, Content, normalizeCode, Service } from '@icure/api'
-import { FormValuesContainer, ServiceWithContactVersion, VersionedData } from '../models'
+import { CodeStub, Content, Service } from '@icure/api'
 
 export function fuzzyDate(epochOrLongCalendar?: number): Date | undefined {
 	if (!epochOrLongCalendar && epochOrLongCalendar !== 0) {
@@ -82,45 +81,4 @@ export function isContentEqual(content1: Content, content2: Content): boolean {
 
 export function isServiceContentEqual(content1: { [language: string]: Content }, content2: { [language: string]: Content }): boolean {
 	return Object.keys(content1).reduce((isEqual, lng) => isEqual && isContentEqual(content1[lng], content2[lng]), true as boolean)
-}
-
-export function convertServicesToVersionedValues(
-	versions: VersionedData<Service, ServiceWithContactVersion>,
-	extractValueFromContent: (content: Content) => string,
-): VersionedValue[] {
-	return Object.entries(versions).map(([key, value]) => ({
-		id: key,
-		versions: value.map((s) => ({
-			revision: '' + s.service?.modified,
-			modified: s.service?.modified || 0,
-			value: Object.entries(s.service?.content || {}).reduce((acc, [lng, content]) => ({ ...acc, [lng]: extractValueFromContent(content) }), {}),
-		})),
-	}))
-}
-
-export function convertServicesToVersionedMetas(versions: VersionedData<Service, ServiceWithContactVersion>): VersionedMeta[] {
-	return Object.entries(versions).map(([key, value]) => ({
-		id: key,
-		metas: value.map((s) => ({
-			revision: '' + s.service?.modified,
-			modified: s.service?.modified || 0,
-			valueDate: s.service?.valueDate,
-			owner: s.service?.responsible ? { id: s.service?.responsible } : undefined,
-		})),
-	}))
-}
-
-export function getVersions(formsValueContainer: FormValuesContainer, field: Field): VersionedData<ServiceWithContact> {
-	return (
-		formsValueContainer?.getVersions((svc) =>
-			field.tags?.length ? field.tags.every((t) => (svc.tags || []).some((tt) => normalizeCode(tt).id === t)) : svc.label === field.label(),
-		) || {}
-	)
-}
-
-export function setServices(ctc: Contact, newServices: Service[], modifiedServices: Service[]): Contact {
-	return new Contact({
-		...ctc,
-		services: newServices.concat(ctc.services?.map((s) => modifiedServices.find((r) => r.id === s.id) || s) || []),
-	})
 }

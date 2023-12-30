@@ -1,5 +1,5 @@
-import { Action, Trigger, Form, StateToUpdate, Group, Field, Section, Launcher } from '../components/icure-form/model'
-import { FormValuesContainer } from './formValuesContainer'
+import { Action, Trigger, Form, StateToUpdate, Group, Field, Section, Launcher } from '../components/model'
+import { FormValuesContainer } from '../generic'
 
 export function extractActions(actions: Action[], name: string, trigger?: Trigger): Action[] {
 	return actions.filter((action) => action.launchers.some((launcher: Launcher) => launcher.name === name && (!trigger || launcher.triggerer === trigger)))
@@ -11,15 +11,15 @@ export function extractActionsByTrigger(actions: Action[], trigger: Trigger): Ac
 export function extractLauncherByNameAndTrigger(actions: Action, name: string, trigger: Trigger): Launcher | undefined {
 	return actions.launchers.find((launcher: Launcher) => launcher.name === name && launcher.triggerer === trigger)
 }
-export class ActionManager<> {
+export class ActionManager<Item, Metadata> {
 	public actions: Action[] = []
-	formValuesContainer: FormValuesContainer<>
+	formValuesContainer: FormValuesContainer<Item, Metadata>
 	stateUpdaters: { [name: string]: (state: StateToUpdate, result: any) => void } = {}
 	readyChildrenCount: Map<string, { total: number; count: number; parent: string }> = new Map()
 	defaultSandbox: Map<string, any> = new Map()
 	public editable = true
 
-	constructor(form: Form, formValueContainer: FormValuesContainer, editable = true) {
+	constructor(form: Form, formValueContainer: FormValuesContainer<Item, Metadata>, editable = true) {
 		this.editable = editable
 		this.formValuesContainer = formValueContainer
 		this.actions = form.actions || []

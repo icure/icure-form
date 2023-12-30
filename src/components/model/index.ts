@@ -5,9 +5,53 @@ import { DateSchema, DateTimeSchema, TimeSchema } from '../icure-text-field/sche
 import { DecimalSchema } from '../icure-text-field/schema/decimal-schema'
 import { MeasureSchema } from '../icure-text-field/schema/measure-schema'
 
-export interface OptionCode {
+export interface Code {
 	id: string
 	label: { [key: string]: string }
+}
+
+export interface FieldMetadata {
+	label: string
+	valueDate?: number
+	owner?: string
+	tags?: Code[]
+}
+
+export interface FieldValue {
+	[language: string]: { value: PrimitiveType; codes?: Code[] }
+}
+
+export type PrimitiveType = StringType | NumberType | BooleanType | TimestampType | DateTimeType | MeasureType
+
+export interface StringType {
+	type: 'string'
+	value: string
+}
+
+export interface NumberType {
+	type: 'number'
+	value: number
+}
+
+export interface BooleanType {
+	type: 'boolean'
+	value: boolean
+}
+
+export interface TimestampType {
+	type: 'timestamp'
+	value: number
+}
+
+export interface DateTimeType {
+	type: 'datetime'
+	value: number
+}
+
+export interface MeasureType {
+	type: 'measure'
+	value: number
+	unit?: string
 }
 
 export interface Labels {

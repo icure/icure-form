@@ -1,26 +1,35 @@
 import { property } from 'lit/decorators.js'
-import { ActionManager, Labels, VersionedData } from '../../models'
 import { LitElement } from 'lit'
-import { Content } from '@icure/api'
-import { StateToUpdate } from '../icure-form/model'
+import { FieldMetadata, FieldValue, Labels, StateToUpdate } from '../model'
+import { ActionManager, VersionedData } from '../../generic'
 
 export abstract class Field extends LitElement {
-	@property() labels: Labels = {}
-	@property() placeholder?: string = ''
+	/**
+	 * The label of the field. This is a unique per form property that is used to create data in the formValuesContainer.
+	 */
+	@property() label: string
+
+	/**
+	 * The labels of the field. These are the labels that will be displayed in the UI.
+	 */
+	@property() displayedLabels: Labels = {}
 	@property() styleOptions: { [key: string]: unknown }
 
 	@property() translate = true
 	@property() defaultLanguage?: string = 'en' //todo make an enum
 	@property() displayedLanguage?: string = this.defaultLanguage
 	@property() translationProvider: (text: string, language?: string) => string = (text) => text
-	@property() containerId?: string = undefined
-	@property() valueProvider?: () => VersionedData[] = undefined
-	@property() metaProvider?: () => VersionedMeta[] = undefined
-	@property() handleValueChanged?: (id: string | undefined, language: string, value: { asString: string; content?: Content }) => void = undefined
-	@property() handleMetaChanged?: (id: string, language: string, value: { asString: string; content?: Content }) => void = undefined
-	@property() actionManager?: ActionManager
-	@property() editable = true
-	@property() public displayed = true
+
+	@property() valueProvider?: () => VersionedData<FieldValue> = undefined
+	@property() metadataProvider?: (id: string, revisions: string[]) => VersionedData<FieldMetadata> = undefined
+	@property() handleValueChanged?: (label: string, language: string, value: FieldValue, id?: string) => string | undefined = undefined
+	@property() handleMetadataChanged?: (label: string, metadata: FieldMetadata, id?: string) => string | undefined = undefined
+
+	@property() public visible = true
+	@property() readonly = false
+
+	//This must go away
+	@property() actionManager?: ActionManager<FieldValue, FieldMetadata>
 
 	public registerStateUpdater(name: string, stateUpdater?: (state: StateToUpdate, result: any) => void) {
 		if (this.actionManager) {

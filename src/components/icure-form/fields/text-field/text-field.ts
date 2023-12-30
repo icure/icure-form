@@ -2,11 +2,12 @@ import { html } from 'lit'
 import { property } from 'lit/decorators.js'
 
 import './icure-text-field'
-import { Content } from '@icure/api'
-import { Suggestion } from '../../../../models'
-import { Field } from '../../../common'
 
-class Textfield extends Field {
+import { Field } from '../../../common'
+import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
+import { Suggestion } from '../../../../generic'
+
+class TextField extends Field {
 	//Boolean value is parsed as text, so we also need to use string type
 	@property() multiline: boolean | string = false
 	@property() rows = 1
@@ -21,22 +22,14 @@ class Textfield extends Field {
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 
-	@property() metaProvider?: () => VersionedMeta[] = undefined
-	@property() handleMetaChanged?: (id: string, language: string, value: { asString: string; content?: Content }) => void = undefined
-
-	/**
-	 * Todo: refactor versioned values.
-	 */
 	render() {
 		const versionedValues = this.valueProvider?.()
-		return (versionedValues?.length ? versionedValues : [undefined]).map((versionedValue, idx) => {
+		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field
 				.actionManager="${this.actionManager}"
-				.editable="${this.editable}"
-				labelPosition=${this.labelPosition}
+				.readonly="${this.readonly}"
 				label="${this.label}"
-				labels="${this.labels}"
-				value="${this.value}"
+				labels="${this.displayedLabels}"
 				defaultLanguage="${this.defaultLanguage}"
 				schema="${this.multiline ? 'text-document' : 'styled-text-with-codes'}"
 				?suggestions=${!!this.suggestionProvider}
@@ -48,15 +41,14 @@ class Textfield extends Field {
 				.codeColorProvider=${this.codeColorProvider}
 				.linkColorProvider=${this.linkColorProvider}
 				.codeContentProvider=${this.codeContentProvider}
-				.valueProvider=${() => versionedValue}
-				.metaProvider=${() => this.metaProvider?.()?.[idx]}
-				.handleValueChanged=${this.handleValueChanged}
-				.handleMetaChanged=${this.handleMetaChanged}
+				.valueProvider=${singleValueProvider(this.valueProvider, id)}
+				.metaProvider=${this.metadataProvider}
+				.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}
+				.handleMetaChanged=${handleSingleMetadataChanged(this.handleMetadataChanged, id)}
 				.styleOptions=${this.styleOptions}
 			></icure-text-field>`
 		})
 	}
 }
-//.valueProvider=${() => versionedValue}
 
-customElements.define('icure-form-textfield', Textfield)
+customElements.define('icure-form-textfield', TextField)

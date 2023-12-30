@@ -3,7 +3,7 @@ import equal from 'fast-deep-equal'
 import { EditorView } from 'prosemirror-view'
 import { EditorState, Transaction } from 'prosemirror-state'
 import { Schema } from 'prosemirror-model'
-import { Suggestion } from '../../models'
+import { Suggestion } from '../../generic'
 
 export class SuggestionPalette {
 	private readonly palette: HTMLDivElement

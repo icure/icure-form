@@ -1,10 +1,8 @@
 // Import the LitElement base class and html helper function
-import { html } from 'lit'
+import { html, LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
 
-import { Form } from './model'
-
-import './fields/text-field/textfield'
+import './fields/text-field/text-field'
 import './fields/measure-field/measureField'
 import './fields/number-field/numberField'
 import './fields/date-picker/datePicker'
@@ -20,26 +18,26 @@ import baseCss from './styles/style.scss'
 // @ts-ignore
 import kendoCss from './styles/kendo.scss'
 import { Renderer } from './renderer'
-
-import { render as renderAsCard } from './renderer/cards'
 import { render as renderAsForm } from './renderer/form'
 import { CodeStub } from '@icure/api'
-import { StateListenerLitElement, OptionCode } from '../common'
-import { FormValuesContainer } from '../../models'
+import { Code, FieldMetadata, FieldValue, Form } from '../model'
+import { FormValuesContainer } from '../../generic'
 
 // Extend the LitElement base class
-class IcureForm extends StateListenerLitElement {
+class IcureForm extends LitElement {
 	@property() form?: Form
 	@property() skin = 'material'
 	@property() theme = 'default'
 	@property() renderer = 'form'
+	@property() visible = true
+	@property() readonly = false
 	@property() labelPosition?: string = undefined
 	@property() defaultLanguage?: string = undefined
-	@property() formValuesContainer?: FormValuesContainer = undefined
-	@property() formValuesContainerChanged?: (newValue: FormValuesContainer) => void = undefined
+	@property() formValuesContainer?: FormValuesContainer<FieldValue, FieldMetadata> = undefined
+	@property() formValuesContainerChanged?: (newValue: FormValuesContainer<FieldValue, FieldMetadata>) => void = undefined
 	@property() translationProvider: (text: string) => string = (text) => text
-	@property() codesProvider: (codifications: string[], searchTerm: string) => Promise<CodeStub[]> = () => Promise.resolve([])
-	@property() optionsProvider: (codifications: string[], searchTerm: string) => Promise<OptionCode[]> = () => Promise.resolve([])
+	@property() codesProvider: (codifications: string[], searchTerm: string) => Promise<Code[]> = () => Promise.resolve([])
+	@property() optionsProvider: (language: string, codifications: string[], searchTerm: string) => Promise<Code[]> = () => Promise.resolve([])
 
 	constructor() {
 		super()
@@ -58,9 +56,9 @@ class IcureForm extends StateListenerLitElement {
 	}
 
 	render() {
-		const renderer: Renderer | undefined = this.renderer === 'form' ? renderAsForm : this.renderer === 'form' ? renderAsCard : undefined
+		const renderer: Renderer | undefined = this.renderer === 'form' ? renderAsForm : undefined
 
-		if (!this.display) {
+		if (!this.visible) {
 			return html``
 		}
 		return renderer && this.form
@@ -73,18 +71,11 @@ class IcureForm extends StateListenerLitElement {
 					() => [],
 					this.codesProvider,
 					this.optionsProvider,
-					this.actionManager,
-					this.editable,
+					this.readonly,
 			  )
 			: this.form
 			? html`<p>unknown renderer</p>`
 			: html`<p>missing form</p>`
-	}
-
-	firstUpdated() {
-		if (this.actionManager && this.form && this.formValuesContainer) {
-			this.registerStateUpdater(this.form.form || 'main-form')
-		}
 	}
 }
 

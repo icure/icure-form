@@ -1,5 +1,5 @@
 // Import the LitElement base class and html helper function
-import { html } from 'lit'
+import { html, nothing } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { EditorState, Plugin, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
@@ -27,32 +27,18 @@ import { maskPlugin } from './plugin/mask-plugin'
 import { hasContentClassPlugin } from './plugin/has-content-class-plugin'
 import { regexpPlugin } from './plugin/regexp-plugin'
 import { sorted } from '../../utils/no-lodash'
-import { generateLabel, generateLabels } from '../../label'
-import { Content, Measure } from '@icure/api'
-import { parse, format } from 'date-fns'
-import { StateToUpdate, Trigger } from '../../../model'
+import { format, parse } from 'date-fns'
 import { Field } from '../common'
-
-/** Meta holds the metadata of one version of a Service
- *
- * revision is the revision of the version
- * modified is the date of the modification of the version
- * valueDate is the date of the value of the version
- * owner is the owner of the version
- *
- */
-export interface Meta {
-	revision: string
-	modified?: number
-	valueDate?: number | null
-	owner?: { id: string; descr?: string } | null
-}
+import { Code, IcureTextFieldSchema, PrimitiveType, Trigger } from '../model'
+import { Suggestion } from '../../generic'
+import { generateLabels } from '../common/utils'
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
 	get _ownerSearch(): HTMLInputElement | null {
 		return this.renderRoot.querySelector('#ownerSearch')
 	}
+	@property() placeholder = ''
 	@property() suggestionStopWords: Set<string> = new Set<string>()
 	@property({ type: Boolean }) displayOwnerMenu = false
 	@property({ type: Boolean }) suggestions = false
@@ -64,13 +50,9 @@ export class IcureTextField extends Field {
 	@property() codeColorProvider: (type: string, code: string) => string = () => 'XI'
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
-	@property() schema: IqrTextFieldSchema = 'styled-text-with-codes'
-	@property() textRegex = ''
+	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
 
-	@property() owner?: string
-
-	@property() metaProvider?: () => VersionedMeta | undefined = undefined
-	@property() handleMetaChanged?: (id: string, meta: Meta) => void = undefined
+	@state() protected containerId?: string
 
 	@state() protected displayOwnersMenu = false
 	@state() protected ownerInputValue = ''
@@ -81,8 +63,6 @@ export class IcureTextField extends Field {
 
 	@state() protected displayVersionsMenu = false
 
-	@state() protected displayedVersion = '0'
-
 	@state() protected availableLanguages = [this.displayedLanguage]
 
 	private proseMirrorSchema?: Schema
@@ -90,7 +70,8 @@ export class IcureTextField extends Field {
 	private serializer: MarkdownSerializer | { serialize: (content: ProsemirrorNode) => string } = {
 		serialize: (content: ProsemirrorNode) => content.textBetween(0, content.nodeSize - 2, ' '),
 	}
-	private contentMaker: (doc?: ProsemirrorNode) => Content = () => ({})
+	private primitiveTypeExtractor: (doc?: ProsemirrorNode) => PrimitiveType | undefined = () => undefined
+	private codesExtractor: (doc?: ProsemirrorNode) => Code[] = () => []
 
 	private view?: EditorView
 	private container?: HTMLElement
@@ -124,8 +105,8 @@ export class IcureTextField extends Field {
 
 	render() {
 		return html`
-			<div id="root" class="${this.display ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
-				${this.labels ? generateLabels(this.labels, this.translationProvider) : generateLabel(this.label ?? '', this.labelPosition ?? 'float', this.translationProvider)}
+			<div id="root" class="${this.visible ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
 				<div class="icure-input">
 					<div id="editor"></div>
 				</div>
@@ -151,7 +132,7 @@ export class IcureTextField extends Field {
 	}
 
 	handleOwnerButtonClicked(id: string) {
-		this.handleMetaChanged && this.containerId && this.handleMetaChanged(this.containerId, { revision: this.displayedVersion, owner: { id } })
+		this.handleMetadataChanged && this.containerId && this.handleMetadataChanged(this.containerId, { label: this.label, owner: id })
 		this.displayOwnersMenu = false
 	}
 
@@ -182,8 +163,9 @@ export class IcureTextField extends Field {
 			this.codeContentProvider,
 		))
 
-		this.parser = this.makeParser(pms)
-		this.contentMaker = this.makeContentMaker()
+		this.parser = this.makeParser(this.schema, pms)
+		this.primitiveTypeExtractor = this.makePrimitiveExtractor(this.schema)
+		this.codesExtractor = this.makeCodesExtractor(this.schema)
 
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
 
@@ -206,16 +188,20 @@ export class IcureTextField extends Field {
 			)
 
 			const providedValue = this.valueProvider && this.valueProvider()
-			this.displayedVersion = providedValue?.versions?.[0]?.revision || '0'
-			const displayedVersionedValue = providedValue?.versions?.[0]?.value
-			this.containerId = providedValue?.id
+
+			//Currently take the first piece of data if it is available
+			this.containerId = Object.keys(providedValue?.versions ?? {})[0]
+			const revision = this.containerId ? providedValue?.versions?.[this.containerId]?.[0] : undefined
+			const displayedVersionedValue = revision?.value
 
 			this.availableLanguages = displayedVersionedValue && Object.keys(displayedVersionedValue).length ? sorted(Object.keys(displayedVersionedValue)) : this.availableLanguages
 			if (!this.availableLanguages.includes(this.displayedLanguage)) {
 				this.displayedLanguage = this.availableLanguages[0]
 			}
 
-			const parsedDoc = this.parser.parse(this.valueProvider ? displayedVersionedValue?.[this.displayedLanguage ?? 'en'] || this.value || '' : this.value || '') ?? undefined
+			const parsedDoc =
+				this.parser.parse(this.valueProvider ? displayedVersionedValue?.[this.displayedLanguage ?? 'en'] || displayedVersionedValue || '' : displayedVersionedValue || '') ??
+				undefined
 
 			this.view = new EditorView(this.container, {
 				state: EditorState.create({
@@ -299,45 +285,56 @@ export class IcureTextField extends Field {
 							// eslint-disable-next-line max-len
 							if (this.trToSave === tr) {
 								const serialized = this.serializer.serialize(tr.doc)
-								const content = this.contentMaker?.(tr.doc)
-								this.containerId = this.handleValueChanged?.(this.displayedLanguage ?? 'en', { asString: serialized, content: content }, this.containerId, [])
-								if (this.actionManager) {
-									this.actionManager.launchActions(Trigger.CHANGE, this.label || '', { value: serialized, content: content })
+								const content = this.primitiveTypeExtractor?.(tr.doc)
+								const value = this.primitiveTypeExtractor?.(parsedDoc)
+								if (value) {
+									const language = this.displayedLanguage ?? 'en'
+									this.containerId = this.handleValueChanged?.(
+										this.label,
+										language,
+										{ [language]: { value: value, codes: this.codesExtractor?.(parsedDoc) ?? [] } },
+										this.containerId,
+									)
+									if (this.actionManager) {
+										this.actionManager.launchActions(Trigger.CHANGE, this.label || '', {
+											value: serialized,
+											content: content,
+										})
+									}
 								}
 							}
 						}, 800)
 					}
 				},
 				editable: () => {
-					return this.editable
+					return !this.readonly
 				},
 			})
 			if (parsedDoc ? this.serializer.serialize(parsedDoc) : '' !== '') {
 				this.actionManager?.defaultSandbox.set(this.label || '', {
 					value: parsedDoc ? this.serializer.serialize(parsedDoc) : '',
-					content: this.contentMaker?.(parsedDoc),
+					content: this.primitiveTypeExtractor?.(parsedDoc),
 				})
-				this.containerId = this.handleValueChanged?.(
-					this.displayedLanguage ?? 'en',
-					{ asString: parsedDoc ? this.serializer.serialize(parsedDoc) : '', content: this.contentMaker?.(parsedDoc) },
-					this.containerId,
-					[],
-				)
+				const value = this.primitiveTypeExtractor?.(parsedDoc)
+				if (value) {
+					const language = this.displayedLanguage ?? 'en'
+					this.containerId = this.handleValueChanged?.(this.label, language, { [language]: { value: value, codes: this.codesExtractor?.(parsedDoc) ?? [] } }, this.containerId)
+				}
 			}
 		}
 	}
 
-	private makeParser(pms: Schema) {
+	private makeParser(schemaName: string, pms: Schema) {
 		const tokenizer = MarkdownIt('commonmark', { html: false })
-		return this.schema === 'date'
+		return schemaName === 'date'
 			? {
 					parse: (value: string) => pms.node('paragraph', {}, [pms.node('date', {}, value ? [pms.text(value)] : [])]),
 			  }
-			: this.schema === 'time'
+			: schemaName === 'time'
 			? {
 					parse: (value: string) => pms.node('paragraph', {}, [pms.node('time', {}, value ? [pms.text(value)] : [])]),
 			  }
-			: this.schema === 'measure'
+			: schemaName === 'measure'
 			? {
 					parse: (value: string) => {
 						const decimal = value ? value.split(' ')[0] : ''
@@ -349,13 +346,13 @@ export class IcureTextField extends Field {
 						])
 					},
 			  }
-			: this.schema === 'decimal'
+			: schemaName === 'decimal'
 			? {
 					parse: (value: string) => {
 						return pms.node('paragraph', {}, [pms.node('decimal', {}, value && value.length ? [pms.text(value)] : [pms.text(' ')])])
 					},
 			  }
-			: this.schema === 'date-time'
+			: schemaName === 'date-time'
 			? {
 					parse: (value: string) => {
 						const date = value ? value.split(' ')[0] : ''
@@ -367,7 +364,7 @@ export class IcureTextField extends Field {
 						])
 					},
 			  }
-			: this.schema === 'text-document'
+			: schemaName === 'text-document'
 			? new MarkdownParser(pms, MarkdownIt('commonmark', { html: false }), {
 					blockquote: { block: 'blockquote' },
 					paragraph: { block: 'paragraph' },
@@ -421,63 +418,40 @@ export class IcureTextField extends Field {
 			  )
 	}
 
-	private makeContentMaker() {
-		return this.schema === 'date'
-			? (doc?: ProsemirrorNode) =>
-					new Content({ fuzzyDateValue: doc?.firstChild?.textContent ? format(parse(doc?.firstChild?.textContent, 'dd/MM/yyyy', new Date()), 'yyyyMMdd') : undefined })
-			: this.schema === 'time'
-			? (doc?: ProsemirrorNode) =>
-					new Content({ fuzzyDateValue: doc?.firstChild?.textContent ? format(parse(doc?.firstChild?.textContent, 'HH:mm:ss', new Date()), 'HHmmss') : undefined })
-			: this.schema === 'measure'
-			? (doc?: ProsemirrorNode) =>
-					new Content({
-						measureValue: new Measure({ value: doc?.firstChild?.textContent ? parseFloat(doc?.firstChild?.textContent) : undefined, unit: doc?.child(1)?.textContent }),
-					})
-			: this.schema === 'decimal'
-			? (doc?: ProsemirrorNode) =>
-					new Content({
-						numberValue: doc?.firstChild?.textContent ? parseFloat(doc?.firstChild?.textContent?.replace(/,/g, '.')) : undefined,
-					})
-			: this.schema === 'date-time'
-			? (doc?: ProsemirrorNode) =>
-					new Content({
-						fuzzyDateValue:
-							doc?.firstChild?.textContent && doc?.lastChild?.textContent
-								? format(parse(doc?.firstChild?.textContent + ' ' + doc?.lastChild?.textContent, 'dd/MM/yyyy HH:mm:ss', new Date()), 'yyyyMMddHHmmss')
-								: undefined,
-					})
-			: this.schema === 'text-document'
-			? (doc?: ProsemirrorNode) =>
-					new Content({
-						stringValue: doc?.textBetween(0, doc?.nodeSize - 2, '\n'),
-					})
-			: (doc?: ProsemirrorNode) =>
-					new Content({
-						stringValue: doc?.textBetween(0, doc?.nodeSize - 2, '\n'),
-					})
+	private makeCodesExtractor(schemaName: string): (doc?: ProsemirrorNode) => Code[] {
+		return schemaName === 'measure'
+			? (doc?: ProsemirrorNode) => {
+					const unit = doc?.child(1)?.textContent
+					return unit ? [{ id: `CD-UNIT|${unit}|1`, label: { [this.displayedLanguage ?? 'en']: unit } }] : []
+			  }
+			: schemaName === 'measure'
+			? (doc?: ProsemirrorNode) => {
+					const unit = doc?.child(1)?.textContent
+					return unit ? [{ id: `CD-UNIT|${unit}|1`, label: { [this.displayedLanguage ?? 'en']: unit } }] : []
+			  }
+			: () => []
 	}
-	// private getMeta(): Meta | undefined {
-	// 	return (this.metaProvider && this.metaProvider()?.metas?.find((vm) => vm.revision === this.displayedVersion)) || undefined
-	// }
 
-	//override
-	public stateUpdater(state: StateToUpdate, result: any): void {
-		switch (state) {
-			case StateToUpdate.VALUE:
-				this.value = result
-				if (this.view) {
-					const tr = this.view?.state.tr
-					tr?.delete(0, tr.doc.nodeSize - 2)
-					tr?.insertText(this.value || '')
-					this.view?.dispatch(tr)
-				}
-				break
-			case StateToUpdate.VISIBLE:
-				this.display = result
-				break
-			default:
-				break
-		}
+	private makePrimitiveExtractor(schemaName: string): (doc?: ProsemirrorNode) => PrimitiveType | undefined {
+		return schemaName === 'date'
+			? (doc?: ProsemirrorNode) =>
+					doc?.firstChild?.textContent ? { type: 'datetime', value: parseInt(format(parse(doc.firstChild.textContent, 'dd/MM/yyyy', new Date()), 'yyyyMMdd')) } : undefined
+			: schemaName === 'time'
+			? (doc?: ProsemirrorNode) =>
+					doc?.firstChild?.textContent ? { type: 'datetime', value: parseInt(format(parse(doc.firstChild.textContent, 'HH:mm:ss', new Date()), 'HHmmss')) } : undefined
+			: schemaName === 'measure'
+			? (doc?: ProsemirrorNode) => (doc?.firstChild?.textContent ? { type: 'measure', value: parseFloat(doc.firstChild.textContent), unit: doc?.child(1)?.textContent } : undefined)
+			: schemaName === 'decimal'
+			? (doc?: ProsemirrorNode) => (doc?.firstChild?.textContent ? { type: 'number', value: parseFloat(doc.firstChild.textContent.replace(/,/g, '.')) } : undefined)
+			: schemaName === 'date-time'
+			? (doc?: ProsemirrorNode) =>
+					doc?.firstChild?.textContent && doc?.lastChild?.textContent
+						? {
+								type: 'datetime',
+								value: parseInt(format(parse(doc.firstChild.textContent + ' ' + doc.lastChild.textContent, 'dd/MM/yyyy HH:mm:ss', new Date()), 'yyyyMMddHHmmss')),
+						  }
+						: undefined
+			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: doc.textBetween(0, doc.nodeSize - 2, '\n') } : undefined)
 	}
 }
 

@@ -1,12 +1,11 @@
-import { Field } from '../components/icure-form/model'
-import { OptionCode } from '../components'
+import { Field, Code } from '../components/model'
 
-export function optionMapper(field: Field): OptionCode[] {
+export function optionMapper(language: string, field: Field): Code[] {
 	return Object.keys(field?.options ?? []).map((optionKey) => {
 		const text: string = (field?.options?.[optionKey] as string) ?? ''
 		return {
 			id: optionKey,
-			text: text,
+			label: { [language]: text },
 		}
 	})
 }

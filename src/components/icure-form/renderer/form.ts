@@ -1,42 +1,24 @@
 import { html, TemplateResult } from 'lit'
-import { Field, Form, Group, SubForm } from '../model'
 import { Renderer } from './index'
-import {
-	handleFieldValueChangedProvider,
-	dateFieldValuesProvider,
-	dateTimeFieldValuesProvider,
-	radioButtonFieldValuesProvider,
-	dropdownFieldValuesProvider,
-	handleMetaChangedProvider,
-	measureFieldValuesProvider,
-	metaProvider,
-	numberFieldValuesProvider,
-	textFieldValuesProvider,
-	timeFieldValuesProvider,
-} from '../../../utils/fieldsValuesProviders'
-import { /*VersionedMeta,*/ VersionedValue } from '../fields/text-field'
+import { fieldValuesProvider, handleMetadataChanged, handleValueChanged } from '../../../utils/fieldsValuesProviders'
 
 import '../fields/dropdown/dropdown'
 import { currentDate, currentDateTime, currentTime } from '../../../utils/icure-utils'
 import { CodeStub, HealthcareParty } from '@icure/api'
-import { OptionCode } from '../../common'
-import { ActionManager, FormValuesContainer } from '../../../models'
 import { optionMapper } from '../../../utils/code-utils'
-
-export const firstItemValueProvider = (valuesProvider: () => VersionedValue[]) => () => valuesProvider()[0] ? [valuesProvider()[0]] : []
-//const firstItemMetaProvider = (valuesProvider: () => VersionedMeta[]) => () => valuesProvider()[0]
+import { Code, FieldMetadata, FieldValue, Form, Field, Group, SubForm } from '../../model'
+import { FormValuesContainer } from '../../../generic'
 
 export const render: Renderer = (
 	form: Form,
 	props: { [key: string]: unknown },
-	formsValueContainer?: FormValuesContainer,
-	formValuesContainerChanged?: (newValue: FormValuesContainer) => void,
+	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
+	formValuesContainerChanged?: (newValue: FormValuesContainer<FieldValue, FieldMetadata>) => void,
 	translationProvider: (text: string) => string = (text) => text,
 	ownersProvider: (speciality: string[]) => HealthcareParty[] = () => [],
 	codesProvider: (codifications: string[], searchTerm: string) => Promise<CodeStub[]> = () => Promise.resolve([]),
-	optionsProvider: (codifications: string[], searchTerm?: string) => Promise<OptionCode[]> = () => Promise.resolve([]),
-	actionManager?: ActionManager,
-	editable?: boolean,
+	optionsProvider?: (language: string, codifications: string[], searchTerm?: string) => Promise<Code[]>,
+	readonly?: boolean,
 ) => {
 	const h = function (level: number, content: TemplateResult): TemplateResult {
 		return level === 1
@@ -65,18 +47,14 @@ export const render: Renderer = (
 				${Object.entries(children ?? {})?.flatMap(([formKey, children]) => {
 					const form = fg?.forms?.[formKey]
 					return children
-						.map(
-							(child) =>
-								form && render(form, props, child, formValuesContainerChanged, translationProvider, ownersProvider, codesProvider, optionsProvider, actionManager, editable),
-						)
+						.map((child) => form && render(form, props, child, formValuesContainerChanged, translationProvider, ownersProvider, codesProvider, optionsProvider))
 						.filter((x) => !!x)
 				})}
 			</div>`
 		} else if (fg.clazz === 'field') {
 			return html`${fg.type === 'textfield'
 				? html`<icure-form-textfield
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						class="icure-form-field"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows, fg.styleOptions?.width)}"
 						labelPosition=${props.labelPosition}
@@ -92,16 +70,15 @@ export const render: Renderer = (
 						.codeColorProvider=${fg.options?.codeColorProvider}
 						.linkColorProvider=${fg.options?.linkColorProvider}
 						.codeContentProvider=${fg.options?.codeContentProvider}
-						.valueProvider="${formsValueContainer && firstItemValueProvider(textFieldValuesProvider(formsValueContainer, fg))}"
-						.metaProvider=${formsValueContainer && metaProvider(formsValueContainer, fg)}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.handleMetaChanged=${formsValueContainer && handleMetaChangedProvider(formsValueContainer)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-textfield>`
 				: fg.type === 'measure-field'
 				? html`<icure-form-measure-field
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"
@@ -109,100 +86,96 @@ export const render: Renderer = (
 						value="${fg.value}"
 						unit="${fg.unit}"
 						defaultLanguage="${props.defaultLanguage}"
-						.valueProvider="${formsValueContainer && firstItemValueProvider(measureFieldValuesProvider(formsValueContainer, fg))}"
 						.translationProvider=${translationProvider}
-						.metaProvider=${formsValueContainer && metaProvider(formsValueContainer, fg)}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.handleMetaChanged=${formsValueContainer && handleMetaChangedProvider(formsValueContainer)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-measure-field>`
 				: fg.type === 'number-field'
 				? html`<icure-form-number-field
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"
 						.labels="${fg.labels}"
 						value="${fg.value}"
 						defaultLanguage="${props.defaultLanguage}"
-						.valueProvider="${formsValueContainer && firstItemValueProvider(numberFieldValuesProvider(formsValueContainer, fg))}"
 						.translationProvider=${translationProvider}
-						.metaProvider=${formsValueContainer && metaProvider(formsValueContainer, fg)}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.handleMetaChanged=${formsValueContainer && handleMetaChangedProvider(formsValueContainer)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-number-field>`
 				: fg.type === 'date-picker'
 				? html`<icure-form-date-picker
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"
 						.labels="${fg.labels}"
 						value="${fg.now ? currentDate() : fg.value}"
 						defaultLanguage="${props.defaultLanguage}"
-						.valueProvider="${formsValueContainer && firstItemValueProvider(dateFieldValuesProvider(formsValueContainer, fg))}"
 						.translationProvider=${translationProvider}
-						.metaProvider=${formsValueContainer && metaProvider(formsValueContainer, fg)}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.handleMetaChanged=${formsValueContainer && handleMetaChangedProvider(formsValueContainer)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-date-picker>`
 				: fg.type === 'time-picker'
 				? html`<icure-form-time-picker
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"
 						.labels="${fg.labels}"
 						value="${fg.now ? currentTime() : fg.value}"
 						defaultLanguage="${props.defaultLanguage}"
-						.valueProvider="${formsValueContainer && firstItemValueProvider(timeFieldValuesProvider(formsValueContainer, fg))}"
 						.translationProvider=${translationProvider}
-						.metaProvider=${formsValueContainer && metaProvider(formsValueContainer, fg)}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.handleMetaChanged=${formsValueContainer && handleMetaChangedProvider(formsValueContainer)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-time-picker>`
 				: fg.type === 'date-time-picker'
 				? html`<icure-form-date-time-picker
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"
 						.labels="${fg.labels}"
 						value="${fg.now ? currentDateTime() : fg.value}"
 						defaultLanguage="${props.defaultLanguage}"
-						.valueProvider="${formsValueContainer && firstItemValueProvider(dateTimeFieldValuesProvider(formsValueContainer, fg))}"
 						.translationProvider=${translationProvider}
-						.metaProvider=${formsValueContainer && metaProvider(formsValueContainer, fg)}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.handleMetaChanged=${formsValueContainer && handleMetaChangedProvider(formsValueContainer)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-date-time-picker>`
 				: fg.type === 'multiple-choice'
 				? html`<icure-form-multiple-choice
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"
 						.labels="${fg.labels}"
 						value="${fg.value}"
 						defaultLanguage="${props.defaultLanguage}"
-						.valueProvider="${formsValueContainer && firstItemValueProvider(textFieldValuesProvider(formsValueContainer, fg))}"
 						.translationProvider=${translationProvider}
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-multiple-choice>`
 				: fg.type === 'dropdown-field'
 				? html`<icure-form-dropdown-field
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						.label=${fg.field}
@@ -211,20 +184,32 @@ export const render: Renderer = (
 						.translate="${fg.translate}"
 						.sortable="${fg.sortable}"
 						.sortOptions="${fg.sortOptions}"
-						.options="${optionMapper(fg)}"
 						value="${fg.value}"
 						.codifications="${fg.codifications}"
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.optionsProvider=${optionsProvider}
+						.optionsProvider=${optionsProvider && fg.codifications?.length
+							? (language: string, searchTerms?: string) => optionsProvider(language, fg.codifications ?? [], searchTerms)
+							: (language: string, searchTerms?: string) =>
+									Promise.resolve(
+										optionMapper(language, fg).filter(
+											(x) =>
+												!searchTerms ||
+												searchTerms
+													.split(/\s+/)
+													.map((st) => st.toLowerCase())
+													.every((st) => x.label[language].toLowerCase().includes(st)),
+										),
+									)}
 						.ownersProvider=${ownersProvider}
 						.translationProvider=${translationProvider}
-						.valueProvider="${formsValueContainer && firstItemValueProvider(dropdownFieldValuesProvider(formsValueContainer, fg))}"
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-dropdown-field>`
 				: fg.type === 'radio-button'
 				? html`<icure-form-radio-button
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						.label="${fg.field}"
@@ -233,20 +218,31 @@ export const render: Renderer = (
 						.translate="${fg.translate}"
 						.sortable="${fg.sortable}"
 						.sortOptions="${fg.sortOptions}"
-						.options="${optionMapper(fg)}"
-						value="${fg.value}"
 						.codifications="${fg.codifications}"
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.optionsProvider=${codesProvider}
+						.optionsProvider=${optionsProvider && fg.codifications?.length
+							? (language: string, searchTerms?: string) => optionsProvider(language, fg.codifications ?? [], searchTerms)
+							: (language: string, searchTerms?: string) =>
+									Promise.resolve(
+										optionMapper(language, fg).filter(
+											(x) =>
+												!searchTerms ||
+												searchTerms
+													.split(/\s+/)
+													.map((st) => st.toLowerCase())
+													.every((st) => x.label[language].toLowerCase().includes(st)),
+										),
+									)}
 						.ownersProvider=${ownersProvider}
 						.translationProvider=${translationProvider}
-						.valueProvider="${formsValueContainer && firstItemValueProvider(radioButtonFieldValuesProvider(formsValueContainer, fg))}"
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-radio-button>`
 				: fg.type === 'checkbox'
 				? html`<icure-form-checkbox
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						.label="${fg.field}"
@@ -255,20 +251,32 @@ export const render: Renderer = (
 						.translate="${fg.translate}"
 						.sortable="${fg.sortable}"
 						.sortOptions="${fg.sortOptions}"
-						.options="${optionMapper(fg)}"
 						value="${fg.value}"
 						.codifications="${fg.codifications}"
-						.handleValueChanged=${formsValueContainer && formValuesContainerChanged && handleFieldValueChangedProvider(fg, formsValueContainer, formValuesContainerChanged)}
-						.optionsProvider=${codesProvider}
+						.optionsProvider=${optionsProvider && fg.codifications?.length
+							? (language: string, searchTerms?: string) => optionsProvider(language, fg.codifications ?? [], searchTerms)
+							: (language: string, searchTerms?: string) =>
+									Promise.resolve(
+										optionMapper(language, fg).filter(
+											(x) =>
+												!searchTerms ||
+												searchTerms
+													.split(/\s+/)
+													.map((st) => st.toLowerCase())
+													.every((st) => x.label[language].toLowerCase().includes(st)),
+										),
+									)}
 						.ownersProvider=${ownersProvider}
 						.translationProvider=${translationProvider}
-						.valueProvider="${formsValueContainer && firstItemValueProvider(radioButtonFieldValuesProvider(formsValueContainer, fg))}"
+						.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+						.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
+						.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
+						.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
 						.styleOptions="${fg.styleOptions}"
 				  ></icure-form-checkbox>`
 				: fg.type === 'label'
 				? html`<icure-form-label
-						.actionManager="${actionManager}"
-						.editable="${editable}"
+						.readonly="${readonly}"
 						style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 						labelPosition=${props.labelPosition}
 						label="${fg.field}"

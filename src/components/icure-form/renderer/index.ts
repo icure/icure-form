@@ -1,18 +1,16 @@
-import { Form } from '../model'
 import { TemplateResult } from 'lit'
 import { CodeStub, HealthcareParty } from '@icure/api'
-import { OptionCode } from '../../common'
-import { ActionManager, FormValuesContainer } from '../../../models'
+import { FormValuesContainer } from '../../../generic'
+import { Code, FieldMetadata, FieldValue, Form } from '../../model'
 
 export type Renderer = (
 	form: Form,
 	props: { [p: string]: unknown },
-	formsValueContainer?: FormValuesContainer,
-	formValuesContainerChanged?: (newValue: FormValuesContainer) => void,
+	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
+	formValuesContainerChanged?: (newValue: FormValuesContainer<FieldValue, FieldMetadata>) => void,
 	translationProvider?: (text: string) => string,
 	ownersProvider?: (speciality: string[]) => HealthcareParty[],
 	codesProvider?: (codifications: string[], searchTerm: string) => Promise<CodeStub[]>,
-	optionsProvider?: (codifications: string[], searchTerm?: string) => Promise<OptionCode[]>,
-	actionManager?: ActionManager,
-	editable?: boolean,
+	optionsProvider?: (language: string, codifications: string[], searchTerm?: string) => Promise<Code[]>,
+	readonly?: boolean,
 ) => TemplateResult

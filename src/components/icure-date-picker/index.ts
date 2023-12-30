@@ -1,7 +1,7 @@
 import { ValuedField } from '../../../../common/valuedField'
 import { VersionedValue } from '../../text-field/icure-text-field'
 import { html, TemplateResult } from 'lit'
-import { generateLabel } from '../../label/icure-label/utils'
+import { generateLabel } from '../common/utils'
 import { state } from 'lit/decorators.js'
 import { datePicto } from '../../text-field/icure-text-field/styles/paths'
 import 'app-datepicker'
@@ -16,7 +16,7 @@ export class IqrDatePickerField extends ValuedField<string, VersionedValue> {
 	@state() protected inputValue = ''
 
 	render(): TemplateResult {
-		if (!this.display) {
+		if (!this.visible) {
 			return html``
 		}
 		return html`

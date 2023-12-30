@@ -1,2 +1,1 @@
-export * from './dropdown'
-export * from './icure-dropdown'
+export * from './dropdown-field'

@@ -1,6 +1,6 @@
 import { html } from 'lit'
 import '../text-field/icure-text-field'
-import './icure-radio-button-group'
+import '../../../icure-radio-button-group'
 import { VersionedValue } from '../text-field'
 import { CodeStub } from '@icure/api'
 import { OptionCode, OptionsField } from '../../../common'

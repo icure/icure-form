@@ -1,9 +1,9 @@
 import { property } from 'lit/decorators.js'
 import { LitElement } from 'lit'
-import { FieldMetadata, FieldValue, Labels, StateToUpdate } from '../model'
-import { ActionManager, VersionedData } from '../../generic'
+import { FieldMetadata, FieldValue, Labels } from '../model'
+import { VersionedData } from '../../generic'
 
-export abstract class Field extends LitElement {
+export class Field extends LitElement {
 	/**
 	 * The label of the field. This is a unique per form property that is used to create data in the formValuesContainer.
 	 */
@@ -28,17 +28,11 @@ export abstract class Field extends LitElement {
 	@property() public visible = true
 	@property() readonly = false
 
-	//This must go away
-	@property() actionManager?: ActionManager<FieldValue, FieldMetadata>
-
-	public registerStateUpdater(name: string, stateUpdater?: (state: StateToUpdate, result: any) => void) {
-		if (this.actionManager) {
-			//this.actionManager.registerStateUpdater(name || '', stateUpdater || this.stateUpdater.bind(this))
-		}
-	}
-	//override
-
 	protected translateText(text: string): string {
 		return this.translate ? this.translationProvider(text) : text
+	}
+
+	language(): string {
+		return (this.translate ? this.displayedLanguage : this.defaultLanguage) ?? 'en'
 	}
 }

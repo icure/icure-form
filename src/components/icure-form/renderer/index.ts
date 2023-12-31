@@ -8,7 +8,7 @@ export type Renderer = (
 	props: { [p: string]: unknown },
 	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
 	formValuesContainerChanged?: (newValue: FormValuesContainer<FieldValue, FieldMetadata>) => void,
-	translationProvider?: (text: string) => string,
+	translationProvider?: (language: string, text: string) => string,
 	ownersProvider?: (speciality: string[]) => HealthcareParty[],
 	codesProvider?: (codifications: string[], searchTerm: string) => Promise<CodeStub[]>,
 	optionsProvider?: (language: string, codifications: string[], searchTerm?: string) => Promise<Code[]>,

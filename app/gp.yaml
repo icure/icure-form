@@ -61,6 +61,58 @@ actions:
       - name: abortion-forms.field-labels.OTHER-ACTUAL-LIFE-SITUATION
         stateToUpdate: VISIBLE
         canLaunchLauncher: false
+codifications:
+  - type: MS-ABORTION-CONTACT-VIA-TYPE
+    codes:
+      - code: onSite
+        label:
+          en: On site
+          fr: Sur place
+      - code: visio
+        label:
+          en: Visio
+          fr: Visio
+      - code: phone
+        label:
+          en: Phone
+          fr: Téléphone
+translations:
+  - language: en
+    translations:
+      abortion-forms.field-labels.PRELIMINARY-PSYCHO-SOCIAL-INTERVIEW: Preliminary psycho-social interview
+      abortion-forms.field-labels.CONSULTATION-TYPE: Consultation type
+      abortion-forms.field-labels.ACCOMPANIED-BY: Accompanied by
+      abortion-forms.field-labels.OTHER: Other
+      abortion-forms.field-labels.OTHER-INFORMATION: Other information
+      abortion-forms.field-labels.INFOS-ABORTION: Information about abortion
+      abortion-forms.field-labels.SCHOOL-LEVEL: School level
+      abortion-forms.field-labels.OTHER-SCHOOL-LEVEL: Other school level
+      abortion-forms.field-labels.PATIENT-PROFESSION: Patient profession
+      abortion-forms.field-labels.OTHER-PROFESSION: Other profession
+      abortion-forms.field-labels.ACTUAL-LIFE-SITUATION: Actual life situation
+      abortion-forms.field-labels.OTHER-ACTUAL-LIFE-SITUATION: Other actual life situation
+      abortion-forms.field-labels.SECTION-1: Section 1
+      abortion-forms.field-options.ON-SITE: On site
+      abortion-forms.field-options.VISIO: Visio
+      abortion-forms.field-options.PHONE: Phone
+  - language: fr
+    translations:
+      abortion-forms.field-labels.PRELIMINARY-PSYCHO-SOCIAL-INTERVIEW: Entretien préliminaire psycho-social
+      abortion-forms.field-labels.CONSULTATION-TYPE: Type de consultation
+      abortion-forms.field-labels.ACCOMPANIED-BY: Accompagné par
+      abortion-forms.field-labels.OTHER: Autre
+      abortion-forms.field-labels.OTHER-INFORMATION: Autre information
+      abortion-forms.field-labels.INFOS-ABORTION: Information sur l'avortement
+      abortion-forms.field-labels.SCHOOL-LEVEL: Niveau scolaire
+      abortion-forms.field-labels.OTHER-SCHOOL-LEVEL: Autre niveau scolaire
+      abortion-forms.field-labels.PATIENT-PROFESSION: Profession du patient
+      abortion-forms.field-labels.OTHER-PROFESSION: Autre profession
+      abortion-forms.field-labels.ACTUAL-LIFE-SITUATION: Situation de vie actuelle
+      abortion-forms.field-labels.OTHER-ACTUAL-LIFE-SITUATION: Autre situation de vie actuelle
+      abortion-forms.field-labels.SECTION-1: Section 1
+      abortion-forms.field-options.ON-SITE: Sur place
+      abortion-forms.field-options.VISIO: Visio
+      abortion-forms.field-options.PHONE: Téléphone
 sections:
   - section: abortion-forms.field-labels.SECTION-1
     fields:
@@ -78,289 +130,4 @@ sections:
         tags:
           - MS-ABORTION-item|contact-via|1
           - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|CONTACT-TYPE|1
-      - field: abortion-forms.field-labels.IN-TAKE-DATE
-        type: date-picker
-        shortLabel: inTakeDate
-        rows: 1
-        columns: 2
-        now: true
-        tags:
-          - MS-ABORTION-DATE|intake|1
-          - MS-ABORTION-ITEM|date|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|IN-TAKE-DATE|1
-      - field: abortion-forms.field-labels.ACCOMPANIED-BY-PERSONS-WAITING-ROOM
-        type: number-field
-        shortLabel: abortion-forms.field-labels.ACCOMPANIED-BY-PERSONS-WAITING-ROOM
-        rows: 2
-        columns: 1
-        tags:
-          - MS-ABORTION-COMPANION|numberWaitingRoom|1
-          - MS-ABORTION-ITEM|companion|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|WAITING-ROOM-FOLLOWERS-NUMBER|1
-      - field: abortion-forms.field-labels.ACCOMPANIED-BY-PERSONS-PRELIMINARY-INTERVIEW
-        type: number-field
-        shortLabel: abortion-forms.field-labels.ACCOMPANIED-BY-PERSONS-PRELIMINARY-INTERVIEW
-        rows: 2
-        columns: 2
-        tags:
-          - MS-ABORTION-COMPANION|numberDuringIntervention|1
-          - MS-ABORTION-ITEM|companion|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|CONSULTATION-FOLLOWERS-NUMBER|1
-      - field: abortion-forms.field-labels.ACCOMPANIED-BY
-        type: checkbox
-        shortLabel: accompaniedBy
-        options:
-          none: abortion-forms.field-options.NONE
-          father: abortion-forms.field-options.FATHER
-          other: abortion-forms.field-options.OTHER
-          partner: abortion-forms.field-options.PARTNER
-          mother: abortion-forms.field-options.MOTHER
-          friend: abortion-forms.field-options.FRIEND
-          educator: abortion-forms.field-options.EDUCATOR
-          empty: abortion-forms.field-options.EMPTY
-        styleOptions:
-          direction: column
-          columns: 3
-        rows: 3
-        columns: 1
-        sortable: true
-        sortOptions:
-          other: 2
-          none: 1
-          empty: -1
-          asc: true
-          alpha: false
-        codifications:
-          - MS-ABORTION-COMPANION-TYPE
-        tags:
-          - MS-ABORTION-COMPANION|typeOfCompanion|1
-          - MS-ABORTION-ITEM|companion|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|PERSON-FOLLOWER-TYPE|1
-      - field: abortion-forms.field-labels.OTHER
-        type: textfield
-        shortLabel: other
-        rows: 4
-        columns: 1
-        tags:
-          - MS-ABORTION-COMPANION-TYPE|custom|1
-          - MS-ABORTION-COMPANION|typeOfCompanion|1
-          - MS-ABORTION-ITEM|companion|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|PERSON-FOLLOWER-OTHER|1
-      - field: abortion-forms.field-labels.HISTORY
-        type: textfield
-        shortLabel: history
-        multiline: true
-        rows: 5
-        columns: 1
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|HISTORY|1
-      - field: abortion-forms.field-labels.PARTNER-POSITION
-        type: textfield
-        shortLabel: partnerPosition
-        rows: 6
-        multiline: true
-        columns: 1
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|PARTNER-POSITION|1
-      - field: abortion-forms.field-labels.DECISION-PROCESSUS
-        type: textfield
-        shortLabel: decisionProcessus
-        rows: 6
-        multiline: true
-        columns: 1
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|DECISION-PROCESSUS|1
-      - field: abortion-forms.field-labels.PATIENT-FIRST-DECISION
-        type: radio-button
-        shortLabel: patientFirstDecision
-        rows: 7
-        columns: 1
-        options:
-          medication: abortion-forms.field-options.MEDICATION
-          curettage: abortion-forms.field-options.CURETTAGE
-          doubt: abortion-forms.field-options.DOUBT
-          keepIt: abortion-forms.field-options.KEEP-IT
-        styleOptions:
-          direction: row
-          rows: 2
-        codifications:
-          - MS-ABORTION-METHOD-TYPE
-        tags:
-          - MS-ABORTION-ITEM|method|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|FIRST-CHOICE|1
-      - field: abortion-forms.field-labels.INFOS-ABORTION
-        type: dropdown
-        shortLabel: infosAbortion
-        rows: 8
-        columns: 1
-        options:
-          gestation: abortion-forms.field-options.GESTATION
-          anesthesia: abortion-forms.field-options.ANESTHESIA
-          other: abortion-forms.field-options.OTHER
-        codifications:
-          - MS-ABORTION-EXTRA-INFO
-        tags:
-          - MS-ABORTION-ITEM|extra-info|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|ABORTION-INFORMATION|1
-      - field: abortion-forms.field-labels.OTHER-INFORMATION
-        type: textfield
-        shortLabel: otherInformation
-        rows: 8
-        columns: 2
-        tags:
-          - MS-ABORTION-EXTRA-INFO|custom|1
-          - MS-ABORTION-ITEM|extra-info|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|ABORTION-INFORMATION-OTHER|1
-      - field: abortion-forms.field-labels.COMMENTARY
-        type: textfield
-        shortLabel: commentary
-        rows: 9
-        columns: 1
-        multiline: true
-        tags:
-          - MS-ABORTION-ITEM|comment-note|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|COMMENT|1
-      - field: abortion-forms.field-labels.SCHOOL-LEVEL
-        type: dropdown
-        shortLabel: schoolLevel
-        rows: 11
-        columns: 1
-        options:
-          primary: abortion-forms.field-options.PRIMARY
-          secondary: abortion-forms.field-options.SECONDARY
-          higher: abortion-forms.field-options.HIGHER
-          university: abortion-forms.field-options.UNIVERSITY
-          other: abortion-forms.field-options.OTHER
-        codifications:
-          - MS-ABORTION-PATIENT-SCHOOL-LEVEL
-        tags:
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT-INFO|school-level|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|SCHOOL-LEVEL|1
-      - field: abortion-forms.field-labels.OTHER-SCHOOL-LEVEL
-        type: textfield
-        shortLabel: otherSchoolLevel
-        rows: 11
-        columns: 2
-        tags:
-          - MS-ABORTION-PATIENT-SCHOOL-LEVEL|custom|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT-INFO|school-level|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|SCHOOL-LEVEL-OTHER|1
-      - field: abortion-forms.field-labels.PATIENT-PROFESSION
-        type: dropdown
-        shortLabel: patientProfession
-        options:
-          employee: abortion-forms.field-options.EMPLOYEE
-          independent: abortion-forms.field-options.INDEPENDANT
-          unemployed: abortion-forms.field-options.UNEMPLOYED
-          housewife: abortion-forms.field-options.HOUSEWIFE
-          schoolGirl: abortion-forms.field-options.SCHOOL-GIRL
-          student: abortion-forms.field-options.STUDENT
-          other: abortion-forms.field-options.OTHER
-        rows: 12
-        columns: 1
-        codifications:
-          - MS-ABORTION-PATIENT-PROFESSION
-        tags:
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT|profession|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|PATIENT-PROFESSION|1
-      - field: abortion-forms.field-labels.OTHER-PROFESSION
-        type: textfield
-        shortLabel: otherProfession
-        rows: 12
-        columns: 2
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|PATIENT-PROFESSION-OTHER|1
-          - MS-ABORTION-PATIENT-PROFESSION|custom|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT|profession|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-      - field: abortion-forms.field-labels.MARITAL-STATUS
-        type: dropdown
-        shortLabel: maritalStatus
-        rows: 13
-        columns: 1
-        options:
-          married: abortion-forms.field-options.MARRIED
-          cohabiting: abortion-forms.field-options.COHABITING
-          single: abortion-forms.field-options.SINGLE
-          divorced: abortion-forms.field-options.DIVORCED
-          widowed: abortion-forms.field-options.WIDOWED
-        codifications:
-          - MS-ABORTION-PATIENT-MARITAL-STATUS
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|MARITAL-STATUS|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT|marital-status|1
-      - field: abortion-forms.field-labels.ACTUAL-LIFE-SITUATION
-        type: dropdown
-        shortLabel: actualLifeSituation
-        rows: 14
-        columns: 1
-        options:
-          alone: abortion-forms.field-options.ALONE
-          couple: abortion-forms.field-options.COUPLE
-          parent: abortion-forms.field-options.PARENT
-          other: abortion-forms.field-options.OTHER
-        codifications:
-          - MS-ABORTION-PATIENT-LIFE-SITUATION
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|ACTUAL-LIFE-SITUATION|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT|life-situation|1
-      - field: abortion-forms.field-labels.OTHER-ACTUAL-LIFE-SITUATION
-        type: textfield
-        shortLabel: otherLifeSituation
-        rows: 14
-        columns: 2
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|ACTUAL-LIFE-SITUATION-OTHER|1
-          - MS-ABORTION-PATIENT-LIFE-SITUATION|custom|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT|life-situation|1
-      - field: abortion-forms.field-labels.CHILD-NUMBER
-        type: number-field
-        shortLabel: childNumber
-        rows: 15
-        columns: 1
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|CHILD-NUMBER|1
-      - field: abortion-forms.field-labels.CHILD-DEPENDANT-NUMBER
-        type: number-field
-        shortLabel: childDependantNumber
-        rows: 15
-        columns: 2
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|CHILD-DEPENDANT-NUMBER|1
-      - field: abortion-forms.field-labels.COUNTRY-BIRTH
-        type: dropdown
-        shortLabel: countryBirth
-        rows: 16
-        columns: 1
-        codifications:
-          - CD-FED-COUNTRY
-        tags:
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|COUNTRY-BIRTH|1
-          - MS-ABORTION-ITEM|administrative-patient-info|1
-          - MS-ABORTION-ADMINISTRATIVE-PATIENT|country-birth|1
-      - field: abortion-forms.field-labels.FOLLOW-UP-INTAKE-MIN
-        type: number-field
-        shortLabel: followUpIntakeMin
-        rows: 17
-        columns: 1
-        value: 50
-        tags:
-          - MS-FOLLOW-UP-MIN|intake|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|MINUTES-TRACKING-NUMBER|1
-          - MS-ABORTION-ITEM|follow-up|1
-      - field: abortion-forms.field-labels.FOLLOW-UP-CONTRACEPTION-MIN
-        type: number-field
-        shortLabel: followUpContraceptionMin
-        rows: 17
-        columns: 2
-        value: 10
-        tags:
-          - MS-FOLLOW-UP-MIN|contraception|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|MINUTES-CONTRACEPTION-NUMBER|1
-          - MS-ABORTION-ITEM|follow-up|1
+

@@ -1,1 +1,1 @@
-export * from './itemsListField'
+export * from './items-list-field'

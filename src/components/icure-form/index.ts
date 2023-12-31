@@ -2,26 +2,18 @@
 import { html, LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
 
-import './fields/text-field/text-field'
-import './fields/measure-field/measureField'
-import './fields/number-field/numberField'
-import './fields/date-picker/datePicker'
-import './fields/date-picker/timePicker'
-import './fields/date-picker/dateTimePicker'
-import './fields/multiple-choice/multipleChoice'
-import './fields/dropdown/dropdown'
-import './fields/button-group/radioButton'
-import './fields/button-group/checkbox'
-import './fields/label/label'
-// @ts-ignore
-import baseCss from './styles/style.scss'
-// @ts-ignore
-import kendoCss from './styles/kendo.scss'
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form'
-import { CodeStub } from '@icure/api'
 import { Code, FieldMetadata, FieldValue, Form } from '../model'
 import { FormValuesContainer } from '../../generic'
+
+import './fields'
+
+// @ts-ignore
+import baseCss from '../styles/style.scss'
+// @ts-ignore
+import kendoCss from '../styles/kendo.scss'
+import { defaultTranslationProvider } from '../../utils/languages'
 
 // Extend the LitElement base class
 class IcureForm extends LitElement {
@@ -35,7 +27,7 @@ class IcureForm extends LitElement {
 	@property() defaultLanguage?: string = undefined
 	@property() formValuesContainer?: FormValuesContainer<FieldValue, FieldMetadata> = undefined
 	@property() formValuesContainerChanged?: (newValue: FormValuesContainer<FieldValue, FieldMetadata>) => void = undefined
-	@property() translationProvider: (text: string) => string = (text) => text
+	@property() translationProvider?: (language: string, text: string) => string
 	@property() codesProvider: (codifications: string[], searchTerm: string) => Promise<Code[]> = () => Promise.resolve([])
 	@property() optionsProvider: (language: string, codifications: string[], searchTerm: string) => Promise<Code[]> = () => Promise.resolve([])
 
@@ -61,13 +53,15 @@ class IcureForm extends LitElement {
 		if (!this.visible) {
 			return html``
 		}
+		const translationTables = this.form?.translations
+
 		return renderer && this.form
 			? renderer(
 					this.form,
 					{ labelPosition: this.labelPosition, defaultLanguage: this.defaultLanguage },
 					this.formValuesContainer,
 					(newValue) => this.formValuesContainerChanged?.(newValue),
-					this.translationProvider,
+					this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
 					() => [],
 					this.codesProvider,
 					this.optionsProvider,

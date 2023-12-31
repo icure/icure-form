@@ -1,7 +1,7 @@
 import { html } from 'lit'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 
-import '../text-field/icure-text-field'
+import '../../../icure-text-field'
 import { Field } from '../../../common'
 
 export class DateTimePicker extends Field {
@@ -9,10 +9,9 @@ export class DateTimePicker extends Field {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field
-				.actionManager="${this.actionManager}"
 				.readonly="${this.readonly}"
 				label="${this.label}"
-				labels="${this.displayedLabels}"
+				.labels="${this.displayedLabels}"
 				defaultLanguage="${this.defaultLanguage}"
 				schema="date-time"
 				.translationProvider=${this.translationProvider}

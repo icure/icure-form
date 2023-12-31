@@ -1,1 +1,1 @@
-export * from './TokenField'
+export * from './token-field'

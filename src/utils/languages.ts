@@ -1,3 +1,5 @@
+import { TranslationTable } from '../components/model'
+
 export const languages = {
 	en: 'English',
 	fr: 'French',
@@ -6,6 +8,6 @@ export const languages = {
 	de: 'German',
 }
 
-export function languageName(iso: string): string {
-	return languages[iso] || iso
-}
+export const languageName = (iso: string): string => languages[iso] || iso
+
+export const defaultTranslationProvider = (translations: TranslationTable[]) => (language: string, text: string) => translations?.[language]?.[text] ?? text

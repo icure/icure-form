@@ -1,18 +1,18 @@
 import { css, html, LitElement } from 'lit'
 import { CodeStub, IccHcpartyXApi, sleep } from '@icure/api'
 import * as YAML from 'yaml'
-import '../src/components/icure-form/fields/text-field/icure-text-field'
-import '../src/components/icure-form/fields/dropdown/icure-dropdown'
+import '../src/components/icure-form/fields/text-field'
+import '../src/components/icure-form/fields/dropdown'
 import '../src/components/icure-date-picker'
 import '../src/components/icure-form'
 import MiniSearch, { SearchResult } from 'minisearch'
-import { DatePicker, DateTimePicker, Form, Group, MeasureField, MultipleChoice, NumberField, Section, TextField, TimePicker } from '../src/components/icure-form/model'
+import { DatePicker, DateTimePicker, Form, Group, MeasureField, MultipleChoice, NumberField, Section, TextField, TimePicker } from '../src/components/model'
 import { codes } from './codes'
 // @ts-ignore
 import yamlForm from './gp.yaml'
 import { makeFormValuesContainer } from './form-values-container'
 import { property } from 'lit/decorators.js'
-import { ContactFormValuesContainer, ActionManager } from '../src/models'
+import { ContactFormValuesContainer } from '../src/icure'
 
 const icd10 = [
 	['I', new RegExp('^[AB][0–9]')],
@@ -344,7 +344,6 @@ class DemoApp extends LitElement {
 
 		const editable = true
 		const gpForm = Form.parse(YAML.parse(yamlForm))
-		const actionManager: ActionManager = new ActionManager(gpForm, this.formValuesContainer, editable)
 
 		return html`
 			<icure-form
@@ -355,7 +354,6 @@ class DemoApp extends LitElement {
 				theme="gray"
 				renderer="form"
 				.formValuesContainer="${this.formValuesContainer}"
-				.actionManager="${actionManager}"
 				.formValuesContainerChanged="${(newVal: ContactFormValuesContainer) => {
 					console.log(newVal)
 				}}"

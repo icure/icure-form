@@ -1,1 +1,1 @@
-export * from './measureField'
+export * from './measure-field'

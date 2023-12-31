@@ -1,14 +1,14 @@
 import { html } from 'lit'
-import '../text-field/icure-text-field'
 import { Field } from '../../../common'
+
+import '../../../icure-text-field'
 
 export class ItemsListField extends Field {
 	render() {
 		return html`<icure-text-field
-			.actionManager="${this.actionManager}"
 			.readonly="${this.readonly}"
 			label="${this.label}"
-			labels="${this.displayedLabels}"
+			.labels="${this.displayedLabels}"
 			defaultLanguage="${this.defaultLanguage}"
 			schema="items-list-field"
 			.valueProvider=${() => this.valueProvider}

@@ -2,7 +2,7 @@ import { Contact, Content, Service } from '@icure/api'
 import { sortedBy } from '../utils/no-lodash'
 import { FormValuesContainer, Version, VersionedData } from '../generic'
 import { ServiceMetadata } from '../icure'
-import { BooleanType, DateTimeType, FieldMetadata, FieldValue, MeasureType, NumberType, PrimitiveType, StringType, TimestampType } from '../components/model'
+import { BooleanType, CompoundType, DateTimeType, FieldMetadata, FieldValue, MeasureType, NumberType, PrimitiveType, StringType, TimestampType } from '../components/model'
 
 export class BridgedFormValuesContainer implements FormValuesContainer<FieldValue, FieldMetadata> {
 	/**
@@ -16,7 +16,37 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		this.contactFormValuesContainer = contactFormValuesContainer
 	}
 
-	contentToPrimitiveType(content: Content): PrimitiveType | undefined {
+	private primitiveTypeToContent(language: string, value: PrimitiveType): Content {
+		return {
+			...(value.type === 'number' ? { numberValue: (value as NumberType).value } : {}),
+			...(value.type === 'measure'
+				? {
+						measureValue: {
+							value: (value as MeasureType).value,
+							unit: (value as MeasureType).unit,
+						},
+				  }
+				: {}),
+			...(value.type === 'string' ? { stringValue: (value as StringType).value } : {}),
+			...(value.type === 'datetime' ? { fuzzyDateValue: (value as DateTimeType).value } : {}),
+			...(value.type === 'boolean' ? { booleanValue: (value as BooleanType).value } : {}),
+			...(value.type === 'timestamp' ? { instantValue: (value as TimestampType).value } : {}),
+			...(value.type === 'compound'
+				? {
+						compoundValue: Object.entries((value as CompoundType).value).map(([label, value]) => ({
+							content: {
+								[language]: this.primitiveTypeToContent(language, value),
+							},
+						})),
+				  }
+				: {}),
+		}
+	}
+
+	contentToPrimitiveType(language: string, content: Content | undefined): PrimitiveType | undefined {
+		if (!content) {
+			return undefined
+		}
 		if (content.numberValue || content.numberValue === 0) {
 			return { type: 'number', value: content.numberValue }
 		}
@@ -35,6 +65,16 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		if (content.instantValue) {
 			return { type: 'timestamp', value: content.instantValue }
 		}
+		if (content.compoundValue) {
+			return {
+				type: 'compound',
+				value: content.compoundValue.reduce((acc: { [label: string]: PrimitiveType }, { label, content }) => {
+					const primitiveValue = this.contentToPrimitiveType(language, content?.[language])
+					return label && primitiveValue ? { ...acc, [label]: primitiveValue } : acc
+				}, {}),
+			}
+		}
+
 		return undefined
 	}
 
@@ -62,13 +102,16 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				[id]: history.map(({ revision, modified, value: s }) => ({
 					revision,
 					modified,
-					value: Object.entries(s.content ?? {}).reduce((acc, [lng, cnt]) => {
-						const converted = this.contentToPrimitiveType(cnt)
-						return converted ? { ...acc, [lng]: { value: converted, codes: s.codes } } : acc
-					}, {}),
+					value: {
+						value: Object.entries(s.content ?? {}).reduce((acc, [lng, cnt]) => {
+							const converted = this.contentToPrimitiveType(lng, cnt)
+							return converted ? { ...acc, [lng]: { value: converted } } : acc
+						}, {}),
+						codes: s.codes?.map((c) => ({ id: c.id ?? `${c.type}|${c.code}|${c.version}`, label: c.label ?? {} })),
+					},
 				})),
 			}),
-			{},
+			{} as VersionedData<FieldValue>,
 		)
 	}
 	getMetadata(id: string, revisions: string[]): VersionedData<FieldMetadata> {
@@ -90,27 +133,21 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		)
 	}
 	setValue(label: string, language: string, fv: FieldValue, id?: string | undefined): string {
-		const value = fv[language].value
+		const value = fv.value[language]
 		return this.contactFormValuesContainer.setValue(
 			label,
 			language,
 			{
 				id: id,
-				codes: fv[language].codes,
+				codes: fv.codes,
 				content: {
-					[language]: {
-						...(value.type === 'number' ? { numberValue: (value as NumberType).value } : {}),
-						...(value.type === 'measure' ? { measureValue: { value: (value as MeasureType).value, unit: (value as MeasureType).unit } } : {}),
-						...(value.type === 'string' ? { stringValue: (value as StringType).value } : {}),
-						...(value.type === 'datetime' ? { fuzzyDateValue: (value as DateTimeType).value } : {}),
-						...(value.type === 'boolean' ? { booleanValue: (value as BooleanType).value } : {}),
-						...(value.type === 'timestamp' ? { instantValue: (value as TimestampType).value } : {}),
-					},
+					[language]: this.primitiveTypeToContent(language, value),
 				},
 			},
 			id,
 		)
 	}
+
 	setMetadata(label: string, meta: FieldMetadata, id?: string | undefined): string {
 		return this.contactFormValuesContainer.setMetadata(
 			label,
@@ -174,10 +211,13 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 
 	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => string[]): VersionedData<Service> {
 		return Object.entries(this.getServicesInHistory(revisionsFilter)).reduce(
-			(acc, [id, history]) => ({
-				...acc,
-				[id]: [...history].sort((a, b) => (b?.modified || +new Date()) - (a?.modified || +new Date())),
-			}),
+			(acc, [id, history]) =>
+				history.length
+					? {
+							...acc,
+							[id]: [...history].sort((a, b) => (b?.modified || +new Date()) - (a?.modified || +new Date())),
+					  }
+					: acc,
 			{},
 		)
 	}

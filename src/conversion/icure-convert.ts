@@ -1,16 +1,4 @@
-import {
-	CheckBox,
-	ItemsListField,
-	TokenField,
-	DatePicker,
-	DateTimePicker,
-	DropdownField,
-	Form,
-	MeasureField,
-	NumberField,
-	Section,
-	TextField,
-} from '../components/icure-form/model'
+import { CheckBox, ItemsListField, TokenField, DatePicker, DateTimePicker, DropdownField, Form, MeasureField, NumberField, Section, TextField } from '../components/model'
 
 import { FormLayoutData } from '@icure/api/icc-api/model/FormLayoutData'
 import { FormLayout } from '@icure/api'

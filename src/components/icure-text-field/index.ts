@@ -18,20 +18,20 @@ import { SuggestionPalette } from './suggestion-palette'
 import { caretFixPlugin } from './plugin/caret-fix-plugin'
 import { hasMark } from './prosemirror-utils'
 
-// @ts-ignore
-import baseCss from './styles/style.scss'
-// @ts-ignore
-import kendoCss from './styles/kendo.scss'
-
 import { maskPlugin } from './plugin/mask-plugin'
 import { hasContentClassPlugin } from './plugin/has-content-class-plugin'
 import { regexpPlugin } from './plugin/regexp-plugin'
 import { sorted } from '../../utils/no-lodash'
 import { format, parse } from 'date-fns'
 import { Field } from '../common'
-import { Code, IcureTextFieldSchema, PrimitiveType, Trigger } from '../model'
+import { Code, IcureTextFieldSchema, PrimitiveType } from '../model'
 import { Suggestion } from '../../generic'
 import { generateLabels } from '../common/utils'
+
+// @ts-ignore
+import baseCss from './styles/style.scss'
+// @ts-ignore
+import kendoCss from './styles/kendo.scss'
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
@@ -154,7 +154,6 @@ export class IcureTextField extends Field {
 	}
 
 	firstUpdated() {
-		this.registerStateUpdater(this.label || '')
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const cmp = this
 		const pms: Schema = (this.proseMirrorSchema = createSchema(
@@ -284,23 +283,15 @@ export class IcureTextField extends Field {
 						setTimeout(() => {
 							// eslint-disable-next-line max-len
 							if (this.trToSave === tr) {
-								const serialized = this.serializer.serialize(tr.doc)
-								const content = this.primitiveTypeExtractor?.(tr.doc)
 								const value = this.primitiveTypeExtractor?.(parsedDoc)
 								if (value) {
 									const language = this.displayedLanguage ?? 'en'
 									this.containerId = this.handleValueChanged?.(
 										this.label,
 										language,
-										{ [language]: { value: value, codes: this.codesExtractor?.(parsedDoc) ?? [] } },
+										{ value: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] },
 										this.containerId,
 									)
-									if (this.actionManager) {
-										this.actionManager.launchActions(Trigger.CHANGE, this.label || '', {
-											value: serialized,
-											content: content,
-										})
-									}
 								}
 							}
 						}, 800)
@@ -311,14 +302,10 @@ export class IcureTextField extends Field {
 				},
 			})
 			if (parsedDoc ? this.serializer.serialize(parsedDoc) : '' !== '') {
-				this.actionManager?.defaultSandbox.set(this.label || '', {
-					value: parsedDoc ? this.serializer.serialize(parsedDoc) : '',
-					content: this.primitiveTypeExtractor?.(parsedDoc),
-				})
 				const value = this.primitiveTypeExtractor?.(parsedDoc)
 				if (value) {
 					const language = this.displayedLanguage ?? 'en'
-					this.containerId = this.handleValueChanged?.(this.label, language, { [language]: { value: value, codes: this.codesExtractor?.(parsedDoc) ?? [] } }, this.containerId)
+					this.handleValueChanged?.(this.label, language, { value: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] }, this.containerId)
 				}
 			}
 		}

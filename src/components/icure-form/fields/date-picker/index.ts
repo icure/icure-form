@@ -1,4 +1,3 @@
-export * from './datePicker'
-export * from '../../../icure-date-picker/index'
-export * from './dateTimePicker'
-export * from './timePicker'
+export * from './date-picker'
+export * from './date-time-picker'
+export * from './time-picker'

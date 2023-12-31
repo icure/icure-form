@@ -6,15 +6,15 @@ import { Code } from '../../../model'
 
 import '../../../icure-button-group'
 
-export class CheckBox extends Field {
+export class RadioButton extends Field {
 	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Code[]> = async () => []
-
 	render() {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`
 				<icure-button-group
 					.readonly="${this.readonly}"
+					type="radio"
 					.displayedLabels="${this.displayedLabels}"
 					label="${this.label}"
 					defaultLanguage="${this.defaultLanguage}"
@@ -31,4 +31,4 @@ export class CheckBox extends Field {
 	}
 }
 
-customElements.define('icure-form-checkbox', CheckBox)
+customElements.define('icure-form-radio-button', RadioButton)

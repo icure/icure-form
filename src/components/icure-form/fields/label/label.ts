@@ -1,6 +1,7 @@
 import { css, CSSResultGroup, html, LitElement, TemplateResult } from 'lit'
+import { property } from 'lit/decorators.js'
+
 import '../../../icure-label'
-import { property } from 'lit/decorators'
 
 export class Label extends LitElement {
 	//override

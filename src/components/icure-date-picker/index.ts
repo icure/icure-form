@@ -1,117 +1,95 @@
-import { ValuedField } from '../../../../common/valuedField'
-import { VersionedValue } from '../../text-field/icure-text-field'
-import { html, TemplateResult } from 'lit'
-import { generateLabel } from '../common/utils'
-import { state } from 'lit/decorators.js'
-import { datePicto } from '../../text-field/icure-text-field/styles/paths'
+import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
+import { generateLabels } from '../common/utils'
+import { property, state } from 'lit/decorators.js'
 import 'app-datepicker'
 import { CustomEventDetail } from 'app-datepicker/dist/typings'
-import { Content } from '@icure/api'
 import { MAX_DATE } from 'app-datepicker/dist/constants'
 import { toResolvedDate } from 'app-datepicker/dist/helpers/to-resolved-date'
-import { Trigger } from '../../../model'
+import { Field } from '../common'
+import { datePicto } from '../icure-text-field/styles/paths'
+import { extractSingleValue } from '../icure-form/fields/utils'
+import { format } from 'date-fns'
+import { anyDateToDate } from '../../utils/icure-utils'
+// @ts-ignore
+import baseCss from '../styles/style.scss'
+// @ts-ignore
+import kendoCss from '../styles/kendo.scss'
 
-export class IqrDatePickerField extends ValuedField<string, VersionedValue> {
+export class IcureDatePickerField extends Field {
+	//TODO: support different date formats
+	@property() placeholder = ''
+	@property() containerId?: string = undefined
+
 	@state() protected displayDatePicker = false
-	@state() protected inputValue = ''
+
+	static get styles(): CSSResultGroup[] {
+		return [baseCss, kendoCss]
+	}
+
+	getValueFromProvider(): string | undefined {
+		const [id, versions] = extractSingleValue(this.valueProvider?.())
+		if (versions) {
+			this.containerId = id
+			const valueForLanguage = versions[0]?.value?.value?.[this.language()] ?? ''
+			if (valueForLanguage && (valueForLanguage.type === 'timestamp' || valueForLanguage.type === 'datetime') && valueForLanguage.value) {
+				const date = anyDateToDate(valueForLanguage.value)
+				return date ? format(date, 'dd/MM/yyyy') : ''
+			}
+		}
+		return undefined
+	}
 
 	render(): TemplateResult {
 		if (!this.visible) {
 			return html``
 		}
-		return html`
-			<div id="root" class="icure-text-field ${this.inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
-				${generateLabel(this.label ?? '', this.labelPosition ?? 'float', this.translationProvider)}
-				<div class="icure-input" @click="${this.togglePopup}" id="test">
-					<div id="editor">${this.inputValue}</div>
-					<div id="extra" class=${'extra forced'}>
-						<button class="btn select-arrow">${datePicto}</button>
-						${this.displayDatePicker
-							? html`<div id="menu" class="date-picker" @click="${(event: Event) => event.stopPropagation()}">
-									<app-date-picker
-										locale="${this.displayedLanguage || this.defaultLanguage || 'en'}"
-										style=""
-										max="${MAX_DATE}"
-										min="${toResolvedDate('1970-01-01')}"
-										@date-updated="${this.dateUpdated}"
-									></app-date-picker>
-							  </div>`
-							: ''}
-					</div>
+
+		const value = this.getValueFromProvider()
+
+		return html` <div id="root" class="icure-text-field ${value && value != '' ? 'has-content' : ''}" data-placeholder="${this.placeholder}">
+			${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
+			<div class="icure-input" @click="${this.togglePopup}" id="test">
+				<div id="editor">${value}</div>
+				<div id="extra" class=${'extra forced'}>
+					<button class="btn select-arrow">${datePicto}</button>
+					${this.displayDatePicker
+						? html`<div id="menu" class="date-picker" @click="${(event: Event) => event.stopPropagation()}">
+								<app-date-picker
+									locale="${this.displayedLanguage || this.defaultLanguage || 'en'}"
+									style=""
+									max="${MAX_DATE}"
+									min="${toResolvedDate('1900-01-01')}"
+									@date-updated="${this.dateUpdated}"
+								></app-date-picker>
+						  </div>`
+						: ''}
 				</div>
 			</div>
-		`
-	}
-	public firstUpdated(): void {
-		this.registerStateUpdater(this.label || '')
-
-		let providedValue = this.valueProvider && this.valueProvider()
-		if (!providedValue) {
-			providedValue = { id: '', versions: [] }
-		}
-		const displayedVersionedValue = providedValue?.versions?.find((version) => version.value)?.value
-		this.containerId = providedValue?.id
-		if (displayedVersionedValue && Object.keys(displayedVersionedValue)?.length) {
-			this.inputValue = this.formatDate(displayedVersionedValue[Object.keys(displayedVersionedValue)[0]])
-			this.value = this.value || this.inputValue.split('/').reduce((acc, x) => x + '' + acc, '')
-		} else if (this.value) {
-			this.inputValue = this.value
-		}
-		this.actionManager?.defaultSandbox.set(this.label || '', {
-			value: this.value,
-			content: new Content({
-				fuzzyDateValue: this.inputValue.split('/').reduce((acc, x) => x + '' + acc, ''),
-			}),
-			fuzzyDate: this.inputValue.split('/').reduce((acc, x) => x + '' + acc, ''),
-		})
-		if (this.value && this.handleValueChanged && this.inputValue) {
-			this.containerId = this.handleValueChanged?.(
-				this.displayedLanguage || this.defaultLanguage || 'en',
-				{
-					asString: this.inputValue,
-					content: new Content({
-						fuzzyDateValue: this.inputValue.split('/').reduce((acc, x) => x + '' + acc, ''),
-					}),
-				},
-				this.containerId,
-				[],
-			)
-		}
+		</div>`
 	}
 
 	public dateUpdated(date: CustomEventDetail['date-updated']): void {
-		this.inputValue = date.detail.value?.split('-').reverse().join('/') ?? ''
-		const fuzzyDateValue: string = this.inputValue.split('/').reduce((acc, x) => x + '' + acc, '')
-		this.containerId = this.handleValueChanged?.(
-			this.displayedLanguage || this.defaultLanguage || 'en',
-			{
-				asString: this.inputValue,
-				content: new Content({
-					fuzzyDateValue: fuzzyDateValue,
-				}),
-			},
-			this.containerId,
-			[],
-		)
-		if (this.actionManager) {
-			this.actionManager.launchActions(Trigger.CHANGE, this.label || '', { value: this.inputValue, fuzzyDateValue: fuzzyDateValue })
+		const parts = date.detail.value?.split('-')
+		if (parts && parts.length === 3) {
+			const fuzzyDateValue = parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2])
+			this.containerId = this.handleValueChanged?.(
+				this.label,
+				this.language(),
+				{
+					value: { [this.language()]: { type: 'timestamp', value: fuzzyDateValue } },
+				},
+				this.containerId,
+			)
 		}
 		this.togglePopup()
 	}
 
 	public togglePopup(): void {
-		if (!this.editable) {
+		if (this.readonly && !this.displayDatePicker) {
 			return
 		}
 		this.displayDatePicker = !this.displayDatePicker
 	}
-
-	private formatDate(inputDate: string) {
-		const day = inputDate.substring(0, 2)
-		const month = inputDate.substring(2, 4)
-		const year = inputDate.substring(4, 8)
-		return `${day}/${month}/${year}`
-	}
 }
 
-customElements.define('icure-date-picker-field', IqrDatePickerField)
+customElements.define('icure-date-picker-field', IcureDatePickerField)

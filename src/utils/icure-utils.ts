@@ -1,26 +1,37 @@
 import parse from 'date-fns/parse'
 import { CodeStub, Content, Service } from '@icure/api'
 
-export function fuzzyDate(epochOrLongCalendar?: number): Date | undefined {
-	if (!epochOrLongCalendar && epochOrLongCalendar !== 0) {
+export function anyDateToDate(dateOrEpochOrLongCalendar?: Date | number): Date | undefined {
+	if (dateOrEpochOrLongCalendar instanceof Date) {
+		return anyDateToDate(+dateOrEpochOrLongCalendar)
+	}
+	if (!dateOrEpochOrLongCalendar && dateOrEpochOrLongCalendar !== 0) {
 		return undefined
 	}
-	if (epochOrLongCalendar >= 18000101 && epochOrLongCalendar < 25400000) {
-		return parse('' + epochOrLongCalendar, 'YYYYMMDD', new Date())
-	} else if (epochOrLongCalendar >= 18000101000000) {
-		return parse('' + epochOrLongCalendar, 'YYYYMMDDHHmmss', new Date())
+	if (dateOrEpochOrLongCalendar >= 18000101 && dateOrEpochOrLongCalendar < 25400000) {
+		return parse('' + dateOrEpochOrLongCalendar, 'YYYYMMDD', new Date())
+	} else if (dateOrEpochOrLongCalendar >= 18000101000000) {
+		return parse('' + dateOrEpochOrLongCalendar, 'YYYYMMDDHHmmss', new Date())
 	} else {
-		return new Date(epochOrLongCalendar)
+		return new Date(dateOrEpochOrLongCalendar)
 	}
 }
 
-export function DateAsIcureDate(date: Date): number {
+export function dateToFuzzyDate(date: Date): number {
 	return parseInt(
 		`${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}:${date
 			.getMinutes()
 			.toString()
 			.padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`,
 	)
+}
+
+export function anyDateToFuzzyDate(dateOrEpochOrLongCalendar: Date | number) {
+	const date = anyDateToDate(dateOrEpochOrLongCalendar)
+	if (!date) {
+		return undefined
+	}
+	return dateToFuzzyDate(date)
 }
 
 export function currentTime() {

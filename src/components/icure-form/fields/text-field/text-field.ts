@@ -1,11 +1,10 @@
 import { html } from 'lit'
 import { property } from 'lit/decorators.js'
-
-import './icure-text-field'
-
 import { Field } from '../../../common'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 import { Suggestion } from '../../../../generic'
+
+import '../../../icure-text-field'
 
 class TextField extends Field {
 	//Boolean value is parsed as text, so we also need to use string type
@@ -26,10 +25,9 @@ class TextField extends Field {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field
-				.actionManager="${this.actionManager}"
 				.readonly="${this.readonly}"
 				label="${this.label}"
-				labels="${this.displayedLabels}"
+				.labels="${this.displayedLabels}"
 				defaultLanguage="${this.defaultLanguage}"
 				schema="${this.multiline ? 'text-document' : 'styled-text-with-codes'}"
 				?suggestions=${!!this.suggestionProvider}

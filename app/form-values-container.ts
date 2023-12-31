@@ -1,5 +1,5 @@
 import { Contact, Service } from '@icure/api'
-import { ContactFormValuesContainer } from '../src/models'
+import { ContactFormValuesContainer } from '../src/icure'
 
 export const makeFormValuesContainer = () => {
 	const cc = new Contact({
@@ -46,11 +46,5 @@ export const makeFormValuesContainer = () => {
 		return await f(...sandboxValues)
 	}
 	const now = +new Date()
-	return new ContactFormValuesContainer(
-		cc,
-		ctc,
-		[ctc],
-		(label, serviceId, language, content, codes, tags) => new Service({ label, id: serviceId, created: now, modified: now, content: { [language]: content }, codes, tags }),
-		interpretor,
-	)
+	return new ContactFormValuesContainer(cc, ctc, [ctc], (label, serviceId) => new Service({ label, id: serviceId, created: now, modified: now }), interpretor)
 }

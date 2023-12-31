@@ -1,13 +1,14 @@
 import { Schema } from 'prosemirror-model'
-import { DocumentSchema, getMarkdownSpec, InlineSchema, StyledSchema } from './markdown-schema'
-import { DateSchema, DateTimeSchema, getDateSpec, getDateTimeSpec, getTimeSpec, TimeSchema } from './date-time-schema'
-import { getTokensSpec, TokensSchema } from './token-schema'
-import { getMeasureSpec, MeasureSchema } from './measure-schema'
-import { DecimalSchema, getDecimalSpec } from './decimal-schema'
-import { getItemsListSpec, ItemsListSchema } from './items-list'
+import { getMarkdownSpec } from './markdown-schema'
+import { getDateSpec, getDateTimeSpec, getTimeSpec } from './date-time-schema'
+import { getTokensSpec } from './token-schema'
+import { getMeasureSpec } from './measure-schema'
+import { getDecimalSpec } from './decimal-schema'
+import { getItemsListSpec } from './items-list'
+import { IcureTextFieldSchema } from '../../model'
 
 export function createSchema(
-	type: IqrTextFieldSchema,
+	type: IcureTextFieldSchema,
 	colorProvider: (type: string, code: string, isCode: boolean) => string,
 	contentProvider: (codes: { type: string; code: string }[]) => string,
 ): Schema {

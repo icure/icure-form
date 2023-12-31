@@ -18,10 +18,11 @@ export interface FieldMetadata {
 }
 
 export interface FieldValue {
-	[language: string]: { value: PrimitiveType; codes?: Code[] }
+	value: { [language: string]: PrimitiveType }
+	codes?: Code[]
 }
 
-export type PrimitiveType = StringType | NumberType | BooleanType | TimestampType | DateTimeType | MeasureType
+export type PrimitiveType = StringType | NumberType | BooleanType | TimestampType | DateTimeType | MeasureType | CompoundType
 
 export interface StringType {
 	type: 'string'
@@ -52,6 +53,11 @@ export interface MeasureType {
 	type: 'measure'
 	value: number
 	unit?: string
+}
+
+export interface CompoundType {
+	type: 'compound'
+	value: { [label: string]: PrimitiveType }
 }
 
 export interface Labels {
@@ -1075,28 +1081,92 @@ export class Section {
 	}
 }
 
+export class Codification {
+	type: string
+	codes: Code[]
+
+	constructor(type: string, codes: Code[]) {
+		this.type = type
+		this.codes = codes
+	}
+
+	static parse(json: { type: string; codes: Code[] }): Codification {
+		return new Codification(json.type, json.codes)
+	}
+
+	toJson(): { type: string; codes: Code[] } {
+		return {
+			type: this.type,
+			codes: this.codes,
+		}
+	}
+}
+
+export class TranslationTable {
+	language: string
+	translations: { [key: string]: string }
+
+	constructor(language: string, translations: { [key: string]: string }) {
+		this.language = language
+		this.translations = translations
+	}
+
+	static parse(json: { language: string; translations: { [key: string]: string } }): TranslationTable {
+		return new TranslationTable(json.language, json.translations)
+	}
+
+	toJson(): { language: string; translations: { [key: string]: string } } {
+		return {
+			language: this.language,
+			translations: this.translations,
+		}
+	}
+}
+
 export class Form {
 	form: string
 	sections: Section[]
 	description?: string
 	keywords?: string[]
 	actions?: Action[]
+	codifications?: Codification[]
+	translations?: TranslationTable[]
 
-	constructor(title: string, sections: Section[], description?: string, keywords?: string[], actions?: Action[]) {
+	constructor(
+		title: string,
+		sections: Section[],
+		description?: string,
+		keywords?: string[],
+		actions?: Action[],
+		codifications?: Codification[],
+		translations?: TranslationTable[],
+	) {
 		this.form = title
 		this.description = description
 		this.keywords = keywords
 		this.sections = sections
 		this.actions = actions
+		this.codifications = codifications
+		this.translations = translations
 	}
 
-	static parse(json: { form: string; sections: Section[]; description?: string; keywords?: string[]; actions?: Action[] }): Form {
+	static parse(json: {
+		form: string
+		sections: Section[]
+		description?: string
+		keywords?: string[]
+		actions?: Action[]
+		codifications?: Codification[]
+		translations: TranslationTable[]
+	}): Form {
 		return new Form(
 			json.form,
 			(json.sections || []).map((s: Section) => Section.parse(s)),
 			json.description,
 			json.keywords,
 			(json.actions || []).map((a: Action) => Action.parse(a)),
+			json.codifications?.map((c: Codification) => Codification.parse(c)),
+			json.translations?.map((t: TranslationTable) => TranslationTable.parse(t)),
 		)
 	}
 

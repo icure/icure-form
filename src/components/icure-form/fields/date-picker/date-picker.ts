@@ -1,18 +1,17 @@
 import { html } from 'lit'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
-
-import '../text-field/icure-text-field'
 import { Field } from '../../../common'
+
+import '../../../icure-date-picker'
 
 export class DatePicker extends Field {
 	render() {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-date-picker-field
-				.actionManager="${this.actionManager}"
 				.readonly="${this.readonly}"
 				label="${this.label}"
-				labels="${this.displayedLabels}"
+				.labels="${this.displayedLabels}"
 				defaultLanguage="${this.defaultLanguage}"
 				schema="decimal"
 				.translationProvider=${this.translationProvider}

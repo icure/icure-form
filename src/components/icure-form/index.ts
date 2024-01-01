@@ -15,7 +15,9 @@ import baseCss from '../styles/style.scss'
 import kendoCss from '../styles/kendo.scss'
 import { defaultTranslationProvider } from '../../utils/languages'
 
-// Extend the LitElement base class
+/**
+ * Form element
+ */
 class IcureForm extends LitElement {
 	@property() form?: Form
 	@property() skin = 'material'

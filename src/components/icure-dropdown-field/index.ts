@@ -88,7 +88,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 
 		return html`
 			<div id="root" class="icure-text-field ${inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
 				<div class="icure-input" @click="${this.togglePopup}" id="test">
 					<div id="editor">${inputValue}</div>
 					<div id="extra" class=${'extra forced'}>

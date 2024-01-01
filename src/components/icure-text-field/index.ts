@@ -106,7 +106,7 @@ export class IcureTextField extends Field {
 	render() {
 		return html`
 			<div id="root" class="${this.visible ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
 				<div class="icure-input">
 					<div id="editor"></div>
 				</div>

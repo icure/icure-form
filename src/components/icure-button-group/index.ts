@@ -64,7 +64,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 
 		return html`
 			<div class="icure-text-field">
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
 				<div style="${this.generateStyle()}">
 					${this.displayedOptions?.map((x) => {
 						const text = (x.label ?? {})[this.language()] ?? ''

@@ -96,7 +96,7 @@ type FieldType =
 
 export interface ComputedProperties {
 	hidden?: string
-	readOnly?: string
+	readonly?: string
 	value?: string
 }
 

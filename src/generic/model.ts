@@ -14,7 +14,7 @@ export interface FormValuesContainer<Value, Metadata> {
 	setValue(label: string, language: string, data: Value, id?: string, metadata?: Metadata): string
 	setMetadata(label: string, metadata: Metadata, id?: string): string
 	delete(serviceId: string): void
-	compute<T, S>(formula: string, sandbox?: S): Promise<T | undefined>
+	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): T | undefined
 	getChildren(subform: string): { [form: string]: FormValuesContainer<Value, Metadata>[] }
 	registerChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
 	unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void

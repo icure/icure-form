@@ -77,7 +77,6 @@ export const render: Renderer = (
 
 	function renderTextField(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-textfield
-			.readonly="${readonly}"
 			class="icure-form-field"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows, fg.styleOptions?.width)}"
 			label="${fg.field}"
@@ -97,13 +96,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-textfield>`
 	}
 
 	function renderMeasureField(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-measure-field
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -116,13 +114,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-measure-field>`
 	}
 
 	function renderNumberField(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-number-field
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -134,13 +131,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-number-field>`
 	}
 
 	function renderDatePicker(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-date-picker
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -152,13 +148,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-date-picker>`
 	}
 
 	function renderTimePicker(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-time-picker
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -170,13 +165,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-time-picker>`
 	}
 
 	function renderDateTimePicker(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-date-time-picker
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -188,13 +182,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-date-time-picker>`
 	}
 
 	function renderDropdownField(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-dropdown-field
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			.label=${fg.field}
 			.displayedLabels=${getLabels(fg)}
@@ -224,13 +217,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-dropdown-field>`
 	}
 
 	function renderRadioButtons(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-radio-button
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			.label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -259,13 +251,12 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-radio-button>`
 	}
 
 	function renderCheckboxes(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html` <icure-form-checkbox
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			.label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
@@ -295,24 +286,27 @@ export const render: Renderer = (
 			.handleValueChanged="${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}"
 			.handleMetadataChanged="${handleMetadataChanged(formsValueContainer)}"
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-checkbox>`
 	}
 
 	function renderLabel(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-label
-			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
 			labelPosition=${props.labelPosition}
 			label="${fg.field}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.styleOptions="${fg.styleOptions}"
-			.visible="${fg.computedProperties?.hidden ? !formsValueContainer?.compute(fg.computedProperties?.hidden) : true}"
+			.readonly="${readonly || (fg.computedProperties?.readonly ? !formsValueContainer?.compute(fg.computedProperties?.readonly) : false)}"
 		></icure-form-label>`
 	}
 
 	const renderFieldOrGroup = function (fg: Field | Group | SubForm, level: number, fieldsInRow = 1): TemplateResult | TemplateResult[] {
 		const fgColumns = fg.columns ?? 1
+		const hidden = fg.computedProperties?.hidden ? formsValueContainer?.compute(fg.computedProperties?.hidden) : false
+		if (hidden) {
+			return html``
+		}
 		if (fg.clazz === 'group' && fg.fields) {
 			return renderGroup(fg, fgColumns, fieldsInRow, level)
 		} else if (fg.clazz === 'subform' && fg.subform) {

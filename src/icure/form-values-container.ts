@@ -14,11 +14,13 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	 * @param responsible
 	 * @param contact The displayed contact (may be in the past). === to currentContact if the contact is the contact of the day
 	 * @param contactFormValuesContainer
+	 * @param interpreter
 	 * @param changeListeners
 	 */
 	constructor(
 		private responsible: string,
 		private contactFormValuesContainer: ContactFormValuesContainer,
+		private interpreter?: <T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox: S) => T | undefined,
 		contact?: Contact,
 		changeListeners: ((newValue: BridgedFormValuesContainer) => void)[] = [],
 	) {
@@ -26,8 +28,8 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		this.changeListeners = changeListeners
 		const listener = (newContactFormValuesContainer: ContactFormValuesContainer) => {
 			newContactFormValuesContainer.unregisterChangeListener(listener) //Will be added again on the next line
-			const newBridgedFoemValueContainer = new BridgedFormValuesContainer(this.responsible, newContactFormValuesContainer, this.contact, this.changeListeners)
-			this.changeListeners.forEach((l) => l(newBridgedFoemValueContainer))
+			const newBridgedFormValueContainer = new BridgedFormValuesContainer(this.responsible, newContactFormValuesContainer, this.interpreter, this.contact, this.changeListeners)
+			this.changeListeners.forEach((l) => l(newBridgedFormValueContainer))
 		}
 		this.contactFormValuesContainer.registerChangeListener(listener)
 	}
@@ -191,14 +193,23 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	delete(serviceId: string): void {
 		this.contactFormValuesContainer.delete(serviceId)
 	}
-	compute<T, S>(formula: string, sandbox?: S | undefined): Promise<T | undefined> {
-		return this.contactFormValuesContainer.compute(formula, sandbox)
+
+	private getVersionedValuesForKey(key: string | symbol) {
+		return this.getValues((id, history) => (history?.[0]?.value?.label && key === history[0].value.label ? [history?.[0]?.revision] : []))
+	}
+
+	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): T | undefined {
+		const proxy: S = new Proxy({} as S, {
+			has: (target: S, key: string | symbol) => key === 'self' || Object.keys(this.getVersionedValuesForKey(key) ?? {}).length > 0,
+			get: (target: S, key: string | symbol) => (key === 'self' ? proxy : Object.values(this.getVersionedValuesForKey(key)).map((v) => v[0]?.value)),
+		})
+		return this.interpreter?.(formula, sandbox ?? proxy)
 	}
 	getChildren(subform: string): { [form: string]: FormValuesContainer<FieldValue, FieldMetadata>[] } {
 		return Object.entries(this.contactFormValuesContainer.getChildren(subform)).reduce(
 			(acc, [form, fvc]) => ({
 				...acc,
-				[form]: fvc.map((fvc) => new BridgedFormValuesContainer(this.responsible, fvc, this.contact)),
+				[form]: fvc.map((fvc) => new BridgedFormValuesContainer(this.responsible, fvc, this.interpreter, this.contact)),
 			}),
 			{},
 		)
@@ -211,7 +222,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 
 	serviceFactory: (label: string, serviceId?: string) => Service
 	//Actions management
-	interpreter: (formula: string, sandbox?: any) => Promise<any>
 
 	changeListeners: ((newValue: ContactFormValuesContainer) => void)[]
 
@@ -219,7 +229,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		currentContact: Contact,
 		contactsHistory: Contact[],
 		serviceFactory: (label: string, serviceId?: string) => Service,
-		interpreter: (formula: string, sandbox: any) => Promise<any>,
 		changeListeners: ((newValue: ContactFormValuesContainer) => void)[] = [],
 	) {
 		if (contactsHistory.includes(currentContact)) {
@@ -228,7 +237,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		this.currentContact = currentContact
 		this.contactsHistory = sortedBy(contactsHistory, 'created', 'desc')
 		this.serviceFactory = serviceFactory
-		this.interpreter = interpreter
 
 		this.changeListeners = changeListeners
 	}
@@ -313,7 +321,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 				{ ...this.currentContact, services: this.currentContact.services?.map((s) => (s.id === service.id ? newService : s)) },
 				this.contactsHistory,
 				this.serviceFactory,
-				this.interpreter,
 				this.changeListeners,
 			)
 
@@ -357,7 +364,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 				newCurrentContact,
 				this.contactsHistory.map((c) => (c === this.currentContact ? newCurrentContact : c)),
 				this.serviceFactory,
-				this.interpreter,
 				this.changeListeners,
 			)
 
@@ -374,15 +380,14 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 				{ ...this.currentContact, services: this.currentContact.services?.map((s) => (s.id === serviceId ? new Service({ ...service, endOfLife: Date.now() }) : s)) },
 				this.contactsHistory,
 				this.serviceFactory,
-				this.interpreter,
 			)
 
 			this.changeListeners.forEach((l) => l(newFormValuesContainer))
 		}
 	}
 
-	async compute<T, S>(formula: string, sandbox?: S): Promise<T | undefined> {
-		return await this.interpreter(formula, sandbox)
+	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): T | undefined {
+		throw new Error('Compute not supported at contact level')
 	}
 
 	/** returns all services in history that match a selector

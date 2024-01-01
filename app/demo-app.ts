@@ -13,6 +13,7 @@ import yamlForm from './gp.yaml'
 import { makeFormValuesContainer } from './form-values-container'
 import { state } from 'lit/decorators.js'
 import { BridgedFormValuesContainer } from '../src/icure'
+import { makeInterpreter } from '../src/utils/interpreter'
 
 const icd10 = [
 	['I', new RegExp('^[AB][0–9]')],
@@ -71,7 +72,7 @@ const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'd
 
 class DemoApp extends LitElement {
 	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
-	@state() formValuesContainer: BridgedFormValuesContainer = new BridgedFormValuesContainer('user-id', makeFormValuesContainer())
+	@state() formValuesContainer: BridgedFormValuesContainer = new BridgedFormValuesContainer('user-id', makeFormValuesContainer(), makeInterpreter())
 
 	private miniSearch: MiniSearch = new MiniSearch({
 		fields: ['text'], // fields to index for full-text search

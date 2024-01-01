@@ -237,7 +237,9 @@ sections:
         shortLabel: other
         rows: 4
         columns: 1
-
+        computedProperties:
+          hidden: |
+            return !self['abortion-forms.field-labels.ACCOMPANIED-BY']?.some(d => d.codes?.some(c => c.id === 'other'))
         tags:
           - MS-ABORTION-COMPANION-TYPE|custom|1
           - MS-ABORTION-COMPANION|typeOfCompanion|1

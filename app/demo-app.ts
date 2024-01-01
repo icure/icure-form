@@ -330,7 +330,6 @@ class DemoApp extends LitElement {
 						],
 						rows: 1,
 						columns: 1,
-						hideCondition: '',
 					}),
 				]),
 			],

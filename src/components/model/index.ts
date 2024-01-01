@@ -94,6 +94,12 @@ type FieldType =
 
 //todo: create abstract class for all fields + delete useless properties
 
+export interface ComputedProperties {
+	hidden?: string
+	readOnly?: string
+	value?: string
+}
+
 export abstract class Field {
 	clazz = 'field' as const
 	field: string
@@ -110,7 +116,7 @@ export abstract class Field {
 	value?: string
 	unit?: string
 	multiline?: boolean
-	hideCondition?: string
+	computedProperties?: ComputedProperties
 	now?: boolean
 	translate?: boolean
 	sortable?: boolean
@@ -138,7 +144,7 @@ export abstract class Field {
 			value,
 			unit,
 			multiline,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -156,7 +162,7 @@ export abstract class Field {
 			value?: string
 			unit?: string
 			multiline?: boolean
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			now?: boolean
 			translate?: boolean
 			width?: number
@@ -177,7 +183,7 @@ export abstract class Field {
 		this.value = value
 		this.unit = unit
 		this.multiline = multiline || false
-		this.hideCondition = hideCondition
+		this.computedProperties = computedProperties
 		this.now = now
 		this.translate = translate ?? true
 		this.width = width
@@ -238,7 +244,7 @@ export abstract class Field {
 		options: { [p: string]: unknown } | undefined
 		width: number | undefined
 		shortLabel: string | undefined
-		hideCondition: string | undefined
+		computedProperties: ComputedProperties | undefined
 		value: string | undefined
 	} {
 		return {
@@ -256,7 +262,7 @@ export abstract class Field {
 			value: this.value,
 			unit: this.unit,
 			multiline: this.multiline,
-			hideCondition: this.hideCondition,
+			computedProperties: this.computedProperties,
 			now: this.now,
 			translate: this.translate,
 			sortable: this.sortable,
@@ -283,7 +289,7 @@ export class TextField extends Field {
 			value,
 			unit,
 			multiline,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -300,7 +306,7 @@ export class TextField extends Field {
 			value?: string
 			unit?: string
 			multiline?: boolean
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
@@ -319,7 +325,7 @@ export class TextField extends Field {
 			value,
 			unit,
 			multiline: multiline,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -341,7 +347,7 @@ export class MeasureField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -356,7 +362,7 @@ export class MeasureField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
@@ -373,7 +379,7 @@ export class MeasureField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -395,7 +401,7 @@ export class NumberField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -410,7 +416,7 @@ export class NumberField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
@@ -427,7 +433,7 @@ export class NumberField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -449,7 +455,7 @@ export class TokenField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -464,7 +470,7 @@ export class TokenField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
@@ -481,7 +487,7 @@ export class TokenField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -503,7 +509,7 @@ export class ItemsListField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -518,7 +524,7 @@ export class ItemsListField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
@@ -535,7 +541,7 @@ export class ItemsListField extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -557,7 +563,7 @@ export class DatePicker extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -573,7 +579,7 @@ export class DatePicker extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			now?: boolean
 			translate?: boolean
 			width?: number
@@ -591,7 +597,7 @@ export class DatePicker extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -614,7 +620,7 @@ export class TimePicker extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -630,7 +636,7 @@ export class TimePicker extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			now?: boolean
 			translate?: boolean
 			width?: number
@@ -648,7 +654,7 @@ export class TimePicker extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -671,7 +677,7 @@ export class DateTimePicker extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -687,7 +693,7 @@ export class DateTimePicker extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			now?: boolean
 			translate?: boolean
 			width?: number
@@ -705,7 +711,7 @@ export class DateTimePicker extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			now,
 			translate,
 			width,
@@ -728,7 +734,7 @@ export class MultipleChoice extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -743,7 +749,7 @@ export class MultipleChoice extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
@@ -760,7 +766,7 @@ export class MultipleChoice extends Field {
 			labels,
 			value,
 			unit,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -781,7 +787,7 @@ export class DropdownField extends Field {
 			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			sortable?: boolean
 			sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean }
@@ -799,7 +805,7 @@ export class DropdownField extends Field {
 			options: options.options,
 			labels: options.labels,
 			value: options.value,
-			hideCondition: options.hideCondition,
+			computedProperties: options.computedProperties,
 			translate: options.translate,
 			width: options.width,
 			styleOptions: options.styleOptions,
@@ -821,7 +827,7 @@ export class RadioButton extends Field {
 			codifications,
 			options,
 			value,
-			hideCondition,
+			computedProperties,
 			translate,
 			sortable,
 			sortOptions,
@@ -836,7 +842,7 @@ export class RadioButton extends Field {
 			codifications?: string[]
 			options?: { [p: string]: unknown }
 			value?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			sortable?: boolean
 			sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean }
@@ -853,7 +859,7 @@ export class RadioButton extends Field {
 			codifications,
 			options,
 			value,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -875,7 +881,7 @@ export class CheckBox extends Field {
 			codifications,
 			options,
 			value,
-			hideCondition,
+			computedProperties,
 			translate,
 			sortable,
 			sortOptions,
@@ -890,7 +896,7 @@ export class CheckBox extends Field {
 			codifications?: string[]
 			options?: { [p: string]: unknown }
 			value?: string
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			translate?: boolean
 			sortable?: boolean
 			sortOptions?: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean }
@@ -907,7 +913,7 @@ export class CheckBox extends Field {
 			codifications,
 			options,
 			value,
-			hideCondition,
+			computedProperties,
 			translate,
 			width,
 			styleOptions,
@@ -933,7 +939,7 @@ export class Group {
 	fields?: Array<Field | Group>
 	rows?: number
 	columns?: number
-	hideCondition?: string
+	computedProperties?: ComputedProperties
 	width?: number
 	styleOptions?: { [key: string]: unknown }
 
@@ -943,14 +949,14 @@ export class Group {
 			fields,
 			rows,
 			columns,
-			hideCondition,
+			computedProperties,
 			width,
 			styleOptions,
 		}: {
 			fields: Array<Field | Group>
 			rows?: number
 			columns?: number
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			width?: number
 			styleOptions?: { [p: string]: unknown }
 		},
@@ -959,17 +965,17 @@ export class Group {
 		this.fields = fields
 		this.rows = rows
 		this.columns = columns
-		this.hideCondition = hideCondition
+		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
 	}
 
-	static parse(json: { group: string; fields?: Array<Field | Group>; rows?: number; columns?: number; hideCondition?: string; width?: number }): Group {
+	static parse(json: { group: string; fields?: Array<Field | Group>; rows?: number; columns?: number; computedProperties?: ComputedProperties; width?: number }): Group {
 		return new Group(json.group, {
 			fields: (json.fields || []).map((s: Field | Group) => (s['group'] ? Group.parse(s as Group) : Field.parse(s as Field))),
 			rows: json.rows,
 			columns: json.columns,
-			hideCondition: json.hideCondition,
+			computedProperties: json.computedProperties,
 			width: json.width,
 		})
 	}
@@ -977,7 +983,7 @@ export class Group {
 	toJson(): any {
 		return {
 			group: this.group,
-			hideCondition: this.hideCondition,
+			computedProperties: this.computedProperties,
 			fields: this.fields?.map((f: Field | Group) => f.toJson()),
 			rows: this.rows,
 			columns: this.columns,
@@ -993,7 +999,7 @@ export class SubForm {
 	forms?: { [key: string]: Form }
 	rows?: number
 	columns?: number
-	hideCondition?: string
+	computedProperties?: ComputedProperties
 	width?: number
 	styleOptions?: { [key: string]: unknown }
 
@@ -1004,7 +1010,7 @@ export class SubForm {
 			forms,
 			rows,
 			columns,
-			hideCondition,
+			computedProperties,
 			width,
 			styleOptions,
 		}: {
@@ -1012,7 +1018,7 @@ export class SubForm {
 			forms: { [key: string]: Form }
 			rows?: number
 			columns?: number
-			hideCondition?: string
+			computedProperties?: ComputedProperties
 			width?: number
 			styleOptions?: { [p: string]: unknown }
 		},
@@ -1022,17 +1028,17 @@ export class SubForm {
 		this.forms = forms
 		this.rows = rows
 		this.columns = columns
-		this.hideCondition = hideCondition
+		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
 	}
 
-	static parse(json: { group: string; fields?: Array<Field | Group>; rows?: number; columns?: number; hideCondition?: string; width?: number }): Group {
+	static parse(json: { group: string; fields?: Array<Field | Group>; rows?: number; columns?: number; computedProperties?: ComputedProperties; width?: number }): Group {
 		return new Group(json.group, {
 			fields: (json.fields || []).map((s: Field | Group) => (s['group'] ? Group.parse(s as Group) : Field.parse(s as Field))),
 			rows: json.rows,
 			columns: json.columns,
-			hideCondition: json.hideCondition,
+			computedProperties: json.computedProperties,
 			width: json.width,
 		})
 	}

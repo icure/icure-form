@@ -211,7 +211,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 
 	serviceFactory: (label: string, serviceId?: string) => Service
 	//Actions management
-	interpreter: (formula: string, sandbox: any) => Promise<any>
+	interpreter: (formula: string, sandbox?: any) => Promise<any>
 
 	changeListeners: ((newValue: ContactFormValuesContainer) => void)[]
 
@@ -381,7 +381,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		}
 	}
 
-	async compute<T, S>(formula: string, sandbox: S): Promise<T | undefined> {
+	async compute<T, S>(formula: string, sandbox?: S): Promise<T | undefined> {
 		return await this.interpreter(formula, sandbox)
 	}
 

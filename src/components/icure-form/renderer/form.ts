@@ -1,6 +1,6 @@
 import { html, TemplateResult } from 'lit'
 import { Renderer, RendererProps } from './index'
-import { fieldValuesProvider, handleMetadataChanged, handleValueChanged } from '../../../utils/fieldsValuesProviders'
+import { fieldValuesProvider, handleMetadataChanged, handleValueChanged } from '../../../utils/fields-values-provider'
 import { currentDate, currentDateTime, currentTime } from '../../../utils/icure-utils'
 import { CodeStub, HealthcareParty } from '@icure/api'
 import { optionMapper } from '../../../utils/code-utils'
@@ -97,6 +97,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-textfield>`
 	}
 
@@ -115,6 +116,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-measure-field>`
 	}
 
@@ -132,6 +134,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-number-field>`
 	}
 
@@ -149,6 +152,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-date-picker>`
 	}
 
@@ -166,6 +170,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-time-picker>`
 	}
 
@@ -183,6 +188,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-date-time-picker>`
 	}
 
@@ -218,6 +224,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-dropdown-field>`
 	}
 
@@ -252,6 +259,7 @@ export const render: Renderer = (
 			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
 			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-radio-button>`
 	}
 
@@ -287,6 +295,7 @@ export const render: Renderer = (
 			.handleValueChanged="${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}"
 			.handleMetadataChanged="${handleMetadataChanged(formsValueContainer)}"
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-checkbox>`
 	}
 
@@ -298,6 +307,7 @@ export const render: Renderer = (
 			label="${fg.field}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.styleOptions="${fg.styleOptions}"
+			.visible="${fg.hideCondition ? !formsValueContainer?.compute(fg.hideCondition) : true}"
 		></icure-form-label>`
 	}
 

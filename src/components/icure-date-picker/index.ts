@@ -11,9 +11,9 @@ import { extractSingleValue } from '../icure-form/fields/utils'
 import { format } from 'date-fns'
 import { anyDateToDate } from '../../utils/icure-utils'
 // @ts-ignore
-import baseCss from '../styles/style.scss'
+import baseCss from '../common/styles/style.scss'
 // @ts-ignore
-import kendoCss from '../styles/kendo.scss'
+import kendoCss from '../common/styles/kendo.scss'
 
 export class IcureDatePickerField extends Field {
 	//TODO: support different date formats

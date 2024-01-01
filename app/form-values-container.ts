@@ -1,5 +1,6 @@
 import { Contact, Service } from '@icure/api'
 import { ContactFormValuesContainer } from '../src/icure'
+import { v4 as uuid } from 'uuid'
 
 export const makeFormValuesContainer = () => {
 	const cc = new Contact({
@@ -22,6 +23,7 @@ export const makeFormValuesContainer = () => {
 	})
 	const ctc = new Contact({
 		id: 'c1',
+		rev: '12345',
 		services: [
 			{ id: 's1', label: 'abortion-forms.field-labels.HISTORY', tags: [{ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|HISTORY|1' }], content: { en: { stringValue: 'test' } } },
 			{
@@ -46,5 +48,5 @@ export const makeFormValuesContainer = () => {
 		return await f(...sandboxValues)
 	}
 	const now = +new Date()
-	return new ContactFormValuesContainer(cc, ctc, [ctc], (label, serviceId) => new Service({ label, id: serviceId, created: now, modified: now }), interpretor)
+	return new ContactFormValuesContainer(cc, [ctc], (label, serviceId) => new Service({ label, id: serviceId ?? uuid(), created: now, modified: now }), interpretor)
 }

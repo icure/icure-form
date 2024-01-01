@@ -11,8 +11,8 @@ import { codes } from './codes'
 // @ts-ignore
 import yamlForm from './gp.yaml'
 import { makeFormValuesContainer } from './form-values-container'
-import { property } from 'lit/decorators.js'
-import { ContactFormValuesContainer } from '../src/icure'
+import { state } from 'lit/decorators.js'
+import { BridgedFormValuesContainer } from '../src/icure'
 
 const icd10 = [
 	['I', new RegExp('^[AB][0–9]')],
@@ -71,7 +71,7 @@ const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'd
 
 class DemoApp extends LitElement {
 	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
-	@property() formValuesContainer: ContactFormValuesContainer = makeFormValuesContainer()
+	@state() formValuesContainer: BridgedFormValuesContainer = new BridgedFormValuesContainer('user-id', makeFormValuesContainer())
 
 	private miniSearch: MiniSearch = new MiniSearch({
 		fields: ['text'], // fields to index for full-text search
@@ -105,6 +105,9 @@ class DemoApp extends LitElement {
 		`
 	}
 	async firstUpdated() {
+		this.formValuesContainer.registerChangeListener((newValue) => {
+			this.formValuesContainer = newValue
+		})
 		this.miniSearch.addAll(codes.map((x) => ({ id: x.id, code: x.code, text: x.label?.fr, links: x.links })))
 	}
 
@@ -169,18 +172,10 @@ class DemoApp extends LitElement {
 	}
 
 	async optionsProvider() {
-		await sleep(5000)
-		return Promise.resolve([
-			{
-				id: 1,
-				text: 'Dylan Friedrich',
-			},
-		])
+		await sleep(100)
+		return []
 	}
 
-	translationProvider(stringToTranslate: string) {
-		return stringToTranslate
-	}
 	async codesProvider(codifications: string[]): Promise<CodeStub[]> {
 		const codes: CodeStub[] = []
 		if (codifications.find((code) => code === 'ULTRASOUND-EVALUATION')) {
@@ -354,11 +349,7 @@ class DemoApp extends LitElement {
 				theme="gray"
 				renderer="form"
 				.formValuesContainer="${this.formValuesContainer}"
-				.formValuesContainerChanged="${(newVal: ContactFormValuesContainer) => {
-					console.log(newVal)
-				}}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"
-				.translationProvider="${this.translationProvider.bind(this)}"
 				.codesProvider="${this.codesProvider.bind(this)}"
 				.optionsProvider="${this.optionsProvider.bind(this)}"
 			></icure-form>

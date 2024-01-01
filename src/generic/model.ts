@@ -3,19 +3,21 @@ export interface VersionedData<T> {
 }
 
 export interface Version<T> {
-	revision?: string //undefined means that the version is not saved yet
+	revision: string | null //null means that the version is not saved yet
 	modified?: number
 	value: T
 }
 
 export interface FormValuesContainer<Value, Metadata> {
-	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => string[]): VersionedData<Value>
+	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: string[]): VersionedData<Metadata>
-	setValue(label: string, language: string, data: Value, id?: string): string
-	setMetadata(label: string, meta: Metadata, id?: string): string
+	setValue(label: string, language: string, data: Value, id?: string, metadata?: Metadata): string
+	setMetadata(label: string, metadata: Metadata, id?: string): string
 	delete(serviceId: string): void
 	compute<T, S>(formula: string, sandbox?: S): Promise<T | undefined>
 	getChildren(subform: string): { [form: string]: FormValuesContainer<Value, Metadata>[] }
+	registerChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
+	unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
 }
 
 export type Suggestion = { id: string; code: string; text: string; terms: string[] }

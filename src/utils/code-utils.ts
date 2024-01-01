@@ -1,4 +1,5 @@
 import { Field, Code } from '../components/model'
+import { CodeStub } from '@icure/api'
 
 export function optionMapper(language: string, field: Field, translationProvider?: (language: string, text: string) => string): Code[] {
 	return Object.keys(field?.options ?? []).map((optionKey) => {
@@ -9,3 +10,5 @@ export function optionMapper(language: string, field: Field, translationProvider
 		}
 	})
 }
+
+export const codeStubToCode = (c: CodeStub) => ({ id: c.id ?? `${c.type}|${c.code}|${c.version}`, label: c.label ?? {} })

@@ -10,4 +10,5 @@ export const languages = {
 
 export const languageName = (iso: string): string => languages[iso] || iso
 
-export const defaultTranslationProvider = (translations: TranslationTable[]) => (language: string, text: string) => translations?.[language]?.[text] ?? text
+export const defaultTranslationProvider = (translations: TranslationTable[]) => (language: string, text: string) =>
+	translations?.find((tt) => tt.language === language)?.translations?.[text] ?? text

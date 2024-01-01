@@ -17,10 +17,6 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 		return [baseCss, kendoCss]
 	}
 
-	public async firstUpdated(): Promise<void> {
-		this.displayedOptions = await this.optionsProvider(this.language())
-	}
-
 	getValueFromProvider(): [string, string[]] | [undefined, undefined] {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
@@ -68,7 +64,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 
 		return html`
 			<div class="icure-text-field">
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
 				<div style="${this.generateStyle()}">
 					${this.displayedOptions?.map((x) => {
 						const text = (x.label ?? {})[this.language()] ?? ''

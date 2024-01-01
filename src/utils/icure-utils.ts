@@ -70,7 +70,13 @@ export function isServiceEqual(svc1: Service, svc2: Service): boolean {
 	)
 }
 
-export function isContentEqual(content1: Content, content2: Content): boolean {
+export function isContentEqual(content1: Content | undefined, content2: Content | undefined): boolean {
+	if (!content1 && !content2) {
+		return true
+	}
+	if (!content1 || !content2) {
+		return false
+	}
 	return (
 		((!content1.binaryValue && !content2.binaryValue) || content1.binaryValue === content2.binaryValue) &&
 		(((content1.booleanValue === null || content1.booleanValue === undefined) && (content2.booleanValue === null || content2.booleanValue === undefined)) ||

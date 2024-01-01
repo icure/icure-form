@@ -29,9 +29,9 @@ import { Suggestion } from '../../generic'
 import { generateLabels } from '../common/utils'
 
 // @ts-ignore
-import baseCss from './styles/style.scss'
+import baseCss from '../common/styles/style.scss'
 // @ts-ignore
-import kendoCss from './styles/kendo.scss'
+import kendoCss from '../common/styles/kendo.scss'
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
@@ -106,7 +106,7 @@ export class IcureTextField extends Field {
 	render() {
 		return html`
 			<div id="root" class="${this.visible ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
 				<div class="icure-input">
 					<div id="editor"></div>
 				</div>
@@ -190,8 +190,8 @@ export class IcureTextField extends Field {
 
 			//Currently take the first piece of data if it is available
 			this.containerId = Object.keys(providedValue?.versions ?? {})[0]
-			const revision = this.containerId ? providedValue?.versions?.[this.containerId]?.[0] : undefined
-			const displayedVersionedValue = revision?.value
+			const selectedVersion = this.containerId ? providedValue?.versions?.[this.containerId]?.[0] : undefined
+			const displayedVersionedValue = selectedVersion?.value
 
 			this.availableLanguages = displayedVersionedValue && Object.keys(displayedVersionedValue).length ? sorted(Object.keys(displayedVersionedValue)) : this.availableLanguages
 			if (!this.availableLanguages.includes(this.displayedLanguage)) {

@@ -1,14 +1,14 @@
 import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
-import { dropdownPicto } from '../icure-text-field/styles/paths'
+import { dropdownPicto } from '../common/styles/paths'
 import { Field } from '../common'
 import { generateLabels } from '../common/utils'
 import { extractSingleValue } from '../icure-form/fields/utils'
 import { FieldWithOptionsMixin } from '../common/field-with-options'
 // @ts-ignore
-import baseCss from '../styles/style.scss'
+import baseCss from '../common/styles/style.scss'
 // @ts-ignore
-import kendoCss from '../styles/kendo.scss'
+import kendoCss from '../common/styles/kendo.scss'
 
 export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 	@property() placeholder = ''
@@ -33,12 +33,12 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 
 	connectedCallback() {
 		super.connectedCallback()
-		document.addEventListener('click', this._handleClickOutside)
+		//document.addEventListener('click', this._handleClickOutside)
 	}
 
 	disconnectedCallback() {
 		super.disconnectedCallback()
-		document.removeEventListener('click', this._handleClickOutside)
+		//document.removeEventListener('click', this._handleClickOutside)
 	}
 
 	handleOptionButtonClicked(id: string | undefined): (e: Event) => boolean {
@@ -79,10 +79,6 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		return [undefined, undefined]
 	}
 
-	public async firstUpdated(): Promise<void> {
-		this.displayedOptions = await this.optionsProvider(this.language())
-	}
-
 	render(): TemplateResult {
 		if (!this.visible) {
 			return html``
@@ -92,7 +88,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 
 		return html`
 			<div id="root" class="icure-text-field ${inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
 				<div class="icure-input" @click="${this.togglePopup}" id="test">
 					<div id="editor">${inputValue}</div>
 					<div id="extra" class=${'extra forced'}>

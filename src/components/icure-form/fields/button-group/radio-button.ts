@@ -20,6 +20,7 @@ export class RadioButton extends Field {
 					defaultLanguage="${this.defaultLanguage}"
 					.translate="${this.translate}"
 					.optionsProvider=${this.optionsProvider}
+					.translationProvider=${this.translationProvider}
 					.valueProvider=${singleValueProvider(this.valueProvider, id)}
 					.metaProvider=${this.metadataProvider}
 					.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}

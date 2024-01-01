@@ -11,7 +11,7 @@ export class IcureLabel extends LitElement {
 		if (!this.visible) {
 			return html``
 		}
-		return html`${generateLabel(this.label ?? '', this.labelPosition ?? 'float')}`
+		return html`${generateLabel(this.label ?? '', this.labelPosition ?? 'float', 'en')}`
 	}
 }
 customElements.define('icure-label', IcureLabel)

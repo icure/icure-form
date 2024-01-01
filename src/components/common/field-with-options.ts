@@ -15,9 +15,11 @@ export const FieldWithOptionsMixin = <T extends Constructor<Field>>(superClass: 
 		@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Code[]> = async () => []
 		@state() displayedOptions: Code[] = []
 
-		public async firstUpdated(_changedProperties: PropertyValues): Promise<void> {
+		public firstUpdated(_changedProperties: PropertyValues) {
 			super.firstUpdated(_changedProperties)
-			this.displayedOptions = await this.optionsProvider(this.language())
+			this.optionsProvider(this.language()).then(async (options) => {
+				this.displayedOptions = options
+			})
 		}
 	}
 	// Cast return type to the superClass type passed in

@@ -1,5 +1,5 @@
 import { html, TemplateResult } from 'lit'
-import { Renderer } from './index'
+import { Renderer, RendererProps } from './index'
 import { fieldValuesProvider, handleMetadataChanged, handleValueChanged } from '../../../utils/fieldsValuesProviders'
 import { currentDate, currentDateTime, currentTime } from '../../../utils/icure-utils'
 import { CodeStub, HealthcareParty } from '@icure/api'
@@ -9,12 +9,12 @@ import { FormValuesContainer } from '../../../generic'
 
 import '../fields'
 import { defaultTranslationProvider } from '../../../utils/languages'
+import { getLabels } from '../../common/utils'
 
 export const render: Renderer = (
 	form: Form,
-	props: { [key: string]: unknown },
+	props: RendererProps,
 	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
-	formValuesContainerChanged?: (newValue: FormValuesContainer<FieldValue, FieldMetadata>) => void,
 	translationProvider?: (language: string, text: string) => string,
 	ownersProvider: (speciality: string[]) => HealthcareParty[] = () => [],
 	codesProvider: (codifications: string[], searchTerm: string) => Promise<CodeStub[]> = () => Promise.resolve([]),
@@ -70,22 +70,19 @@ export const render: Renderer = (
 		return html`<div class="group" style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width)}">
 			${Object.entries(children ?? {})?.flatMap(([formKey, children]) => {
 				const form = fg?.forms?.[formKey]
-				return children
-					.map((child) => form && render(form, props, child, formValuesContainerChanged, translationProvider, ownersProvider, codesProvider, optionsProvider))
-					.filter((x) => !!x)
+				return children.map((child) => form && render(form, props, child, translationProvider, ownersProvider, codesProvider, optionsProvider)).filter((x) => !!x)
 			})}
 		</div>`
 	}
 
-	function renderTextfield(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderTextField(fgColumns: number, fieldsInRow: number, fg: Field) {
 		return html`<icure-form-textfield
 			.readonly="${readonly}"
 			class="icure-form-field"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows, fg.styleOptions?.width)}"
-			labelPosition=${props.labelPosition}
 			label="${fg.field}"
 			value="${fg.value}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			.multiline="${fg.multiline || false}"
 			defaultLanguage="${props.defaultLanguage}"
 			.linksProvider=${fg.options?.linksProvider}
@@ -97,8 +94,8 @@ export const render: Renderer = (
 			.codeContentProvider=${fg.options?.codeContentProvider}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-textfield>`
 	}
@@ -107,17 +104,16 @@ export const render: Renderer = (
 		return html`<icure-form-measure-field
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			value="${fg.value}"
 			unit="${fg.unit}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-measure-field>`
 	}
@@ -126,16 +122,15 @@ export const render: Renderer = (
 		return html`<icure-form-number-field
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			value="${fg.value}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-number-field>`
 	}
@@ -144,16 +139,15 @@ export const render: Renderer = (
 		return html`<icure-form-date-picker
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			value="${fg.now ? currentDate() : fg.value}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-date-picker>`
 	}
@@ -162,16 +156,15 @@ export const render: Renderer = (
 		return html`<icure-form-time-picker
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			value="${fg.now ? currentTime() : fg.value}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-time-picker>`
 	}
@@ -180,16 +173,15 @@ export const render: Renderer = (
 		return html`<icure-form-date-time-picker
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			value="${fg.now ? currentDateTime() : fg.value}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-date-time-picker>`
 	}
@@ -198,9 +190,8 @@ export const render: Renderer = (
 		return html`<icure-form-dropdown-field
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			.label=${fg.field}
-			.labels=${fg.labels}
+			.displayedLabels=${getLabels(fg)}
 			defaultLanguage="${props.defaultLanguage}"
 			.translate="${fg.translate}"
 			.sortable="${fg.sortable}"
@@ -224,8 +215,8 @@ export const render: Renderer = (
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-dropdown-field>`
 	}
@@ -234,9 +225,8 @@ export const render: Renderer = (
 		return html`<icure-form-radio-button
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			.label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translate="${fg.translate}"
 			.sortable="${fg.sortable}"
@@ -259,26 +249,25 @@ export const render: Renderer = (
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.handleValueChanged=${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}
+			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-radio-button>`
 	}
 
 	function renderCheckboxes(fgColumns: number, fieldsInRow: number, fg: Field) {
-		return html`<icure-form-checkbox
+		return html` <icure-form-checkbox
 			.readonly="${readonly}"
 			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
-			labelPosition=${props.labelPosition}
 			.label="${fg.field}"
-			.labels="${fg.labels}"
+			.displayedLabels="${getLabels(fg)}"
 			defaultLanguage="${props.defaultLanguage}"
 			.translate="${fg.translate}"
 			.sortable="${fg.sortable}"
 			.sortOptions="${fg.sortOptions}"
 			value="${fg.value}"
 			.codifications="${fg.codifications}"
-			.optionsProvider=${composedOptionsProvider && fg.codifications?.length
+			.optionsProvider="${composedOptionsProvider && fg.codifications?.length
 				? (language: string, searchTerms?: string) => composedOptionsProvider(language, fg.codifications ?? [], searchTerms)
 				: (language: string, searchTerms?: string) =>
 						Promise.resolve(
@@ -290,13 +279,13 @@ export const render: Renderer = (
 										.map((st) => st.toLowerCase())
 										.every((st) => x.label[language].toLowerCase().includes(st)),
 							),
-						)}
-			.ownersProvider=${ownersProvider}
-			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
+						)}"
+			.ownersProvider="${ownersProvider}"
+			.translationProvider="${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}"
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
-			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata}
-			.handleValueChanged=${handleValueChanged(formsValueContainer, formValuesContainerChanged)}
-			.handleMetadataChanged=${handleMetadataChanged(formsValueContainer, formValuesContainerChanged)}
+			.metadataProvider="${formsValueContainer && formsValueContainer.getMetadata}"
+			.handleValueChanged="${handleValueChanged(formsValueContainer, props.defaultOwner, fg)}"
+			.handleMetadataChanged="${handleMetadataChanged(formsValueContainer)}"
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-checkbox>`
 	}
@@ -320,7 +309,7 @@ export const render: Renderer = (
 			return renderSubForm(fg, fgColumns, fieldsInRow)
 		} else if (fg.clazz === 'field') {
 			return html`${fg.type === 'textfield'
-				? renderTextfield(fgColumns, fieldsInRow, fg)
+				? renderTextField(fgColumns, fieldsInRow, fg)
 				: fg.type === 'measure-field'
 				? renderMeasureField(fgColumns, fieldsInRow, fg)
 				: fg.type === 'number-field'

@@ -8,7 +8,7 @@ export class ItemsListField extends Field {
 		return html`<icure-text-field
 			.readonly="${this.readonly}"
 			label="${this.label}"
-			.labels="${this.displayedLabels}"
+			.displayedLabels="${this.displayedLabels}"
 			defaultLanguage="${this.defaultLanguage}"
 			schema="items-list-field"
 			.valueProvider=${() => this.valueProvider}

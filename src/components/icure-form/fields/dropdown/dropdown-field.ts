@@ -14,12 +14,11 @@ export class DropdownField extends Field {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`
-				<div>${id}</div>
 				<icure-dropdown-field
 					.readonly="${this.readonly}"
 					.translate="${this.translate}"
 					label="${this.label}"
-					.labels="${this.displayedLabels}"
+					.displayedLabels="${this.displayedLabels}"
 					.valueProvider=${singleValueProvider(this.valueProvider, id)}
 					.metaProvider=${this.metadataProvider}
 					.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}

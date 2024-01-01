@@ -6,7 +6,7 @@ import { CustomEventDetail } from 'app-datepicker/dist/typings'
 import { MAX_DATE } from 'app-datepicker/dist/constants'
 import { toResolvedDate } from 'app-datepicker/dist/helpers/to-resolved-date'
 import { Field } from '../common'
-import { datePicto } from '../icure-text-field/styles/paths'
+import { datePicto } from '../common/styles/paths'
 import { extractSingleValue } from '../icure-form/fields/utils'
 import { format } from 'date-fns'
 import { anyDateToDate } from '../../utils/icure-utils'
@@ -47,7 +47,7 @@ export class IcureDatePickerField extends Field {
 		const value = this.getValueFromProvider()
 
 		return html` <div id="root" class="icure-text-field ${value && value != '' ? 'has-content' : ''}" data-placeholder="${this.placeholder}">
-			${this.displayedLabels ? generateLabels(this.displayedLabels, this.translationProvider) : nothing}
+			${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translationProvider) : nothing}
 			<div class="icure-input" @click="${this.togglePopup}" id="test">
 				<div id="editor">${value}</div>
 				<div id="extra" class=${'extra forced'}>

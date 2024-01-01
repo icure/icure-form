@@ -11,7 +11,7 @@ export class TimePicker extends Field {
 			return html`<icure-text-field
 				.readonly="${this.readonly}"
 				label="${this.label}"
-				.labels="${this.displayedLabels}"
+				.displayedLabels="${this.displayedLabels}"
 				defaultLanguage="${this.defaultLanguage}"
 				schema="time"
 				.translationProvider=${this.translationProvider}

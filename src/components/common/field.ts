@@ -18,7 +18,7 @@ export class Field extends LitElement {
 	@property() translate = true
 	@property() defaultLanguage?: string = 'en' //todo make an enum
 	@property() displayedLanguage?: string = this.defaultLanguage
-	@property() translationProvider: (text: string, language?: string) => string = (text) => text
+	@property() translationProvider: (language: string, text: string) => string = (language, text) => text
 
 	@property() valueProvider?: () => VersionedData<FieldValue> = undefined
 	@property() metadataProvider?: (id: string, revisions: string[]) => VersionedData<FieldMetadata> = undefined
@@ -28,8 +28,8 @@ export class Field extends LitElement {
 	@property() public visible = true
 	@property() readonly = false
 
-	protected translateText(text: string): string {
-		return this.translate ? this.translationProvider(text) : text
+	protected translateText(language: string, text: string): string {
+		return this.translate ? this.translationProvider(language, text) : text
 	}
 
 	language(): string {

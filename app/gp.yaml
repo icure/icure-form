@@ -64,18 +64,52 @@ actions:
 codifications:
   - type: MS-ABORTION-CONTACT-VIA-TYPE
     codes:
-      - code: onSite
+      - id: onSite
         label:
           en: On site
           fr: Sur place
-      - code: visio
+      - id: visio
         label:
           en: Visio
           fr: Visio
-      - code: phone
+      - id: phone
         label:
           en: Phone
           fr: Téléphone
+  - type: MS-ABORTION-COMPANION-TYPE
+    codes:
+      - id: none
+        label:
+          en: None
+          fr: Aucun
+      - id: father
+        label:
+          en: Father
+          fr: Père
+      - id: other
+        label:
+          en: Other
+          fr: Autre
+      - id: partner
+        label:
+          en: Partner
+          fr: Partenaire
+      - id: mother
+        label:
+          en: Mother
+          fr: Mère
+      - id: friend
+        label:
+          en: Friend
+          fr: Ami
+      - id: educator
+        label:
+          en: Educator
+          fr: Éducateur
+      - id: empty
+        label:
+          en: Empty
+          fr: Vide
 translations:
   - language: en
     translations:
@@ -95,6 +129,11 @@ translations:
       abortion-forms.field-options.ON-SITE: On site
       abortion-forms.field-options.VISIO: Visio
       abortion-forms.field-options.PHONE: Phone
+      consultationType: Consultation type
+      accompaniedBy: Accompanied by
+      other: Other
+      partnerPosition: Partner position
+      decisionProcessus: Decision process
   - language: fr
     translations:
       abortion-forms.field-labels.PRELIMINARY-PSYCHO-SOCIAL-INTERVIEW: Entretien préliminaire psycho-social
@@ -113,21 +152,41 @@ translations:
       abortion-forms.field-options.ON-SITE: Sur place
       abortion-forms.field-options.VISIO: Visio
       abortion-forms.field-options.PHONE: Téléphone
+      consultationType: Type de consultation
+      accompaniedBy: Accompagné par
+      other: Autre
+      partnerPosition: Position du partenaire
+      decisionProcessus: Processus de décision
 sections:
   - section: abortion-forms.field-labels.SECTION-1
     fields:
-      - field: abortion-forms.field-labels.CONSULTATION-TYPE
-        type: dropdown
-        shortLabel: consultationType
+      - field: abortion-forms.field-labels.ACCOMPANIED-BY
+        type: checkbox
+        shortLabel: accompaniedBy
         options:
-          onSite: abortion-forms.field-options.ON-SITE
-          visio: abortion-forms.field-options.VISIO
-          phone: abortion-forms.field-options.PHONE
-        rows: 1
+          none: abortion-forms.field-options.NONE
+          father: abortion-forms.field-options.FATHER
+          other: abortion-forms.field-options.OTHER
+          partner: abortion-forms.field-options.PARTNER
+          mother: abortion-forms.field-options.MOTHER
+          friend: abortion-forms.field-options.FRIEND
+          educator: abortion-forms.field-options.EDUCATOR
+          empty: abortion-forms.field-options.EMPTY
+        styleOptions:
+          direction: column
+          columns: 3
+        rows: 3
         columns: 1
+        sortable: true
+        sortOptions:
+          other: 2
+          none: 1
+          empty: -1
+          asc: true
+          alpha: false
         codifications:
-          - MS-ABORTION-CONTACT-VIA-TYPE
+          - MS-ABORTION-COMPANION-TYPE
         tags:
-          - MS-ABORTION-item|contact-via|1
-          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|CONTACT-TYPE|1
-
+          - MS-ABORTION-COMPANION|typeOfCompanion|1
+          - MS-ABORTION-ITEM|companion|1
+          - MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|PERSON-FOLLOWER-TYPE|1

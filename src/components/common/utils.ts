@@ -1,17 +1,28 @@
 import { html, TemplateResult } from 'lit'
-import { Code, Labels } from '../model'
+import { Code, Field, Labels } from '../model'
 
-export function generateLabels(labels: Labels, translationProvider: (text: string) => string = (text) => text): TemplateResult[] {
-	return Object.keys(labels).map((position) => generateLabel(labels[position], position, translationProvider))
+export const getLabels = (field: Field): Labels => field.labels ?? (field.shortLabel ? { float: field.shortLabel } : { float: field.label() })
+
+export function generateLabels(
+	labels: Labels,
+	language: string,
+	translationProvider: (language: string, text: string) => string = (language: string, text) => text,
+): TemplateResult[] {
+	return Object.keys(labels).map((position) => generateLabel(labels[position], position, language, translationProvider))
 }
 
-export function generateLabel(label: string, labelPosition: string, translationProvider: (text: string) => string = (text) => text): TemplateResult {
+export function generateLabel(
+	label: string,
+	labelPosition: string,
+	language: string,
+	translationProvider: (language: string, text: string) => string = (language: string, text) => text,
+): TemplateResult {
 	switch (labelPosition) {
 		case 'right':
 		case 'left':
-			return html` <label class="icure-label side above ${labelPosition}">${translationProvider(label)}</icure-label> `
+			return html` <label class="icure-label side above ${labelPosition}">${translationProvider(language, label)}</icure-label> `
 		default:
-			return html` <label class="icure-label ${labelPosition}">${translationProvider(label)}</icure-label> `
+			return html` <label class="icure-label ${labelPosition}">${translationProvider(language, label)}</icure-label> `
 	}
 }
 

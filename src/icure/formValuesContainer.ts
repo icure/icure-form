@@ -3,17 +3,42 @@ import { sortedBy } from '../utils/no-lodash'
 import { FormValuesContainer, Version, VersionedData } from '../generic'
 import { ServiceMetadata } from '../icure'
 import { BooleanType, CompoundType, DateTimeType, FieldMetadata, FieldValue, MeasureType, NumberType, PrimitiveType, StringType, TimestampType } from '../components/model'
+import { areCodesEqual, isContentEqual } from '../utils/icure-utils'
+import { codeStubToCode } from '../utils/code-utils'
 
 export class BridgedFormValuesContainer implements FormValuesContainer<FieldValue, FieldMetadata> {
+	private contact: Contact
+
 	/**
 	 * Creates an instance of BridgedFormValuesContainer.
 	 * @param responsible
 	 * @param contact The displayed contact (may be in the past). === to currentContact if the contact is the contact of the day
 	 * @param contactFormValuesContainer
+	 * @param changeListeners
 	 */
-	constructor(private responsible: string, private contact: Contact, private contactFormValuesContainer: ContactFormValuesContainer) {
-		this.contact = contact
-		this.contactFormValuesContainer = contactFormValuesContainer
+	constructor(
+		private responsible: string,
+		private contactFormValuesContainer: ContactFormValuesContainer,
+		contact?: Contact,
+		changeListeners: ((newValue: BridgedFormValuesContainer) => void)[] = [],
+	) {
+		this.contact = contact ?? contactFormValuesContainer.currentContact
+		this.changeListeners = changeListeners
+		const listener = (newContactFormValuesContainer: ContactFormValuesContainer) => {
+			newContactFormValuesContainer.unregisterChangeListener(listener) //Will be added again on the next line
+			const newBridgedFoemValueContainer = new BridgedFormValuesContainer(this.responsible, newContactFormValuesContainer, this.contact, this.changeListeners)
+			this.changeListeners.forEach((l) => l(newBridgedFoemValueContainer))
+		}
+		this.contactFormValuesContainer.registerChangeListener(listener)
+	}
+
+	private changeListeners: ((newValue: BridgedFormValuesContainer) => void)[]
+
+	registerChangeListener(listener: (newValue: BridgedFormValuesContainer) => void): void {
+		this.changeListeners.push(listener)
+	}
+	unregisterChangeListener(listener: (newValue: BridgedFormValuesContainer) => void): void {
+		this.changeListeners = this.changeListeners.filter((l) => l !== listener)
 	}
 
 	private primitiveTypeToContent(language: string, value: PrimitiveType): Content {
@@ -34,6 +59,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			...(value.type === 'compound'
 				? {
 						compoundValue: Object.entries((value as CompoundType).value).map(([label, value]) => ({
+							label,
 							content: {
 								[language]: this.primitiveTypeToContent(language, value),
 							},
@@ -78,7 +104,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return undefined
 	}
 
-	getValues(revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => string[]): VersionedData<FieldValue> {
+	getValues(revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]): VersionedData<FieldValue> {
 		return Object.entries(
 			this.contactFormValuesContainer.getValues((id, history) => {
 				return revisionsFilter(
@@ -91,13 +117,14 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 							value: {
 								label: sm.label,
 								owner: sm.owner,
+								tags: sm.tags?.map(codeStubToCode),
 								valueDate: sm.valueDate,
 							},
 						})),
 				)
 			}),
-		).reduce(
-			(acc, [id, history]) => ({
+		).reduce((acc, [id, history]) => {
+			return {
 				...acc,
 				[id]: history.map(({ revision, modified, value: s }) => ({
 					revision,
@@ -107,12 +134,11 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 							const converted = this.contentToPrimitiveType(lng, cnt)
 							return converted ? { ...acc, [lng]: { value: converted } } : acc
 						}, {}),
-						codes: s.codes?.map((c) => ({ id: c.id ?? `${c.type}|${c.code}|${c.version}`, label: c.label ?? {} })),
+						codes: s.codes?.map(codeStubToCode),
 					},
 				})),
-			}),
-			{} as VersionedData<FieldValue>,
-		)
+			}
+		}, {} as VersionedData<FieldValue>)
 	}
 	getMetadata(id: string, revisions: string[]): VersionedData<FieldMetadata> {
 		return Object.entries(this.contactFormValuesContainer.getMetadata(id, revisions)).reduce(
@@ -132,7 +158,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			{},
 		)
 	}
-	setValue(label: string, language: string, fv: FieldValue, id?: string | undefined): string {
+	setValue(label: string, language: string, fv: FieldValue, id?: string, metadata?: FieldMetadata): string {
 		const value = fv.value[language]
 		return this.contactFormValuesContainer.setValue(
 			label,
@@ -145,6 +171,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				},
 			},
 			id,
+			metadata,
 		)
 	}
 
@@ -171,7 +198,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return Object.entries(this.contactFormValuesContainer.getChildren(subform)).reduce(
 			(acc, [form, fvc]) => ({
 				...acc,
-				[form]: fvc.map((fvc) => new BridgedFormValuesContainer(this.responsible, this.contact, fvc)),
+				[form]: fvc.map((fvc) => new BridgedFormValuesContainer(this.responsible, fvc, this.contact)),
 			}),
 			{},
 		)
@@ -186,16 +213,15 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 	//Actions management
 	interpreter: (formula: string, sandbox: any) => Promise<any>
 
+	changeListeners: ((newValue: ContactFormValuesContainer) => void)[]
+
 	constructor(
 		currentContact: Contact,
-		contact: Contact,
 		contactsHistory: Contact[],
 		serviceFactory: (label: string, serviceId?: string) => Service,
 		interpreter: (formula: string, sandbox: any) => Promise<any>,
+		changeListeners: ((newValue: ContactFormValuesContainer) => void)[] = [],
 	) {
-		if (!contactsHistory.includes(contact) && contact !== currentContact) {
-			throw new Error('Illegal argument, the history must contain the contact')
-		}
 		if (contactsHistory.includes(currentContact)) {
 			throw new Error('Illegal argument, the history must not contain the currentContact')
 		}
@@ -203,13 +229,23 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		this.contactsHistory = sortedBy(contactsHistory, 'created', 'desc')
 		this.serviceFactory = serviceFactory
 		this.interpreter = interpreter
+
+		this.changeListeners = changeListeners
+	}
+
+	registerChangeListener(listener: (newValue: ContactFormValuesContainer) => void): void {
+		this.changeListeners.push(listener)
+	}
+
+	unregisterChangeListener(listener: (newValue: ContactFormValuesContainer) => void): void {
+		this.changeListeners = this.changeListeners.filter((l) => l !== listener)
 	}
 
 	getChildren(subform: string): { [form: string]: ContactFormValuesContainer[] } {
 		throw new Error('Method not implemented.')
 	}
 
-	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => string[]): VersionedData<Service> {
+	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<Service> {
 		return Object.entries(this.getServicesInHistory(revisionsFilter)).reduce(
 			(acc, [id, history]) =>
 				history.length
@@ -236,7 +272,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 									? {
 											...acc,
 											[s.id]: (acc[s.id] ?? (acc[s.id] = [])).concat({
-												revision: ctc.rev,
+												revision: ctc.rev ?? null,
 												modified: s.modified,
 												value: {
 													label: s.label ?? s.id,
@@ -255,40 +291,94 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 	}
 
 	setMetadata(label: string, meta: ServiceMetadata, id?: string): string {
-		const service = (id && this.getServicesInCurrentContact(id)) || this.serviceFactory(label, id)
+		const service = (id && this.getServiceInCurrentContact(id)) || this.serviceFactory(label, id)
 		if (!service.id) {
 			throw new Error('Service id must be defined')
 		}
-		meta.responsible && (service.responsible = meta.responsible)
-		meta.owner && (service.author = meta.owner)
-		meta.valueDate && (service.valueDate = meta.valueDate)
-		meta.codes && (service.codes = meta.codes)
-		meta.tags && (service.tags = meta.tags)
+		if (
+			(meta.responsible && service.responsible !== meta.responsible) ||
+			(meta.owner && service.author !== meta.owner) ||
+			(meta.valueDate && service.valueDate !== meta.valueDate) ||
+			(meta.codes && service.codes !== meta.codes) ||
+			(meta.tags && service.tags !== meta.tags)
+		) {
+			const newService = new Service({ ...service, modified: Date.now() })
+			meta.responsible && (newService.responsible = meta.responsible)
+			meta.owner && (newService.author = meta.owner)
+			meta.valueDate && (newService.valueDate = meta.valueDate)
+			meta.codes && (newService.codes = meta.codes)
+			meta.tags && (newService.tags = meta.tags)
+
+			const newFormValuesContainer = new ContactFormValuesContainer(
+				{ ...this.currentContact, services: this.currentContact.services?.map((s) => (s.id === service.id ? newService : s)) },
+				this.contactsHistory,
+				this.serviceFactory,
+				this.interpreter,
+				this.changeListeners,
+			)
+
+			this.changeListeners.forEach((l) => l(newFormValuesContainer))
+		}
 
 		return service.id
 	}
 
-	setValue(label: string, language: string, value: Service, id?: string): string {
-		const service = (id && this.getServicesInCurrentContact(id)) || this.serviceFactory(label, id)
+	setValue(label: string, language: string, value: Service, id?: string, metadata?: ServiceMetadata): string {
+		const service = (id && this.getServiceInCurrentContact(id)) || this.serviceFactory(label, id)
 		if (!service.id) {
 			throw new Error('Service id must be defined')
 		}
 		const newContent = value.content?.[language]
-		if (newContent) {
-			service.content = service.content || {}
-			service.content[language] = newContent
-		}
-		const newCodes = value.codes
-		if (newCodes) {
-			service.codes = newCodes
+		const newCodes = value.codes ?? []
+		if ((newContent && !isContentEqual(service.content?.[language], newContent)) || (newCodes && !areCodesEqual(newCodes, service.codes ?? []))) {
+			const newService = new Service({ ...service, modified: Date.now() })
+			const newContents = newContent ? { ...(service.content || {}), [language]: newContent } : { ...(service.content || {}) }
+			if (!newContent) {
+				delete newContents[language]
+			}
+			newService.content = newContents
+			newService.codes = newCodes
+
+			if (metadata) {
+				newService.responsible = metadata.responsible ?? newService.responsible
+				newService.author = metadata.owner ?? newService.author
+				newService.valueDate = metadata.valueDate ?? newService.valueDate
+				newService.tags = metadata.tags ?? newService.tags
+				newService.label = metadata.label ?? newService.label
+			}
+
+			const newCurrentContact = {
+				...this.currentContact,
+				services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
+					? (this.currentContact.services ?? []).map((s) => (s.id === service.id ? newService : s))
+					: [...(this.currentContact.services ?? []), newService],
+			}
+			const newFormValuesContainer = new ContactFormValuesContainer(
+				newCurrentContact,
+				this.contactsHistory.map((c) => (c === this.currentContact ? newCurrentContact : c)),
+				this.serviceFactory,
+				this.interpreter,
+				this.changeListeners,
+			)
+
+			this.changeListeners.forEach((l) => l(newFormValuesContainer))
 		}
 
 		return service.id
 	}
 
 	delete(serviceId: string): void {
-		const service = this.getServicesInCurrentContact(serviceId)
-		service.endOfLife = Date.now()
+		const service = this.getServiceInCurrentContact(serviceId)
+		if (service) {
+			const newFormValuesContainer = new ContactFormValuesContainer(
+				{ ...this.currentContact, services: this.currentContact.services?.map((s) => (s.id === serviceId ? new Service({ ...service, endOfLife: Date.now() }) : s)) },
+				this.contactsHistory,
+				this.serviceFactory,
+				this.interpreter,
+			)
+
+			this.changeListeners.forEach((l) => l(newFormValuesContainer))
+		}
 	}
 
 	async compute<T, S>(formula: string, sandbox: S): Promise<T | undefined> {
@@ -300,13 +390,13 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 	 * @private
 	 * @param revisionsFilter
 	 */
-	private getServicesInHistory(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => string[]): VersionedData<Service> {
+	private getServicesInHistory(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<Service> {
 		const indexedServices = [this.currentContact]
 			.concat(this.contactsHistory)
 			.reduce(
 				(acc, ctc) =>
 					ctc.services?.reduce(
-						(acc, s) => (s.id ? { ...acc, [s.id]: (acc[s.id] ?? (acc[s.id] = [])).concat({ revision: ctc.rev, modified: ctc.created, value: s }) } : acc),
+						(acc, s) => (s.id ? { ...acc, [s.id]: (acc[s.id] ?? (acc[s.id] = [])).concat({ revision: ctc.rev ?? null, modified: ctc.created, value: s }) } : acc),
 						acc,
 					) ?? acc,
 				{} as VersionedData<Service>,
@@ -328,12 +418,12 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 						},
 					})),
 				)
-				return [id, history.filter(({ revision }) => revision && keptRevisions.includes(revision))] as [string, Version<Service>[]]
+				return [id, history.filter(({ revision }) => keptRevisions.includes(revision))] as [string, Version<Service>[]]
 			})
 			.reduce((acc, [id, history]) => ({ ...acc, [id]: history }), {})
 	}
 
-	private getServicesInCurrentContact(id: string): Service {
+	private getServiceInCurrentContact(id: string): Service {
 		const service = (this.currentContact.services || [])?.find((s) => s.id === id)
 		if (!service) {
 			throw new Error('Service not found')

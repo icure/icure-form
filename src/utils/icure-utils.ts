@@ -9,9 +9,9 @@ export function anyDateToDate(dateOrEpochOrLongCalendar?: Date | number): Date |
 		return undefined
 	}
 	if (dateOrEpochOrLongCalendar >= 18000101 && dateOrEpochOrLongCalendar < 25400000) {
-		return parse('' + dateOrEpochOrLongCalendar, 'YYYYMMDD', new Date())
+		return parse('' + dateOrEpochOrLongCalendar, 'yyyyMMdd', new Date())
 	} else if (dateOrEpochOrLongCalendar >= 18000101000000) {
-		return parse('' + dateOrEpochOrLongCalendar, 'YYYYMMDDHHmmss', new Date())
+		return parse('' + dateOrEpochOrLongCalendar, 'yyyyMMddHHmmss', new Date())
 	} else {
 		return new Date(dateOrEpochOrLongCalendar)
 	}

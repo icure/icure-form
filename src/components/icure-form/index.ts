@@ -36,14 +36,6 @@ class IcureForm extends LitElement {
 		super()
 	}
 
-	connectedCallback() {
-		super.connectedCallback()
-	}
-
-	disconnectedCallback() {
-		super.disconnectedCallback()
-	}
-
 	static get styles() {
 		return [baseCss, kendoCss]
 	}

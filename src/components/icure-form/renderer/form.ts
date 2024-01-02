@@ -1,4 +1,4 @@
-import { html, TemplateResult } from 'lit'
+import { html, nothing, TemplateResult } from 'lit'
 import { Renderer, RendererProps } from './index'
 import { fieldValuesProvider, handleMetadataChanged, handleValueChanged } from '../../../utils/fields-values-provider'
 import { currentDate, currentDateTime, currentTime } from '../../../utils/icure-utils'
@@ -32,7 +32,6 @@ export const render: Renderer = (
 								c.codes.filter(
 									(c) =>
 										!searchTerms ||
-										!searchTerms ||
 										searchTerms
 											.split(/\s+/)
 											.map((st) => st.toLowerCase())
@@ -57,17 +56,18 @@ export const render: Renderer = (
 			: html`<h6>${content}</h6>`
 	}
 
-	function renderGroup(fg: Group, fgColumns: number, fieldsInRow: number, level: number) {
-		const fieldsOrGroupByRows = fg.fields ? groupFieldsOrGroupByRows(fg.fields) : []
-		return html`<div class="group" style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width)}">
-			${h(level, html`${fg.group}`)}
-			${fieldsOrGroupByRows.map((fieldsOrGroupRow) => fieldsOrGroupRow.map((fieldOrGroup) => renderFieldOrGroup(fieldOrGroup, level + 1, sumColumnsOfFields(fieldsOrGroupRow))))}
+	function renderGroup(fg: Group, fgColumns: number, level: number) {
+		return html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupWidth(fgColumns, fg.width)}">
+			${fg.borderless ? nothing : html`<div>${h(level, html`${fg.group}`)}</div>`}
+			<div class="icure-form" style="grid-template-columns: repeat(${fgColumns}, 1fr)">
+				${(fg.fields ?? []).map((fieldOrGroup: Field | Group) => renderFieldOrGroup(fieldOrGroup, level + 1))}
+			</div>
 		</div>`
 	}
 
-	function renderSubForm(fg: SubForm, fgColumns: number, fieldsInRow: number) {
-		const children = formsValueContainer?.getChildren(fg.subform)
-		return html`<div class="group" style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width)}">
+	function renderSubForm(fg: SubForm, fgColumns: number) {
+		const children = formsValueContainer?.getChildren(fg.title)
+		return html`<div class="group" style="${calculateFieldOrGroupWidth(fgColumns, fg.width)}">
 			${Object.entries(children ?? {})?.flatMap(([formKey, children]) => {
 				const form = fg?.forms?.[formKey]
 				return children.map((child) => form && render(form, props, child, translationProvider, ownersProvider, codesProvider, optionsProvider)).filter((x) => !!x)
@@ -75,10 +75,10 @@ export const render: Renderer = (
 		</div>`
 	}
 
-	function renderTextField(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderTextField(fgColumns: number, fg: Field) {
 		return html`<icure-form-textfield
 			class="icure-form-field"
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows, fg.styleOptions?.width)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows, fg.styleOptions?.width)}"
 			label="${fg.field}"
 			value="${fg.value}"
 			.displayedLabels="${getLabels(fg)}"
@@ -100,9 +100,9 @@ export const render: Renderer = (
 		></icure-form-textfield>`
 	}
 
-	function renderMeasureField(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderMeasureField(fgColumns: number, fg: Field) {
 		return html`<icure-form-measure-field
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			value="${fg.value}"
@@ -118,9 +118,9 @@ export const render: Renderer = (
 		></icure-form-measure-field>`
 	}
 
-	function renderNumberField(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderNumberField(fgColumns: number, fg: Field) {
 		return html`<icure-form-number-field
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			value="${fg.value}"
@@ -135,9 +135,9 @@ export const render: Renderer = (
 		></icure-form-number-field>`
 	}
 
-	function renderDatePicker(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderDatePicker(fgColumns: number, fg: Field) {
 		return html`<icure-form-date-picker
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			value="${fg.now ? currentDate() : fg.value}"
@@ -152,9 +152,9 @@ export const render: Renderer = (
 		></icure-form-date-picker>`
 	}
 
-	function renderTimePicker(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderTimePicker(fgColumns: number, fg: Field) {
 		return html`<icure-form-time-picker
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			value="${fg.now ? currentTime() : fg.value}"
@@ -169,9 +169,9 @@ export const render: Renderer = (
 		></icure-form-time-picker>`
 	}
 
-	function renderDateTimePicker(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderDateTimePicker(fgColumns: number, fg: Field) {
 		return html`<icure-form-date-time-picker
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			value="${fg.now ? currentDateTime() : fg.value}"
@@ -186,9 +186,9 @@ export const render: Renderer = (
 		></icure-form-date-time-picker>`
 	}
 
-	function renderDropdownField(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderDropdownField(fgColumns: number, fg: Field) {
 		return html`<icure-form-dropdown-field
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			.label=${fg.field}
 			.displayedLabels=${getLabels(fg)}
 			defaultLanguage="${props.defaultLanguage}"
@@ -221,9 +221,9 @@ export const render: Renderer = (
 		></icure-form-dropdown-field>`
 	}
 
-	function renderRadioButtons(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderRadioButtons(fgColumns: number, fg: Field) {
 		return html`<icure-form-radio-button
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			.label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			defaultLanguage="${props.defaultLanguage}"
@@ -255,9 +255,9 @@ export const render: Renderer = (
 		></icure-form-radio-button>`
 	}
 
-	function renderCheckboxes(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderCheckboxes(fgColumns: number, fg: Field) {
 		return html` <icure-form-checkbox
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			.label="${fg.field}"
 			.displayedLabels="${getLabels(fg)}"
 			defaultLanguage="${props.defaultLanguage}"
@@ -290,9 +290,9 @@ export const render: Renderer = (
 		></icure-form-checkbox>`
 	}
 
-	function renderLabel(fgColumns: number, fieldsInRow: number, fg: Field) {
+	function renderLabel(fgColumns: number, fg: Field) {
 		return html`<icure-form-label
-			style="${calculateFieldOrGroupWidth(fgColumns, fieldsInRow, fg.width, fg.grows)}"
+			style="${calculateFieldOrGroupWidth(fgColumns, fg.width, fg.grows)}"
 			labelPosition=${props.labelPosition}
 			label="${fg.field}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
@@ -301,70 +301,49 @@ export const render: Renderer = (
 		></icure-form-label>`
 	}
 
-	const renderFieldOrGroup = function (fg: Field | Group | SubForm, level: number, fieldsInRow = 1): TemplateResult | TemplateResult[] {
-		const fgColumns = fg.columns ?? 1
+	const renderFieldOrGroup = function (fg: Field | Group | SubForm, level: number): TemplateResult | TemplateResult[] {
+		const fgColumns = fg.columns ?? 6
 		const hidden = fg.computedProperties?.hidden ? formsValueContainer?.compute(fg.computedProperties?.hidden) : false
 		if (hidden) {
 			return html``
 		}
 		if (fg.clazz === 'group' && fg.fields) {
-			return renderGroup(fg, fgColumns, fieldsInRow, level)
-		} else if (fg.clazz === 'subform' && fg.subform) {
-			return renderSubForm(fg, fgColumns, fieldsInRow)
+			return renderGroup(fg, fgColumns, level)
+		} else if (fg.clazz === 'subform' && fg.title) {
+			return renderSubForm(fg, fgColumns)
 		} else if (fg.clazz === 'field') {
 			return html`${fg.type === 'textfield'
-				? renderTextField(fgColumns, fieldsInRow, fg)
+				? renderTextField(fgColumns, fg)
 				: fg.type === 'measure-field'
-				? renderMeasureField(fgColumns, fieldsInRow, fg)
+				? renderMeasureField(fgColumns, fg)
 				: fg.type === 'number-field'
-				? renderNumberField(fgColumns, fieldsInRow, fg)
+				? renderNumberField(fgColumns, fg)
 				: fg.type === 'date-picker'
-				? renderDatePicker(fgColumns, fieldsInRow, fg)
+				? renderDatePicker(fgColumns, fg)
 				: fg.type === 'time-picker'
-				? renderTimePicker(fgColumns, fieldsInRow, fg)
+				? renderTimePicker(fgColumns, fg)
 				: fg.type === 'date-time-picker'
-				? renderDateTimePicker(fgColumns, fieldsInRow, fg)
+				? renderDateTimePicker(fgColumns, fg)
 				: fg.type === 'dropdown-field'
-				? renderDropdownField(fgColumns, fieldsInRow, fg)
+				? renderDropdownField(fgColumns, fg)
 				: fg.type === 'radio-button'
-				? renderRadioButtons(fgColumns, fieldsInRow, fg)
+				? renderRadioButtons(fgColumns, fg)
 				: fg.type === 'checkbox'
-				? renderCheckboxes(fgColumns, fieldsInRow, fg)
+				? renderCheckboxes(fgColumns, fg)
 				: fg.type === 'label'
-				? renderLabel(fgColumns, fieldsInRow, fg)
+				? renderLabel(fgColumns, fg)
 				: ''}`
 		}
 		return html``
 	}
 
-	const calculateFieldOrGroupWidth = (columns: number, fieldsInRow: number, fieldWidth?: number, shouldFieldGrow?: boolean, fixedWidth?: number | undefined) => {
+	const calculateFieldOrGroupWidth = (columns: number, fieldWidth?: number, shouldFieldGrow?: boolean, fixedWidth?: number | undefined) => {
 		if (fixedWidth) return `width: ${fixedWidth}px`
-		else if (fieldWidth && fieldWidth > 0) return `--width: ${fieldWidth}px; --grows: ${Number(shouldFieldGrow)}`
-		return `--width: ${(100 / fieldsInRow) * (columns || 0)}%; --grows: ${Number(shouldFieldGrow)};`
+		return `grid-column: span ${columns};`
 	}
 
 	const renderForm = (form: Form) => {
-		return form.sections.map((s) =>
-			groupFieldsOrGroupByRows(s.fields)?.map(
-				(fieldsOrGroup) =>
-					html`<div class="icure-form" style="${fieldsOrGroup.some((fieldOrGroup) => fieldOrGroup.styleOptions?.alignItems === 'flex-end') ? 'align-items: flex-end' : ''}">
-						${fieldsOrGroup.map((fieldOrGroup: Field | Group) => renderFieldOrGroup(fieldOrGroup, 3, sumColumnsOfFields(fieldsOrGroup)))}
-					</div> `,
-			),
-		)
-	}
-
-	const sumColumnsOfFields = (fieldsOrGroup: (Field | Group | SubForm)[]) => {
-		return fieldsOrGroup.map((item) => item.columns).reduce((prev, next) => (prev || 0) + (next || 0))
-	}
-
-	const groupFieldsOrGroupByRows = (fieldsOrGroup: (Field | Group | SubForm)[]) => {
-		return fieldsOrGroup
-			.reduce<(Field | Group | SubForm)[][]>((x, y) => {
-				if (y.rows) (x[y.rows] = x[y.rows] || []).push(y)
-				return x
-			}, [])
-			.filter((text) => text)
+		return form.sections.map((s) => html`<div class="icure-form">${s.fields.map((fieldOrGroup: Field | Group) => renderFieldOrGroup(fieldOrGroup, 3))}</div>`)
 	}
 
 	return html` ${renderForm(form)} `

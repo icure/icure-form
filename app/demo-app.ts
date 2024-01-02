@@ -6,7 +6,7 @@ import '../src/components/icure-form/fields/dropdown'
 import '../src/components/icure-date-picker'
 import '../src/components/icure-form'
 import MiniSearch, { SearchResult } from 'minisearch'
-import { DatePicker, DateTimePicker, Form, Group, MeasureField, MultipleChoice, NumberField, Section, TextField, TimePicker } from '../src/components/model'
+import { Form } from '../src/components/model'
 import { codes } from './codes'
 // @ts-ignore
 import yamlForm from './gp.yaml'
@@ -72,6 +72,8 @@ const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'd
 
 class DemoApp extends LitElement {
 	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
+	private undoStack: BridgedFormValuesContainer[] = []
+
 	@state() formValuesContainer: BridgedFormValuesContainer = new BridgedFormValuesContainer('user-id', makeFormValuesContainer(), makeInterpreter())
 
 	private miniSearch: MiniSearch = new MiniSearch({
@@ -107,6 +109,7 @@ class DemoApp extends LitElement {
 	}
 	async firstUpdated() {
 		this.formValuesContainer.registerChangeListener((newValue) => {
+			this.undoStack.push(this.formValuesContainer)
 			this.formValuesContainer = newValue
 		})
 		this.miniSearch.addAll(codes.map((x) => ({ id: x.id, code: x.code, text: x.label?.fr, links: x.links })))
@@ -188,154 +191,6 @@ class DemoApp extends LitElement {
 	render() {
 		// noinspection DuplicatedCode
 		// @ts-ignore
-		const form = new Form(
-			'Waiting room GP',
-			[
-				new Section('All fields', [
-					new TextField('This field is a TextField', {
-						shortLabel: 'allTextField',
-						rows: 1,
-						grows: true,
-						columns: 1,
-					}),
-					new NumberField('This field is a NumberField', {
-						shortLabel: 'allNumberField',
-						rows: 1,
-						grows: true,
-						columns: 1,
-					}),
-					new MeasureField('This field is a MeasureField', {
-						shortLabel: 'allMeasureField',
-						rows: 1,
-						grows: true,
-						columns: 1,
-					}),
-					new DatePicker('This field is a DatePicker', {
-						shortLabel: 'allDatePicker',
-						rows: 2,
-						grows: true,
-						columns: 1,
-					}),
-					new TimePicker('This field is a TimePicker', {
-						shortLabel: 'allTimePicker',
-						rows: 2,
-						grows: true,
-						columns: 1,
-					}),
-					new DateTimePicker('This field is a DateTimePicker', {
-						shortLabel: 'allDateTimePicker',
-						rows: 3,
-						grows: true,
-						columns: 1,
-					}),
-					new MultipleChoice('This field is a MultipleChoice', {
-						shortLabel: 'allMultipleChoice',
-						rows: 3,
-						grows: true,
-						columns: 1,
-					}),
-				]),
-				new Section('Grouped fields', [
-					new Group('You can group fields together', {
-						fields: [
-							new TextField('This field is a TextField', {
-								shortLabel: 'groupTextField',
-								rows: 1,
-								grows: true,
-								columns: 2,
-								schema: undefined,
-								tags: undefined,
-								codifications: ['CD-ITEM|diagnosis|1'],
-							}),
-							new NumberField('This field is a NumberField', {
-								shortLabel: 'groupNumberField',
-								rows: 1,
-								grows: true,
-								columns: 2,
-							}),
-							new MeasureField('This field is a MeasureField', {
-								shortLabel: 'groupMeasureField',
-								rows: 1,
-								grows: true,
-								columns: 2,
-							}),
-							new DatePicker('This field is a DatePicker', {
-								shortLabel: 'groupDatePicker',
-								rows: 3,
-								grows: true,
-								columns: 2,
-							}),
-							new TimePicker('This field is a TimePicker', {
-								shortLabel: 'groupTimePicker',
-								rows: 3,
-								grows: true,
-								columns: 2,
-							}),
-							new DateTimePicker('This field is a DateTimePicker', {
-								shortLabel: 'groupDateTimePicker',
-								rows: 3,
-								grows: true,
-								columns: 2,
-							}),
-							new MultipleChoice('This field is a MultipleChoice', {
-								shortLabel: 'groupMultipleChoice',
-								rows: 4,
-								grows: true,
-								columns: 2,
-							}),
-						],
-						rows: 1,
-						columns: 1,
-					}),
-					new Group('And you can add tags and codes', {
-						fields: [
-							new TextField('This field is a TextField with rows and columns', {
-								shortLabel: 'tagTextField',
-								rows: 1,
-								grows: true,
-								columns: 1,
-								schema: 'text-document',
-								tags: ['CD-ITEM|diagnosis|1'],
-								codifications: ['BE-THESAURUS', 'ICD10'],
-								options: {
-									option: 'blink',
-								},
-							}),
-							new NumberField('This field is a NumberField', {
-								shortLabel: 'tagNumberField',
-								rows: 1,
-								grows: true,
-								columns: 1,
-								tags: ['CD-ITEM|parameter|1', 'CD-PARAMETER|bmi|1'],
-								codifications: [],
-								options: { option: 'bang' },
-							}),
-							new MeasureField('This field is a MeasureField', {
-								shortLabel: 'tagMeasureField',
-								rows: 1,
-								grows: true,
-								columns: 1,
-								tags: ['CD-ITEM|parameter|1', 'CD-PARAMETER|heartbeat|1'],
-								codifications: [],
-								options: { unit: 'bpm' },
-							}),
-							new MultipleChoice('This field is a MultipleChoice', {
-								shortLabel: 'tagMultipleChoice',
-								rows: 4,
-								grows: true,
-								columns: 4,
-								tags: [],
-								codifications: ['KATZ'],
-								options: { many: 'no' },
-							}),
-						],
-						rows: 1,
-						columns: 1,
-					}),
-				]),
-			],
-			'Fill in the patient information inside the waiting room',
-		)
 
 		const editable = true
 		const gpForm = Form.parse(YAML.parse(yamlForm))

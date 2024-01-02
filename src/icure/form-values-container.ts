@@ -132,9 +132,9 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 					revision,
 					modified,
 					value: {
-						value: Object.entries(s.content ?? {}).reduce((acc, [lng, cnt]) => {
+						content: Object.entries(s.content ?? {}).reduce((acc, [lng, cnt]) => {
 							const converted = this.contentToPrimitiveType(lng, cnt)
-							return converted ? { ...acc, [lng]: { value: converted } } : acc
+							return converted ? { ...acc, [lng]: converted } : acc
 						}, {}),
 						codes: s.codes?.map(codeStubToCode),
 					},
@@ -161,7 +161,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		)
 	}
 	setValue(label: string, language: string, fv: FieldValue, id?: string, metadata?: FieldMetadata): string {
-		const value = fv.value[language]
+		const value = fv.content[language]
 		return this.contactFormValuesContainer.setValue(
 			label,
 			language,

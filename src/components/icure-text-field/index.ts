@@ -289,7 +289,7 @@ export class IcureTextField extends Field {
 									this.containerId = this.handleValueChanged?.(
 										this.label,
 										language,
-										{ value: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] },
+										{ content: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] },
 										this.containerId,
 									)
 								}
@@ -305,7 +305,7 @@ export class IcureTextField extends Field {
 				const value = this.primitiveTypeExtractor?.(parsedDoc)
 				if (value) {
 					const language = this.displayedLanguage ?? 'en'
-					this.handleValueChanged?.(this.label, language, { value: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] }, this.containerId)
+					this.handleValueChanged?.(this.label, language, { content: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] }, this.containerId)
 				}
 			}
 		}

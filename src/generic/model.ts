@@ -8,6 +8,9 @@ export interface Version<T> {
 	value: T
 }
 
+/**
+ * FormValuesContainer is a readonly structure that provides and handle the values of a form.
+ */
 export interface FormValuesContainer<Value, Metadata> {
 	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: string[]): VersionedData<Metadata>

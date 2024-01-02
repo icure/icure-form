@@ -1,6 +1,6 @@
 import { strictEqual } from 'assert'
 import YAML from 'yaml'
-import { Form, Section, Group, TextField, NumberField, DatePicker, TimePicker, DateTimePicker, MultipleChoice, MeasureField } from '../../src/components/icure-form/model'
+import { Form, Section, Group, TextField, NumberField, DatePicker, TimePicker, DateTimePicker, MeasureField } from '../../src/components/model'
 
 describe('Form parsing tests', () => {
 	it('should Render simple form', () => {
@@ -26,7 +26,6 @@ describe('Form parsing tests', () => {
 				'      - clazz: field\n' +
 				'        field: What symptoms, or more generally what reason motivated your visit\n' +
 				'        type: textfield\n' +
-				'        rows: 1\n' +
 				'        grows: false\n' +
 				'        columns: 1\n' +
 				'        schema: styled-text-with-codes\n' +
@@ -44,7 +43,6 @@ describe('Form parsing tests', () => {
 			'      - clazz: field\n' +
 			'        field: What symptoms, or more generally what reason motivated your visit\n' +
 			'        type: textfield\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        schema: styled-text-with-codes\n' +
@@ -70,25 +68,25 @@ describe('Form parsing tests', () => {
 								new DatePicker('This field is a DatePicker', { shortLabel: 'DatePicker' }),
 								new TimePicker('This field is a TimePicker', { shortLabel: 'TimePicker' }),
 								new DateTimePicker('This field is a DateTimePicker', { shortLabel: 'DateTimePicker' }),
-								new MultipleChoice('This field is a MultipleChoice', { shortLabel: 'MultipleChoice' }),
 							]),
 							new Section('Grouped fields', [
-								new Group('You can group fields together', {
-									fields: [
+								new Group(
+									'You can group fields together',
+									[
 										new TextField('This field is a TextField', { shortLabel: 'TextField' }),
 										new NumberField('This field is a NumberField', { shortLabel: 'NumberField' }),
 										new MeasureField('This field is a MeasureField', { shortLabel: 'MeasureField' }),
 										new DatePicker('This field is a DatePicker', { shortLabel: 'DatePicker' }),
 										new TimePicker('This field is a TimePicker', { shortLabel: 'TimePicker' }),
 										new DateTimePicker('This field is a DateTimePicker', { shortLabel: 'DateTimePicker' }),
-										new MultipleChoice('This field is a MultipleChoice', { shortLabel: 'MultipleChoice' }),
 									],
-								}),
-								new Group('And you can add tags and codes', {
-									fields: [
+									{},
+								),
+								new Group(
+									'And you can add tags and codes',
+									[
 										new TextField('This field is a TextField', {
 											shortLabel: 'TextField',
-											rows: 3,
 											grows: false,
 											columns: 1,
 											schema: 'text-document',
@@ -98,7 +96,6 @@ describe('Form parsing tests', () => {
 										}),
 										new NumberField('This field is a NumberField', {
 											shortLabel: 'NumberField',
-											rows: 3,
 											grows: false,
 											columns: 1,
 											tags: ['CD-ITEM|parameter|1', 'CD-PARAMETER|bmi|1'],
@@ -107,24 +104,15 @@ describe('Form parsing tests', () => {
 										}),
 										new MeasureField('This field is a MeasureField', {
 											shortLabel: 'MeasureField',
-											rows: 3,
 											grows: false,
 											columns: 1,
 											tags: ['CD-ITEM|parameter|1', 'CD-PARAMETER|heartbeat|1'],
 											codifications: [],
 											options: { unit: 'bpm' },
 										}),
-										new MultipleChoice('This field is a MultipleChoice', {
-											shortLabel: 'MultipleChoice',
-											rows: 4,
-											grows: false,
-											columns: 4,
-											tags: [],
-											codifications: ['KATZ'],
-											options: { many: 'no' },
-										}),
 									],
-								}),
+									{},
+								),
 							]),
 						],
 						'Fill in the patient information inside the waiting room',
@@ -144,7 +132,6 @@ sections:
         field: This field is a TextField
         type: textfield
         shortLabel: TextField
-        rows: 1
         grows: false
         columns: 1
         schema: styled-text-with-codes
@@ -154,7 +141,6 @@ sections:
         field: This field is a NumberField
         type: number-field
         shortLabel: NumberField
-        rows: 1
         grows: false
         columns: 1
         multiline: false
@@ -164,7 +150,6 @@ sections:
         field: This field is a MeasureField
         type: measure-field
         shortLabel: MeasureField
-        rows: 1
         grows: false
         columns: 1
         multiline: false
@@ -174,7 +159,6 @@ sections:
         field: This field is a DatePicker
         type: date-picker
         shortLabel: DatePicker
-        rows: 1
         grows: false
         columns: 1
         multiline: false
@@ -183,7 +167,6 @@ sections:
         field: This field is a TimePicker
         type: time-picker
         shortLabel: TimePicker
-        rows: 1
         grows: false
         columns: 1
         multiline: false
@@ -192,7 +175,6 @@ sections:
         field: This field is a DateTimePicker
         type: date-time-picker
         shortLabel: DateTimePicker
-        rows: 1
         grows: false
         columns: 1
         multiline: false
@@ -201,7 +183,6 @@ sections:
         field: This field is a MultipleChoice
         type: multiple-choice
         shortLabel: MultipleChoice
-        rows: 1
         grows: false
         columns: 1
         multiline: false
@@ -216,7 +197,6 @@ sections:
             field: This field is a TextField
             type: textfield
             shortLabel: TextField
-            rows: 1
             grows: false
             columns: 1
             schema: styled-text-with-codes
@@ -226,7 +206,6 @@ sections:
             field: This field is a NumberField
             type: number-field
             shortLabel: NumberField
-            rows: 1
             grows: false
             columns: 1
             multiline: false
@@ -236,7 +215,6 @@ sections:
             field: This field is a MeasureField
             type: measure-field
             shortLabel: MeasureField
-            rows: 1
             grows: false
             columns: 1
             multiline: false
@@ -246,7 +224,6 @@ sections:
             field: This field is a DatePicker
             type: date-picker
             shortLabel: DatePicker
-            rows: 1
             grows: false
             columns: 1
             multiline: false
@@ -255,7 +232,6 @@ sections:
             field: This field is a TimePicker
             type: time-picker
             shortLabel: TimePicker
-            rows: 1
             grows: false
             columns: 1
             multiline: false
@@ -264,7 +240,6 @@ sections:
             field: This field is a DateTimePicker
             type: date-time-picker
             shortLabel: DateTimePicker
-            rows: 1
             grows: false
             columns: 1
             multiline: false
@@ -273,7 +248,6 @@ sections:
             field: This field is a MultipleChoice
             type: multiple-choice
             shortLabel: MultipleChoice
-            rows: 1
             grows: false
             columns: 1
             multiline: false
@@ -286,7 +260,6 @@ sections:
             field: This field is a TextField
             type: textfield
             shortLabel: TextField
-            rows: 3
             grows: false
             columns: 1
             schema: text-document
@@ -303,7 +276,6 @@ sections:
             field: This field is a NumberField
             type: number-field
             shortLabel: NumberField
-            rows: 3
             grows: false
             columns: 1
             tags:
@@ -319,7 +291,6 @@ sections:
             field: This field is a MeasureField
             type: measure-field
             shortLabel: MeasureField
-            rows: 3
             grows: false
             columns: 1
             tags:
@@ -335,7 +306,6 @@ sections:
             field: This field is a MultipleChoice
             type: multiple-choice
             shortLabel: MultipleChoice
-            rows: 4
             grows: false
             columns: 4
             tags: []
@@ -360,7 +330,6 @@ sections:
 			'        field: This field is a TextField\n' +
 			'        type: textfield\n' +
 			'        shortLabel: TextField\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        schema: styled-text-with-codes\n' +
@@ -370,7 +339,6 @@ sections:
 			'        field: This field is a NumberField\n' +
 			'        type: number-field\n' +
 			'        shortLabel: NumberField\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        multiline: false\n' +
@@ -380,7 +348,6 @@ sections:
 			'        field: This field is a MeasureField\n' +
 			'        type: measure-field\n' +
 			'        shortLabel: MeasureField\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        multiline: false\n' +
@@ -390,7 +357,6 @@ sections:
 			'        field: This field is a DatePicker\n' +
 			'        type: date-picker\n' +
 			'        shortLabel: DatePicker\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        multiline: false\n' +
@@ -399,7 +365,6 @@ sections:
 			'        field: This field is a TimePicker\n' +
 			'        type: time-picker\n' +
 			'        shortLabel: TimePicker\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        multiline: false\n' +
@@ -408,7 +373,6 @@ sections:
 			'        field: This field is a DateTimePicker\n' +
 			'        type: date-time-picker\n' +
 			'        shortLabel: DateTimePicker\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        multiline: false\n' +
@@ -417,7 +381,6 @@ sections:
 			'        field: This field is a MultipleChoice\n' +
 			'        type: multiple-choice\n' +
 			'        shortLabel: MultipleChoice\n' +
-			'        rows: 1\n' +
 			'        grows: false\n' +
 			'        columns: 1\n' +
 			'        multiline: false\n' +
@@ -432,7 +395,6 @@ sections:
 			'            field: This field is a TextField\n' +
 			'            type: textfield\n' +
 			'            shortLabel: TextField\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            schema: styled-text-with-codes\n' +
@@ -442,7 +404,6 @@ sections:
 			'            field: This field is a NumberField\n' +
 			'            type: number-field\n' +
 			'            shortLabel: NumberField\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            multiline: false\n' +
@@ -452,7 +413,6 @@ sections:
 			'            field: This field is a MeasureField\n' +
 			'            type: measure-field\n' +
 			'            shortLabel: MeasureField\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            multiline: false\n' +
@@ -462,7 +422,6 @@ sections:
 			'            field: This field is a DatePicker\n' +
 			'            type: date-picker\n' +
 			'            shortLabel: DatePicker\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            multiline: false\n' +
@@ -471,7 +430,6 @@ sections:
 			'            field: This field is a TimePicker\n' +
 			'            type: time-picker\n' +
 			'            shortLabel: TimePicker\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            multiline: false\n' +
@@ -480,7 +438,6 @@ sections:
 			'            field: This field is a DateTimePicker\n' +
 			'            type: date-time-picker\n' +
 			'            shortLabel: DateTimePicker\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            multiline: false\n' +
@@ -489,7 +446,6 @@ sections:
 			'            field: This field is a MultipleChoice\n' +
 			'            type: multiple-choice\n' +
 			'            shortLabel: MultipleChoice\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            multiline: false\n' +
@@ -502,7 +458,6 @@ sections:
 			'            field: This field is a TextField\n' +
 			'            type: textfield\n' +
 			'            shortLabel: TextField\n' +
-			'            rows: 3\n' +
 			'            grows: true\n' +
 			'            columns: 1\n' +
 			'            schema: text-document\n' +
@@ -519,7 +474,6 @@ sections:
 			'            field: This field is a NumberField\n' +
 			'            type: number-field\n' +
 			'            shortLabel: NumberField\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            tags:\n' +
@@ -535,7 +489,6 @@ sections:
 			'            field: This field is a MeasureField\n' +
 			'            type: measure-field\n' +
 			'            shortLabel: MeasureField\n' +
-			'            rows: 1\n' +
 			'            grows: false\n' +
 			'            columns: 1\n' +
 			'            tags:\n' +
@@ -551,7 +504,6 @@ sections:
 			'            field: This field is a MultipleChoice\n' +
 			'            type: multiple-choice\n' +
 			'            shortLabel: MultipleChoice\n' +
-			'            rows: 4\n' +
 			'            grows: false\n' +
 			'            columns: 4\n' +
 			'            tags: []\n' +

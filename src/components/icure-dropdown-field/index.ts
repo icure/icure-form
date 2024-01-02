@@ -33,12 +33,12 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 
 	connectedCallback() {
 		super.connectedCallback()
-		//document.addEventListener('click', this._handleClickOutside)
+		document.addEventListener('click', this._handleClickOutside.bind(this))
 	}
 
 	disconnectedCallback() {
 		super.disconnectedCallback()
-		//document.removeEventListener('click', this._handleClickOutside)
+		document.removeEventListener('click', this._handleClickOutside.bind(this))
 	}
 
 	handleOptionButtonClicked(id: string | undefined): (e: Event) => boolean {
@@ -54,7 +54,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 					this.label,
 					this.language(),
 					{
-						value: { [this.language()]: { type: 'string', value: inputValue } },
+						content: { [this.language()]: { type: 'string', value: inputValue } },
 						codes: code ? [code] : [],
 					},
 					valueId,
@@ -69,7 +69,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
 			const value = versions[0]?.value
-			const valueForLanguage = value?.value?.[this.language()] ?? ''
+			const valueForLanguage = value?.content?.[this.language()] ?? ''
 			if (valueForLanguage && valueForLanguage.type === 'string' && valueForLanguage.value) {
 				return [id, valueForLanguage.value]
 			} else if (value?.codes?.length) {

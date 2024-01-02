@@ -21,7 +21,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
 			const value = versions[0]?.value
-			const valueForLanguage = value?.value?.[this.language()] ?? ''
+			const valueForLanguage = value?.content?.[this.language()] ?? ''
 			const fromValue = valueForLanguage && valueForLanguage.type === 'compound' && valueForLanguage.value ? Object.keys(valueForLanguage.value) : []
 			return [id, fromValue.concat(value?.codes?.map((c) => c.id)?.filter((id) => !fromValue.includes(id)) ?? [])]
 		}
@@ -38,7 +38,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 				this.label,
 				this.language(),
 				{
-					value: {
+					content: {
 						[this.language()]: {
 							type: 'compound',
 							value: selectedOptions?.reduce(
@@ -95,14 +95,11 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 	}
 
 	private generateStyle() {
-		switch (this.styleOptions?.direction) {
-			case 'column':
-				return `grid-template-columns: repeat(${this.styleOptions?.columns}, 1fr);`
-			case 'row':
-				return `grid-template-columns: repeat(${Number((this.displayedOptions?.length ?? 0) / (this.styleOptions?.rows as number))}, 1fr);`
-			default:
-				return ``
-		}
+		return this.styleOptions?.columns
+			? `grid-template-columns: repeat(${this.styleOptions?.columns}, 1fr);`
+			: this.styleOptions?.rows
+			? `grid-template-columns: repeat(${Number((this.displayedOptions?.length ?? 0) / (this.styleOptions?.rows as number))}, 1fr);`
+			: ''
 	}
 }
 

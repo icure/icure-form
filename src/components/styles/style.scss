@@ -1,8 +1,15 @@
-.icure-form {
-	display: flex;
-	flex-flow: row wrap;
-	align-items: start;
+@media (min-width: 600px) {
+	.icure-form { grid-template-columns: repeat(12, 1fr); }
+}
 
+.icure-form {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(24, 1fr);
+	grid-auto-flow: row;
+}
+
+.icure-form {
 	h2 {
 		width: 100%;
 		font-size: 2em;
@@ -39,15 +46,9 @@
 		margin: 0em 10px 11px 10px;
 	}
 
-	.group {
-		flex: 1 1 calc(var(--width) - 2em);
-		margin: 1em;
+	.group.bordered {
 		background: #f6f6f6;
 		border-radius: 12px;
-		width: 100%;
-		display: flex;
-		flex-flow: row wrap;
-		align-items: center;
-		justify-content: flex-start;
 	}
+
 }

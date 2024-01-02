@@ -18,7 +18,7 @@ export interface FieldMetadata {
 }
 
 export interface FieldValue {
-	value: { [language: string]: PrimitiveType }
+	content: { [language: string]: PrimitiveType }
 	codes?: Code[]
 }
 
@@ -105,9 +105,8 @@ export abstract class Field {
 	field: string
 	type: FieldType
 	shortLabel?: string
-	rows?: number
 	columns?: number
-	grows?: boolean
+	grows: boolean
 	schema?: IcureTextFieldSchema
 	tags?: string[]
 	codifications?: string[]
@@ -133,7 +132,6 @@ export abstract class Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			schema,
@@ -151,7 +149,6 @@ export abstract class Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			schema?: IcureTextFieldSchema
@@ -172,9 +169,8 @@ export abstract class Field {
 		this.field = label
 		this.type = type
 		this.shortLabel = shortLabel
-		this.rows = rows || 1
-		this.grows = grows || false
-		this.columns = columns || 1
+		this.grows = grows === undefined ? true : grows
+		this.columns = columns
 		this.schema = schema
 		this.tags = tags
 		this.codifications = codifications
@@ -201,7 +197,6 @@ export abstract class Field {
 				'date-picker': () => new DatePicker(json.field, { ...json }),
 				'time-picker': () => new TimePicker(json.field, { ...json }),
 				'date-time-picker': () => new DateTimePicker(json.field, { ...json }),
-				'multiple-choice': () => new MultipleChoice(json.field, { ...json }),
 				dropdown: () => new DropdownField(json.field, { ...json }),
 				'radio-button': () => new RadioButton(json.field, { ...json }),
 				checkbox: () => new CheckBox(json.field, { ...json }),
@@ -231,7 +226,6 @@ export abstract class Field {
 			| 'checkbox'
 			| 'label'
 			| 'action'
-		rows: number | undefined
 		translate: boolean | undefined
 		tags: string[] | undefined
 		labels: Labels | undefined
@@ -241,7 +235,7 @@ export abstract class Field {
 		sortOptions: { other?: number; none?: number; empty?: number; asc?: boolean; alpha?: boolean } | undefined
 		multiline: boolean | undefined
 		now: boolean | undefined
-		options: { [p: string]: unknown } | undefined
+		options: { [key: string]: unknown } | undefined
 		width: number | undefined
 		shortLabel: string | undefined
 		computedProperties: ComputedProperties | undefined
@@ -251,7 +245,6 @@ export abstract class Field {
 			field: this.field,
 			type: this.type,
 			shortLabel: this.shortLabel,
-			rows: this.rows,
 			grows: this.grows,
 			columns: this.columns,
 			schema: this.schema?.toString(),
@@ -278,7 +271,6 @@ export class TextField extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			schema,
@@ -295,13 +287,12 @@ export class TextField extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			schema?: IcureTextFieldSchema
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -314,7 +305,6 @@ export class TextField extends Field {
 	) {
 		super('textfield', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			schema: schema || 'styled-text-with-codes',
@@ -338,7 +328,6 @@ export class MeasureField extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -353,12 +342,11 @@ export class MeasureField extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -370,7 +358,6 @@ export class MeasureField extends Field {
 	) {
 		super('measure-field', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -392,7 +379,6 @@ export class NumberField extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -407,12 +393,11 @@ export class NumberField extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -424,7 +409,6 @@ export class NumberField extends Field {
 	) {
 		super('number-field', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -446,7 +430,6 @@ export class TokenField extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -461,12 +444,11 @@ export class TokenField extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -478,7 +460,6 @@ export class TokenField extends Field {
 	) {
 		super('token-field', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -500,7 +481,6 @@ export class ItemsListField extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -515,12 +495,11 @@ export class ItemsListField extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -532,7 +511,6 @@ export class ItemsListField extends Field {
 	) {
 		super('items-list-field', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -554,7 +532,6 @@ export class DatePicker extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -570,12 +547,11 @@ export class DatePicker extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -588,7 +564,6 @@ export class DatePicker extends Field {
 	) {
 		super('date-picker', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -611,7 +586,6 @@ export class TimePicker extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -627,12 +601,11 @@ export class TimePicker extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -645,7 +618,6 @@ export class TimePicker extends Field {
 	) {
 		super('time-picker', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -668,7 +640,6 @@ export class DateTimePicker extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -684,12 +655,11 @@ export class DateTimePicker extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			labels?: Labels
 			value?: string
 			unit?: string
@@ -702,7 +672,6 @@ export class DateTimePicker extends Field {
 	) {
 		super('date-time-picker', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -720,66 +689,11 @@ export class DateTimePicker extends Field {
 	}
 }
 
-export class MultipleChoice extends Field {
-	constructor(
-		label: string,
-		{
-			shortLabel,
-			rows,
-			grows,
-			columns,
-			tags,
-			codifications,
-			options,
-			labels,
-			value,
-			unit,
-			computedProperties,
-			translate,
-			width,
-			styleOptions,
-		}: {
-			shortLabel?: string
-			rows?: number
-			grows?: boolean
-			columns?: number
-			tags?: string[]
-			codifications?: string[]
-			options?: { [p: string]: unknown }
-			labels?: Labels
-			value?: string
-			unit?: string
-			computedProperties?: ComputedProperties
-			translate?: boolean
-			width?: number
-			styleOptions?: { width: number; direction: string; columns: number; rows: number; alignItems: string }
-		},
-	) {
-		super('multiple-choice', label, {
-			shortLabel,
-			rows,
-			grows,
-			columns,
-			tags,
-			codifications,
-			options,
-			labels,
-			value,
-			unit,
-			computedProperties,
-			translate,
-			width,
-			styleOptions,
-		})
-	}
-}
-
 export class DropdownField extends Field {
 	constructor(
 		label: string,
 		options: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
@@ -797,7 +711,6 @@ export class DropdownField extends Field {
 	) {
 		super('dropdown-field', label, {
 			shortLabel: options.shortLabel,
-			rows: options.rows,
 			grows: options.grows,
 			columns: options.columns,
 			tags: options.tags,
@@ -820,7 +733,6 @@ export class RadioButton extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -835,12 +747,11 @@ export class RadioButton extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			value?: string
 			computedProperties?: ComputedProperties
 			translate?: boolean
@@ -852,7 +763,6 @@ export class RadioButton extends Field {
 	) {
 		super('radio-button', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -874,7 +784,6 @@ export class CheckBox extends Field {
 		label: string,
 		{
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -889,12 +798,11 @@ export class CheckBox extends Field {
 			styleOptions,
 		}: {
 			shortLabel?: string
-			rows?: number
 			grows?: boolean
 			columns?: number
 			tags?: string[]
 			codifications?: string[]
-			options?: { [p: string]: unknown }
+			options?: { [key: string]: unknown }
 			value?: string
 			computedProperties?: ComputedProperties
 			translate?: boolean
@@ -906,7 +814,6 @@ export class CheckBox extends Field {
 	) {
 		super('checkbox', label, {
 			shortLabel,
-			rows,
 			grows,
 			columns,
 			tags,
@@ -923,21 +830,22 @@ export class CheckBox extends Field {
 	}
 }
 export class Label extends Field {
-	constructor(label: string, { shortLabel, rows, grows, columns }: { shortLabel?: string; rows?: number; grows?: boolean; columns?: number }) {
-		super('label', label, { shortLabel, rows, grows, columns })
+	constructor(label: string, { shortLabel, grows, columns }: { shortLabel?: string; grows?: boolean; columns?: number }) {
+		super('label', label, { shortLabel, grows, columns })
 	}
 }
 
 export class ActionButton extends Field {
-	constructor(label: string, { shortLabel, rows, grows, columns }: { shortLabel?: string; rows?: number; grows?: boolean; columns?: number }) {
-		super('action', label, { shortLabel, rows, grows, columns })
+	constructor(label: string, { shortLabel, grows, columns }: { shortLabel?: string; grows?: boolean; columns?: number }) {
+		super('action', label, { shortLabel, grows, columns })
 	}
 }
 export class Group {
 	clazz = 'group' as const
 	group: string
-	fields?: Array<Field | Group>
-	rows?: number
+	borderless: boolean
+	translate: boolean
+	fields?: Array<Field | Group | SubForm>
 	columns?: number
 	computedProperties?: ComputedProperties
 	width?: number
@@ -945,39 +853,64 @@ export class Group {
 
 	constructor(
 		title: string,
+		fields: Array<Field | Group | SubForm>,
 		{
-			fields,
-			rows,
 			columns,
+			borderless,
+			translate,
 			computedProperties,
 			width,
 			styleOptions,
 		}: {
-			fields: Array<Field | Group>
-			rows?: number
+			borderless?: boolean
+			translate?: boolean
 			columns?: number
 			computedProperties?: ComputedProperties
 			width?: number
-			styleOptions?: { [p: string]: unknown }
+			styleOptions?: { [key: string]: unknown }
 		},
 	) {
 		this.group = title
 		this.fields = fields
-		this.rows = rows
+		this.borderless = borderless ?? false
+		this.translate = translate ?? true
+		this.fields = fields
 		this.columns = columns
 		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
 	}
 
-	static parse(json: { group: string; fields?: Array<Field | Group>; rows?: number; columns?: number; computedProperties?: ComputedProperties; width?: number }): Group {
-		return new Group(json.group, {
-			fields: (json.fields || []).map((s: Field | Group) => (s['group'] ? Group.parse(s as Group) : Field.parse(s as Field))),
-			rows: json.rows,
-			columns: json.columns,
-			computedProperties: json.computedProperties,
-			width: json.width,
-		})
+	static parse({
+		borderless,
+		columns,
+		computedProperties,
+		fields,
+		group,
+		translate,
+		width,
+	}: {
+		group: string
+		fields?: Array<Field | Group | SubForm>
+		borderless?: boolean
+		translate?: boolean
+		columns?: number
+		computedProperties?: ComputedProperties
+		width?: number
+	}): Group {
+		return new Group(
+			group,
+			(fields || []).map((s: Field | Group | SubForm) =>
+				s['group'] ? Group.parse(s as Group) : s['subForm'] ? SubForm.parse(s as SubForm & { subform: string }) : Field.parse(s as Field),
+			),
+			{
+				columns: columns,
+				borderless: borderless,
+				translate: translate,
+				computedProperties: computedProperties,
+				width: width,
+			},
+		)
 	}
 
 	toJson(): any {
@@ -985,7 +918,8 @@ export class Group {
 			group: this.group,
 			computedProperties: this.computedProperties,
 			fields: this.fields?.map((f: Field | Group) => f.toJson()),
-			rows: this.rows,
+			borderless: this.borderless,
+			translatable: this.translate,
 			columns: this.columns,
 			width: this.width,
 		}
@@ -994,10 +928,9 @@ export class Group {
 
 export class SubForm {
 	clazz = 'subform' as const
-	subform: string
+	title: string
 	shortLabel?: string
-	forms?: { [key: string]: Form }
-	rows?: number
+	forms: { [key: string]: Form }
 	columns?: number
 	computedProperties?: ComputedProperties
 	width?: number
@@ -1008,7 +941,6 @@ export class SubForm {
 		{
 			shortLabel,
 			forms,
-			rows,
 			columns,
 			computedProperties,
 			width,
@@ -1016,40 +948,59 @@ export class SubForm {
 		}: {
 			shortLabel?: string
 			forms: { [key: string]: Form }
-			rows?: number
 			columns?: number
 			computedProperties?: ComputedProperties
 			width?: number
-			styleOptions?: { [p: string]: unknown }
+			styleOptions?: { [key: string]: unknown }
 		},
 	) {
-		this.subform = title
+		this.title = title
 		this.shortLabel = shortLabel
 		this.forms = forms
-		this.rows = rows
 		this.columns = columns
 		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
 	}
 
-	static parse(json: { group: string; fields?: Array<Field | Group>; rows?: number; columns?: number; computedProperties?: ComputedProperties; width?: number }): Group {
-		return new Group(json.group, {
-			fields: (json.fields || []).map((s: Field | Group) => (s['group'] ? Group.parse(s as Group) : Field.parse(s as Field))),
-			rows: json.rows,
+	static parse(json: {
+		subform: string
+		shortLabel?: string
+		forms: { [key: string]: Form }
+		columns?: number
+		computedProperties?: ComputedProperties
+		width?: number
+		styleOptions?: { [key: string]: unknown }
+	}): SubForm {
+		return new SubForm(json.subform, {
+			shortLabel: json.shortLabel,
+			forms: json.forms,
 			columns: json.columns,
 			computedProperties: json.computedProperties,
 			width: json.width,
+			styleOptions: json.styleOptions,
 		})
+	}
+
+	toJson(): any {
+		return {
+			subform: this.title,
+			shortLabel: this.shortLabel,
+			forms: this.forms,
+			columns: this.columns,
+			computedProperties: this.computedProperties,
+			width: this.width,
+			styleOptions: this.styleOptions,
+		}
 	}
 }
 export class Section {
 	section: string
-	fields: Array<Field | Group>
+	fields: Array<Field | Group | SubForm>
 	description?: string
 	keywords?: string[]
 
-	constructor(title: string, fields: Array<Field | Group>, description?: string, keywords?: string[]) {
+	constructor(title: string, fields: Array<Field | Group | SubForm>, description?: string, keywords?: string[]) {
 		this.section = title
 		this.fields = fields
 		this.description = description
@@ -1058,15 +1009,17 @@ export class Section {
 
 	static parse(json: {
 		section: string
-		fields?: Array<Field | Group>
-		groups?: Array<Field | Group>
-		sections?: Array<Field | Group>
+		fields?: Array<Field | Group | SubForm>
+		groups?: Array<Field | Group | SubForm>
+		sections?: Array<Field | Group | SubForm>
 		description?: string
 		keywords?: string[]
 	}): Section {
 		return new Section(
 			json.section,
-			(json.fields || json.groups || json.sections || []).map((s: Field | Group) => (s['group'] ? Group.parse(s as Group) : Field.parse(s as Field))),
+			(json.fields ?? json.groups ?? json.sections ?? []).map((s: Field | Group | SubForm) =>
+				s['group'] ? Group.parse(s as Group) : s['subForm'] ? SubForm.parse(s as SubForm & { subform: string }) : Field.parse(s as Field),
+			),
 			json.description,
 			json.keywords,
 		)
@@ -1076,11 +1029,11 @@ export class Section {
 		section: string
 		keywords?: string[]
 		description?: string
-		fields: any[]
+		fields: (Field | Group | SubForm)[]
 	} {
 		return {
 			section: this.section,
-			fields: this.fields.map((f: Field | Group) => f.toJson()),
+			fields: this.fields.map((f: Field | Group | SubForm) => f.toJson()),
 			description: this.description,
 			keywords: this.keywords,
 		}
@@ -1134,43 +1087,24 @@ export class Form {
 	sections: Section[]
 	description?: string
 	keywords?: string[]
-	actions?: Action[]
 	codifications?: Codification[]
 	translations?: TranslationTable[]
 
-	constructor(
-		title: string,
-		sections: Section[],
-		description?: string,
-		keywords?: string[],
-		actions?: Action[],
-		codifications?: Codification[],
-		translations?: TranslationTable[],
-	) {
+	constructor(title: string, sections: Section[], description?: string, keywords?: string[], codifications?: Codification[], translations?: TranslationTable[]) {
 		this.form = title
 		this.description = description
 		this.keywords = keywords
 		this.sections = sections
-		this.actions = actions
 		this.codifications = codifications
 		this.translations = translations
 	}
 
-	static parse(json: {
-		form: string
-		sections: Section[]
-		description?: string
-		keywords?: string[]
-		actions?: Action[]
-		codifications?: Codification[]
-		translations: TranslationTable[]
-	}): Form {
+	static parse(json: { form: string; sections: Section[]; description?: string; keywords?: string[]; codifications?: Codification[]; translations: TranslationTable[] }): Form {
 		return new Form(
 			json.form,
 			(json.sections || []).map((s: Section) => Section.parse(s)),
 			json.description,
 			json.keywords,
-			(json.actions || []).map((a: Action) => Action.parse(a)),
 			json.codifications?.map((c: Codification) => Codification.parse(c)),
 			json.translations?.map((t: TranslationTable) => TranslationTable.parse(t)),
 		)
@@ -1180,13 +1114,6 @@ export class Form {
 		form: string
 		keywords?: string[]
 		description?: string
-		actions:
-			| {
-					launchers: { triggerer: string; shouldPassValue: boolean; name: string }[]
-					expression: string
-					states: { stateToUpdate: string; name: string; canLaunchLauncher: boolean }[]
-			  }[]
-			| undefined
 		sections: { section: string; keywords?: string[]; description?: string; fields: any[] }[]
 	} {
 		return {
@@ -1194,7 +1121,6 @@ export class Form {
 			sections: this.sections.map((s: Section) => s.toJson()),
 			description: this.description,
 			keywords: this.keywords,
-			actions: this.actions?.map((a: Action) => a.toJson()),
 		}
 	}
 }

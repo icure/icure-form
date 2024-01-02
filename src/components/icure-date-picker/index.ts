@@ -30,7 +30,7 @@ export class IcureDatePickerField extends Field {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
 			this.containerId = id
-			const valueForLanguage = versions[0]?.value?.value?.[this.language()] ?? ''
+			const valueForLanguage = versions[0]?.value?.content?.[this.language()] ?? ''
 			if (valueForLanguage && (valueForLanguage.type === 'timestamp' || valueForLanguage.type === 'datetime') && valueForLanguage.value) {
 				const date = anyDateToDate(valueForLanguage.value)
 				return date ? format(date, 'dd/MM/yyyy') : ''
@@ -76,7 +76,7 @@ export class IcureDatePickerField extends Field {
 				this.label,
 				this.language(),
 				{
-					value: { [this.language()]: { type: 'timestamp', value: fuzzyDateValue } },
+					content: { [this.language()]: { type: 'timestamp', value: fuzzyDateValue } },
 				},
 				this.containerId,
 			)

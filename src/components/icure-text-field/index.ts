@@ -283,13 +283,13 @@ export class IcureTextField extends Field {
 						setTimeout(() => {
 							// eslint-disable-next-line max-len
 							if (this.trToSave === tr) {
-								const value = this.primitiveTypeExtractor?.(parsedDoc)
+								const value = this.primitiveTypeExtractor?.(tr.doc)
 								if (value) {
 									const language = this.displayedLanguage ?? 'en'
 									this.containerId = this.handleValueChanged?.(
 										this.label,
 										language,
-										{ content: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] },
+										{ content: { [language]: value }, codes: this.codesExtractor?.(tr.doc) ?? [] },
 										this.containerId,
 									)
 								}
@@ -301,13 +301,6 @@ export class IcureTextField extends Field {
 					return !this.readonly
 				},
 			})
-			if (parsedDoc ? this.serializer.serialize(parsedDoc) : '' !== '') {
-				const value = this.primitiveTypeExtractor?.(parsedDoc)
-				if (value) {
-					const language = this.displayedLanguage ?? 'en'
-					this.handleValueChanged?.(this.label, language, { content: { [language]: value }, codes: this.codesExtractor?.(parsedDoc) ?? [] }, this.containerId)
-				}
-			}
 		}
 	}
 
@@ -438,7 +431,7 @@ export class IcureTextField extends Field {
 								value: parseInt(format(parse(doc.firstChild.textContent + ' ' + doc.lastChild.textContent, 'dd/MM/yyyy HH:mm:ss', new Date()), 'yyyyMMddHHmmss')),
 						  }
 						: undefined
-			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: doc.textBetween(0, doc.nodeSize - 2, '\n') } : undefined)
+			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: this.serializer.serialize(doc) } : undefined)
 	}
 }
 

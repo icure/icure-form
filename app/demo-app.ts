@@ -73,6 +73,7 @@ const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'd
 class DemoApp extends LitElement {
 	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
 	private undoStack: BridgedFormValuesContainer[] = []
+	private redoStack: BridgedFormValuesContainer[] = []
 
 	@state() formValuesContainer: BridgedFormValuesContainer = new BridgedFormValuesContainer('user-id', makeFormValuesContainer(), makeInterpreter())
 
@@ -107,6 +108,30 @@ class DemoApp extends LitElement {
 			}
 		`
 	}
+
+	connectedCallback() {
+		super.connectedCallback()
+		window.onkeydown = (event) => {
+			console.log(event.key)
+
+			if (event.key === 'Z' && event.metaKey) {
+				event.preventDefault()
+				if (this.redoStack.length > 0) {
+					console.log('redo')
+					this.undoStack.push(this.formValuesContainer)
+					this.formValuesContainer = this.redoStack.pop() as BridgedFormValuesContainer
+				}
+			} else if (event.key === 'z' && event.metaKey) {
+				event.preventDefault()
+				if (this.undoStack.length > 0) {
+					console.log('undo')
+					this.redoStack.push(this.formValuesContainer)
+					this.formValuesContainer = this.undoStack.pop() as BridgedFormValuesContainer
+				}
+			}
+		}
+	}
+
 	async firstUpdated() {
 		this.formValuesContainer.registerChangeListener((newValue) => {
 			this.undoStack.push(this.formValuesContainer)
@@ -194,6 +219,9 @@ class DemoApp extends LitElement {
 
 		const editable = true
 		const gpForm = Form.parse(YAML.parse(yamlForm))
+
+		console.log('redoStack', this.redoStack)
+		console.log('undoStack', this.undoStack)
 
 		return html`
 			<icure-form

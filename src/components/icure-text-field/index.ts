@@ -1,7 +1,7 @@
 // Import the LitElement base class and html helper function
 import { html, nothing } from 'lit'
 import { property, state } from 'lit/decorators.js'
-import { EditorState, Plugin, Transaction } from 'prosemirror-state'
+import { EditorState, Plugin, TextSelection, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
 import { Node as ProsemirrorNode, Schema } from 'prosemirror-model'
 import { history, redo, undo } from 'prosemirror-history'
@@ -21,7 +21,6 @@ import { hasMark } from './prosemirror-utils'
 import { maskPlugin } from './plugin/mask-plugin'
 import { hasContentClassPlugin } from './plugin/has-content-class-plugin'
 import { regexpPlugin } from './plugin/regexp-plugin'
-import { sorted } from '../../utils/no-lodash'
 import { format, parse } from 'date-fns'
 import { Field } from '../common'
 import { Code, IcureTextFieldSchema, PrimitiveType } from '../model'
@@ -32,6 +31,31 @@ import { generateLabels } from '../common/utils'
 import baseCss from '../common/styles/style.scss'
 // @ts-ignore
 import kendoCss from '../common/styles/kendo.scss'
+import { extractSingleValue } from '../icure-form/fields/utils'
+
+class SpacePreservingMarkdownParser {
+	constructor(private mkdp: MarkdownParser) {}
+
+	parse(value: string): ProsemirrorNode | null {
+		const node = this.mkdp.parse(value)
+		const trailingSpaces = value.match(/([ \t\n]+)$/)?.[1]
+		if (node && trailingSpaces) {
+			const appendTextToLastTextChild = (node: ProsemirrorNode, text: string): ProsemirrorNode => {
+				if (node.isText) {
+					return (node as any).withText(node.text + text)
+				}
+				const lastChild = node.lastChild
+				if (lastChild) {
+					return node.copy(node.content.replaceChild(node.childCount - 1, appendTextToLastTextChild(lastChild, text)))
+				}
+				return node
+			}
+
+			return appendTextToLastTextChild(node, trailingSpaces)
+		}
+		return node
+	}
+}
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
@@ -66,14 +90,14 @@ export class IcureTextField extends Field {
 	@state() protected availableLanguages = [this.displayedLanguage]
 
 	private proseMirrorSchema?: Schema
-	private parser?: MarkdownParser | { parse: (value: string) => ProsemirrorNode }
+	private parser?: SpacePreservingMarkdownParser | { parse: (value: string) => ProsemirrorNode }
 	private serializer: MarkdownSerializer | { serialize: (content: ProsemirrorNode) => string } = {
 		serialize: (content: ProsemirrorNode) => content.textBetween(0, content.nodeSize - 2, ' '),
 	}
 	private primitiveTypeExtractor: (doc?: ProsemirrorNode) => PrimitiveType | undefined = () => undefined
 	private codesExtractor: (doc?: ProsemirrorNode) => Code[] = () => []
 
-	private view?: EditorView
+	@state() private view?: EditorView
 	private container?: HTMLElement
 	private readonly windowListeners: [string, () => void][] = []
 	private suggestionPalette?: SuggestionPalette
@@ -104,6 +128,30 @@ export class IcureTextField extends Field {
 	}
 
 	render() {
+		if (this.view) {
+			const [, versions] = extractSingleValue(this.valueProvider?.())
+			if (versions) {
+				const valueForLanguage = versions[0]?.value?.content?.[this.language()] ?? ''
+				if (valueForLanguage && valueForLanguage.type === 'string' && valueForLanguage.value) {
+					const parsedDoc = this.parser?.parse(valueForLanguage.value) ?? undefined
+					if (parsedDoc) {
+						const selection = this.view.state.selection
+						console.log(selection)
+						const selAnchor = selection.$anchor.pos
+						const selHead = selection.$head.pos
+						const lastPos = parsedDoc.content.size
+						const newState = EditorState.create({
+							schema: this.view.state.schema,
+							doc: parsedDoc,
+							plugins: this.view.state.plugins,
+							selection: new TextSelection(parsedDoc.resolve(Math.min(selAnchor, lastPos)), parsedDoc.resolve(Math.min(selHead, lastPos))),
+						})
+						this.view.updateState(newState)
+					}
+				}
+			}
+		}
+
 		return html`
 			<div id="root" class="${this.visible ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
@@ -186,25 +234,10 @@ export class IcureTextField extends Field {
 				}, {}),
 			)
 
-			const providedValue = this.valueProvider && this.valueProvider()
-
 			//Currently take the first piece of data if it is available
-			this.containerId = Object.keys(providedValue?.versions ?? {})[0]
-			const selectedVersion = this.containerId ? providedValue?.versions?.[this.containerId]?.[0] : undefined
-			const displayedVersionedValue = selectedVersion?.value
-
-			this.availableLanguages = displayedVersionedValue && Object.keys(displayedVersionedValue).length ? sorted(Object.keys(displayedVersionedValue)) : this.availableLanguages
-			if (!this.availableLanguages.includes(this.displayedLanguage)) {
-				this.displayedLanguage = this.availableLanguages[0]
-			}
-
-			const parsedDoc =
-				this.parser.parse(this.valueProvider ? displayedVersionedValue?.[this.displayedLanguage ?? 'en'] || displayedVersionedValue || '' : displayedVersionedValue || '') ??
-				undefined
-
 			this.view = new EditorView(this.container, {
 				state: EditorState.create({
-					doc: parsedDoc ?? undefined,
+					doc: undefined,
 					schema: this.proseMirrorSchema,
 					plugins: [
 						caretFixPlugin(),
@@ -283,16 +316,7 @@ export class IcureTextField extends Field {
 						setTimeout(() => {
 							// eslint-disable-next-line max-len
 							if (this.trToSave === tr) {
-								const value = this.primitiveTypeExtractor?.(tr.doc)
-								if (value) {
-									const language = this.displayedLanguage ?? 'en'
-									this.containerId = this.handleValueChanged?.(
-										this.label,
-										language,
-										{ content: { [language]: value }, codes: this.codesExtractor?.(tr.doc) ?? [] },
-										this.containerId,
-									)
-								}
+								this.updateValue(tr)
 							}
 						}, 800)
 					}
@@ -302,6 +326,21 @@ export class IcureTextField extends Field {
 				},
 			})
 		}
+	}
+
+	private updateValue(tr: Transaction) {
+		const [valueId] = extractSingleValue(this.valueProvider?.())
+		const value = this.primitiveTypeExtractor?.(tr.doc)
+		value &&
+			this.handleValueChanged?.(
+				this.label,
+				this.language(),
+				{
+					content: { [this.language()]: value },
+					codes: this.codesExtractor?.(tr.doc) ?? [],
+				},
+				valueId,
+			)
 	}
 
 	private makeParser(schemaName: string, pms: Schema) {
@@ -345,44 +384,25 @@ export class IcureTextField extends Field {
 					},
 			  }
 			: schemaName === 'text-document'
-			? new MarkdownParser(pms, MarkdownIt('commonmark', { html: false }), {
-					blockquote: { block: 'blockquote' },
-					paragraph: { block: 'paragraph' },
-					list_item: { block: 'list_item' },
-					bullet_list: { block: 'bullet_list' },
-					ordered_list: { block: 'ordered_list', getAttrs: (tok) => ({ order: +(tok.attrGet('start') || 1) }) },
-					heading: { block: 'heading', getAttrs: (tok) => ({ level: +tok.tag.slice(1) }) },
-					hr: { node: 'horizontal_rule' },
-					image: {
-						node: 'image',
-						getAttrs: (tok) => ({
-							src: tok.attrGet('src'),
-							title: tok.attrGet('title') || null,
-							alt: (tok.children || [])[0]?.content || null,
-						}),
-					},
-					hardBreak: { node: 'hard_break' },
-
-					em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
-					strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },
-					link: hasMark(pms.spec.marks, 'link')
-						? {
-								mark: 'link',
-								getAttrs: (tok) => ({
-									href: tok.attrGet('href'),
-									title: tok.attrGet('title') || null,
-								}),
-						  }
-						: { ignore: true },
-			  })
-			: new MarkdownParser(
-					pms,
-					{
-						parse: (src: string, env: unknown): unknown[] => {
-							return tokenizer.parse(src, env).filter((t) => !t.type.startsWith('paragraph_'))
+			? new SpacePreservingMarkdownParser(
+					new MarkdownParser(pms, MarkdownIt('commonmark', { html: false }), {
+						blockquote: { block: 'blockquote' },
+						paragraph: { block: 'paragraph' },
+						list_item: { block: 'list_item' },
+						bullet_list: { block: 'bullet_list' },
+						ordered_list: { block: 'ordered_list', getAttrs: (tok) => ({ order: +(tok.attrGet('start') || 1) }) },
+						heading: { block: 'heading', getAttrs: (tok) => ({ level: +tok.tag.slice(1) }) },
+						hr: { node: 'horizontal_rule' },
+						image: {
+							node: 'image',
+							getAttrs: (tok) => ({
+								src: tok.attrGet('src'),
+								title: tok.attrGet('title') || null,
+								alt: (tok.children || [])[0]?.content || null,
+							}),
 						},
-					} as MarkdownIt,
-					{
+						hardBreak: { node: 'hard_break' },
+
 						em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 						strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },
 						link: hasMark(pms.spec.marks, 'link')
@@ -394,7 +414,30 @@ export class IcureTextField extends Field {
 									}),
 							  }
 							: { ignore: true },
-					},
+					}),
+			  )
+			: new SpacePreservingMarkdownParser(
+					new MarkdownParser(
+						pms,
+						{
+							parse: (src: string, env: unknown): unknown[] => {
+								return tokenizer.parse(src, env).filter((t) => !t.type.startsWith('paragraph_'))
+							},
+						} as MarkdownIt,
+						{
+							em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
+							strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },
+							link: hasMark(pms.spec.marks, 'link')
+								? {
+										mark: 'link',
+										getAttrs: (tok) => ({
+											href: tok.attrGet('href'),
+											title: tok.attrGet('title') || null,
+										}),
+								  }
+								: { ignore: true },
+						},
+					),
 			  )
 	}
 

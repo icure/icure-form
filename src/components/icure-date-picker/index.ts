@@ -18,7 +18,6 @@ import kendoCss from '../common/styles/kendo.scss'
 export class IcureDatePickerField extends Field {
 	//TODO: support different date formats
 	@property() placeholder = ''
-	@property() containerId?: string = undefined
 
 	@state() protected displayDatePicker = false
 
@@ -26,10 +25,26 @@ export class IcureDatePickerField extends Field {
 		return [baseCss, kendoCss]
 	}
 
+	_handleClickOutside(event: MouseEvent): void {
+		if (!event.composedPath().includes(this)) {
+			this.displayDatePicker = false
+			event.stopPropagation()
+		}
+	}
+
+	connectedCallback() {
+		super.connectedCallback()
+		document.addEventListener('click', this._handleClickOutside.bind(this))
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback()
+		document.removeEventListener('click', this._handleClickOutside.bind(this))
+	}
+
 	getValueFromProvider(): string | undefined {
-		const [id, versions] = extractSingleValue(this.valueProvider?.())
+		const [, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
-			this.containerId = id
 			const valueForLanguage = versions[0]?.value?.content?.[this.language()] ?? ''
 			if (valueForLanguage && (valueForLanguage.type === 'timestamp' || valueForLanguage.type === 'datetime') && valueForLanguage.value) {
 				const date = anyDateToDate(valueForLanguage.value)
@@ -72,16 +87,17 @@ export class IcureDatePickerField extends Field {
 		const parts = date.detail.value?.split('-')
 		if (parts && parts.length === 3) {
 			const fuzzyDateValue = parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2])
-			this.containerId = this.handleValueChanged?.(
+
+			const [valueId] = this.getValueFromProvider() ?? ''
+			this.handleValueChanged?.(
 				this.label,
 				this.language(),
 				{
 					content: { [this.language()]: { type: 'timestamp', value: fuzzyDateValue } },
 				},
-				this.containerId,
+				valueId,
 			)
 		}
-		this.togglePopup()
 	}
 
 	public togglePopup(): void {

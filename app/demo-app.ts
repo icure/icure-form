@@ -134,6 +134,7 @@ class DemoApp extends LitElement {
 
 	async firstUpdated() {
 		this.formValuesContainer.registerChangeListener((newValue) => {
+			this.redoStack = []
 			this.undoStack.push(this.formValuesContainer)
 			this.formValuesContainer = newValue
 		})

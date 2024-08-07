@@ -8,8 +8,9 @@ $gray-400: #DDE3E7;
 
 $blue-800: #084B83;
 $blue-600: #8DA6BF;
-$blue-500: #9ABFE0;
 $blue-400: #DCE7F2;
+
+$green-100: #BFE8EA;
 
 // theme
 $label-color: $gray-900;
@@ -59,14 +60,11 @@ $select-dropdown-row-font-size: 12px;
 $select-dropdown-row-font-weight: 400;
 $select-dropdown-row-hover-background: $blue-400;
 
-.group .icure-form .icure-form-field:first-child {
-	margin-top: 16px;
-}
-
-.icure-text-field, .icure-button-group {
+.icure-text-field,
+.icure-button-group {
 	width: $textbox-default-width;
 
-	> .icure-label {
+	.icure-label {
 		color: $color;
 		font-size: $label-font-size;
 		font-weight: $font-weight-label;
@@ -84,15 +82,11 @@ $select-dropdown-row-hover-background: $blue-400;
 		width: auto;
 	}
 
-	> .icure-label {
-		transform: translate(0, 0) scale(1);
-	}
-
 	.icure-input,
 	.input-container {
 		cursor: pointer;
 		border-radius: $border-radius;
-		padding: $input-padding-y $input-padding-x;
+		padding: $input-padding-x;
 		width: $textbox-default-width;
 		box-sizing: border-box;
 		border-width: $input-border-width;
@@ -110,6 +104,13 @@ $select-dropdown-row-hover-background: $blue-400;
 		border-color: $border-color;
 		color: $color;
 		box-sizing: border-box;
+
+		&__validationError {
+			border-color: red;
+		}
+		 &__withMetadata{
+			border-radius: 6px 0 0 6px;
+		}
 
 		&:focus,
 		&:focus-within {
@@ -184,17 +185,28 @@ $select-dropdown-row-hover-background: $blue-400;
 				> .selected {
 					color: white;
 					background-color: $active-color;
-					border-radius: 0 !important;
 				}
 			}
 		}
 	}
 }
 
-.menu-container .item.selected {
-	color: white;
-	background-color: $active-color;
-	border-radius: 0 !important;
+.menu-container .item {
+
+	&:hover {
+		background: $blue-400;
+		color: #274768;
+		cursor: pointer;
+	}
+
+	&.existing{
+		background-color: $green-100;
+	}
+
+	&.selected {
+		color: white;
+		background-color: $active-color;
+	}
 }
 
 
@@ -202,8 +214,6 @@ input[type='radio'] {
 	margin-top: -1px;
 	vertical-align: middle;
 }
-
-
 .icure-checkbox {
 	&:hover {
 		border-color: $blue-400;
@@ -215,28 +225,6 @@ input[type='radio'] {
 }
 
 .icure-button-group {
-	> .icure-label {
-		z-index: 1;
-		pointer-events: none;
-		line-height: $textbox-line-height;
-		cursor: text;
-		font-size: $label-font-size;
-		top: add-three($floating-label-height, $input-border-width, $input-padding-y);
-		left: add-two($input-padding-x, $input-border-width);
-		color: $color;
-		align-items: center;
-		height: 28px;
-		max-width: 85%;
-		min-width: 0;
-
-		> span {
-			display: block;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-			overflow: hidden;
-			padding-right: 8px;
-		}
-	}
 
 	> div {
 		display: grid;
@@ -304,10 +292,6 @@ input[type='radio'] {
 
 	}
 
-	.extra {
-		padding-right: 0;
-	}
-
 	.select-arrow {
 		opacity: 1;
 
@@ -365,4 +349,3 @@ input[type='radio'] {
 		}
 	}
 }
-

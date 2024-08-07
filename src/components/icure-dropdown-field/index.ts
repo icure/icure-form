@@ -112,11 +112,12 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		}
 
 		const [, inputValue] = this.getValueFromProvider() ?? ''
+		const validationError = this.validationErrorsProvider?.()?.length
 
 		return html`
 			<div id="root" class="icure-text-field ${inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
-				<div class="icure-input" id="test" @click="${(event: MouseEvent) => this.togglePopup(event, true)}">
+				<div class="icure-input ${validationError && 'icure-input__validationError'}" id="test" @click="${(event: MouseEvent) => this.togglePopup(event, true)}">
 					<input type="text" id="editor" style="outline: none" .value=${this.textInputValue ?? inputValue ?? ''} @input="${this.textInputChanged()}" />
 					<div id="extra" class=${'extra forced'}>
 						<button class="btn select-arrow" @click="${this.togglePopup}">${dropdownPicto}</button>

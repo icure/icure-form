@@ -58,10 +58,11 @@ export class IcureDatePickerField extends Field {
 		}
 
 		const value = this.getValueFromProvider()
+		const validationError = this.validationErrorsProvider?.()?.length
 
 		return html` <div id="root" class="icure-text-field ${value && value != '' ? 'has-content' : ''}" data-placeholder="${this.placeholder}">
 			${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
-			<div class="icure-input" @click="${this.togglePopup}" id="test">
+			<div class="icure-input ${validationError && 'icure-input__validationError'}" @click="${this.togglePopup}" id="test">
 				<div id="editor">${value}</div>
 				<div id="extra" class=${'extra forced'}>
 					<button class="btn select-arrow">${datePicto}</button>

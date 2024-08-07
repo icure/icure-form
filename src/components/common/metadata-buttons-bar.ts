@@ -2,7 +2,7 @@ import { html, LitElement } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { FieldMetadata, FieldValue } from '../model'
 import { Suggestion, Version } from '../../generic'
-import { datePicto, i18nPicto, ownerPicto, searchPicto, versionPicto } from './styles/paths'
+import { calendarPatientPicto, i18nPicto, ownerPicto, searchPicto, versionPicto } from './styles/paths'
 import { format } from 'date-fns'
 import { anyDateToDate } from '../../utils/dates'
 import { toResolvedDate } from 'app-datepicker/dist/helpers/to-resolved-date'
@@ -21,6 +21,7 @@ export class MetadataButtonBar extends LitElement {
 	@property() defaultLanguage: string
 	@property() selectedLanguage?: string
 	@property() languages: { [iso: string]: string } = {}
+	@property() existingLanguages?:  string[]
 	@property() displayedLabels: { [iso: string]: string } = {}
 	@property() handleMetadataChanged?: (metadata: FieldMetadata, id?: string) => string | undefined = undefined
 	@property() handleLanguageSelected?: (iso?: string) => void = undefined
@@ -80,8 +81,8 @@ export class MetadataButtonBar extends LitElement {
 		const forcedByLanguage = this.selectedLanguage && this.defaultLanguage !== this.selectedLanguage
 		const forcedByVersion = this.revision && this.revision !== this.versions?.[0]?.revision
 
-		return html` <div id="extra" class=${'extra' + (forcedByMenu ? ' forced' : '')}>
-			<div class="info ${forcedByOwner || forcedByLanguage || forcedByValueDate ? 'hidden' : ''}">•</div>
+		return html` <div id="extra" class=${'extra extra--metadataButtonsBar' + (forcedByMenu ? ' forced' : '')}>
+			<div class="info ${forcedByOwner || forcedByLanguage || forcedByValueDate ? 'hidden' : ''}">&#9432</div>
 			<div class="buttons-container">
 				<div class="menu-container">
 					<button
@@ -96,7 +97,18 @@ export class MetadataButtonBar extends LitElement {
 								<div id="menu" class="menu">
 									<div class="input-container">${searchPicto} <input id="ownerSearch" @input="${this.searchOwner}" /></div>
 									${(this.availableOwners?.length ? this.availableOwners : Object.values(this.loadedOwners))?.map(
-										(x) => html`<button @click="${() => this.handleOwnerButtonClicked(x.id)}" id="${x.id}" class="item">${x.text}</button>`,
+										(x) => html`
+											<button 
+												@click="${() => this.handleOwnerButtonClicked(x.id)}" 
+												id="${x.id}"
+												class="${
+													(this.metadata?.owner && this.loadedOwners[this.metadata?.owner]?.text === x.text)
+														? "item selected"
+														: 'item'
+												}"
+											>
+												${x.text}
+											</button>`,
 									)}
 								</div>
 						  `
@@ -108,7 +120,7 @@ export class MetadataButtonBar extends LitElement {
 						class="btn date ${forcedByValueDate ? 'forced' : ''}"
 						@click="${() => this.toggleValueDateMenu()}"
 					>
-						${datePicto}
+						${calendarPatientPicto}
 					</button>
 					${this.displayValueDateMenu
 						? html`
@@ -140,7 +152,10 @@ export class MetadataButtonBar extends LitElement {
 						? html` <div id="menu" class="menu">
 								${this.versions.map(
 									(x) =>
-										html`<button class="item ${x.revision === this.revision ? 'selected' : ''}" @click="${() => this.handleRevisionButtonClicked(x.revision)}">
+										html`
+											<button 
+												class="item ${x.revision === this.revision ? 'item selected' : ''}" 
+												@click="${() => this.handleRevisionButtonClicked(x.revision)}">
 											${x.revision == null ? 'Latest' : x.revision ?? ''} ${x.modified ? `(${format(new Date(x.modified), 'yyyy-MM-dd')})` : ''}
 										</button>`,
 								)}
@@ -161,7 +176,20 @@ export class MetadataButtonBar extends LitElement {
 									<div class="input-container">${searchPicto} <input id="languageSearch" @input="${this.searchLanguage}" /></div>
 									${[this.defaultLanguage, ...Object.keys(this.languages).filter((x) => x !== this.defaultLanguage)]
 										.filter((x) => !!x && (languageName(x) ?? this.languages[x] ?? x).toLowerCase().includes((this.languageInputValue ?? '').toLowerCase()))
-										.map((x) => html`<button @click="${() => this.handleLanguageButtonClicked(x)}" id="${x}" class="item">${x ? languageName(x) : ''}</button>`)}
+										.map((x) => html`
+											<button 
+												@click="${() => this.handleLanguageButtonClicked(x)}" 
+												id="${x}" 
+												class="${
+													(x === this.defaultLanguage && !this.selectedLanguage) || x === this.selectedLanguage 
+													? "item item selected" 
+													: this.existingLanguages?.includes(x) 
+													? "item item existing" 
+													: 'item'
+												}"
+											>
+												${x ? languageName(x) : ''}
+											</button>`)}
 								</div>
 						  `
 						: ''}

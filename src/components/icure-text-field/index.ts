@@ -168,10 +168,14 @@ export class IcureTextField extends Field {
 		}
 	}
 
+
 	render() {
 		let metadata: FieldMetadata | undefined
 		let rev: string | null | undefined
 		let versions: Version<FieldValue>[] | undefined
+		const validationError = this.validationErrorsProvider?.()?.length
+		let valueForExistingLanguages: string[] | undefined = undefined
+
 		if (this.view) {
 			let parsedDoc: ProsemirrorNode | undefined
 
@@ -188,6 +192,7 @@ export class IcureTextField extends Field {
 				;[id, versions] = extractSingleValue(data)
 				const version = this.selectedRevision ? versions?.find((v) => v.revision === this.selectedRevision) : versions?.[0]
 				const valueForLanguage = version?.value?.content?.[this.language()] ?? ''
+				valueForExistingLanguages =  Object.keys(version?.value?.content ?? {})
 
 				parsedDoc = valueForLanguage ? this.parser?.parse(valueForLanguage) ?? undefined : undefined
 				rev = version?.revision
@@ -221,27 +226,39 @@ export class IcureTextField extends Field {
 					}),
 				)
 			}
+
 		}
 		return html`
 			<div id="root" class="${this.visible ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
-				<div class="icure-input">
-					<div id="editor" class="${this.schema}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
-					${this.displayMetadata && metadata
-						? html`<icure-metadata-buttons-bar
-								.metadata="${metadata}"
-								.revision="${rev}"
-								.versions="${versions ?? []}"
-								.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
-								.defaultLanguage="${this.defaultLanguage}"
-								.selectedLanguage="${this.selectedLanguage}"
-								.languages="${this.languages}"
-								.handleMetadataChanged="${this.handleMetadataChanged}"
-								.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
-								.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
-								.ownersProvider="${this.ownersProvider}"
-						  />`
-						: ''}
+				<div class="icure-input-metadata-container">
+					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata
+						? 'icure-input__withMetadata' : ""}">
+						<div id="editor" class="${this.schema}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
+					</div>
+					
+						${this.displayMetadata && metadata
+							?
+								html`
+									<div class="icure-metadata-container ${validationError ? 'icure-metadata-container__validationError' : ''}">
+										<icure-metadata-buttons-bar
+												.metadata="${metadata}"
+												.revision="${rev}"
+												.versions="${versions ?? []}"
+												.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
+												.defaultLanguage="${this.defaultLanguage}"
+												.selectedLanguage="${this.selectedLanguage}"
+												.languages="${this.languages}"
+												.handleMetadataChanged="${this.handleMetadataChanged}"
+												.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
+												.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
+												.ownersProvider="${this.ownersProvider}"
+												.existingLanguages="${valueForExistingLanguages ?? undefined}"
+											/>
+									</div>
+								`
+							: ''}
+					
 				</div>
 				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>

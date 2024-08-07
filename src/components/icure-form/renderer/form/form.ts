@@ -61,10 +61,13 @@ export const render: Renderer = (
 	}
 
 	function renderGroup(fg: Group, fgSpan: number, level: number) {
-		return html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
-			${fg.borderless ? nothing : html`<div>${h(level, html`${fg.group}`)}</div>`}
-			<div class="icure-form">${(fg.fields ?? []).map((fieldOrGroup: Field | Group) => renderFieldGroupOrSubform(fieldOrGroup, level + 1))}</div>
-		</div>`
+		const subElements = (fg.fields ?? []).map((fieldOrGroup: Field | Group) => renderFieldGroupOrSubform(fieldOrGroup, level + 1)).filter((x) => !!x && x !== nothing)
+		return subElements.length
+			? html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
+					${fg.borderless ? nothing : html`<div>${h(level, html`${fg.group}`)}</div>`}
+					<div class="icure-form">${subElements}</div>
+			  </div>`
+			: nothing
 	}
 
 	function renderSubform(fg: Subform, fgSpan: number, level: number) {
@@ -375,7 +378,7 @@ export const render: Renderer = (
 			{},
 		) as { [key: string]: string | number | boolean | undefined }
 		if (computedProperties['hidden']) {
-			return html``
+			return nothing
 		}
 
 		const fgSpan = (computedProperties['span'] ?? fg.span ?? 6) as number

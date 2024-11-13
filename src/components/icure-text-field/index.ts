@@ -277,11 +277,7 @@ export class IcureTextField extends Field {
 	firstUpdated() {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const cmp = this
-		const pms: Schema = (this.proseMirrorSchema = createSchema(
-			this.schema,
-			(t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)),
-			this.codeContentProvider,
-		))
+		const pms: Schema = (this.proseMirrorSchema = createSchema(this.schema, (t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)), this.codeContentProvider))
 
 		this.parser = this.makeParser(this.schema, pms)
 		this.serializer = this.makeSerializer(this.schema, pms)
@@ -292,8 +288,8 @@ export class IcureTextField extends Field {
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
 
 		if (this.container) {
-			const br = pms.nodes.hard_break
-			const hardBreak = chainCommands(exitCode, (state, dispatch) => {
+			const br = pms.nodes.hardbreak
+			const hardbreak = chainCommands(exitCode, (state, dispatch) => {
 				dispatch && dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView())
 				return true
 			})
@@ -359,8 +355,8 @@ export class IcureTextField extends Field {
 								pms.marks.em ? { 'Mod-i': toggleMark(pms.marks.em) } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowUp': joinUp } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowDown': joinDown } : {},
-								pms.nodes.paragraph ? { 'Alt-Enter': hardBreak } : {},
-								pms.nodes.paragraph ? { 'Shift-Enter': hardBreak } : {},
+								pms.nodes.paragraph ? { 'Alt-Enter': hardbreak } : {},
+								pms.nodes.paragraph ? { 'Shift-Enter': hardbreak } : {},
 								pms.nodes.ordered_list ? { 'Shift-ctrl-1': wrapInList(pms.nodes.ordered_list) } : {},
 								pms.nodes.bullet_list ? { 'Shift-ctrl-*': wrapInList(pms.nodes.bullet_list) } : {},
 								pms.nodes.blockquote ? { 'Shift-ctrl-w': wrapInIfNeeded(pms.nodes.blockquote) } : {},
@@ -394,11 +390,7 @@ export class IcureTextField extends Field {
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
 							const el = event.target as HTMLElement
-							if (
-								el?.classList.contains('token') &&
-								Math.abs(el.getBoundingClientRect().right - 10 - event.x) < 6 &&
-								Math.abs(el.getBoundingClientRect().bottom - 9 - event.y) < 6
-							) {
+							if (el?.classList.contains('token') && Math.abs(el.getBoundingClientRect().right - 10 - event.x) < 6 && Math.abs(el.getBoundingClientRect().bottom - 9 - event.y) < 6) {
 								const pos = view.posAtCoords({ left: event.x, top: event.y })
 								if (pos?.pos) {
 									const rp = view.state.tr.doc.resolve(pos?.pos)
@@ -466,15 +458,7 @@ export class IcureTextField extends Field {
 											'time',
 											{},
 											value
-												? [
-														pms.text(
-															('00' + Math.floor(value.value / 10000)).slice(-2) +
-																':' +
-																('00' + Math.floor((value.value / 100) % 100)).slice(-2) +
-																':' +
-																('00' + (value.value % 100)).slice(-2),
-														),
-												  ]
+												? [pms.text(('00' + Math.floor(value.value / 10000)).slice(-2) + ':' + ('00' + Math.floor((value.value / 100) % 100)).slice(-2) + ':' + ('00' + (value.value % 100)).slice(-2))]
 												: [],
 										),
 								  ])
@@ -484,15 +468,7 @@ export class IcureTextField extends Field {
 											'time',
 											{},
 											value
-												? [
-														pms.text(
-															('00' + Math.floor(value.value / 10000)).slice(-2) +
-																':' +
-																('00' + Math.floor((value.value / 100) % 100)).slice(-2) +
-																':' +
-																('00' + (value.value % 100)).slice(-2),
-														),
-												  ]
+												? [pms.text(('00' + Math.floor(value.value / 10000)).slice(-2) + ':' + ('00' + Math.floor((value.value / 100) % 100)).slice(-2) + ':' + ('00' + (value.value % 100)).slice(-2))]
 												: [],
 										),
 								  ])
@@ -559,7 +535,7 @@ export class IcureTextField extends Field {
 								alt: (tok.children || [])[0]?.content || null,
 							}),
 						},
-						hardBreak: { node: 'hard_break' },
+						hardbreak: { node: 'hardbreak' },
 
 						em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 						strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },
@@ -625,8 +601,7 @@ export class IcureTextField extends Field {
 
 	private makePrimitiveExtractor(schemaName: string): (doc?: ProsemirrorNode) => PrimitiveType | undefined {
 		return schemaName === 'date'
-			? (doc?: ProsemirrorNode) =>
-					doc?.firstChild?.textContent ? { type: 'datetime', value: parseInt(format(parse(doc.firstChild.textContent, 'dd/MM/yyyy', new Date()), 'yyyyMMdd')) } : undefined
+			? (doc?: ProsemirrorNode) => (doc?.firstChild?.textContent ? { type: 'datetime', value: parseInt(format(parse(doc.firstChild.textContent, 'dd/MM/yyyy', new Date()), 'yyyyMMdd')) } : undefined)
 			: schemaName === 'time'
 			? (doc?: ProsemirrorNode) => {
 					if (doc?.firstChild?.textContent && !doc.firstChild.textContent.startsWith('--:')) {
@@ -699,16 +674,15 @@ export class MetadataButtonBarWrapper extends LitElement {
 		const version = this.selectedRevision ? versions?.find((v) => v.revision === this.selectedRevision) : versions?.[0]
 
 		const rev = version?.revision
-		const metadata =
-			this.id && rev !== undefined ? parent.metadataProvider?.(this.id, versions?.map((v) => v.revision) ?? [])?.[this.id]?.find((m) => m.revision === rev)?.value : undefined
+		const metadata = this.id && rev !== undefined ? parent.metadataProvider?.(this.id, versions?.map((v) => v.revision) ?? [])?.[this.id]?.find((m) => m.revision === rev)?.value : undefined
 
 		const op = (terms: string[], ids?: string[], specialties?: string[]) => {
 			return parent.ownersProvider(terms, ids, specialties)
 		}
 
 		return html`<icure-metadata-buttons-bar .metadata="${metadata}" .revision="${rev}" .versions="${versions}" .valueId="${extractSingleValue(parent.valueProvider?.())?.[0]}"
-		.defaultLanguage="${parent.defaultLanguage}" .selectedLanguage="${parent.selectedLanguage}" .languages="${parent.languages}"
-		.handleMetadataChanged="${parent.handleMetadataChanged}" .handleLanguageSelected="${(iso: string) => (parent.selectedLanguage = iso)}"
-		.handleRevisionSelected="${(rev: string) => (parent.selectedRevision = rev)}" .ownersProvider="${op}" style="white-space: nowrap; padding-top: 1px" " />`
+		.defaultLanguage="${parent.defaultLanguage}" .selectedLanguage="${parent.selectedLanguage}" .languages="${parent.languages}" .handleMetadataChanged="${parent.handleMetadataChanged}"
+		.handleLanguageSelected="${(iso: string) => (parent.selectedLanguage = iso)}" .handleRevisionSelected="${(rev: string) => (parent.selectedRevision = rev)}" .ownersProvider="${op}"
+		style="white-space: nowrap; padding-top: 1px" " />`
 	}
 }

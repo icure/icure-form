@@ -1,4 +1,4 @@
-import { CodeStub } from '@icure/api'
+import { CodeStub } from '@icure/cardinal-sdk'
 
 export interface ServiceMetadata {
 	label: string

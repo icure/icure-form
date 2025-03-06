@@ -5,9 +5,9 @@ import { Suggestion, Version } from '../../generic'
 import { calendarPatientPicto, i18nPicto, ownerPicto, searchPicto, versionPicto } from './styles/paths'
 import { format } from 'date-fns'
 import { anyDateToDate } from '../../utils/dates'
-import { toResolvedDate } from 'app-datepicker/dist/helpers/to-resolved-date'
-import { CustomEventDetail } from 'app-datepicker/dist/typings'
-import { MAX_DATE } from 'app-datepicker/dist/constants'
+import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-resolved-date'
+import { CustomEventDetail } from '@icure/motss-app-datepicker/dist/typings'
+import { MAX_DATE } from '@icure/motss-app-datepicker/dist/constants'
 import { languageName } from '../../utils/languages'
 
 // @ts-ignore
@@ -68,8 +68,7 @@ export class MetadataButtonBar extends LitElement {
 		const owner = this.metadata?.owner
 		if (owner && !this.loadedOwners[owner]) {
 			this.loadedOwners = { ...this.loadedOwners, [owner]: { id: owner, text: '', terms: [], label: {} } } // Make sure we do not loop endlessly
-			this.ownersProvider &&
-				this.ownersProvider([], [owner]).then((availableOwners) => (this.loadedOwners = availableOwners.reduce((acc, o) => ({ ...acc, [o.id]: o }), this.loadedOwners)))
+			this.ownersProvider && this.ownersProvider([], [owner]).then((availableOwners) => (this.loadedOwners = availableOwners.reduce((acc, o) => ({ ...acc, [o.id]: o }), this.loadedOwners)))
 		}
 
 		const forcedByMenu = this.displayOwnersMenu || this.displayLanguagesMenu || this.displayValueDateMenu || this.displayVersionsMenu
@@ -123,13 +122,7 @@ export class MetadataButtonBar extends LitElement {
 						this.displayValueDateMenu
 							? html`
 									<div id="menu" class="menu value-date-menu">
-										<app-date-picker
-											locale="${this.defaultLanguage ?? 'en'}"
-											style=""
-											max="${MAX_DATE}"
-											min="${toResolvedDate('1900-01-01')}"
-											@date-updated="${this.dateUpdated}"
-										></app-date-picker>
+										<app-date-picker locale="${this.defaultLanguage ?? 'en'}" style="" max="${MAX_DATE}" min="${toResolvedDate('1900-01-01')}" @date-updated="${this.dateUpdated}"></app-date-picker>
 									</div>
 							  `
 							: ''
@@ -137,13 +130,7 @@ export class MetadataButtonBar extends LitElement {
 				</div>
 				<div class="menu-container">
 					<button
-						data-content="${
-							this.revision === null
-								? 'latest'
-								: this.revision
-								? `rev-${this.revision.split('-')[0]} ${revisionDate ? `(${format(new Date(revisionDate), 'yyyy-MM-dd')})` : ''}`
-								: ''
-						}"
+						data-content="${this.revision === null ? 'latest' : this.revision ? `rev-${this.revision.split('-')[0]} ${revisionDate ? `(${format(new Date(revisionDate), 'yyyy-MM-dd')})` : ''}` : ''}"
 						@click="${this.toggleVersionsMenu}"
 						class="btn version  ${forcedByVersion ? 'forced' : ''}"
 					>

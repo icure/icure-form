@@ -12,10 +12,8 @@ module.exports = ({ mode }) => {
 		entry: {
 			app: { import: './app/demo-app.ts', dependOn: ['codes'] },
 			codes: { import: './app/codes.ts' },
-			icure: { import: '@icure/api', dependOn: ['lodash', 'dateFns', 'moment'] },
-			lodash: 'lodash',
+			icure: { import: '@icure/cardinal-sdk', dependOn: ['dateFns'] },
 			dateFns: 'date-fns',
-			moment: 'moment',
 		},
 		plugins: [
 			new HtmlWebpackPlugin({

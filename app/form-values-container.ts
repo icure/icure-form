@@ -1,18 +1,24 @@
 import { ContactFormValuesContainer } from '../src/icure'
 import { v4 as uuid } from 'uuid'
-import { Contact, Form, Service } from '@icure/api'
+import { DecryptedContact, DecryptedService, Form, DecryptedForm } from '@icure/cardinal-sdk'
 
-export const makeFormValuesContainer = (observedForms: Record<string, Form>, rootForm: Form, currentContact: Contact, history: Contact[], getForms: (parentId: string) => Promise<Form[]>) => {
+export const makeFormValuesContainer = (
+	observedForms: Record<string, Form>,
+	rootForm: DecryptedForm,
+	currentContact: DecryptedContact,
+	history: DecryptedContact[],
+	getForms: (parentId: string) => Promise<DecryptedForm[]>,
+) => {
 	const now = +new Date()
 	return ContactFormValuesContainer.fromFormsHierarchy(
 		rootForm,
 		currentContact,
 		history,
-		(label, serviceId) => new Service({ label, id: serviceId ?? uuid(), created: now, modified: now, responsible: '1' }),
+		(label, serviceId) => new DecryptedService({ label, id: serviceId ?? uuid(), created: now, modified: now, responsible: '1' }),
 		getForms,
 		async (parentId: string, anchorId: string, fti) => {
 			const id = uuid()
-			return (observedForms[id] = new Form({
+			return (observedForms[id] = new DecryptedForm({
 				id: id,
 				created: +new Date(),
 				modified: +new Date(),

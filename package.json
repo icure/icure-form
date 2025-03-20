@@ -113,7 +113,8 @@
 		"@lit/reactive-element": "1.6.2",
 		"lit-element": "3.3.2",
 		"@babel/traverse": "^7.26.10",
-		"braces": "3.0.3"
+		"braces": "^3.0.3",
+		"ip": "^2.0.1"
 	},
 	"browserslist": {
 		"production": [

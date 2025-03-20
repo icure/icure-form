@@ -1,6 +1,6 @@
 // Import the LitElement base class and html helper function
-import { html, LitElement } from 'lit'
-import { property } from 'lit/decorators.js'
+import { html, LitElement, TemplateResult } from 'lit'
+import { property, state } from 'lit/decorators.js'
 
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form/form'
@@ -29,6 +29,8 @@ export class IcureForm extends LitElement {
 	@property() optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>
 	@property() actionListener?: (event: string, payload: unknown) => void = () => undefined
 
+	@state() selectedTab = 0
+
 	constructor() {
 		super()
 	}
@@ -38,8 +40,22 @@ export class IcureForm extends LitElement {
 	}
 
 	render() {
-		const renderer: Renderer | undefined = this.renderer === 'form' ? renderAsForm : undefined
+		const variant = this.renderer?.split(':')
+		const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : undefined
 
+		if (!this.form) {
+			return html`<p>missing form</p>`
+		}
+		if (!renderer) {
+			return html`<p>unknown renderer</p>`
+		}
+
+		const sectionWrapper =
+			variant[1] === 'tab'
+				? (index: number, section: TemplateResult) => {
+						return html`<div class="tab ${index == this.selectedTab ? 'active' : ''}">${section}</div>`
+				  }
+				: undefined
 		console.log('Render metadata', this.displayMetadata)
 
 		if (!this.visible) {
@@ -47,21 +63,29 @@ export class IcureForm extends LitElement {
 		}
 		const translationTables = this.form?.translations
 
-		return renderer && this.form
-			? renderer(
-					this.form,
-					{ labelPosition: this.labelPosition, language: this.language },
-					this.formValuesContainer,
-					this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
-					this.ownersProvider,
-					this.optionsProvider,
-					this.actionListener,
-					this.languages,
-					this.readonly,
-					this.displayMetadata,
-			  )
-			: this.form
-			? html`<p>unknown renderer</p>`
-			: html`<p>missing form</p>`
+		const render = renderer(
+			this.form,
+			{ labelPosition: this.labelPosition, language: this.language },
+			this.formValuesContainer,
+			this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
+			this.ownersProvider,
+			this.optionsProvider,
+			this.actionListener,
+			this.languages,
+			this.readonly,
+			this.displayMetadata,
+			sectionWrapper,
+		)
+
+		return variant[1] === 'tab'
+			? html`<div class="tab-container">
+					<div class="tab-bar">
+						<ul>
+							${this.form.sections.map((s, idx) => html`<li class="${this.selectedTab === idx ? 'active' : ''}" @click="${() => (this.selectedTab = idx)}">${s.section}</li>`)}
+						</ul>
+					</div>
+					<div class="tab-content">${render}</div>
+			  </div>`
+			: render
 	}
 }

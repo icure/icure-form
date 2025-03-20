@@ -27,6 +27,34 @@ $floating-label-scale: 1 !default;
 $floating-label-height: $textbox-line-height * $floating-label-scale;
 $font-weight-label: 500;
 
+
+.tab-container {
+	.tab-bar {
+		li {
+			display: inline-block;
+			padding: 8px 16px;
+			cursor: pointer;
+			color: $color;
+			font-size: $textbox-font-size;
+			font-weight: $font-weight-label;
+
+			&.active {
+				background-color: $accent;
+				color: white;
+			}
+		}
+	}
+	.tab-content {
+		.tab {
+			display: none;
+
+			&.active {
+				display: block;
+			}
+		}
+	}
+}
+
 .icure-text-field,
 .icure-button-group {
 	padding-top: 16px;

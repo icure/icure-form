@@ -61,6 +61,33 @@ $select-dropdown-row-font-size: 12px;
 $select-dropdown-row-font-weight: 400;
 $select-dropdown-row-hover-background: $blue-400;
 
+.tab-container {
+	.tab-bar {
+		li {
+			display: inline-block;
+			padding: 8px 16px;
+			cursor: pointer;
+			color: $color;
+			font-size: $textbox-font-size;
+			font-weight: $font-weight-label;
+
+			&.active {
+				background-color: $blue-400;
+				color: white;
+			}
+		}
+	}
+	.tab-content {
+		.tab {
+			display: none;
+
+			&.active {
+				display: block;
+			}
+		}
+	}
+}
+
 .icure-text-field,
 .icure-button-group {
 	width: $textbox-default-width;

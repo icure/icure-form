@@ -22,6 +22,7 @@ export const render: Renderer = (
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,
+	sectionWrapper?: (index: number, section: TemplateResult) => TemplateResult,
 ) => {
 	const composedOptionsProvider =
 		optionsProvider && form.codifications
@@ -453,9 +454,11 @@ export const render: Renderer = (
 		return `grid-column: span ${span}; ${rowSpan > 1 ? `grid-row: span ${rowSpan}` : ''}`
 	}
 
-	const renderForm = (form: Form) => {
-		return form.sections.map((s) => html`<div class="icure-form">${s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3))}</div>`)
+	const renderForm = (form: Form, sectionWrapper: (index: number, section: TemplateResult) => TemplateResult) => {
+		return form.sections.map((s, idx) =>
+			sectionWrapper(idx, html`<div class="icure-form">${s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3))}</div>`),
+		)
 	}
 
-	return html` ${renderForm(form)} `
+	return html`${renderForm(form, sectionWrapper ?? ((idx, section) => section))}`
 }

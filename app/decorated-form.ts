@@ -116,6 +116,7 @@ async function getForms(formTemplateId: string | undefined, parentId: string | u
 }
 
 export class DecoratedForm extends LitElement {
+	@property() renderer = 'form'
 	@property() form: Form
 	@property() language?: string = 'fr'
 
@@ -428,7 +429,7 @@ export class DecoratedForm extends LitElement {
 			<icure-form
 				.form="${this.form}"
 				labelPosition="above"
-				renderer="form"
+				renderer="${this.renderer}"
 				.readOnly="${false}"
 				.displayMetadata="${true}"
 				.language="${this.language}"

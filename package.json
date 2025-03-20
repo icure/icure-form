@@ -1,13 +1,13 @@
 {
 	"name": "@icure/form",
-	"version": "3.0.3",
+	"version": "3.0.7",
 	"description": "",
 	"main": "lib/index.js",
 	"scripts": {
 		"start": "webpack serve --mode development",
 		"build": "node lit-inject-scss.js src tmp && jq '{include:[\"tmp\"], compilerOptions:.compilerOptions}' < tsconfig.json > tsconfig.tmp.json && tsc -p tsconfig.tmp.json",
 		"dist": "webpack --env.mode production",
-		"prepare": "rm -r lib && yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
+		"prepare": "yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
 		"publish": "yarn version patch && yarn run prepare && cd lib && touch yarn.lock && yarn install && rm -rf node_modules && npm publish --tolerate-republish --access public && cd ..",
 		"test": "jest",
 		"lint:commit": "eslint . --ext .ts",
@@ -81,6 +81,7 @@
 		"babel-preset-es2017": "^6.24.1",
 		"copy-webpack-plugin": "^11.0.0",
 		"css-loader": "^6.7.3",
+		"dotenv": "^16.4.7",
 		"eslint": "^8.35.0",
 		"eslint-config-prettier": "^8.7.0",
 		"eslint-plugin-import": "^2.27.5",

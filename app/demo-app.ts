@@ -17,6 +17,8 @@ import interruption_of_pregnancy_medical_part_1 from './samples/5-interruption-o
 // @ts-ignore
 import interruption_of_pregnancy_medical_part_2 from './samples/6-interruption-of-pregnancy-medical-part-2.yaml'
 // @ts-ignore
+import tabs from './samples/10-tabs.yaml'
+// @ts-ignore
 import note from './samples/9-note.yaml'
 // @ts-ignore
 import extra from './samples/8-extra.yaml'
@@ -28,6 +30,7 @@ import obstetrics_followup_long from './samples/obstetrics-followup-long.json'
 import obstetrics_followup_short from './samples/obstetrics-followup-short.json'
 import obstetrics_followup_midwife from './samples/obstetrics-followup-midwife.json'
 import incapacity from './samples/incapacity.json'
+
 import { css, html, LitElement } from 'lit'
 // @ts-ignore
 import { convertLegacy } from '../src/conversion/icure-convert'
@@ -84,9 +87,12 @@ import { AuthenticationMethod, CardinalBaseSdk } from '@icure/cardinal-sdk'
 import UsingCredentials = AuthenticationMethod.UsingCredentials
 
 class DemoApp extends LitElement {
-	private hcpApi = CardinalBaseSdk.initialize('com.icure.form-sample', 'https://kraken.svc.icure.cloud/rest/v1', new UsingCredentials.UsernamePassword('abdemo@icure.cloud', 'knalou')).then(
-		(sdk) => sdk.healthcareParty,
-	)
+	private hcpApi = CardinalBaseSdk.initialize(
+		undefined,
+		'https://nightly.icure.cloud',
+		new UsingCredentials.UsernamePassword(process.env.CARDINAL_USERNAME ?? 'user', process.env.CARDINAL_PASSWORD ?? 'password'),
+		{ groupSelector: async () => process.env.CARDINAL_GROUP_ID ?? '' },
+	).then((sdk) => sdk.healthcareParty)
 	private samples = [
 		...[
 			{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) } /*
@@ -104,8 +110,9 @@ class DemoApp extends LitElement {
 			{ title: '6 - Interuption of pregnancy medical part 2', form: Form.parse(YAML.parse(interruption_of_pregnancy_medical_part_2)) },
 			{ title: '7 - Control', form: Form.parse(YAML.parse(control)) },
 			{ title: '8 - Extra', form: Form.parse(YAML.parse(extra)) },
-			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },
-			{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
+			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },*/,
+			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },
+			/*{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_measure)) },
 			{ title: 'OKIDO - Evaluation', form: Form.parse(YAML.parse(okido_evaluation)) },
 			{ title: 'OKIDO - Planification', form: Form.parse(YAML.parse(okido_planification)) },
@@ -120,7 +127,7 @@ class DemoApp extends LitElement {
 			{ title: 'OKIDO - Anamnèse - Donnée chirurgicale', form: Form.parse(YAML.parse(okido_surgical_data)) },
 			{ title: 'OKIDO - Anamnèse - Soin médical', form: Form.parse(YAML.parse(okido_medical_care)) },
 			{ title: 'OKIDO - Anamnèse - Soin paramédical', form: Form.parse(YAML.parse(okido_paramedical_care)) },
-			{ title: 'OKIDO - Anamnèse - Soin kinésithérapeutique', form: Form.parse(YAML.parse(okido_physiotherapy_care)) },*/,
+			{ title: 'OKIDO - Anamnèse - Soin kinésithérapeutique', form: Form.parse(YAML.parse(okido_physiotherapy_care)) },*/
 		], //.filter((x, idx) => idx === 0),
 	]
 
@@ -217,7 +224,7 @@ class DemoApp extends LitElement {
 				<div class="detail">
 					${this.samples.map((s) => {
 						return html`<div style="${s.form === this.selectedForm ? '' : 'display: none;'}">
-							<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}"></decorated-form>
+							<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}" renderer="form:tab"></decorated-form>
 						</div>`
 					})}
 				</div>

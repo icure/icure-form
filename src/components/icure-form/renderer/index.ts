@@ -19,4 +19,5 @@ export type Renderer = (
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,
+	sectionWrapper?: (index: number, section: TemplateResult) => TemplateResult,
 ) => TemplateResult

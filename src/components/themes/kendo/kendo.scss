@@ -31,25 +31,8 @@ $font-weight-label: 500;
 .tab-container {
 	.tab-bar {
 		li {
-			display: inline-block;
-			padding: 8px 16px;
-			cursor: pointer;
-			color: $color;
-			font-size: $textbox-font-size;
-			font-weight: $font-weight-label;
-
 			&.active {
 				background-color: $accent;
-				color: white;
-			}
-		}
-	}
-	.tab-content {
-		.tab {
-			display: none;
-
-			&.active {
-				display: block;
 			}
 		}
 	}

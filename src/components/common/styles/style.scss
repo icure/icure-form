@@ -36,6 +36,35 @@ $font-weight-label: 500;
 $btn-outlined-bg: #FCFCFD;
 $btn-outlined-bg-hover: #F2F2F2;
 
+.tab-container {
+	.tab-bar {
+		li {
+			display: inline-block;
+			padding: 8px 16px;
+			cursor: pointer;
+			color: $color;
+			font-size: $textbox-font-size;
+			font-weight: $font-weight-label;
+
+			&.active {
+				background-color: $accent;
+				color: white;
+			}
+		}
+	}
+
+	.tab-content {
+		.tab {
+			display: none;
+
+			&.active {
+				display: block;
+			}
+		}
+	}
+}
+
+
 :host {
 	--bg-color-1: #f44336;
 }
@@ -64,19 +93,24 @@ $btn-outlined-bg-hover: #F2F2F2;
 	h6:last-child {
 		margin-bottom: 2px;
 	}
+
 	p {
 		margin-bottom: 1em;
 	}
+
 	pre {
 		white-space: pre-wrap;
 	}
+
 	li {
 		position: relative;
 	}
+
 	ul,
 	ol {
 		padding-left: 30px;
 	}
+
 	blockquote {
 		padding-left: 1em;
 		border-left: 3px solid #eee;
@@ -260,24 +294,25 @@ li.ProseMirror-selectednode {
 			flex-wrap: wrap;
 			align-items: flex-start;
 
-				li {
-					display: flex;
-					flex-direction: row;
-					border-radius: 8px;
-					padding: 2px 4px;
-					margin-right: 2px;
-					background-color: #dadada;
-					border-color: rgba(42, 61, 108, 0.44);
-					min-height: 20px;
+			li {
+				display: flex;
+				flex-direction: row;
+				border-radius: 8px;
+				padding: 2px 4px;
+				margin-right: 2px;
+				background-color: #dadada;
+				border-color: rgba(42, 61, 108, 0.44);
+				min-height: 20px;
 
-					span{
-						display: inline-block;
-						min-height: 18px;
-						br {
-							display: none;
-						}
+				span {
+					display: inline-block;
+					min-height: 18px;
+
+					br {
+						display: none;
 					}
 				}
+			}
 		}
 	}
 
@@ -288,11 +323,13 @@ li.ProseMirror-selectednode {
 			flex-wrap: nowrap;
 			align-items: flex-start;
 			gap: 6px;
+
 			li {
 				list-style-type: none;
 				width: 100%;
 				padding-bottom: 4px;
 				border-bottom: 1px dotted #80808082;
+
 				&:last-child {
 					border-bottom: none;
 				}
@@ -321,10 +358,10 @@ h3 {
 
 // icure-input-metadata-containe
 
-.icure-input-metadata-container{
+.icure-input-metadata-container {
 	display: flex;
 
-	.icure-metadata-container{
+	.icure-metadata-container {
 		display: flex;
 		flex-grow: 1;
 		padding: 0 4px;
@@ -334,7 +371,7 @@ h3 {
 		outline: 0;
 		box-sizing: border-box;
 
-		&__validationError{
+		&__validationError {
 			border-color: $error-border-color;
 		}
 	}
@@ -365,17 +402,19 @@ h3 {
 			z-index: 0 !important;
 			display: none;
 		}
+
 		.buttons-container .btn {
 			opacity: 1 !important;
 			display: unset !important;
 		}
+
 		&:hover .buttons-container .menu-container .btn {
 			animation: none;
 			pointer-events: all;
 		}
 	}
 
-	&--metadataButtonsBar{
+	&--metadataButtonsBar {
 		height: 100%;
 		display: flex;
 		align-items: center;
@@ -526,7 +565,7 @@ h3 {
 		overflow-x: hidden;
 		text-overflow: ellipsis;
 
-		&.existing{
+		&.existing {
 			background-color: $green-light-bg;
 		}
 
@@ -737,6 +776,7 @@ span {
 				width: 12px;
 				border-radius: 4px;
 				transform-origin: center center;
+
 				path {
 					fill: rgb(128, 154, 180);
 				}
@@ -796,7 +836,7 @@ span.code-count-3::before {
 	/* background: linear-gradient(90deg, var(--bg-code-color-1) 0%, var(--bg-code-color-2) 100%);*/
 }
 
-.selected-option{
+.selected-option {
 	padding: 2px;
 	margin-right: 5px;
 }
@@ -912,7 +952,7 @@ app-date-picker {
 	background-color: $background-color-dark;
 	gap: 12px;
 
-	&__heading{
+	&__heading {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -939,7 +979,7 @@ app-date-picker {
 		}
 	}
 
-	&__removeBtn{
+	&__removeBtn {
 		justify-self: end;
 		border: 1px solid $input-border-color;
 		background-color: $btn-outlined-bg;
@@ -950,7 +990,7 @@ app-date-picker {
 		}
 	}
 
-	&__child{
+	&__child {
 		display: grid;
 		grid-template-rows: auto;
 		gap: 8px;
@@ -966,7 +1006,7 @@ app-date-picker {
 			background-color: $green-light-bg;
 		}
 
-		.subform{
+		.subform {
 			background: unset;
 			margin: 0;
 			padding: 0;
@@ -980,12 +1020,14 @@ app-date-picker {
 	display: grid;
 	gap: 16px 6px;
 	grid-template-columns: repeat(24, 1fr);
+
 	hr {
 		display: block;
 		margin-top: 20px;
 		border-top: 1px solid $hr-color;
 		margin-bottom: 20px;
 	}
+
 	h2 {
 		font-size: add-two($label-font-size, 0, 1.2);
 		font-weight: 700;
@@ -1005,6 +1047,7 @@ app-date-picker {
 		border-radius: 12px;
 	}
 }
+
 .icure-form-field {
 	display: grid;
 	align-items: flex-start;
@@ -1017,12 +1060,13 @@ app-date-picker {
 }
 
 .icure-text-field, .icure-button-group {
-	.icure-label-extra{
+	.icure-label-extra {
 		display: flex;
 		width: 100%;
 		gap: 12px;
 	}
-	 .icure-label {
+
+	.icure-label {
 		z-index: 1;
 		pointer-events: none;
 		line-height: $textbox-line-height;
@@ -1031,9 +1075,11 @@ app-date-picker {
 		left: add-two($input-padding-x, $input-border-width);
 		color: $label-color;
 		align-items: center;
-		height: 28px;
+		text-wrap: auto;
+		min-height: 28px;
 		max-width: 85%;
 		min-width: 0;
+
 		&.float {
 			display: flex;
 			white-space: nowrap;
@@ -1096,7 +1142,7 @@ app-date-picker {
 			border-color: $error-border-color;
 		}
 
-		&__withMetadata{
+		&__withMetadata {
 			border-radius: 6px 0 0 6px;
 		}
 
@@ -1152,7 +1198,7 @@ app-date-picker {
 				opacity: 0.5;
 			}
 
-			 .btn svg path {
+			.btn svg path {
 				fill: $accent;
 				opacity: 0.5;
 
@@ -1186,14 +1232,14 @@ input[type='radio'] {
 	display: flex;
 	height: 32px;
 	padding: 0 16px;
-	background-color:  $label-color;
+	background-color: $label-color;
 	color: white;
 	border-radius: 6px;
 	cursor: pointer;
 	font-size: 14px;
 	font-weight: normal;
 
-	&:hover{
+	&:hover {
 		background-color: $label-color-hover;
 	}
 }
@@ -1224,6 +1270,7 @@ input[type='radio'] {
 				height: 28px;
 				max-width: 85%;
 				min-width: 0;
+
 				> span {
 					display: block;
 					white-space: nowrap;
@@ -1234,6 +1281,7 @@ input[type='radio'] {
 			}
 		}
 	}
+
 	> .icure-input {
 		flex: 1 1 auto;
 		width: auto;

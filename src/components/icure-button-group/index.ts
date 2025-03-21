@@ -56,6 +56,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 			)
 		}
 	}
+
 	render(): TemplateResult {
 		if (!this.visible) {
 			return html``
@@ -71,58 +72,54 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 			<div class="icure-text-field icure-button-group">
 				${this.displayedLabels && this.displayedOptions?.length
 					? html`
-					<div class="icure-label-extra">
-						${generateLabels(
-							Object.entries(this.displayedLabels ?? {})
-								.filter(
-									//If we have less than 2 options, we don't need to display the label except if it is different from the first option
-									([, l]) => (this.displayedOptions?.length ?? 0) > 1 || (this.displayedOptions?.length && l !== this.displayedOptions[0].label[this.language()]),
-								)
-								.reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
-							this.language(),
-							this.translate ? this.translationProvider : undefined,
-						)}
-						${this.displayMetadata && metadata
-							? html`<icure-metadata-buttons-bar
-									.metadata="${metadata}"
-									.revision="${rev}"
-									.versions="${versions ?? []}"
-									.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
-									.defaultLanguage="${this.defaultLanguage}"
-									.selectedLanguage="${this.selectedLanguage}"
-									.languages="${this.languages}"
-									.handleMetadataChanged="${this.handleMetadataChanged}"
-									.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
-									.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
-									.ownersProvider="${this.ownersProvider}"
-							  />`
-							: nothing}
-					</div>
-					`
+							<div class="icure-label-extra">
+								${generateLabels(
+									Object.entries(this.displayedLabels ?? {})
+										.filter(
+											//If we have less than 2 options, we don't need to display the label except if it is different from the first option
+											([, l]) => (this.displayedOptions?.length ?? 0) > 1 || (this.displayedOptions?.length && l !== this.displayedOptions[0].label[this.language()]),
+										)
+										.reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
+									this.language(),
+									this.translate ? this.translationProvider : undefined,
+								)}
+								${this.displayMetadata && metadata
+									? html` <icure-metadata-buttons-bar
+											.metadata="${metadata}"
+											.revision="${rev}"
+											.versions="${versions ?? []}"
+											.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
+											.defaultLanguage="${this.defaultLanguage}"
+											.selectedLanguage="${this.selectedLanguage}"
+											.languages="${this.languages}"
+											.handleMetadataChanged="${this.handleMetadataChanged}"
+											.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
+											.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
+											.ownersProvider="${this.ownersProvider}"
+									  />`
+									: nothing}
+							</div>
+					  `
 					: nothing}
 				<div style="${this.generateStyle()}">
 					${(this.displayedOptions?.length ? this.displayedOptions : [{ id: this.label, label: {} }]).map((x) => {
 						const text = (x.label ?? {})[this.language()] ?? ''
 						if (this.readonly) {
-							return html`<div>
-								<input class="icure-checkbox" disabled type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" .checked=${inputValues?.includes(x.id)} />
+							return html` <div>
+								<input class="icure-checkbox" disabled type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" .checked="${inputValues?.includes(x.id)}" />
 								<label class="icure-button-group-label" for="${x.id}"><span>${text}</span></label>
 							</div>`
 						}
-						return html`<div>
-							<input
-								class="icure-checkbox"
-								type="${this.type}"
-								id="${x.id}"
-								name="${this.label}"
-								value="${text}"
-								.checked=${inputValues?.includes(x.id)}
-								@change=${this.checkboxChange}
-							/><label class="icure-button-group-label" for="${x.id}"><span>${text}</span></label>
+						return html` <div>
+							<input class="icure-checkbox" type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" .checked="${inputValues?.includes(x.id)}" @change="${this.checkboxChange}" /><label
+								class="icure-button-group-label"
+								for="${x.id}"
+								><span>${text}</span></label
+							>
 						</div>`
 					})}
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		`
 	}

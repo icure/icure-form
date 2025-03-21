@@ -1082,8 +1082,6 @@ app-date-picker {
 
 		&.float {
 			display: flex;
-			white-space: nowrap;
-			text-overflow: ellipsis;
 			overflow: hidden;
 		}
 	}

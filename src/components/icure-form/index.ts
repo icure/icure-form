@@ -1,5 +1,5 @@
 // Import the LitElement base class and html helper function
-import { html, LitElement, TemplateResult } from 'lit'
+import { html, LitElement, nothing, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 
 import { Renderer } from './renderer'
@@ -52,8 +52,8 @@ export class IcureForm extends LitElement {
 
 		const sectionWrapper =
 			variant[1] === 'tab'
-				? (index: number, section: TemplateResult) => {
-						return html`<div class="tab ${index == this.selectedTab ? 'active' : ''}">${section}</div>`
+				? (index: number, section: () => TemplateResult) => {
+						return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
 				  }
 				: undefined
 		console.log('Render metadata', this.displayMetadata)

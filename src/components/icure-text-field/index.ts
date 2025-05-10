@@ -34,6 +34,7 @@ import { extractSingleValue, extractValues } from '../icure-form/fields/utils'
 import { preprocessEmptyNodes, SpacePreservingMarkdownParser } from '../../utils/markdown'
 import { measureOnFocusHandler, measureTransactionMapper } from './schema/measure-schema'
 import { anyDateToDate } from '../../utils/dates'
+import { icureFormLogging } from '../../index'
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
@@ -175,6 +176,10 @@ export class IcureTextField extends Field {
 		let versions: Version<FieldValue>[] | undefined
 		const validationError = this.validationErrorsProvider?.()?.length
 		let valueForExistingLanguages: string[] | undefined = undefined
+
+		if (icureFormLogging) {
+			console.log(`Rendering text-field ${this.schema} ${this.label} [${this.displayedLabels}]`)
+		}
 
 		if (this.view) {
 			let parsedDoc: ProsemirrorNode | undefined

@@ -2,6 +2,7 @@ import { html, LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
+import { icureFormLogging } from '../../index'
 
 export class IcureButton extends LitElement {
 	@property() label?: string
@@ -20,6 +21,9 @@ export class IcureButton extends LitElement {
 	render() {
 		if (!this.visible) {
 			return html``
+		}
+		if (icureFormLogging) {
+			console.log(`Rendering button ${this.label}`)
 		}
 		return html`<div class="icure-button" style="button" @click="${() => this.actionListener(this.event, this.payload)}">
 			${this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : ''}

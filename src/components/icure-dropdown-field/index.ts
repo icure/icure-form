@@ -7,6 +7,7 @@ import { extractSingleValue } from '../icure-form/fields/utils'
 import { FieldWithOptionsMixin } from '../common/field-with-options'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
+import { icureFormLogging } from '../../index'
 
 export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 	@property() placeholder = ''
@@ -108,6 +109,10 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 	render(): TemplateResult {
 		if (!this.visible) {
 			return html``
+		}
+
+		if (icureFormLogging) {
+			console.log(`Rendering dropdown ${this.label}`)
 		}
 
 		const [, inputValue] = this.getValueFromProvider() ?? ''

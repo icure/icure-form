@@ -1,6 +1,6 @@
 {
 	"name": "@icure/form",
-	"version": "3.0.11",
+	"version": "3.0.14",
 	"description": "",
 	"main": "lib/index.js",
 	"scripts": {

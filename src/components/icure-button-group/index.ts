@@ -8,6 +8,7 @@ import { extractSingleValue } from '../icure-form/fields/utils'
 import { FieldWithOptionsMixin } from '../common/field-with-options'
 import { FieldValue } from '../model'
 import { Version } from '../../generic'
+import { icureFormLogging } from '../../index'
 
 export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 	@property() type: 'radio' | 'checkbox' = 'radio'
@@ -61,6 +62,10 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 		if (!this.visible) {
 			return html``
 		}
+		if (icureFormLogging) {
+			console.log(`Rendering button group ${this.label}`)
+		}
+
 		const [id, inputValues, versions] = this.getValueFromProvider()
 
 		const version = this.selectedRevision ? versions?.find((v) => v.revision === this.selectedRevision) : versions?.[0]

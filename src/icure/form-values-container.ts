@@ -398,6 +398,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	changeListeners: ((newValue: ContactFormValuesContainer) => void)[]
 	private _id: string = uuidv4()
 	private _initialised = false
+	private indexedServices: { [id: string]: Version<DecryptedService>[] }
 
 	toString(): string {
 		return `Contact(${this.rootForm.formTemplateId}[${this.rootForm.id}]) - ${this._id}`
@@ -456,6 +457,27 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		this.formRecycler = formRecycler
 		this.changeListeners = changeListeners
 		this._initialised = initialised
+
+		this.indexedServices = [this.currentContact].concat(this.contactsHistory).reduce((acc, ctc) => {
+			const services =
+				ctc.services
+					?.filter((s) => ctc.subContacts?.some((sc) => sc.formId === this.rootForm.id && sc.services?.some((sss) => sss.serviceId === s.id)))
+					?.reduce(
+						(acc, s) =>
+							s.id
+								? {
+										...acc,
+										[s.id]: (acc[s.id] ?? (acc[s.id] = [])).concat({
+											revision: ctc.rev ?? null,
+											modified: ctc.created,
+											value: s,
+										}),
+								  }
+								: acc,
+						acc,
+					) ?? acc
+			return services
+		}, {} as VersionedData<DecryptedService>)
 
 		this.synchronise()
 	}
@@ -744,27 +766,8 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	 * @param revisionsFilter
 	 */
 	private getServicesInHistory(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<DecryptedService> {
-		const indexedServices = [this.currentContact].concat(this.contactsHistory).reduce((acc, ctc) => {
-			const services =
-				ctc.services
-					?.filter((s) => ctc.subContacts?.some((sc) => sc.formId === this.rootForm.id && sc.services?.some((sss) => sss.serviceId === s.id)))
-					?.reduce(
-						(acc, s) =>
-							s.id
-								? {
-										...acc,
-										[s.id]: (acc[s.id] ?? (acc[s.id] = [])).concat({
-											revision: ctc.rev ?? null,
-											modified: ctc.created,
-											value: s,
-										}),
-								  }
-								: acc,
-						acc,
-					) ?? acc
-			return services
-		}, {} as VersionedData<DecryptedService>) //index services in history by id
-		return Object.entries(indexedServices)
+		//index services in history by id
+		return Object.entries(this.indexedServices)
 			.map(([id, history]) => {
 				const keptRevisions = revisionsFilter(
 					id,

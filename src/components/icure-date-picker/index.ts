@@ -12,6 +12,7 @@ import { format } from 'date-fns'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
 import { anyDateToDate } from '../../utils/dates'
+import { icureFormLogging } from '../../index'
 
 export class IcureDatePickerField extends Field {
 	//TODO: support different date formats
@@ -56,6 +57,10 @@ export class IcureDatePickerField extends Field {
 	render(): TemplateResult {
 		if (!this.visible) {
 			return html``
+		}
+
+		if (icureFormLogging) {
+			console.log(`Rendering dat epicker ${this.label}`)
 		}
 
 		const value = this.getValueFromProvider()

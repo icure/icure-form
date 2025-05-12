@@ -46,14 +46,15 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	/**
 	 * Creates an instance of BridgedFormValuesContainer.
 	 * @param responsible The id of the data owner responsible for the creation of the values
-	 * @param contact The displayed contact (may be in the past). === to currentContact if the contact is the contact of the day
 	 * @param contactFormValuesContainer The wrapped ContactFormValuesContainer
 	 * @param interpreter A function that can interpret formulas
+	 * @param contact The displayed contact (may be in the past). === to currentContact if the contact is the contact of the day
+	 * @param initialValuesProvider A lambda that provides the initial values of the form
 	 * @param dependentValuesProvider A function that provides the dependent values (computed on the basis of other values) for a given anchorId and templateId
 	 * @param validatorsProvider A function that provides the validators for a given anchorId and templateId
 	 * @param language The language in which the values are displayed
 	 * @param changeListeners The listeners that will be notified when the values change
-	 * @param initialValuesProvider A lambda that provides the initial values of the form
+	 * @param interpreterContext A map with keys that are the names of the variables and values that are the functions that return the values of the variables
 	 */
 	constructor(
 		private responsible: string,
@@ -93,6 +94,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		}[] = () => [],
 		private language = 'en',
 		private changeListeners: ((newValue: BridgedFormValuesContainer) => void)[] = [],
+		private interpreterContext: { [variable: string]: () => unknown } = {},
 	) {
 		console.log(`Creating bridge FVC (${contactFormValuesContainer.rootForm.formTemplateId}) with ${contactFormValuesContainer.children.length} children [${this._id}]`)
 		//Before start to broadcast changes, we need to fill in the contactFormValuesContainer with the dependent values
@@ -318,7 +320,8 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			log,
 		} as { [key: string]: any }
 		const proxy: S = new Proxy({} as S, {
-			has: (target: S, key: string | symbol) => !!native[key as string] || key === 'self' || Object.keys(this.getVersionedValuesForKey(key) ?? {}).length > 0,
+			has: (target: S, key: string | symbol) =>
+				!!native[key as string] || key === 'self' || !!this.interpreterContext[key as string] || Object.keys(this.getVersionedValuesForKey(key) ?? {}).length > 0,
 			get: (target: S, key: string | symbol) => {
 				if (key === 'undefined') {
 					return undefined
@@ -327,7 +330,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				if (!!nativeValue) {
 					return nativeValue
 				}
-				return key === 'self' ? proxy : Object.values(this.getVersionedValuesForKey(key)).map((v) => v[0]?.value)
+				return key === 'self' ? proxy : this.interpreterContext[key as string] ? this.interpreterContext[key as string]() : Object.values(this.getVersionedValuesForKey(key)).map((v) => v[0]?.value)
 			},
 		})
 		return this.interpreter?.(formula, sandbox ?? proxy)

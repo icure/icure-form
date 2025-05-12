@@ -111,6 +111,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				this.validatorsProvider,
 				this.language,
 				this.changeListeners,
+				this.interpreterContext,
 			)
 			this.changeListeners.forEach((l) => notify(l, newBridgedFormValueContainer))
 			return newBridgedFormValueContainer
@@ -351,7 +352,18 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			.getChildren()
 			.map(
 				(fvc) =>
-					new BridgedFormValuesContainer(this.responsible, fvc, this.interpreter, this.contact, this.initialValuesProvider, this.dependentValuesProvider, this.validatorsProvider, this.language, []),
+					new BridgedFormValuesContainer(
+						this.responsible,
+						fvc,
+						this.interpreter,
+						this.contact,
+						this.initialValuesProvider,
+						this.dependentValuesProvider,
+						this.validatorsProvider,
+						this.language,
+						[],
+						this.interpreterContext,
+					),
 			)
 		console.log(`${children.length} children found in ${this.contactFormValuesContainer.rootForm.formTemplateId} initialised with `, this.initialValuesProvider)
 		return children

@@ -13,6 +13,7 @@ export class NumberField extends Field {
 				.displayedLabels="${this.displayedLabels}"
 				.defaultLanguage="${this.defaultLanguage}"
 				.languages="${this.languages}"
+				.styleOptions="${this.styleOptions}"
 				schema="decimal"
 				.ownersProvider=${this.ownersProvider}
 				.translationProvider=${this.translationProvider}

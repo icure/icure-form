@@ -81,7 +81,18 @@ export class IcureForm extends LitElement {
 			? html`<div class="tab-container">
 					<div class="tab-bar">
 						<ul>
-							${this.form.sections.map((s, idx) => html`<li class="${this.selectedTab === idx ? 'active' : ''}" @click="${() => (this.selectedTab = idx)}">${s.section}</li>`)}
+							${this.form.sections.map(
+								(s, idx) =>
+									html`<li
+										class="${this.selectedTab === idx ? 'active' : ''}"
+										@click="${() => {
+											this.selectedTab = idx
+											setTimeout(() => this.shadowRoot?.querySelectorAll('.tab-bar li.active')[0].scrollIntoView({ inline: 'center' }), 100)
+										}}"
+									>
+										${s.section}
+									</li>`,
+							)}
 						</ul>
 					</div>
 					<div class="tab-content">${render}</div>

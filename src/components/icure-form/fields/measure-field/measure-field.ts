@@ -14,6 +14,7 @@ export class MeasureField extends Field {
 					.displayedLabels="${this.displayedLabels}"
 					.defaultLanguage="${this.defaultLanguage}"
 					.languages="${this.languages}"
+					.styleOptions="${this.styleOptions}"
 					schema="measure"
 					.ownersProvider=${this.ownersProvider}
 					.translationProvider=${this.translationProvider}

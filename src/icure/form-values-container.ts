@@ -310,6 +310,15 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			Boolean: Boolean,
 			Array: Array,
 			Object: Object,
+			score: (it: { codes: CodeStub[] }) => {
+				return it.codes.reduce((acc, c) => {
+					try {
+						return acc + parseInt(c.id?.split('|')?.[1] ?? '0')
+					} catch (e) {
+						return acc
+					}
+				}, 0)
+			},
 			parseContent,
 			validate: {
 				notBlank: (self: any, label: string) => {

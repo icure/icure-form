@@ -185,6 +185,10 @@ export class IcureTextField extends Field {
 			let parsedDoc: ProsemirrorNode | undefined
 
 			const data = this.valueProvider?.()
+			if (icureFormLogging) {
+				console.log(`Data for ${this.label} is ${JSON.stringify(data)}`)
+			}
+
 			if (this.isMultivalued()) {
 				const values = extractValues(data, this.metadataProvider ?? (() => ({})))
 				parsedDoc =

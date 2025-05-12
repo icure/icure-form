@@ -489,7 +489,10 @@ export class IcureTextField extends Field {
 							return undefined
 						}
 
-						const decimal = value.value !== undefined ? value.value.toFixed(this.styleOptions?.decimalPlaces ? parseInt(this.styleOptions.decimalPlaces.toString()) : 2) : ''
+						const decimal =
+							value.value !== undefined
+								? value.value.toFixed(this.styleOptions?.decimalPlaces || this.styleOptions?.decimalPlaces?.toString() === '0' ? parseInt(this.styleOptions.decimalPlaces.toString()) : 2)
+								: ''
 						const unit = value.unit
 
 						return pms.node(
@@ -503,7 +506,11 @@ export class IcureTextField extends Field {
 			? {
 					parse: (value: PrimitiveType) => {
 						return value.type === 'number'
-							? pms.node('paragraph', {}, [pms.node('decimal', {}, [pms.text(value.value.toFixed(this.styleOptions?.decimalPlaces ? parseInt(this.styleOptions.decimalPlaces.toString()) : 2))])])
+							? pms.node('paragraph', {}, [
+									pms.node('decimal', {}, [
+										pms.text(value.value.toFixed(this.styleOptions?.decimalPlaces || this.styleOptions?.decimalPlaces?.toString() === '0' ? parseInt(this.styleOptions.decimalPlaces.toString()) : 2)),
+									]),
+							  ])
 							: undefined
 					},
 			  }

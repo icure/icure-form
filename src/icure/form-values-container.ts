@@ -311,15 +311,17 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			Boolean: Boolean,
 			Array: Array,
 			Object: Object,
-			hasOption: (it: { codes: CodeStub[] }, option: string) => it.codes.some((c) => c.id === option || c.id?.split('|')?.[1] === option),
+			hasOption: (it: { codes: CodeStub[] }, option: string) => it && it.codes.some((c) => c.id === option || c.id?.split('|')?.[1] === option),
 			score: (it: { codes: CodeStub[] }) => {
-				return it.codes.reduce((acc, c) => {
-					try {
-						return acc + parseInt(c.id?.split('|')?.[1] ?? '0')
-					} catch (e) {
-						return acc
-					}
-				}, 0)
+				return it
+					? (it.codes ?? []).reduce((acc, c) => {
+							try {
+								return acc + parseInt(c.id?.split('|')?.[1] ?? '0')
+							} catch (e) {
+								return acc
+							}
+					  }, 0)
+					: 0
 			},
 			parseContent,
 			validate: {

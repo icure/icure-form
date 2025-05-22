@@ -377,8 +377,8 @@ export const render: Renderer = async (
 			.translationProvider="${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}"
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
 			.actionListener="${actionListener}"
-			.event="${fg.event !== undefined ? fg.event : fg.computedProperties?.event ? !formsValueContainer?.compute(fg.computedProperties?.event) : 'submit'}"
-			.payload="${fg.payload !== undefined ? fg.payload : fg.computedProperties?.payload ? !formsValueContainer?.compute(fg.computedProperties?.payload) : undefined}"
+			.event="${fg.event !== undefined ? fg.event : fg.computedProperties?.event ? !(await formsValueContainer?.compute(fg.computedProperties?.event)) : 'submit'}"
+			.payload="${fg.payload !== undefined ? fg.payload : fg.computedProperties?.payload ? !(await formsValueContainer?.compute(fg.computedProperties?.payload)) : undefined}"
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-button>`
 	}
@@ -401,10 +401,10 @@ export const render: Renderer = async (
 		if (!fg) {
 			return nothing
 		}
-		const computedProperties = Object.keys(fg.computedProperties ?? {}).reduce(
-			(acc, k) => ({ ...acc, [k]: fg.computedProperties?.[k] && formsValueContainer?.compute(fg.computedProperties[k]) }),
-			{},
-		) as { [key: string]: string | number | boolean | undefined }
+		const computedProperties = (await Object.keys(fg.computedProperties ?? {}).reduce(
+			async (acc, k) => ({ ...(await acc), [k]: fg.computedProperties?.[k] && (await formsValueContainer?.compute(fg.computedProperties[k])) }),
+			Promise.resolve({}),
+		)) as { [key: string]: string | number | boolean | undefined }
 		if (computedProperties['hidden']) {
 			return nothing
 		}

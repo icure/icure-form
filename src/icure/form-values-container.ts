@@ -5,7 +5,7 @@ import { ServiceMetadata } from './model'
 import { FieldMetadata, FieldValue, PrimitiveType, Validator } from '../components/model'
 import { areCodesEqual, codeStubToCode, contentToPrimitiveType, isContentEqual, primitiveTypeToContent } from './icure-utils'
 import { parsePrimitive } from '../utils/primitive'
-import { anyDateToDate } from '../utils/dates'
+import { anyDateToDate, dateToFuzzyDate } from '../utils/dates'
 import { v4 as uuidv4 } from 'uuid'
 import { normalizeCodes } from '../utils/code-utils'
 
@@ -204,6 +204,54 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		)
 	}
 
+	private convertRawValue(rawValue: unknown): FieldValue | undefined {
+		if (rawValue && typeof rawValue === 'object' && 'content' in rawValue) {
+			return rawValue as FieldValue
+		}
+
+		if (Array.isArray(rawValue)) {
+			return rawValue.reduce(
+				(acc: FieldValue, it, idx) => {
+					const fv = this.convertRawValue(it)
+					if (fv === undefined) {
+						return acc
+					}
+					acc.codes = [...(fv.codes ?? []), ...(acc.codes ?? [])]
+					acc.content['*'] = fv.content['*']?.value
+						? {
+								...acc.content['*'],
+								[(fv.codes ?? [])[0].id ?? idx.toString()]: fv.content['*'].value,
+						  }
+						: acc.content['*']
+					return acc
+				},
+				{ content: { '*': { type: 'compound', value: {} } } },
+			)
+		}
+
+		if (typeof rawValue === 'number') {
+			return { content: { '*': { type: 'number', value: rawValue } } }
+		}
+
+		if (typeof rawValue === 'string') {
+			return { content: { '*': { type: 'string', value: rawValue } } }
+		}
+
+		if (typeof rawValue === 'boolean') {
+			return { content: { '*': { type: 'boolean', value: rawValue } } }
+		}
+
+		if (rawValue instanceof Date) {
+			return { content: { '*': { type: 'timestamp', value: dateToFuzzyDate(rawValue) } } }
+		}
+
+		if (rawValue && typeof rawValue === 'object' && 'unit' in rawValue && 'value' in rawValue && typeof rawValue.value === 'number') {
+			return { content: { '*': { type: 'measure', value: rawValue.value, unit: rawValue.unit?.toString() ?? '' } } }
+		}
+
+		return undefined
+	}
+
 	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
 	private computeInitialValues() {
 		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
@@ -211,7 +259,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				try {
 					const currentValue = this.getValues(revisionsFilter)
 					if (!currentValue || !Object.keys(currentValue).length) {
-						const newValue = this.compute(formula) as FieldValue | undefined
+						const newValue = this.convertRawValue(this.compute(formula) as unknown)
 						if (newValue !== undefined) {
 							const lng = this.language ?? 'en'
 							if (newValue && !newValue.content[lng] && newValue.content['*']) {
@@ -242,7 +290,8 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).forEach(({ metadata, revisionsFilter, formula }) => {
 				try {
 					const currentValue = this.getValues(revisionsFilter)
-					const newValue = this.compute(formula) as FieldValue | undefined
+					const newValue = this.convertRawValue(this.compute(formula) as unknown)
+
 					if (newValue !== undefined || currentValue != undefined) {
 						const lng = this.language ?? 'en'
 						if (newValue && !newValue.content[lng] && newValue.content['*']) {

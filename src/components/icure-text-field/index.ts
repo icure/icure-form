@@ -169,12 +169,12 @@ export class IcureTextField extends Field {
 		}
 	}
 
-	render() {
+	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }) {
 		const renderHash = Math.random()
 		let metadata: FieldMetadata | undefined
 		let rev: string | null | undefined
 		let versions: Version<FieldValue>[] | undefined
-		const validationError = this.validationErrorsProvider?.()?.length
+		const validationError = validationErrors.length
 		let valueForExistingLanguages: string[] | undefined = undefined
 
 		if (icureFormLogging) {
@@ -265,7 +265,7 @@ export class IcureTextField extends Field {
 						  `
 						: ''}
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		`
 	}

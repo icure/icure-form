@@ -7,7 +7,7 @@ import { Suggestion } from '../../../../generic'
 export class DropdownField extends Field {
 	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Suggestion[]> = async () => []
 
-	render(): TemplateResult[] {
+	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`

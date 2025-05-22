@@ -52,13 +52,13 @@ export type ID = string
  */
 export interface FormValuesContainer<Value, Metadata> {
 	//information retrieval
-	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): T | undefined
+	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<T | undefined>
 	getLabel(): string
 	getFormId(): string | undefined
 	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>
-	getChildren(): FormValuesContainer<Value, Metadata>[]
-	getValidationErrors(): [FieldMetadata, string][]
+	getChildren(): Promise<FormValuesContainer<Value, Metadata>[]>
+	getValidationErrors(): Promise<[FieldMetadata, string][]>
 	//modification
 	setValue(label: string, language: string, data?: Value, id?: string, metadata?: Metadata, changeListenersOverrider?: (fvc: FormValuesContainer<Value, Metadata>) => void): void
 	setMetadata(metadata: Metadata, id?: string): void

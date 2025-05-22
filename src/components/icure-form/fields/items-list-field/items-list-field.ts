@@ -1,11 +1,11 @@
-import { html } from 'lit'
+import { html, TemplateResult } from 'lit'
 import { Field } from '../../../common'
 import { property } from 'lit/decorators.js'
 
 export class ItemsListField extends Field {
 	@property() multiline: boolean | string = false
 	@property() lines = 1
-	render() {
+	override renderSync(): TemplateResult {
 		return html`<icure-text-field
 			schema="items-list"
 			.readonly="${this.readonly}"

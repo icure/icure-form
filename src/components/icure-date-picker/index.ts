@@ -13,6 +13,7 @@ import { format } from 'date-fns'
 import baseCss from '../common/styles/style.scss'
 import { anyDateToDate } from '../../utils/dates'
 import { icureFormLogging } from '../../index'
+import { FieldMetadata } from '../model'
 
 export class IcureDatePickerField extends Field {
 	//TODO: support different date formats
@@ -54,7 +55,7 @@ export class IcureDatePickerField extends Field {
 		return undefined
 	}
 
-	render(): TemplateResult {
+	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }): TemplateResult {
 		if (!this.visible) {
 			return html``
 		}
@@ -64,7 +65,7 @@ export class IcureDatePickerField extends Field {
 		}
 
 		const value = this.getValueFromProvider()
-		const validationError = this.validationErrorsProvider?.()?.length
+		const validationError = validationErrors.length
 
 		return html` <div id="root" class="icure-text-field ${value && value != '' ? 'has-content' : ''}" data-placeholder="${this.placeholder}">
 			${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
@@ -84,7 +85,7 @@ export class IcureDatePickerField extends Field {
 						  </div>`
 						: ''}
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		</div>`
 	}

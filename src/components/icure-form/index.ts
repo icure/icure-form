@@ -10,6 +10,7 @@ import { FormValuesContainer, Suggestion } from '../../generic'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
 import { defaultTranslationProvider, languages } from '../../utils/languages'
+import { Task } from '@lit/task'
 
 /**
  * Form element
@@ -39,49 +40,64 @@ export class IcureForm extends LitElement {
 		return [baseCss]
 	}
 
+	_asyncTask = new Task(this, {
+		task: async ([form, formValuesContainer, language]) => {
+			if (!form) {
+				return html`<p>missing form</p>`
+			}
+
+			const variant = this.renderer?.split(':')
+			const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : undefined
+
+			if (!renderer) {
+				return html`<p>unknown renderer</p>`
+			}
+			const translationTables = this.form?.translations
+
+			const sectionWrapper =
+				variant[1] === 'tab'
+					? (index: number, section: () => TemplateResult) => {
+							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
+					  }
+					: undefined
+
+			return renderer(
+				form,
+				{ labelPosition: this.labelPosition, language },
+				formValuesContainer,
+				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
+				this.ownersProvider,
+				this.optionsProvider,
+				this.actionListener,
+				this.languages,
+				this.readonly,
+				this.displayMetadata,
+				sectionWrapper,
+			)
+		},
+		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab],
+	})
+
 	render() {
-		const variant = this.renderer?.split(':')
-		const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : undefined
-
-		if (!this.form) {
-			return html`<p>missing form</p>`
-		}
-		if (!renderer) {
-			return html`<p>unknown renderer</p>`
-		}
-
-		const sectionWrapper =
-			variant[1] === 'tab'
-				? (index: number, section: () => TemplateResult) => {
-						return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
-				  }
-				: undefined
 		console.log('Render metadata', this.displayMetadata)
 
 		if (!this.visible) {
-			return html``
+			return nothing
 		}
-		const translationTables = this.form?.translations
 
-		const render = renderer(
-			this.form,
-			{ labelPosition: this.labelPosition, language: this.language },
-			this.formValuesContainer,
-			this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
-			this.ownersProvider,
-			this.optionsProvider,
-			this.actionListener,
-			this.languages,
-			this.readonly,
-			this.displayMetadata,
-			sectionWrapper,
-		)
+		const variant = this.renderer?.split(':')
+
+		const render = this._asyncTask.render({
+			pending: () => html`<p>Loading...</p>`,
+			complete: (render: TemplateResult) => render,
+			error: () => html`<p>Error</p>`,
+		})
 
 		return variant[1] === 'tab'
 			? html`<div class="tab-container">
 					<div class="tab-bar">
 						<ul>
-							${this.form.sections.map(
+							${(this.form?.sections ?? []).map(
 								(s, idx) =>
 									html`<li
 										class="${this.selectedTab === idx ? 'active' : ''}"

@@ -37,7 +37,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	private contact: DecryptedContact
 	private contactFormValuesContainer: ContactFormValuesContainer
 	private _id: string = uuidv4()
-	private mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer) => BridgedFormValuesContainer
+	private readonly mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer) => Promise<BridgedFormValuesContainer>
 
 	toString(): string {
 		return `Bridged(${this.contactFormValuesContainer.rootForm.formTemplateId}[${this.contactFormValuesContainer.rootForm.id}]) - ${this._id}`
@@ -67,7 +67,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		>(
 			formula: string,
 			sandbox: S,
-		) => T | undefined,
+		) => Promise<T | undefined>,
 		contact?: DecryptedContact,
 		private initialValuesProvider: (
 			anchorId?: string,
@@ -99,9 +99,9 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		console.log(`Creating bridge FVC (${contactFormValuesContainer.rootForm.formTemplateId}) with ${contactFormValuesContainer.children.length} children [${this._id}]`)
 		//Before start to broadcast changes, we need to fill in the contactFormValuesContainer with the dependent values
 		this.contactFormValuesContainer = contactFormValuesContainer
-		this.mutateAndNotify = (newContactFormValuesContainer: ContactFormValuesContainer) => {
+		this.mutateAndNotify = async (newContactFormValuesContainer: ContactFormValuesContainer) => {
 			newContactFormValuesContainer.unregisterChangeListener(this.mutateAndNotify)
-			const newBridgedFormValueContainer = new BridgedFormValuesContainer(
+			const newBridgedFormValueContainer = await new BridgedFormValuesContainer(
 				this.responsible,
 				newContactFormValuesContainer,
 				this.interpreter,
@@ -112,16 +112,21 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				this.language,
 				this.changeListeners,
 				this.interpreterContext,
-			)
+			).init()
 			this.changeListeners.forEach((l) => notify(l, newBridgedFormValueContainer))
 			return newBridgedFormValueContainer
 		}
 		this.contactFormValuesContainer.registerChangeListener(this.mutateAndNotify)
 		this.contact = contact ?? contactFormValuesContainer.currentContact
+	}
+
+	async init() {
 		if (this.contactFormValuesContainer.mustBeInitialised()) {
-			this.computeInitialValues()
+			await this.computeInitialValues()
 		}
-		this.computeDependentValues()
+		await this.computeDependentValues()
+
+		return this
 	}
 
 	getLabel(): string {
@@ -253,14 +258,49 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	}
 
 	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
-	private computeInitialValues() {
+	private async computeInitialValues() {
 		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
-			this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).forEach(({ metadata, revisionsFilter, formula }) => {
-				try {
-					const currentValue = this.getValues(revisionsFilter)
-					if (!currentValue || !Object.keys(currentValue).length) {
-						const newValue = this.convertRawValue(this.compute(formula) as unknown)
-						if (newValue !== undefined) {
+			await Promise.all(
+				this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map(async ({ metadata, revisionsFilter, formula }) => {
+					try {
+						const currentValue = this.getValues(revisionsFilter)
+						if (!currentValue || !Object.keys(currentValue).length) {
+							const newValue = this.convertRawValue((await this.compute(formula)) as unknown)
+							if (newValue !== undefined) {
+								const lng = this.language ?? 'en'
+								if (newValue && !newValue.content[lng] && newValue.content['*']) {
+									newValue.content[lng] = newValue.content['*']
+								}
+								if (newValue) {
+									delete newValue.content['*']
+								}
+								setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, undefined, metadata, (fvc: ContactFormValuesContainer) => {
+									const currentContact = this.contactFormValuesContainer.currentContact
+									this.contactFormValuesContainer = fvc
+									if (this.contact === currentContact) {
+										this.contact = fvc.currentContact
+									}
+								})
+							}
+						}
+					} catch (e) {
+						console.log(`Error while computing formula : ${formula}`, e)
+					}
+				}),
+			)
+		}
+	}
+
+	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
+	private async computeDependentValues() {
+		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
+			await Promise.all(
+				this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map(async ({ metadata, revisionsFilter, formula }) => {
+					try {
+						const currentValue = this.getValues(revisionsFilter)
+						const newValue = this.convertRawValue((await this.compute(formula)) as unknown)
+
+						if (newValue !== undefined || currentValue != undefined) {
 							const lng = this.language ?? 'en'
 							if (newValue && !newValue.content[lng] && newValue.content['*']) {
 								newValue.content[lng] = newValue.content['*']
@@ -268,51 +308,20 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 							if (newValue) {
 								delete newValue.content['*']
 							}
-							setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, undefined, metadata, (fvc: ContactFormValuesContainer) => {
+							const interceptor = (fvc: ContactFormValuesContainer) => {
 								const currentContact = this.contactFormValuesContainer.currentContact
 								this.contactFormValuesContainer = fvc
 								if (this.contact === currentContact) {
 									this.contact = fvc.currentContact
 								}
-							})
-						}
-					}
-				} catch (e) {
-					console.log(`Error while computing formula : ${formula}`, e)
-				}
-			})
-		}
-	}
-
-	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
-	private computeDependentValues() {
-		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
-			this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).forEach(({ metadata, revisionsFilter, formula }) => {
-				try {
-					const currentValue = this.getValues(revisionsFilter)
-					const newValue = this.convertRawValue(this.compute(formula) as unknown)
-
-					if (newValue !== undefined || currentValue != undefined) {
-						const lng = this.language ?? 'en'
-						if (newValue && !newValue.content[lng] && newValue.content['*']) {
-							newValue.content[lng] = newValue.content['*']
-						}
-						if (newValue) {
-							delete newValue.content['*']
-						}
-						const interceptor = (fvc: ContactFormValuesContainer) => {
-							const currentContact = this.contactFormValuesContainer.currentContact
-							this.contactFormValuesContainer = fvc
-							if (this.contact === currentContact) {
-								this.contact = fvc.currentContact
 							}
+							setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, Object.keys(currentValue ?? {})[0], metadata, interceptor)
 						}
-						setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, Object.keys(currentValue ?? {})[0], metadata, interceptor)
+					} catch (e) {
+						console.log(`Error while computing formula : ${formula}`, e)
 					}
-				} catch (e) {
-					console.log(`Error while computing formula : ${formula}`, e)
-				}
-			})
+				}),
+			)
 		}
 	}
 
@@ -340,7 +349,12 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return this.getValues((id, history) => (history?.[0]?.value?.label && key === history[0].value.label ? [history?.[0]?.revision] : []))
 	}
 
-	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): T | undefined {
+	async compute<
+		T,
+		S extends {
+			[key: string | symbol]: unknown
+		},
+	>(formula: string, sandbox?: S): Promise<T | undefined> {
 		// noinspection JSUnusedGlobalSymbols
 		const parseContent = (content?: { [key: string]: PrimitiveType }) => {
 			if (!content) {
@@ -360,7 +374,12 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			Boolean: Boolean,
 			Array: Array,
 			Object: Object,
-			hasOption: (it: { codes: CodeStub[] }, option: string) => it && it.codes.some((c) => c.id === option || c.id?.split('|')?.[1] === option),
+			hasOption: (
+				it: {
+					codes: CodeStub[]
+				},
+				option: string,
+			) => it && it.codes.some((c) => c.id === option || c.id?.split('|')?.[1] === option),
 			score: (it: { codes: CodeStub[] }) => {
 				return it
 					? (it.codes ?? []).reduce((acc, c) => {
@@ -398,42 +417,46 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return this.interpreter?.(formula, sandbox ?? proxy)
 	}
 
-	getChildren(): FormValuesContainer<FieldValue, FieldMetadata>[] {
-		const children = this.contactFormValuesContainer
-			.getChildren()
-			.map(
-				(fvc) =>
-					new BridgedFormValuesContainer(
-						this.responsible,
-						fvc,
-						this.interpreter,
-						this.contact,
-						this.initialValuesProvider,
-						this.dependentValuesProvider,
-						this.validatorsProvider,
-						this.language,
-						[],
-						this.interpreterContext,
-					),
-			)
+	async getChildren(): Promise<FormValuesContainer<FieldValue, FieldMetadata>[]> {
+		const children = await Promise.all(
+			(
+				await this.contactFormValuesContainer.getChildren()
+			).map((fvc) =>
+				new BridgedFormValuesContainer(
+					this.responsible,
+					fvc,
+					this.interpreter,
+					this.contact,
+					this.initialValuesProvider,
+					this.dependentValuesProvider,
+					this.validatorsProvider,
+					this.language,
+					[],
+					this.interpreterContext,
+				).init(),
+			),
+		)
 		console.log(`${children.length} children found in ${this.contactFormValuesContainer.rootForm.formTemplateId} initialised with `, this.initialValuesProvider)
 		return children
 	}
 
-	getValidationErrors(): [FieldMetadata, string][] {
+	async getValidationErrors(): Promise<[FieldMetadata, string][]> {
 		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
-			return this.validatorsProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).flatMap(
-				({ metadata, validators }) =>
-					validators
-						.map(({ validation, message }) => {
-							try {
-								return this.compute(validation) ? undefined : [metadata, message]
-							} catch (e) {
-								console.log(`Error while computing validation : ${validation}`, e)
-								return undefined
+			// noinspection ES6MissingAwait
+			return await this.validatorsProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).reduce(
+				async (resPromise, { metadata, validators }) =>
+					await validators.reduce(async (resPromise, { validation, message }) => {
+						const res = await resPromise
+						try {
+							if (!(await this.compute(validation))) {
+								res.push([metadata, message])
 							}
-						})
-						.filter((x) => !!x) as [FieldMetadata, string][],
+						} catch (e) {
+							console.log(`Error while computing validation : ${validation}`, e)
+						}
+						return res
+					}, resPromise),
+				Promise.resolve([]) as Promise<[FieldMetadata, string][]>,
 			)
 		} else {
 			return []
@@ -638,11 +661,11 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		this.changeListeners = this.changeListeners.filter((l) => l !== listener)
 	}
 
-	getChildren(): ContactFormValuesContainer[] {
+	async getChildren(): Promise<ContactFormValuesContainer[]> {
 		return this.children
 	}
 
-	getValidationErrors(): [FieldMetadata, string][] {
+	async getValidationErrors(): Promise<[FieldMetadata, string][]> {
 		throw new Error('Validation not supported at contact level')
 	}
 
@@ -752,12 +775,20 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 					subContacts: (this.currentContact.subContacts ?? []).some((sc) => sc.formId === this.rootForm.id)
 						? (this.currentContact.subContacts ?? []).map((sc) => {
 								if (sc.formId === this.rootForm.id) {
-									return { ...sc, services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([{ serviceId: service.id }]) }
+									return {
+										...sc,
+										services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([{ serviceId: service.id }]),
+									}
 								} else {
 									return sc
 								}
 						  })
-						: (this.currentContact.subContacts ?? []).concat(new DecryptedSubContact({ formId: this.rootForm.id, services: [{ serviceId: service.id }] })),
+						: (this.currentContact.subContacts ?? []).concat(
+								new DecryptedSubContact({
+									formId: this.rootForm.id,
+									services: [{ serviceId: service.id }],
+								}),
+						  ),
 					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
 						? (this.currentContact.services ?? []).filter((s) => s.id !== service.id)
 						: [...(this.currentContact.services ?? [])],
@@ -778,12 +809,20 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 					subContacts: (this.currentContact.subContacts ?? []).some((sc) => sc.formId === this.rootForm.id)
 						? (this.currentContact.subContacts ?? []).map((sc) => {
 								if (sc.formId === this.rootForm.id) {
-									return { ...sc, services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([{ serviceId: service.id }]) }
+									return {
+										...sc,
+										services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([{ serviceId: service.id }]),
+									}
 								} else {
 									return sc
 								}
 						  })
-						: (this.currentContact.subContacts ?? []).concat(new DecryptedSubContact({ formId: this.rootForm.id, services: [{ serviceId: service.id }] })),
+						: (this.currentContact.subContacts ?? []).concat(
+								new DecryptedSubContact({
+									formId: this.rootForm.id,
+									services: [{ serviceId: service.id }],
+								}),
+						  ),
 					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
 						? (this.currentContact.services ?? []).map((s) => (s.id === service.id ? newService : s))
 						: [...(this.currentContact.services ?? []), newService],
@@ -832,7 +871,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		}
 	}
 
-	compute<T>(): T | undefined {
+	async compute<T>(): Promise<T | undefined> {
 		throw new Error('Compute not supported at contact level')
 	}
 

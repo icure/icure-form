@@ -8,6 +8,7 @@ import { FieldWithOptionsMixin } from '../common/field-with-options'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
 import { icureFormLogging } from '../../index'
+import { FieldMetadata } from '../model'
 
 export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 	@property() placeholder = ''
@@ -106,7 +107,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		return [undefined, undefined]
 	}
 
-	render(): TemplateResult {
+	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }): TemplateResult {
 		if (!this.visible) {
 			return html``
 		}
@@ -116,7 +117,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		}
 
 		const [, inputValue] = this.getValueFromProvider() ?? ''
-		const validationError = this.validationErrorsProvider?.()?.length
+		const validationError = validationErrors.length
 
 		return html`
 			<div id="root" class="icure-text-field ${inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
@@ -139,7 +140,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 							: ''}
 					</div>
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		`
 	}

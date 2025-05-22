@@ -537,6 +537,7 @@ __metadata:
     "@icure/api": 5.3.7
     "@icure/cardinal-sdk": ^1.3.0-ts-2
     "@icure/motss-app-datepicker": ^6.0.0-rc.39
+    "@lit/task": ^1.0.2
     "@types/jest": ^27.0.2
     "@types/markdown-it": ^14.1.2
     "@types/node": ^18.16.3
@@ -1015,6 +1016,15 @@ __metadata:
   dependencies:
     "@lit-labs/ssr-dom-shim": ^1.0.0
   checksum: 011a3ef0933fda86ec726d29ebc14e829e2f1ba23eca8ed8ed4d5c6f2a102c55cc6986000c5f4c8c3d0c549bc671f5d84d00ce91adc5bbd95970eec3662c0a92
+  languageName: node
+  linkType: hard
+
+"@lit/task@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@lit/task@npm:1.0.2"
+  dependencies:
+    "@lit/reactive-element": ^1.0.0 || ^2.0.0
+  checksum: 22e1265a628284423ac060e44ca9e27ebfd44eb6e99fc7b0958e13c7edb713ebc76f8c11e5c4bd8c556fd158bc9c876a33d67a94e24444330cb694d6c1cdbf3d
   languageName: node
   linkType: hard
 

@@ -20,4 +20,4 @@ export type Renderer = (
 	readonly?: boolean,
 	displayMetadata?: boolean,
 	sectionWrapper?: (index: number, section: () => TemplateResult) => TemplateResult,
-) => TemplateResult
+) => Promise<TemplateResult>

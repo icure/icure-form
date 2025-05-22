@@ -6,7 +6,7 @@ import { Field } from '../common'
 import { generateLabels } from '../common/utils'
 import { extractSingleValue } from '../icure-form/fields/utils'
 import { FieldWithOptionsMixin } from '../common/field-with-options'
-import { FieldValue } from '../model'
+import { FieldMetadata, FieldValue } from '../model'
 import { Version } from '../../generic'
 import { icureFormLogging } from '../../index'
 
@@ -58,7 +58,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 		}
 	}
 
-	render(): TemplateResult {
+	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }): TemplateResult {
 		if (!this.visible) {
 			return html``
 		}
@@ -124,7 +124,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 						</div>`
 					})}
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		`
 	}

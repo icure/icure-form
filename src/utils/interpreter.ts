@@ -2,7 +2,7 @@ export const makeInterpreter = () => {
 	const sb = new Map()
 	const cs: Map<string, any> = new Map()
 
-	return <T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox: S): T | undefined => {
+	return async <T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox: S): Promise<T | undefined> => {
 		function compileCode(src: string) {
 			if (cs.has(src)) {
 				return cs.get(src)

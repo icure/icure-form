@@ -356,12 +356,22 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		},
 	>(formula: string, sandbox?: S): Promise<T | undefined> {
 		// noinspection JSUnusedGlobalSymbols
-		const parseContent = (content?: { [key: string]: PrimitiveType }) => {
+		const parseContent = (content?: { [key: string]: PrimitiveType }, toString = false) => {
 			if (!content) {
 				return undefined
 			}
 			const primitive = content[this.language] ?? content['*'] ?? content[Object.keys(content)[0]]
-			return primitive && parsePrimitive(primitive)
+			return primitive && parsePrimitive(primitive, toString)
+		}
+		const text = (item?: { content: { [key: string]: PrimitiveType } } | { content: { [key: string]: PrimitiveType } }[]) => {
+			if (!item) {
+				return undefined
+			}
+			const items: { content: { [key: string]: PrimitiveType } }[] = Array.isArray(item) ? item : [item]
+			return items
+				.map((it) => parseContent(it.content, true)?.toString())
+				.filter((it) => !!it)
+				.join(', ')
 		}
 		const log = console.log
 		const native = {
@@ -379,7 +389,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 					codes: CodeStub[]
 				},
 				option: string,
-			) => it && it.codes.some((c) => c.id === option || c.id?.split('|')?.[1] === option),
+			) => it && it.codes?.some((c) => c.id === option || c.id?.split('|')?.[1] === option),
 			score: (it: { codes: CodeStub[] }) => {
 				return it
 					? (it.codes ?? []).reduce((acc, c) => {
@@ -398,6 +408,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 					return !!(value as any)?.trim()?.length
 				},
 			},
+			text,
 			log,
 		} as { [key: string]: any }
 		const proxy: S = new Proxy({} as S, {

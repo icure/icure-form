@@ -410,7 +410,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			},
 			text,
 			log,
-			Promise: Promise,
+			Promise,
 		} as { [key: string]: any }
 		const proxy: S = new Proxy({} as S, {
 			has: (target: S, key: string | symbol) =>

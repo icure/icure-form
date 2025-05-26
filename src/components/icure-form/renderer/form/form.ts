@@ -401,10 +401,11 @@ export const render: Renderer = async (
 		if (!fg) {
 			return nothing
 		}
-		const computedProperties = (await Object.keys(fg.computedProperties ?? {}).reduce(
-			async (acc, k) => ({ ...(await acc), [k]: fg.computedProperties?.[k] && (await formsValueContainer?.compute(fg.computedProperties[k])) }),
-			Promise.resolve({}),
-		)) as { [key: string]: string | number | boolean | undefined }
+		const computedProperties = (await Object.keys(fg.computedProperties ?? {})
+			.filter((k) => k !== 'value' && k !== 'defaultValue')
+			.reduce(async (acc, k) => ({ ...(await acc), [k]: fg.computedProperties?.[k] && (await formsValueContainer?.compute(fg.computedProperties[k])) }), Promise.resolve({}))) as {
+			[key: string]: string | number | boolean | undefined
+		}
 		if (computedProperties['hidden']) {
 			return nothing
 		}

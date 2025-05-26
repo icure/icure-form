@@ -74,8 +74,11 @@ export class IcureTextField extends Field {
 	}
 
 	_handleClickOutside(event: MouseEvent): void {
+		const pm = this.shadowRoot?.querySelectorAll('.ProseMirror')[0] as HTMLDivElement
 		if (!event.composedPath().includes(this)) {
 			event.stopPropagation()
+		} else if (pm && !event.composedPath().includes(pm)) {
+			pm.focus()
 		}
 	}
 

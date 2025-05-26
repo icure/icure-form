@@ -32,6 +32,8 @@ export class IcureForm extends LitElement {
 
 	@state() selectedTab = 0
 
+	latestRender?: TemplateResult = undefined
+
 	constructor() {
 		super()
 	}
@@ -88,8 +90,8 @@ export class IcureForm extends LitElement {
 		const variant = this.renderer?.split(':')
 
 		const render = this._asyncTask.render({
-			pending: () => html`<p>Loading...</p>`,
-			complete: (render: TemplateResult) => render,
+			pending: () => this.latestRender ?? html`<p>Loading...</p>`,
+			complete: (render: TemplateResult) => (this.latestRender = render),
 			error: () => html`<p>Error</p>`,
 		})
 

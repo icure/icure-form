@@ -9,7 +9,7 @@ export class IcureButton extends LitElement {
 	@property() labelPosition?: string
 	@property() visible = true
 	@property() defaultLanguage = 'en'
-	@property() translationProvider: (language: string, text: string) => string = (language, text) => text
+	@property() translationProvider?: (language: string, text: string) => string = (language, text) => text
 	@property() actionListener: (event: string, payload: unknown) => void = () => undefined
 	@property() event: string
 	@property() payload: unknown
@@ -26,7 +26,7 @@ export class IcureButton extends LitElement {
 			console.log(`Rendering button ${this.label}`)
 		}
 		return html`<div class="icure-button" style="button" @click="${() => this.actionListener(this.event, this.payload)}">
-			${this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : ''}
+			${this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : this.label ?? ''}
 		</div>`
 	}
 }

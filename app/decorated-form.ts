@@ -13,6 +13,7 @@ import { Suggestion, Version } from '../src/generic'
 import { getRevisionsFilter } from '../src/utils/fields-values-provider'
 import { v4 as uuid } from 'uuid'
 import { normalizeCode } from '../src/utils/code-utils'
+import { defaultTranslationProvider } from '../src/utils/languages'
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
@@ -299,6 +300,16 @@ export class DecoratedForm extends LitElement {
 			},
 			this.language,
 			undefined,
+			{
+				language: () => this.language ?? 'fr',
+				summarize: () => (context: string, questions: [string, string][]) =>
+					new Promise((resolve) => {
+						setTimeout(() => {
+							resolve(`${context} \n ${questions.map(([question, answer]) => `${question}: ${answer}`).join('\n')}`)
+						}, 1000)
+					}),
+				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,
+			},
 		)
 
 		this.formValuesContainer = initialisedFormValueContainer

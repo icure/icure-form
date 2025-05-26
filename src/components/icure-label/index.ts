@@ -24,6 +24,6 @@ export class IcureLabel extends LitElement {
 			console.log(`Rendering label ${this.label}`)
 		}
 
-		return html`${generateLabel(this.label ? this.translationProvider(this.defaultLanguage, this.label) : '', this.labelPosition ?? 'float', 'en')}`
+		return html`${generateLabel(this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : '', this.labelPosition ?? 'float', 'en')}`
 	}
 }

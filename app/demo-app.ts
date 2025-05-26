@@ -75,6 +75,8 @@ import okido_medical_care from './samples/okido_medical_care.yaml'
 import okido_physiotherapy_care from './samples/okido_physiotherapy_care.yaml'
 // @ts-ignore
 import okido_paramedical_care from './samples/okido_paramedical_care.yaml'
+// @ts-ignore
+import preventi from './samples/preventi.yaml'
 
 import { Form } from '../src/components/model'
 import { state } from 'lit/decorators.js'
@@ -111,6 +113,7 @@ class DemoApp extends LitElement {
 			{ title: '8 - Extra', form: Form.parse(YAML.parse(extra)) },
 			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },
 			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },
+			{ title: '11 - Preventi', form: Form.parse(YAML.parse(preventi)) },
 			/*{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_measure)) },
 			{ title: 'OKIDO - Evaluation', form: Form.parse(YAML.parse(okido_evaluation)) },

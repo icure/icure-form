@@ -131,6 +131,7 @@ export const render: Renderer = async (
 			.codeColorProvider=${fg.options?.codeColorProvider}
 			.linkColorProvider=${fg.options?.linkColorProvider}
 			.codeContentProvider=${fg.options?.codeContentProvider}
+			.defaultValueProvider=${() => formsValueContainer?.getDefaultValue(fg.field)}
 			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}

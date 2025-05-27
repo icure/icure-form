@@ -1,4 +1,4 @@
-import { FieldMetadata } from '../components/model'
+import { FieldMetadata, FieldValue } from '../components/model'
 
 /**
  * VersionedData is a structure that contains the values of a form, organized by id and version.
@@ -55,6 +55,7 @@ export interface FormValuesContainer<Value, Metadata> {
 	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<T | undefined>
 	getLabel(): string
 	getFormId(): string | undefined
+	getDefaultValue(label: string): Promise<FieldValue | undefined>
 	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>
 	getChildren(): Promise<FormValuesContainer<Value, Metadata>[]>

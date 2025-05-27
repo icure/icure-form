@@ -35,6 +35,7 @@ import { preprocessEmptyNodes, SpacePreservingMarkdownParser } from '../../utils
 import { measureOnFocusHandler, measureTransactionMapper } from './schema/measure-schema'
 import { anyDateToDate } from '../../utils/dates'
 import { icureFormLogging } from '../../index'
+import { resetPicto } from '../common/styles/paths'
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
@@ -245,32 +246,57 @@ export class IcureTextField extends Field {
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
 						<div id="editor" class="${this.schema}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
+						${!this.displayMetadata && this.defaultValueProvider ? html`<div id="reset" class="reset-button" @click="${async () => await this.reset(renderHash)}">${resetPicto}</div` : nothing}
 					</div>
-
-					${this.displayMetadata && metadata
-						? html`
-								<div class="icure-metadata-container ${validationError ? 'icure-metadata-container__validationError' : ''}">
-									<icure-metadata-buttons-bar
-										.metadata="${metadata}"
-										.revision="${rev}"
-										.versions="${versions ?? []}"
-										.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
-										.defaultLanguage="${this.defaultLanguage}"
-										.selectedLanguage="${this.selectedLanguage}"
-										.languages="${this.languages}"
-										.handleMetadataChanged="${this.handleMetadataChanged}"
-										.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
-										.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
-										.ownersProvider="${this.ownersProvider}"
-										.existingLanguages="${valueForExistingLanguages ?? undefined}"
-									/>
-								</div>
-						  `
-						: ''}
+						${
+							this.displayMetadata && metadata
+								? html`
+										<div class="icure-metadata-container ${validationError ? 'icure-metadata-container__validationError' : ''}">
+											<icure-metadata-buttons-bar
+												.metadata="${metadata}"
+												.revision="${rev}"
+												.versions="${versions ?? []}"
+												.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
+												.defaultLanguage="${this.defaultLanguage}"
+												.selectedLanguage="${this.selectedLanguage}"
+												.languages="${this.languages}"
+												.handleReset="${() => this.reset(renderHash)}"
+												.handleMetadataChanged="${this.handleMetadataChanged}"
+												.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
+												.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
+												.ownersProvider="${this.ownersProvider}"
+												.existingLanguages="${valueForExistingLanguages ?? undefined}"
+											/>
+										</div>
+								  `
+								: ''
+						}
+					</div>
+					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 				</div>
-				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		`
+	}
+
+	private async reset(renderHash: number) {
+		if (this.view) {
+			const defaultValue = await this.defaultValueProvider?.()
+			const newState = EditorState.create({
+				schema: this.view.state.schema,
+				doc:
+					this.parser?.parse(
+						defaultValue?.content?.[this.language()] ?? {
+							type: 'string',
+							value: '',
+						},
+						undefined,
+						renderHash,
+					) ?? undefined,
+				plugins: this.view.state.plugins,
+				selection: undefined,
+			})
+			this.view.updateState(newState)
+		}
 	}
 
 	mouseDown() {

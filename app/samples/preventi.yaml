@@ -80,10 +80,7 @@ sections:
             type: text-field
             computedProperties:
               defaultValue: |
-                const at = [
-                  NH17,NH18,NH19,NH20,NH21,NH22,NH23,NH24,NH25,NH26
-                ].flatMap((f) => f).map((s) => parseContent(s?.content)).filter((x) => !!x)
-                return at.length ? at.join('\n') : 'Aucun'
+                return 'Aucun'
           - field: RM2
             shortLabel: Allergies
             span: 24

@@ -442,7 +442,7 @@ export class DecoratedForm extends LitElement {
 				labelPosition="above"
 				renderer="${this.renderer}"
 				.readOnly="${false}"
-				.displayMetadata="${true}"
+				.displayMetadata="${false}"
 				.language="${this.language}"
 				.formValuesContainer="${this.formValuesContainer}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"

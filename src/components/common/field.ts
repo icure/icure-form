@@ -43,6 +43,7 @@ export abstract class Field extends LitElement {
 	/**
 	 * Provides the value of the field.
 	 */
+	@property() defaultValueProvider?: () => FieldValue = undefined
 	@property() valueProvider?: () => VersionedData<FieldValue> = undefined
 	@property() validationErrorsProvider?: () => Promise<[FieldMetadata, string][]> = undefined
 	@property() ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> = async () => []

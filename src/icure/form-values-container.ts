@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { normalizeCodes } from '../utils/code-utils'
 
 function notify<Value, Metadata>(l: (fvc: FormValuesContainer<Value, Metadata>) => void, fvc: FormValuesContainer<Value, Metadata>) {
-	//console.log('Notifying', l, fvc.toString())
 	l(fvc)
 }
 
@@ -147,6 +146,13 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 
 	unregisterChangeListener(listener: (newValue: BridgedFormValuesContainer) => void): void {
 		this.changeListeners = this.changeListeners.filter((l) => l !== listener)
+	}
+
+	async getDefaultValue(label: string): Promise<FieldValue | undefined> {
+		const formula = this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).find(
+			({ metadata }) => metadata.label === label,
+		)?.formula
+		return formula ? this.convertRawValue(await this.compute(formula)) : undefined
 	}
 
 	getValues(revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]): VersionedData<FieldValue> {
@@ -679,6 +685,10 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 
 	async getValidationErrors(): Promise<[FieldMetadata, string][]> {
 		throw new Error('Validation not supported at contact level')
+	}
+
+	getDefaultValue(): Promise<FieldValue | undefined> {
+		return Promise.resolve(undefined)
 	}
 
 	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<DecryptedService> {

@@ -1123,7 +1123,6 @@ app-date-picker {
 		border-style: solid;
 		border-color: $input-border-color;
 		border-radius: $border-radius;
-		box-sizing: border-box;
 		outline: 0;
 		font: inherit;
 		font-size: $textbox-font-size;
@@ -1135,6 +1134,25 @@ app-date-picker {
 		-webkit-appearance: none;
 		background-color: #ffffff;
 		color: $color;
+
+		.reset-button {
+			position: absolute;
+			right:0;
+			border: none;
+			background: transparent;
+			top: 0;
+			opacity: 0.5;
+			cursor: pointer;
+			height: 20px;
+			margin-left: 4px;
+			margin-right: 4px;
+			padding: 0;
+
+			svg {
+				width: 15px;
+				height: 15px;
+			}
+		}
 
 		&__validationError {
 			border-color: $error-border-color;

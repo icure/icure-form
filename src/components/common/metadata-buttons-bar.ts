@@ -1,8 +1,8 @@
-import { html, LitElement } from 'lit'
+import { html, LitElement, nothing } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { FieldMetadata, FieldValue } from '../model'
 import { Suggestion, Version } from '../../generic'
-import { calendarPatientPicto, i18nPicto, ownerPicto, searchPicto, versionPicto } from './styles/paths'
+import { calendarPatientPicto, i18nPicto, ownerPicto, resetPicto, searchPicto, versionPicto } from './styles/paths'
 import { format } from 'date-fns'
 import { anyDateToDate } from '../../utils/dates'
 import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-resolved-date'
@@ -23,6 +23,7 @@ export class MetadataButtonBar extends LitElement {
 	@property() languages: { [iso: string]: string } = {}
 	@property() existingLanguages?: string[]
 	@property() displayedLabels: { [iso: string]: string } = {}
+	@property() handleReset?: () => void | undefined = undefined
 	@property() handleMetadataChanged?: (metadata: FieldMetadata, id?: string) => string | undefined = undefined
 	@property() handleLanguageSelected?: (iso?: string) => void = undefined
 	@property() handleRevisionSelected?: (rev?: string | null) => void = undefined
@@ -80,9 +81,12 @@ export class MetadataButtonBar extends LitElement {
 		const forcedByLanguage = this.selectedLanguage && this.defaultLanguage !== this.selectedLanguage
 		const forcedByVersion = this.revision && this.revision !== this.versions?.[0]?.revision
 
+		console.log('handle reset', this.handleReset)
+
 		return html` <div id="extra" class=${'extra extra--metadataButtonsBar' + (forcedByMenu ? ' forced' : '')}>
 			<div class="info ${forcedByOwner || forcedByLanguage || forcedByValueDate ? 'hidden' : ''}">&#9432</div>
 			<div class="buttons-container">
+				${this.handleReset ? html`<button @click="${() => this.handleReset?.()}" class="btn forced">${resetPicto}</button>` : nothing}
 				<div class="menu-container">
 					<button
 						data-content="${(this.metadata?.owner ? this.loadedOwners[this.metadata?.owner]?.text : '') ?? ''}"

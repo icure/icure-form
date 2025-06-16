@@ -326,8 +326,8 @@ export class IcureTextField extends Field {
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
 
 		if (this.container) {
-			const br = pms.nodes.hardbreak
-			const hardbreak = chainCommands(exitCode, (state, dispatch) => {
+			const br = pms.nodes.hard_break
+			const hard_break = chainCommands(exitCode, (state, dispatch) => {
 				dispatch && dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView())
 				return true
 			})
@@ -393,8 +393,8 @@ export class IcureTextField extends Field {
 								pms.marks.em ? { 'Mod-i': toggleMark(pms.marks.em) } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowUp': joinUp } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowDown': joinDown } : {},
-								pms.nodes.paragraph ? { 'Alt-Enter': hardbreak } : {},
-								pms.nodes.paragraph ? { 'Shift-Enter': hardbreak } : {},
+								pms.nodes.paragraph ? { 'Alt-Enter': hard_break } : {},
+								pms.nodes.paragraph ? { 'Shift-Enter': hard_break } : {},
 								pms.nodes.ordered_list ? { 'Shift-ctrl-1': wrapInList(pms.nodes.ordered_list) } : {},
 								pms.nodes.bullet_list ? { 'Shift-ctrl-*': wrapInList(pms.nodes.bullet_list) } : {},
 								pms.nodes.blockquote ? { 'Shift-ctrl-w': wrapInIfNeeded(pms.nodes.blockquote) } : {},
@@ -582,7 +582,7 @@ export class IcureTextField extends Field {
 								alt: (tok.children || [])[0]?.content || null,
 							}),
 						},
-						hardbreak: { node: 'hardbreak' },
+						hard_break: { node: 'hard_break' },
 
 						em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 						strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },

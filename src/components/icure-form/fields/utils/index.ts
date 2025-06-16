@@ -1,5 +1,6 @@
 import { FieldMetadata, FieldValue } from '../../../model'
 import { Version, VersionedData } from '../../../../generic'
+import { html } from 'lit'
 
 export const singleValueProvider = (valueProvider?: () => VersionedData<FieldValue>, id?: string) =>
 	valueProvider &&
@@ -49,3 +50,5 @@ export const extractValues = <V extends FieldValue>(
 		})
 	}
 }
+
+export const overlay = () => html`<div class="overlay"><div class="spinner"></div></div>`

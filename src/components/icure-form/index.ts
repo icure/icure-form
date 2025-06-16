@@ -32,7 +32,7 @@ export class IcureForm extends LitElement {
 
 	@state() selectedTab = 0
 
-	latestRender?: TemplateResult = undefined
+	@state() latestRender?: TemplateResult = undefined
 
 	constructor() {
 		super()
@@ -58,12 +58,12 @@ export class IcureForm extends LitElement {
 
 			const sectionWrapper =
 				variant[1] === 'tab'
-					? (index: number, section: () => TemplateResult) => {
-							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
+					? async (index: number, section: () => Promise<TemplateResult>) => {
+							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? await section() : nothing}</div>`
 					  }
 					: undefined
 
-			return renderer(
+			const gen = renderer(
 				form,
 				{ labelPosition: this.labelPosition, language },
 				formValuesContainer,
@@ -76,6 +76,22 @@ export class IcureForm extends LitElement {
 				this.displayMetadata,
 				sectionWrapper,
 			)
+
+			let latest: TemplateResult | typeof nothing = nothing
+			while (true) {
+				const next = await gen.next()
+				if (next.done) {
+					break
+				}
+				const [render, isStale] = next.value
+				latest = render
+				this.latestRender = render
+				if (isStale) {
+					break
+				}
+			}
+
+			return latest
 		},
 		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab],
 	})

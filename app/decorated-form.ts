@@ -253,20 +253,20 @@ export class DecoratedForm extends LitElement {
 				}
 			}) ?? []
 
-		const initialisedFormValueContainer = new BridgedFormValuesContainer(
+		const initialisedFormValueContainer = new BridgedFormValuesContainer({
 			responsible,
 			contactFormValuesContainer,
-			makeInterpreter(),
-			undefined,
-			(anchorId, templateId) => {
+			interpreter: makeInterpreter(),
+			contact: undefined,
+			initialValuesProvider: (anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
 				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['defaultValue']) : []
 			},
-			(anchorId, templateId) => {
+			dependentValuesProvider: (anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
 				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['value']) : []
 			},
-			(anchorId, templateId) => {
+			validatorsProvider: (anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
 
 				const extractValidators = (
@@ -298,9 +298,8 @@ export class DecoratedForm extends LitElement {
 
 				return form ? extractValidators(form.sections?.flatMap((f) => f.fields) ?? []) : []
 			},
-			this.language,
-			undefined,
-			{
+			language: this.language,
+			interpreterContext: {
 				language: () => this.language ?? 'fr',
 				summarize: () => (context: string, questions: [string, string][]) =>
 					new Promise((resolve) => {
@@ -308,9 +307,17 @@ export class DecoratedForm extends LitElement {
 							resolve(`${context} \n ${questions.map(([question, answer]) => `${question}: ${answer}`).join('\n')}`)
 						}, 1000)
 					}),
+				delay: () => (delay: number, fn: () => unknown) =>
+					new Promise((resolve) => {
+						console.log(`Delaying for ${delay}ms`)
+						setTimeout(() => {
+							console.log(`Done delaying for ${delay}ms`)
+							resolve(fn())
+						}, delay)
+					}),
 				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,
 			},
-		)
+		})
 
 		this.formValuesContainer = initialisedFormValueContainer
 		initialisedFormValueContainer.registerChangeListener((newValue) => {

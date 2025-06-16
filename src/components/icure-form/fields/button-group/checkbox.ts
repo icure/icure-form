@@ -1,11 +1,18 @@
-import { html, TemplateResult } from 'lit'
+import { html, nothing, TemplateResult } from 'lit'
 import { Field } from '../../../common'
-import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
+import { handleSingleMetadataChanged, handleSingleValueChanged, overlay, singleValueProvider } from '../utils'
 import { property } from 'lit/decorators.js'
 import { Code } from '../../../model'
 
+// @ts-ignore
+import overlayCss from '../../../common/styles/overlay.scss'
+
 export class CheckBox extends Field {
 	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Code[]> = async () => []
+	static get styles() {
+		return [overlayCss]
+	}
+
 	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
@@ -29,6 +36,7 @@ export class CheckBox extends Field {
 					.handleMetadataChanged=${handleSingleMetadataChanged(this.handleMetadataChanged, id)}
 					.styleOptions=${this.styleOptions}
 				></icure-button-group>
+				${this.loading ? overlay() : nothing}
 			`
 		})
 	}

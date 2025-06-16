@@ -53,6 +53,7 @@ export abstract class Field extends LitElement {
 
 	@property() public visible = true
 	@property() readonly = false
+	@property() loading = false
 	@property() displayMetadata = false
 
 	@state() selectedLanguage?: string = undefined

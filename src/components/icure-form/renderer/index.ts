@@ -19,5 +19,5 @@ export type Renderer = (
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,
-	sectionWrapper?: (index: number, section: () => TemplateResult) => TemplateResult,
-) => Promise<TemplateResult>
+	sectionWrapper?: (index: number, section: () => Promise<TemplateResult>) => Promise<TemplateResult>,
+) => AsyncGenerator<[TemplateResult<1>, boolean], void, unknown>

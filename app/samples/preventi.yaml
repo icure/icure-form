@@ -22,7 +22,7 @@ sections:
             readonly: true
             computedProperties:
               value: |
-                return `${patient.birthSex === Gender.Male ? 'Homme' : patient.birthSex === Gender.Female ? 'Femme' : 'Autre'})`
+                return `${patient.birthSex === Gender.Male ? 'Homme' : patient.birthSex === Gender.Female ? 'Femme' : 'Autre'}`
           - field: DP3
             shortLabel: Date de naissance
             span: 6

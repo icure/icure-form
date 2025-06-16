@@ -10,7 +10,15 @@ export interface Code {
 	label: { [key: string]: string }
 }
 
-export interface FieldMetadata {
+//Most generic metadata interface
+export interface Metadata {
+	label: string
+	index?: number
+	valueDate?: number
+	tags?: { id: string }[]
+}
+
+export interface FieldMetadata extends Metadata {
 	label: string
 	index?: number
 	valueDate?: number

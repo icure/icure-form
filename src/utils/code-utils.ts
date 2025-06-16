@@ -2,6 +2,7 @@ import { Code, Field, SortOptions } from '../components/model'
 import { defaultCodePromoter, defaultCodesComparator, makePromoter, naturalCodesComparator } from '../components/common/utils'
 import { Suggestion } from '../generic'
 import { CodeStub } from '@icure/cardinal-sdk'
+import { CodeStubWithId } from '../icure'
 
 /**
  * Maps the options defined in a field into a list of codes
@@ -30,12 +31,7 @@ export const sortSuggestions = (codes: (Code | Suggestion)[], language: string, 
 		: codes.sort(naturalCodesComparator(sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
 	).map((c) => ({ id: c.id, label: c.label, text: c.label[language] ?? '', terms: [] }))
 
-export const filterAndSortOptionsFromFieldDefinition = (
-	language: string,
-	fg: Field,
-	translationProvider: ((language: string, text: string) => string) | undefined,
-	terms?: string[],
-) =>
+export const filterAndSortOptionsFromFieldDefinition = (language: string, fg: Field, translationProvider: ((language: string, text: string) => string) | undefined, terms?: string[]) =>
 	Promise.resolve(
 		sortCodes(
 			optionMapper(language, fg, translationProvider).filter((x) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => x.label[language].toLowerCase().includes(st))),
@@ -44,7 +40,7 @@ export const filterAndSortOptionsFromFieldDefinition = (
 		),
 	)
 
-export const normalizeCodes = (codes: CodeStub[]): CodeStub[] => codes.map((c) => normalizeCode(c))
+export const normalizeCodes = (codes: CodeStub[] | undefined): CodeStubWithId[] => (codes ?? []).map((c) => normalizeCode(c))
 
 /**
  * Normalizes the code's four main fields (type, code, version and id). The first three are considered to be
@@ -54,8 +50,8 @@ export const normalizeCodes = (codes: CodeStub[]): CodeStub[] => codes.map((c) =
  * @param code The code to normalize.
  * @returns A shallow copy of the input with its type, code, version and id normalized.
  */
-export function normalizeCode(code: CodeStub): CodeStub {
-	code = new CodeStub(code)
+export function normalizeCode(c: CodeStub): CodeStubWithId {
+	const code = { ...c }
 
 	if (code.type && code.code && code.version) {
 		// do nothing, we all have the authoritative fields we need
@@ -77,7 +73,5 @@ export function normalizeCode(code: CodeStub): CodeStub {
 	}
 
 	// Recompute the id to ensure that it matches the reconstructed code.
-	code.id = `${code.type}|${code.code}|${code.version}`
-
-	return code
+	return new CodeStubWithId({ ...code, id: `${code.type}|${code.code}|${code.version}` })
 }

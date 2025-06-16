@@ -1,4 +1,4 @@
-import { FieldMetadata, FieldValue } from '../components/model'
+import { FieldMetadata, Metadata as GenericMetadata } from '../components/model'
 
 /**
  * VersionedData is a structure that contains the values of a form, organized by id and version.
@@ -53,23 +53,24 @@ export type ID = string
 export interface FormValuesContainer<Value, Metadata> {
 	//information retrieval
 	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<T | undefined>
+	isFieldBeingComputed(label: string): boolean
+
 	getLabel(): string
 	getFormId(): string | undefined
-	getDefaultValue(label: string): Promise<FieldValue | undefined>
 	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>
 	getChildren(): Promise<FormValuesContainer<Value, Metadata>[]>
 	getValidationErrors(): Promise<[FieldMetadata, string][]>
 	//modification
-	setValue(label: string, language: string, data?: Value, id?: string, metadata?: Metadata, changeListenersOverrider?: (fvc: FormValuesContainer<Value, Metadata>) => void): void
-	setMetadata(metadata: Metadata, id?: string): void
+	setValue(label: string, language: string, data?: Value, id?: string, metadata?: Metadata, changeListenersOverrider?: (fvc: FormValuesContainer<Value, Metadata>) => void): boolean
+	setMetadata(metadata: Metadata, id?: string): boolean
 	delete(serviceId: string): void
 	//hierarchy
 	addChild(anchorId: string, templateId: string, label: string): Promise<void>
 	removeChild(container: FormValuesContainer<Value, Metadata>): Promise<void>
 	//listeners
-	registerChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
-	unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
+	registerChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>, modifiedFields: GenericMetadata[]) => void): void
+	unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>, modifiedFields: GenericMetadata[]) => void): void
 
 	synchronise(): FormValuesContainer<Value, Metadata>
 }

@@ -1,16 +1,20 @@
 import { CodeStub, DecryptedContact, DecryptedForm as CardinalForm, DecryptedService, DecryptedSubContact } from '@icure/cardinal-sdk'
 import { sortedBy } from '../utils/no-lodash'
 import { FormValuesContainer, Version, VersionedData } from '../generic'
-import { ServiceMetadata } from './model'
-import { FieldMetadata, FieldValue, PrimitiveType, Validator } from '../components/model'
+import { CodeStubWithId, ServiceMetadata } from './model'
+import { FieldMetadata, FieldValue, Metadata as GenericMetadata, PrimitiveType, Validator } from '../components/model'
 import { areCodesEqual, codeStubToCode, contentToPrimitiveType, isContentEqual, primitiveTypeToContent } from './icure-utils'
 import { parsePrimitive } from '../utils/primitive'
 import { anyDateToDate, dateToFuzzyDate } from '../utils/dates'
 import { v4 as uuidv4 } from 'uuid'
 import { normalizeCodes } from '../utils/code-utils'
 
-function notify<Value, Metadata>(l: (fvc: FormValuesContainer<Value, Metadata>) => void, fvc: FormValuesContainer<Value, Metadata>) {
-	l(fvc)
+function notify<Value, Metadata>(
+	l: (fvc: FormValuesContainer<Value, Metadata>, modifiedFields: GenericMetadata[]) => void,
+	fvc: FormValuesContainer<Value, Metadata>,
+	modifiedFields: GenericMetadata[] = [],
+) {
+	l(fvc, modifiedFields)
 }
 
 /** This class is a bridge between the ICure API and the generic FormValuesContainer interface.
@@ -33,15 +37,71 @@ function notify<Value, Metadata>(l: (fvc: FormValuesContainer<Value, Metadata>) 
  * This class is fairly generic and can be used as an inspiration or subclassed for other bridges
  */
 export class BridgedFormValuesContainer implements FormValuesContainer<FieldValue, FieldMetadata> {
-	private contact: DecryptedContact
-	private contactFormValuesContainer: ContactFormValuesContainer
-	private _id: string = uuidv4()
-	private readonly mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer) => Promise<BridgedFormValuesContainer>
+	private readonly contact: DecryptedContact
+	private readonly contactFormValuesContainer: ContactFormValuesContainer
+	private readonly _id: string = uuidv4()
+	private readonly mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer, modifiedFields: GenericMetadata[]) => Promise<BridgedFormValuesContainer>
+
+	private readonly responsible: string
+	private readonly interpreter?: <
+		T,
+		S extends {
+			[key: string | symbol]: unknown
+		},
+	>(
+		formula: string,
+		sandbox: S,
+	) => Promise<T | undefined>
+	private readonly initialValuesProvider: (
+		anchorId?: string,
+		templateId?: string,
+	) => {
+		metadata: FieldMetadata
+		revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]
+		formula: string
+	}[] = () => []
+	private readonly dependentValuesProvider: (
+		anchorId: string | undefined,
+		templateId: string | undefined,
+	) => {
+		metadata: FieldMetadata
+		revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]
+		formula: string
+	}[] = () => []
+	private readonly validatorsProvider: (
+		anchorId: string | undefined,
+		templateId: string,
+	) => {
+		metadata: FieldMetadata
+		validators: Validator[]
+	}[] = () => []
+	private readonly language: string = 'en'
+	private changeListeners: ((newValue: BridgedFormValuesContainer, modifiedFields: GenericMetadata[]) => void)[] = []
+	private readonly interpreterContext: { [variable: string]: () => unknown } = {}
+	private readonly currentComputations: {
+		[key: string]: { metadata: FieldMetadata; revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]; computation: Promise<unknown> }
+	} = {}
+	private uuid = uuidv4().substring(0, 4)
 
 	toString(): string {
 		return `Bridged(${this.contactFormValuesContainer.rootForm.formTemplateId}[${this.contactFormValuesContainer.rootForm.id}]) - ${this._id}`
 	}
 
+	private options() {
+		return {
+			responsible: this.responsible,
+			contactFormValuesContainer: this.contactFormValuesContainer,
+			interpreter: this.interpreter,
+			contact: this.contact,
+			initialValuesProvider: this.initialValuesProvider,
+			dependentValuesProvider: this.dependentValuesProvider,
+			validatorsProvider: this.validatorsProvider,
+			language: this.language,
+			changeListeners: this.changeListeners,
+			interpreterContext: this.interpreterContext,
+			currentComputations: this.currentComputations,
+		}
+	}
 	/**
 	 * Creates an instance of BridgedFormValuesContainer.
 	 * @param responsible The id of the data owner responsible for the creation of the values
@@ -54,78 +114,125 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	 * @param language The language in which the values are displayed
 	 * @param changeListeners The listeners that will be notified when the values change
 	 * @param interpreterContext A map with keys that are the names of the variables and values that are the functions that return the values of the variables
+	 * @param currentComputations A list of ongoing computations that should be observed and not recomputed when the form is created.
 	 */
-	constructor(
-		private responsible: string,
-		contactFormValuesContainer: ContactFormValuesContainer,
-		private interpreter?: <
-			T,
-			S extends {
-				[key: string | symbol]: unknown
-			},
-		>(
-			formula: string,
-			sandbox: S,
-		) => Promise<T | undefined>,
-		contact?: DecryptedContact,
-		private initialValuesProvider: (
+	constructor({
+		responsible,
+		contactFormValuesContainer,
+		interpreter,
+		contact,
+		initialValuesProvider,
+		dependentValuesProvider,
+		validatorsProvider,
+		language,
+		changeListeners,
+		interpreterContext,
+		currentComputations,
+		skipComputations,
+	}: {
+		responsible: string
+		contactFormValuesContainer: ContactFormValuesContainer
+		interpreter?: <T, S extends Record<string | symbol, unknown>>(formula: string, sandbox: S) => Promise<T | undefined>
+		contact?: DecryptedContact
+		initialValuesProvider?: (
 			anchorId?: string,
 			templateId?: string,
 		) => {
 			metadata: FieldMetadata
 			revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]
 			formula: string
-		}[] = () => [],
-		private dependentValuesProvider: (
+		}[]
+		dependentValuesProvider?: (
 			anchorId: string | undefined,
 			templateId: string | undefined,
 		) => {
 			metadata: FieldMetadata
 			revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]
 			formula: string
-		}[] = () => [],
-		private validatorsProvider: (
+		}[]
+		validatorsProvider?: (
 			anchorId: string | undefined,
 			templateId: string,
 		) => {
 			metadata: FieldMetadata
 			validators: Validator[]
-		}[] = () => [],
-		private language = 'en',
-		private changeListeners: ((newValue: BridgedFormValuesContainer) => void)[] = [],
-		private interpreterContext: { [variable: string]: () => unknown } = {},
-	) {
-		console.log(`Creating bridge FVC (${contactFormValuesContainer.rootForm.formTemplateId}) with ${contactFormValuesContainer.children.length} children [${this._id}]`)
+		}[]
+		language?: string
+		changeListeners?: ((newValue: BridgedFormValuesContainer, modifiedFields: GenericMetadata[]) => void)[]
+		interpreterContext?: Record<string, () => unknown>
+		currentComputations?: Record<string, { metadata: FieldMetadata; revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]; computation: Promise<unknown> }>
+		skipComputations?: boolean
+	}) {
 		//Before start to broadcast changes, we need to fill in the contactFormValuesContainer with the dependent values
 		this.contactFormValuesContainer = contactFormValuesContainer
-		this.mutateAndNotify = async (newContactFormValuesContainer: ContactFormValuesContainer) => {
+		this.responsible = responsible
+		this.interpreter = interpreter
+		this.initialValuesProvider = initialValuesProvider ?? (() => [])
+		this.dependentValuesProvider = dependentValuesProvider ?? (() => [])
+		this.validatorsProvider = validatorsProvider ?? (() => [])
+		this.language = language ?? 'en'
+		this.changeListeners = changeListeners ?? []
+		this.interpreterContext = interpreterContext ?? {}
+		this.contact = contact ?? contactFormValuesContainer.currentContact
+
+		this.mutateAndNotify = async (newContactFormValuesContainer: ContactFormValuesContainer, modifiedFields: GenericMetadata[]) => {
 			newContactFormValuesContainer.unregisterChangeListener(this.mutateAndNotify)
-			const newBridgedFormValueContainer = await new BridgedFormValuesContainer(
-				this.responsible,
-				newContactFormValuesContainer,
-				this.interpreter,
-				this.contact === this.contactFormValuesContainer.currentContact ? newContactFormValuesContainer.currentContact : this.contact,
-				this.initialValuesProvider,
-				this.dependentValuesProvider,
-				this.validatorsProvider,
-				this.language,
-				this.changeListeners,
-				this.interpreterContext,
-			).init()
-			this.changeListeners.forEach((l) => notify(l, newBridgedFormValueContainer))
+			const modifiedLabels = modifiedFields.map((f) => f.label)
+			const newBridgedFormValueContainer = new BridgedFormValuesContainer({
+				...this.options(),
+				contactFormValuesContainer: newContactFormValuesContainer,
+				contact: this.contact === this.contactFormValuesContainer.currentContact ? newContactFormValuesContainer.currentContact : this.contact,
+				currentComputations: Object.entries(this.currentComputations).reduce((acc, [label, { metadata, revisionsFilter, computation }]) => {
+					return modifiedLabels.includes(label) ? acc : { ...acc, [label]: { metadata, revisionsFilter, computation } }
+				}, {}),
+				skipComputations: modifiedLabels.length === 0,
+			})
+			this.changeListeners.forEach((l) => notify(l, newBridgedFormValueContainer, modifiedFields))
+
 			return newBridgedFormValueContainer
 		}
+
 		this.contactFormValuesContainer.registerChangeListener(this.mutateAndNotify)
-		this.contact = contact ?? contactFormValuesContainer.currentContact
-	}
+		this.currentComputations = skipComputations ? currentComputations ?? {} : this.computeDependentValues(this.computeInitialValues(currentComputations ?? {}))
 
-	async init() {
-		if (this.contactFormValuesContainer.mustBeInitialised()) {
-			await this.computeInitialValues()
-		}
-		await this.computeDependentValues()
+		const skipFutureComputations = [false]
 
-		return this
+		console.log(`bFVC with uuid ${this.uuid} has the following initial computations`, Object.keys(this.currentComputations).join(', '))
+
+		Object.entries(this.currentComputations).forEach(([label, { metadata, revisionsFilter, computation: computationPromise }]) => {
+			computationPromise
+				.then((computation) => {
+					if (skipFutureComputations[0]) {
+						return
+					}
+					console.log(`Computed value for ${label} in ${this.uuid} with computation`, computation)
+
+					const newValue = this.convertRawValue(computation)
+					const currentValue = this.getValues(revisionsFilter)
+
+					if (newValue !== undefined || currentValue != undefined) {
+						const lng = this.language ?? 'en'
+						if (newValue && !newValue.content[lng] && newValue.content['*']) {
+							newValue.content[lng] = newValue.content['*']
+						}
+						if (newValue) {
+							delete newValue.content['*']
+						}
+						if (this.setValue(label, lng, newValue, Object.keys(currentValue ?? {})[0], metadata)) {
+							skipFutureComputations[0] = true // Skip future computations if the value was set successfully and the FVC is now obsolete
+						} else {
+							skipFutureComputations[0] = true
+							const newBridgedFormValueContainer = new BridgedFormValuesContainer({
+								...this.options(),
+								currentComputations: Object.entries(this.currentComputations).reduce((acc, [cLabel, value]) => (cLabel !== label ? { ...acc, [cLabel]: value } : acc), {}),
+								skipComputations: true,
+							})
+							this.changeListeners.forEach((l) => notify(l, newBridgedFormValueContainer, []))
+						}
+					}
+				})
+				.catch(console.error) // Ignore errors in computations, they will be logged in the console
+		})
 	}
 
 	getLabel(): string {
@@ -140,19 +247,12 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return this.contactFormValuesContainer
 	}
 
-	registerChangeListener(listener: (newValue: BridgedFormValuesContainer) => void): void {
+	registerChangeListener(listener: (newValue: BridgedFormValuesContainer, modifiedFields: GenericMetadata[]) => void): void {
 		this.changeListeners.push(listener)
 	}
 
-	unregisterChangeListener(listener: (newValue: BridgedFormValuesContainer) => void): void {
+	unregisterChangeListener(listener: (newValue: BridgedFormValuesContainer, modifiedFields: GenericMetadata[]) => void): void {
 		this.changeListeners = this.changeListeners.filter((l) => l !== listener)
-	}
-
-	async getDefaultValue(label: string): Promise<FieldValue | undefined> {
-		const formula = this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).find(
-			({ metadata }) => metadata.label === label,
-		)?.formula
-		return formula ? this.convertRawValue(await this.compute(formula)) : undefined
 	}
 
 	getValues(revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]): VersionedData<FieldValue> {
@@ -263,85 +363,41 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return undefined
 	}
 
-	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
-	private async computeInitialValues() {
-		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
-			await Promise.all(
-				this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map(async ({ metadata, revisionsFilter, formula }) => {
-					try {
-						const currentValue = this.getValues(revisionsFilter)
-						if (!currentValue || !Object.keys(currentValue).length) {
-							const newValue = this.convertRawValue((await this.compute(formula)) as unknown)
-							if (newValue !== undefined) {
-								const lng = this.language ?? 'en'
-								if (newValue && !newValue.content[lng] && newValue.content['*']) {
-									newValue.content[lng] = newValue.content['*']
-								}
-								if (newValue) {
-									delete newValue.content['*']
-								}
-								setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, undefined, metadata, (fvc: ContactFormValuesContainer) => {
-									const currentContact = this.contactFormValuesContainer.currentContact
-									this.contactFormValuesContainer = fvc
-									if (this.contact === currentContact) {
-										this.contact = fvc.currentContact
-									}
-								})
-							}
-						}
-					} catch (e) {
-						console.log(`Error while computing formula : ${formula}`, e)
-					}
-				}),
-			)
-		}
+	private computeInitialValues(
+		currentComputations: Record<string, { metadata: FieldMetadata; revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]; computation: Promise<unknown> }>,
+	) {
+		return this.contactFormValuesContainer.rootForm.formTemplateId
+			? this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).reduce((acc, { metadata, revisionsFilter, formula }) => {
+					const currentValue = this.getValues(revisionsFilter)
+
+					return currentComputations[metadata.label] === undefined && (!currentValue || !Object.keys(currentValue).length)
+						? { ...acc, [metadata.label]: { metadata, revisionsFilter, computation: this.compute(formula) } }
+						: acc
+			  }, currentComputations)
+			: {}
 	}
 
-	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
-	private async computeDependentValues() {
-		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
-			await Promise.all(
-				this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map(async ({ metadata, revisionsFilter, formula }) => {
-					try {
-						const currentValue = this.getValues(revisionsFilter)
-						const newValue = this.convertRawValue((await this.compute(formula)) as unknown)
-
-						if (newValue !== undefined || currentValue != undefined) {
-							const lng = this.language ?? 'en'
-							if (newValue && !newValue.content[lng] && newValue.content['*']) {
-								newValue.content[lng] = newValue.content['*']
-							}
-							if (newValue) {
-								delete newValue.content['*']
-							}
-							const interceptor = (fvc: ContactFormValuesContainer) => {
-								const currentContact = this.contactFormValuesContainer.currentContact
-								this.contactFormValuesContainer = fvc
-								if (this.contact === currentContact) {
-									this.contact = fvc.currentContact
-								}
-							}
-							setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, Object.keys(currentValue ?? {})[0], metadata, interceptor)
-						}
-					} catch (e) {
-						console.log(`Error while computing formula : ${formula}`, e)
-					}
-				}),
-			)
-		}
+	private computeDependentValues(
+		currentComputations: Record<string, { metadata: FieldMetadata; revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]; computation: Promise<unknown> }>,
+	) {
+		return this.contactFormValuesContainer.rootForm.formTemplateId
+			? this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).reduce((acc, { metadata, revisionsFilter, formula }) => {
+					return currentComputations[metadata.label] === undefined ? { ...acc, [metadata.label]: { metadata, revisionsFilter, computation: this.compute(formula) } } : acc
+			  }, currentComputations)
+			: {}
 	}
 
-	setValue(label: string, language: string, fv?: FieldValue, id?: string, metadata?: FieldMetadata): void {
-		setValueOnContactFormValuesContainer(this.contactFormValuesContainer, label, language, fv, id, metadata)
+	setValue(label: string, language: string, fv?: FieldValue, id?: string, metadata?: FieldMetadata): boolean {
+		return setValueOnContactFormValuesContainer(this.contactFormValuesContainer, label, language, fv, id, metadata)
 	}
 
-	setMetadata(meta: FieldMetadata, id?: string | undefined): void {
-		this.contactFormValuesContainer.setMetadata(
+	setMetadata(meta: FieldMetadata, id?: string | undefined): boolean {
+		return this.contactFormValuesContainer.setMetadata(
 			{
 				label: meta.label,
 				responsible: meta.owner,
 				valueDate: meta.valueDate,
-				tags: meta.tags?.map((x) => new CodeStub(x)),
+				tags: meta.tags?.map((x) => new CodeStubWithId(x)),
 			},
 			id,
 		)
@@ -352,7 +408,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	}
 
 	private getVersionedValuesForKey(key: string | symbol) {
-		return this.getValues((id, history) => (history?.[0]?.value?.label && key === history[0].value.label ? [history?.[0]?.revision] : []))
+		return this.getValues((_id, history) => (history?.[0]?.value?.label && key === history[0].value.label ? [history?.[0]?.revision] : []))
 	}
 
 	async compute<
@@ -361,6 +417,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			[key: string | symbol]: unknown
 		},
 	>(formula: string, sandbox?: S): Promise<T | undefined> {
+		console.warn(`Computing formula ${formula} in ${this.uuid} with sandbox`, sandbox)
 		// noinspection JSUnusedGlobalSymbols
 		const parseContent = (content?: { [key: string]: PrimitiveType }, toString = false) => {
 			if (!content) {
@@ -369,7 +426,13 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			const primitive = content[this.language] ?? content['*'] ?? content[Object.keys(content)[0]]
 			return primitive && parsePrimitive(primitive, toString)
 		}
-		const text = (item?: { content: { [key: string]: PrimitiveType } } | { content: { [key: string]: PrimitiveType } }[]) => {
+		const text = (
+			item?:
+				| { content: { [key: string]: PrimitiveType } }
+				| {
+						content: { [key: string]: PrimitiveType }
+				  }[],
+		) => {
 			if (!item) {
 				return undefined
 			}
@@ -380,6 +443,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				.join(', ')
 		}
 		const log = console.log
+		// noinspection JSUnusedGlobalSymbols
 		const native = {
 			parseInt: parseInt,
 			parseFloat: parseFloat,
@@ -419,9 +483,9 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			Promise,
 		} as { [key: string]: any }
 		const proxy: S = new Proxy({} as S, {
-			has: (target: S, key: string | symbol) =>
+			has: (_target: S, key: string | symbol) =>
 				!!native[key as string] || key === 'self' || !!this.interpreterContext[key as string] || Object.keys(this.getVersionedValuesForKey(key) ?? {}).length > 0,
-			get: (target: S, key: string | symbol) => {
+			get: (_target: S, key: string | symbol) => {
 				if (key === 'undefined') {
 					return undefined
 				}
@@ -435,23 +499,27 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return this.interpreter?.(formula, sandbox ?? proxy)
 	}
 
+	isFieldBeingComputed(label: string): boolean {
+		return !!this.currentComputations[label]
+	}
+
 	async getChildren(): Promise<FormValuesContainer<FieldValue, FieldMetadata>[]> {
 		const children = await Promise.all(
 			(
 				await this.contactFormValuesContainer.getChildren()
-			).map((fvc) =>
-				new BridgedFormValuesContainer(
-					this.responsible,
-					fvc,
-					this.interpreter,
-					this.contact,
-					this.initialValuesProvider,
-					this.dependentValuesProvider,
-					this.validatorsProvider,
-					this.language,
-					[],
-					this.interpreterContext,
-				).init(),
+			).map(
+				(fvc) =>
+					new BridgedFormValuesContainer({
+						responsible: this.responsible,
+						contactFormValuesContainer: fvc,
+						interpreter: this.interpreter,
+						contact: this.contact,
+						initialValuesProvider: this.initialValuesProvider,
+						dependentValuesProvider: this.dependentValuesProvider,
+						validatorsProvider: this.validatorsProvider,
+						language: this.language,
+						interpreterContext: this.interpreterContext,
+					}),
 			),
 		)
 		console.log(`${children.length} children found in ${this.contactFormValuesContainer.rootForm.formTemplateId} initialised with `, this.initialValuesProvider)
@@ -512,17 +580,12 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<CardinalForm>
 	formRecycler: (formId: string) => Promise<void>
 
-	changeListeners: ((newValue: ContactFormValuesContainer) => void)[]
+	changeListeners: ((newValue: ContactFormValuesContainer, modifiedFields: GenericMetadata[]) => void)[]
 	private _id: string = uuidv4()
-	private _initialised = false
 	private indexedServices: { [id: string]: Version<DecryptedService>[] }
 
 	toString(): string {
 		return `Contact(${this.rootForm.formTemplateId}[${this.rootForm.id}]) - ${this._id}`
-	}
-
-	mustBeInitialised() {
-		return !this._initialised
 	}
 
 	/**
@@ -557,8 +620,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		children: ContactFormValuesContainer[],
 		formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<CardinalForm>,
 		formRecycler: (formId: string) => Promise<void>,
-		changeListeners: ((newValue: ContactFormValuesContainer) => void)[] = [],
-		initialised = true,
+		changeListeners: ((newValue: ContactFormValuesContainer, modifiedFields: GenericMetadata[]) => void)[] = [],
 	) {
 		console.log(`Creating contact FVC (${rootForm.formTemplateId}) with ${children.length} children [${this._id}]`)
 
@@ -573,10 +635,9 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		this.formFactory = formFactory
 		this.formRecycler = formRecycler
 		this.changeListeners = changeListeners
-		this._initialised = initialised
 
 		this.indexedServices = [this.currentContact].concat(this.contactsHistory).reduce((acc, ctc) => {
-			const services =
+			return (
 				ctc.services
 					?.filter((s) => ctc.subContacts?.some((sc) => sc.formId === this.rootForm.id && sc.services?.some((sss) => sss.serviceId === s.id)))
 					?.reduce(
@@ -593,7 +654,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 								: acc,
 						acc,
 					) ?? acc
-			return services
+			)
 		}, {} as VersionedData<DecryptedService>)
 
 		this.synchronise()
@@ -622,7 +683,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 					this.formFactory,
 					this.formRecycler,
 				)
-				this.changeListeners.forEach((l) => notify(l, newContactFormValuesContainer))
+				this.changeListeners.forEach((l) => notify(l, newContactFormValuesContainer, []))
 			},
 		]
 	}
@@ -656,7 +717,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 			formFactory,
 			formRecycler,
 			changeListeners,
-			false,
 		)
 		contactFormValuesContainer.children.forEach((childFVC) => contactFormValuesContainer.registerChildFormValuesContainer(childFVC))
 
@@ -671,11 +731,11 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		return this.rootForm?.formTemplateId
 	}
 
-	registerChangeListener(listener: (newValue: ContactFormValuesContainer) => void): void {
+	registerChangeListener(listener: (newValue: ContactFormValuesContainer, modifiedFields: GenericMetadata[]) => void): void {
 		this.changeListeners.push(listener)
 	}
 
-	unregisterChangeListener(listener: (newValue: ContactFormValuesContainer) => void): void {
+	unregisterChangeListener(listener: (newValue: ContactFormValuesContainer, modifiedFields: GenericMetadata[]) => void): void {
 		this.changeListeners = this.changeListeners.filter((l) => l !== listener)
 	}
 
@@ -685,10 +745,6 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 
 	async getValidationErrors(): Promise<[FieldMetadata, string][]> {
 		throw new Error('Validation not supported at contact level')
-	}
-
-	getDefaultValue(): Promise<FieldValue | undefined> {
-		return Promise.resolve(undefined)
 	}
 
 	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<DecryptedService> {
@@ -724,7 +780,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 													label: s.label ?? s.id,
 													responsible: s.responsible,
 													valueDate: s.valueDate,
-													tags: s.tags,
+													tags: normalizeCodes(s.tags),
 												},
 											}),
 									  }
@@ -735,7 +791,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 			) //index services in history by id
 	}
 
-	setMetadata(meta: ServiceMetadata, id?: string): void {
+	setMetadata(meta: ServiceMetadata, id?: string): boolean {
 		const service = (id && this.getServiceInCurrentContact(id)) || this.serviceFactory(meta.label, id)
 		if (!service.id) {
 			throw new Error('Service id must be defined')
@@ -766,19 +822,25 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 				this.changeListeners,
 			)
 
-			this.changeListeners.forEach((l) => notify(l, newFormValuesContainer))
+			this.changeListeners.forEach((l) => notify(l, newFormValuesContainer, [meta]))
+			return true
+		} else {
+			return false
 		}
 	}
 
-	setValue(label: string, language: string, value?: DecryptedService, id?: string, metadata?: ServiceMetadata, changeListenersOverrider?: (fvc: ContactFormValuesContainer) => void): void {
+	setValue(label: string, language: string, value?: DecryptedService, id?: string, metadata?: ServiceMetadata, changeListenersOverrider?: (fvc: ContactFormValuesContainer) => void): boolean {
 		const service = (id && this.getServicesInHistory((sid: string, history) => (sid === id ? history.map((x) => x.revision) : []))[id]?.[0]?.value) || this.serviceFactory(label, id)
 		if (!service.id) {
 			throw new Error('Service id must be defined')
 		}
-		console.log('Setting value of service', service.id, 'with', value, 'and metadata', metadata)
+
 		const newContent = value?.content?.[language]
 		const newCodes = value?.codes ? normalizeCodes(value.codes) : []
+
 		if (!isContentEqual(service.content?.[language], newContent) || (newCodes && !areCodesEqual(newCodes, service.codes ?? []))) {
+			console.log('Setting value of service', service.id, 'with', value, 'and metadata', metadata)
+
 			const newService = new DecryptedService({ ...service, modified: Date.now() })
 			const newContents = newContent
 				? {
@@ -861,7 +923,20 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 				this.changeListeners,
 			)
 
-			changeListenersOverrider ? changeListenersOverrider(newFormValuesContainer) : this.changeListeners.forEach((l) => notify(l, newFormValuesContainer))
+			changeListenersOverrider
+				? changeListenersOverrider(newFormValuesContainer)
+				: this.changeListeners.forEach((l) =>
+						notify(l, newFormValuesContainer, [
+							{
+								valueDate: newService.valueDate,
+								tags: normalizeCodes(newService.tags),
+								label: newService.label ?? label,
+							},
+						]),
+				  )
+			return true
+		} else {
+			return false
 		}
 	}
 
@@ -889,12 +964,16 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 				this.changeListeners,
 			)
 
-			this.changeListeners.forEach((l) => notify(l, newFormValuesContainer))
+			this.changeListeners.forEach((l) => notify(l, newFormValuesContainer, []))
 		}
 	}
 
 	async compute<T>(): Promise<T | undefined> {
 		throw new Error('Compute not supported at contact level')
+	}
+
+	isFieldBeingComputed(): boolean {
+		return false
 	}
 
 	/** returns all services in history that match a selector
@@ -916,7 +995,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 							owner: s.responsible,
 							valueDate: s.valueDate,
 							codes: s.codes,
-							tags: s.tags,
+							tags: normalizeCodes(s.tags),
 						},
 					})),
 				)
@@ -930,7 +1009,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		if (!parentId) return
 
 		const newForm = await this.formFactory(parentId, anchorId, templateId, label)
-		const childFVC = new ContactFormValuesContainer(newForm, this.currentContact, this.contactsHistory, this.serviceFactory, [], this.formFactory, this.formRecycler, [], false)
+		const childFVC = new ContactFormValuesContainer(newForm, this.currentContact, this.contactsHistory, this.serviceFactory, [], this.formFactory, this.formRecycler, [])
 
 		const newContactFormValuesContainer = new ContactFormValuesContainer(
 			this.rootForm,
@@ -966,17 +1045,9 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	}
 }
 
-const setValueOnContactFormValuesContainer = (
-	cfvc: ContactFormValuesContainer,
-	label: string,
-	language: string,
-	fv?: FieldValue,
-	id?: string,
-	metadata?: FieldMetadata,
-	changeListenersOverrider?: (fvc: ContactFormValuesContainer) => void,
-) => {
+const setValueOnContactFormValuesContainer = (cfvc: ContactFormValuesContainer, label: string, language: string, fv?: FieldValue, id?: string, metadata?: FieldMetadata): boolean => {
 	const value = fv?.content[language]
-	cfvc.setValue(
+	return cfvc.setValue(
 		label,
 		language,
 		new DecryptedService({
@@ -994,9 +1065,8 @@ const setValueOnContactFormValuesContainer = (
 					label: metadata?.label ?? label,
 					responsible: metadata?.owner,
 					valueDate: metadata?.valueDate,
-					tags: metadata?.tags?.map((x) => new CodeStub(x)),
+					tags: normalizeCodes(metadata?.tags?.map((x) => new CodeStub(x))),
 			  }
 			: undefined,
-		changeListenersOverrider,
 	)
 }

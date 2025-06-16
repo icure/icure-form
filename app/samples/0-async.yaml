@@ -1,0 +1,48 @@
+form: Async
+id: 092be26a-d685-4430-9cd7-787897897
+description: abortion-forms.CONTROL
+sections:
+  - section: Computations
+    fields:
+      - group: Default values
+        span: 24
+        fields:
+          - field: Default is 0
+            span: 8
+            type: number-field
+            computedProperties:
+              defaultValue: |
+                return delay(0, () => 0)
+          - field: Default is 1
+            span: 8
+            type: number-field
+            computedProperties:
+              defaultValue: |
+                return delay(1000, () => 1)
+          - field: Default is 2
+            span: 8
+            type: number-field
+            computedProperties:
+              defaultValue: |
+                return delay(2000, () => 2)
+      - group: Computed values
+        span: 24
+        fields:
+          - field: Value is 0
+            span: 8
+            type: number-field
+            computedProperties:
+              value: |
+                return delay(0, () => 0)
+          - field: Value is 1
+            span: 8
+            type: number-field
+            computedProperties:
+              value: |
+                return delay(1000, () => 1)
+          - field: Value is 2
+            span: 8
+            type: number-field
+            computedProperties:
+              value: |
+                return delay(2000, () => 2)

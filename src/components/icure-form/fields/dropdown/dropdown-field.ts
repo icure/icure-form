@@ -1,11 +1,18 @@
-import { html, TemplateResult } from 'lit'
+import { html, nothing, TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { Field } from '../../../common'
-import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
+import { handleSingleMetadataChanged, handleSingleValueChanged, overlay, singleValueProvider } from '../utils'
 import { Suggestion } from '../../../../generic'
+
+// @ts-ignore
+import overlayCss from '../../../common/styles/overlay.scss'
 
 export class DropdownField extends Field {
 	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Suggestion[]> = async () => []
+
+	static get styles() {
+		return [overlayCss]
+	}
 
 	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
@@ -28,6 +35,7 @@ export class DropdownField extends Field {
 					.optionsProvider=${this.optionsProvider}
 					.translationProvider=${this.translationProvider}
 				></icure-dropdown-field>
+				${this.loading ? overlay() : nothing}
 			`
 		})
 	}

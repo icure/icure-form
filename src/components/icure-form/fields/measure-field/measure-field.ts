@@ -1,8 +1,15 @@
-import { html, TemplateResult } from 'lit'
-import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
+import { html, nothing, TemplateResult } from 'lit'
+import { handleSingleMetadataChanged, handleSingleValueChanged, overlay, singleValueProvider } from '../utils'
 import { Field } from '../../../common'
 
+// @ts-ignore
+import overlayCss from '../../../common/styles/overlay.scss'
+
 export class MeasureField extends Field {
+	static get styles() {
+		return [overlayCss]
+	}
+
 	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
@@ -24,6 +31,7 @@ export class MeasureField extends Field {
 					.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}
 					.handleMetadataChanged=${handleSingleMetadataChanged(this.handleMetadataChanged, id)}
 				></icure-text-field>
+				${this.loading ? overlay() : nothing}
 			`
 		})
 	}

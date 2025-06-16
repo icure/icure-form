@@ -281,21 +281,24 @@ export class IcureTextField extends Field {
 	private async reset(renderHash: number) {
 		if (this.view) {
 			const defaultValue = await this.defaultValueProvider?.()
-			const newState = EditorState.create({
-				schema: this.view.state.schema,
-				doc:
+
+			const tr = this.view.state.tr
+			this.view.dispatch(
+				tr.replaceWith(
+					0,
+					tr.doc.content.size,
 					this.parser?.parse(
-						defaultValue?.content?.[this.language()] ?? {
-							type: 'string',
-							value: '',
-						},
+						defaultValue?.content?.[this.language()] ??
+							defaultValue?.content?.['*'] ??
+							Object.values(defaultValue?.content ?? {}).find((v) => v.type === 'string') ?? {
+								type: 'string',
+								value: '',
+							},
 						undefined,
 						renderHash,
-					) ?? undefined,
-				plugins: this.view.state.plugins,
-				selection: undefined,
-			})
-			this.view.updateState(newState)
+					) ?? this.view.state.schema.text(''),
+				),
+			)
 		}
 	}
 

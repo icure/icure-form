@@ -76,6 +76,8 @@ import okido_physiotherapy_care from './samples/okido_physiotherapy_care.yaml'
 // @ts-ignore
 import okido_paramedical_care from './samples/okido_paramedical_care.yaml'
 // @ts-ignore
+import async_form from './samples/0-async.yaml'
+// @ts-ignore
 import preventi from './samples/preventi.yaml'
 
 import { Form } from '../src/components/model'
@@ -98,6 +100,7 @@ class DemoApp extends LitElement {
 	private samples = [
 		...[
 			{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
+			{ title: 'Async', form: Form.parse(YAML.parse(async_form)) },
 			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_search)) },
 			{ title: '000 - Validators', form: Form.parse(YAML.parse(validators)) },
@@ -131,7 +134,7 @@ class DemoApp extends LitElement {
 			{ title: 'OKIDO - Anamnèse - Soin paramédical', form: Form.parse(YAML.parse(okido_paramedical_care)) },
 			{ title: 'OKIDO - Anamnèse - Soin kinésithérapeutique', form: Form.parse(YAML.parse(okido_physiotherapy_care)) },
 			*/
-		], //.filter((x, idx) => idx === 0),
+		].filter((x, idx) => idx === 1),
 	]
 
 	@state() private selectedForm: Form = this.samples[0].form

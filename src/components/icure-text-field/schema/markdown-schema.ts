@@ -154,30 +154,6 @@ export function getMarkdownSpec(
 					},
 				},
 
-				measure: {
-					content: 'decimal unit',
-					group: 'block',
-				},
-
-				decimal: {
-					content: 'inline*',
-					group: 'block',
-					parseDOM: [{ tag: 'span' }],
-					toDOM() {
-						return ['span', { class: 'measure' }, 0]
-					},
-					regexp: '[,.0-9-]',
-				},
-
-				unit: {
-					content: 'inline*',
-					group: 'block',
-					parseDOM: [{ tag: 'span' }],
-					toDOM() {
-						return ['span', { class: 'unit' }, 0]
-					},
-				},
-
 				hard_break: {
 					inline: true,
 					group: 'inline',

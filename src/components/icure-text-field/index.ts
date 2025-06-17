@@ -4,7 +4,7 @@ import { css, html, LitElement, nothing } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { EditorState, Plugin, TextSelection, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
-import { Node as ProsemirrorNode, Schema } from 'prosemirror-model'
+import { Fragment, Node as ProsemirrorNode, Schema, Slice } from 'prosemirror-model'
 import { history, redo, undo } from 'prosemirror-history'
 import { keymap } from 'prosemirror-keymap'
 import { baseKeymap, chainCommands, exitCode, joinDown, joinUp, setBlockType, toggleMark } from 'prosemirror-commands'
@@ -412,6 +412,34 @@ export class IcureTextField extends Field {
 						maskPlugin(),
 						regexpPlugin(),
 						hasContentClassPlugin(this.shadowRoot || undefined),
+						new Plugin({
+							props: {
+								transformPasted(slice) {
+									let ok = true
+									slice.content.forEach((node) => {
+										if (!pms.nodes[node.type.name]) {
+											ok = false
+										}
+									})
+
+									if (ok) {
+										return slice
+									}
+									if (pms.nodes.paragraph)
+										return new Slice(
+											Fragment.fromArray(
+												slice.content
+													.textBetween(0, slice.content.size, ' ')
+													.split('\n')
+													.map((line) => pms.nodes.paragraph.create({}, [pms.text(line)])),
+											),
+											0,
+											0,
+										)
+									else return new Slice(Fragment.fromArray([pms.text(slice.content.textBetween(0, slice.content.size, ' ').split('\n').join(' '))]), 0, 0)
+								},
+							},
+						}),
 						keymap(baseKeymap),
 					]
 						.filter((x) => !!x)

@@ -280,12 +280,13 @@ export class IcureTextField extends Field {
 
 	private async reset(renderHash: number) {
 		if (this.view) {
-			const defaultValue = await this.defaultValueProvider?.()
+			const defaultValue = this.defaultValueProvider?.()
+			const contentForLanguage = defaultValue?.content?.[this.language()] ?? defaultValue?.content?.[this.defaultLanguage] ?? defaultValue?.content?.['*']
 			const newState = EditorState.create({
 				schema: this.view.state.schema,
 				doc:
 					this.parser?.parse(
-						defaultValue?.content?.[this.language()] ?? {
+						contentForLanguage ?? {
 							type: 'string',
 							value: '',
 						},

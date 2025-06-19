@@ -4,7 +4,7 @@ import { css, html, LitElement, nothing } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { EditorState, Plugin, TextSelection, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
-import { Node as ProsemirrorNode, Schema } from 'prosemirror-model'
+import { Fragment, Node as ProsemirrorNode, Schema, Slice } from 'prosemirror-model'
 import { history, redo, undo } from 'prosemirror-history'
 import { keymap } from 'prosemirror-keymap'
 import { baseKeymap, chainCommands, exitCode, joinDown, joinUp, setBlockType, toggleMark } from 'prosemirror-commands'
@@ -282,13 +282,14 @@ export class IcureTextField extends Field {
 		if (this.view) {
 			const defaultValue = await this.defaultValueProvider?.()
 
+const contentForLanguage = defaultValue?.content?.[this.language()] ?? defaultValue?.content?.[this.defaultLanguage] ?? defaultValue?.content?.['*']
 			const tr = this.view.state.tr
 			this.view.dispatch(
 				tr.replaceWith(
 					0,
 					tr.doc.content.size,
 					this.parser?.parse(
-						defaultValue?.content?.[this.language()] ??
+						contentForLanguage ??
 							defaultValue?.content?.['*'] ??
 							Object.values(defaultValue?.content ?? {}).find((v) => v.type === 'string') ?? {
 								type: 'string',
@@ -329,8 +330,8 @@ export class IcureTextField extends Field {
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
 
 		if (this.container) {
-			const br = pms.nodes.hardbreak
-			const hardbreak = chainCommands(exitCode, (state, dispatch) => {
+			const br = pms.nodes.hard_break
+			const hard_break = chainCommands(exitCode, (state, dispatch) => {
 				dispatch && dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView())
 				return true
 			})
@@ -396,8 +397,8 @@ export class IcureTextField extends Field {
 								pms.marks.em ? { 'Mod-i': toggleMark(pms.marks.em) } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowUp': joinUp } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowDown': joinDown } : {},
-								pms.nodes.paragraph ? { 'Alt-Enter': hardbreak } : {},
-								pms.nodes.paragraph ? { 'Shift-Enter': hardbreak } : {},
+								pms.nodes.paragraph ? { 'Alt-Enter': hard_break } : {},
+								pms.nodes.paragraph ? { 'Shift-Enter': hard_break } : {},
 								pms.nodes.ordered_list ? { 'Shift-ctrl-1': wrapInList(pms.nodes.ordered_list) } : {},
 								pms.nodes.bullet_list ? { 'Shift-ctrl-*': wrapInList(pms.nodes.bullet_list) } : {},
 								pms.nodes.blockquote ? { 'Shift-ctrl-w': wrapInIfNeeded(pms.nodes.blockquote) } : {},
@@ -415,6 +416,34 @@ export class IcureTextField extends Field {
 						maskPlugin(),
 						regexpPlugin(),
 						hasContentClassPlugin(this.shadowRoot || undefined),
+						new Plugin({
+							props: {
+								transformPasted(slice) {
+									let ok = true
+									slice.content.forEach((node) => {
+										if (!pms.nodes[node.type.name]) {
+											ok = false
+										}
+									})
+
+									if (ok) {
+										return slice
+									}
+									if (pms.nodes.paragraph)
+										return new Slice(
+											Fragment.fromArray(
+												slice.content
+													.textBetween(0, slice.content.size, ' ')
+													.split('\n')
+													.map((line) => pms.nodes.paragraph.create({}, [pms.text(line)])),
+											),
+											0,
+											0,
+										)
+									else return new Slice(Fragment.fromArray([pms.text(slice.content.textBetween(0, slice.content.size, ' ').split('\n').join(' '))]), 0, 0)
+								},
+							},
+						}),
 						keymap(baseKeymap),
 					]
 						.filter((x) => !!x)
@@ -585,7 +614,7 @@ export class IcureTextField extends Field {
 								alt: (tok.children || [])[0]?.content || null,
 							}),
 						},
-						hardbreak: { node: 'hardbreak' },
+						hard_break: { node: 'hard_break' },
 
 						em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 						strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },

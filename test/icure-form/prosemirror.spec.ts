@@ -32,7 +32,7 @@ describe('Form parsing tests', () => {
 					alt: (tok.children || [])[0]?.content || null,
 				}),
 			},
-			hardbreak: { node: 'hardbreak' },
+			hard_break: { node: 'hard_break' },
 
 			em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 			strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },

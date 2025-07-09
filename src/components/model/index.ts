@@ -141,6 +141,7 @@ export abstract class Field {
 	unit?: string
 	multiline?: boolean
 	computedProperties?: { [_key: string]: string }
+	computedPropertiesDependencies?: { [_key: string]: string[] | undefined }
 	validators?: Validator[]
 	now?: boolean
 	translate?: boolean
@@ -221,7 +222,7 @@ export abstract class Field {
 		this.value = value
 		this.unit = unit
 		this.multiline = multiline || false
-		this.computedProperties = computedProperties
+		;[this.computedProperties, this.computedPropertiesDependencies] = canonizeAndComputeDependencies(computedProperties)
 		this.validators = validators
 		this.now = now
 		this.translate = translate ?? true
@@ -1020,6 +1021,30 @@ export class Button extends Field {
 	}
 }
 
+function canonizeAndComputeDependencies(computedProperties: { [p: string]: string } | undefined): [{ [_key: string]: string }, { [_key: string]: string[] | undefined }] {
+	return [
+		Object.entries(computedProperties ?? {}).reduce(
+			(acc, [key, value]) => ({
+				...acc,
+				[key.replace(/\(.*\)/, '')]: value,
+			}),
+			{},
+		),
+		Object.keys(computedProperties ?? {}).reduce(
+			(acc, key) => ({
+				...acc,
+				[key.replace(/\(.*\)/, '')]: key.includes('(')
+					? key
+							.replace(/.+\((.*)\)/, '$1')
+							.split(',')
+							.filter((x) => x.length)
+					: undefined,
+			}),
+			{},
+		),
+	]
+}
+
 export class Group {
 	clazz = 'group' as const
 	group: string
@@ -1029,6 +1054,7 @@ export class Group {
 	span?: number
 	rowSpan?: number
 	computedProperties?: { [_key: string]: string }
+	computedPropertiesDependencies?: { [_key: string]: string[] | undefined }
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
 
@@ -1060,7 +1086,7 @@ export class Group {
 		this.fields = fields
 		this.span = span
 		this.rowSpan = rowSpan
-		this.computedProperties = computedProperties
+		;[this.computedProperties, this.computedPropertiesDependencies] = canonizeAndComputeDependencies(computedProperties)
 		this.width = width
 		this.styleOptions = styleOptions
 	}

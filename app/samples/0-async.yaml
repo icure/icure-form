@@ -11,20 +11,20 @@ sections:
             span: 8
             type: number-field
             computedProperties:
-              defaultValue: |
+              defaultValue(): |
                 return delay(0, () => 0)
           - field: Default is 1
             span: 8
             type: number-field
             computedProperties:
-              defaultValue: |
+              defaultValue(): |
                 return delay(1000, () => 1)
-          - field: Default is 2
+          - field: Default is 1+1
             span: 8
             type: number-field
             computedProperties:
-              defaultValue: |
-                return delay(2000, () => 2)
+              defaultValue(Default is 1): |
+                return parseContent(self['Default is 1'][0]?.content) + 1
       - group: Computed values
         span: 24
         fields:
@@ -32,17 +32,17 @@ sections:
             span: 8
             type: number-field
             computedProperties:
-              value: |
+              value(): |
                 return delay(0, () => 0)
           - field: Value is 1
             span: 8
             type: number-field
             computedProperties:
-              value: |
+              value(): |
                 return delay(1000, () => 1)
-          - field: Value is 2
+          - field: Value is 1+1
             span: 8
             type: number-field
             computedProperties:
-              value: |
-                return delay(2000, () => 2)
+              value(Value is 1): |
+                return parseContent(self['Value is 1'][0]?.content) + 1

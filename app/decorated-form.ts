@@ -258,13 +258,29 @@ export class DecoratedForm extends LitElement {
 			contactFormValuesContainer,
 			interpreter: makeInterpreter(),
 			contact: undefined,
-			initialValuesProvider: (anchorId, templateId) => {
+			initialValuesProvider: (anchorId, templateId, modifiedFields) => {
 				const form = findForm(this.form, anchorId, templateId)
-				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['defaultValue']) : []
+				return form
+					? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) =>
+							modifiedFields === undefined ||
+							fg.computedPropertiesDependencies?.['defaultValue'] === undefined ||
+							fg.computedPropertiesDependencies?.['defaultValue']?.some((k) => modifiedFields.some((m) => k === m.label))
+								? fg.computedProperties?.['defaultValue']
+								: undefined,
+					  )
+					: []
 			},
-			dependentValuesProvider: (anchorId, templateId) => {
+			dependentValuesProvider: (anchorId, templateId, modifiedFields) => {
 				const form = findForm(this.form, anchorId, templateId)
-				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['value']) : []
+				return form
+					? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) =>
+							modifiedFields === undefined ||
+							fg.computedPropertiesDependencies?.['value'] === undefined ||
+							fg.computedPropertiesDependencies?.['value']?.some((k) => modifiedFields.some((m) => k === m.label))
+								? fg.computedProperties?.['value']
+								: undefined,
+					  )
+					: []
 			},
 			validatorsProvider: (anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)

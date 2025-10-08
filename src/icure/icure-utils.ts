@@ -1,4 +1,4 @@
-import { CodeStub, DecryptedContent, DecryptedService, Measure } from '@icure/cardinal-sdk'
+import { CodeStub, Content, Service } from '@icure/api'
 import { BooleanType, CompoundType, DateTimeType, MeasureType, NumberType, PrimitiveType, StringType, TimestampType } from '../components/model'
 
 export function isCodeEqual(c1: CodeStub, c2: CodeStub): boolean {
@@ -17,11 +17,13 @@ export function areCodesEqual(c1s: CodeStub[], c2s: CodeStub[]): boolean {
 	return c1s.every((c1) => c2s.some((c2) => isCodeEqual(c1, c2)) || false) && c2s.every((c2) => c1s.some((c1) => isCodeEqual(c1, c2)) || false)
 }
 
-export function isServiceEqual(svc1: DecryptedService, svc2: DecryptedService): boolean {
-	return svc1.id === svc2.id && svc1.valueDate === svc2.valueDate && areCodesEqual(svc1.codes || [], svc2.codes || []) && isServiceContentEqual(svc1.content || {}, svc2.content || {})
+export function isServiceEqual(svc1: Service, svc2: Service): boolean {
+	return (
+		svc1.id === svc2.id && svc1.valueDate === svc2.valueDate && areCodesEqual(svc1.codes || [], svc2.codes || []) && isServiceContentEqual(svc1.content || {}, svc2.content || {})
+	)
 }
 
-export function isContentEqual(content1: DecryptedContent | undefined, content2: DecryptedContent | undefined): boolean {
+export function isContentEqual(content1: Content | undefined, content2: Content | undefined): boolean {
 	if (!content1 && !content2) {
 		return true
 	}
@@ -47,19 +49,19 @@ export function isContentEqual(content1: DecryptedContent | undefined, content2:
 	)
 }
 
-export function isServiceContentEqual(content1: { [language: string]: DecryptedContent }, content2: { [language: string]: DecryptedContent }): boolean {
+export function isServiceContentEqual(content1: { [language: string]: Content }, content2: { [language: string]: Content }): boolean {
 	return Object.keys(content1).reduce((isEqual, lng) => isEqual && isContentEqual(content1[lng], content2[lng]), true as boolean)
 }
 
-export const primitiveTypeToContent = (language: string, value: PrimitiveType): DecryptedContent => {
-	return new DecryptedContent({
+export const primitiveTypeToContent = (language: string, value: PrimitiveType): Content => {
+	return {
 		...(value.type === 'number' ? { numberValue: (value as NumberType).value } : {}),
 		...(value.type === 'measure'
 			? {
-					measureValue: new Measure({
+					measureValue: {
 						value: (value as MeasureType).value,
 						unit: (value as MeasureType).unit,
-					}),
+					},
 			  }
 			: {}),
 		...(value.type === 'string' ? { stringValue: (value as StringType).value } : {}),
@@ -68,20 +70,17 @@ export const primitiveTypeToContent = (language: string, value: PrimitiveType): 
 		...(value.type === 'timestamp' ? { instantValue: (value as TimestampType).value } : {}),
 		...(value.type === 'compound'
 			? {
-					compoundValue: Object.entries((value as CompoundType).value).map(
-						([label, value]) =>
-							new DecryptedService({
-								label,
-								content: {
-									[language]: primitiveTypeToContent(language, value),
-								},
-							}),
-					),
+					compoundValue: Object.entries((value as CompoundType).value).map(([label, value]) => ({
+						label,
+						content: {
+							[language]: primitiveTypeToContent(language, value),
+						},
+					})),
 			  }
 			: {}),
-	})
+	}
 }
-export const contentToPrimitiveType = (language: string, content: DecryptedContent | undefined): PrimitiveType | undefined => {
+export const contentToPrimitiveType = (language: string, content: Content | undefined): PrimitiveType | undefined => {
 	if (!content) {
 		return undefined
 	}

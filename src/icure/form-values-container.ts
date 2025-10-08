@@ -1,4 +1,4 @@
-import { CodeStub, DecryptedContact, DecryptedForm as CardinalForm, DecryptedService, DecryptedSubContact } from '@icure/cardinal-sdk'
+import { Contact, Form, Form as ICureForm, Service, CodeStub } from '@icure/api'
 import { sortedBy } from '../utils/no-lodash'
 import { FormValuesContainer, Version, VersionedData } from '../generic'
 import { ServiceMetadata } from './model'
@@ -33,7 +33,7 @@ function notify<Value, Metadata>(l: (fvc: FormValuesContainer<Value, Metadata>) 
  * This class is fairly generic and can be used as an inspiration or subclassed for other bridges
  */
 export class BridgedFormValuesContainer implements FormValuesContainer<FieldValue, FieldMetadata> {
-	private contact: DecryptedContact
+	private contact: Contact
 	private contactFormValuesContainer: ContactFormValuesContainer
 	private _id: string = uuidv4()
 	private readonly mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer) => Promise<BridgedFormValuesContainer>
@@ -67,7 +67,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			formula: string,
 			sandbox: S,
 		) => Promise<T | undefined>,
-		contact?: DecryptedContact,
+		contact?: Contact,
 		private initialValuesProvider: (
 			anchorId?: string,
 			templateId?: string,
@@ -341,7 +341,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				label: meta.label,
 				responsible: meta.owner,
 				valueDate: meta.valueDate,
-				tags: meta.tags?.map((x) => new CodeStub(x)),
+				tags: meta.tags,
 			},
 			id,
 		)
@@ -503,19 +503,19 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
  * Each ContactFormValuesContainer has a reference to its `rootForm`.
  * The `serviceFactory` and `formFactory` are used to create new services and add sub-forms.
  */
-export class ContactFormValuesContainer implements FormValuesContainer<DecryptedService, ServiceMetadata> {
-	rootForm: CardinalForm
-	currentContact: DecryptedContact //The contact of the moment, used to record new modifications
-	contactsHistory: DecryptedContact[] //Must be sorted (most recent first), contains all the contacts linked to this form
+export class ContactFormValuesContainer implements FormValuesContainer<Service, ServiceMetadata> {
+	rootForm: ICureForm
+	currentContact: Contact //The contact of the moment, used to record new modifications
+	contactsHistory: Contact[] //Must be sorted (most recent first), contains all the contacts linked to this form
 	children: ContactFormValuesContainer[] //Direct children of the ContactFormValuesContainer
-	serviceFactory: (label: string, serviceId?: string) => DecryptedService
-	formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<CardinalForm>
+	serviceFactory: (label: string, serviceId?: string) => Service
+	formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<ICureForm>
 	formRecycler: (formId: string) => Promise<void>
 
 	changeListeners: ((newValue: ContactFormValuesContainer) => void)[]
 	private _id: string = uuidv4()
 	private _initialised = false
-	private indexedServices: { [id: string]: Version<DecryptedService>[] }
+	private indexedServices: { [id: string]: Version<Service>[] }
 
 	toString(): string {
 		return `Contact(${this.rootForm.formTemplateId}[${this.rootForm.id}]) - ${this._id}`
@@ -528,34 +528,32 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	/**
 	 * Returns a contact that combines the content of the contact in this form with the content of all contents stored in the children
 	 */
-	coordinatedContact(): DecryptedContact {
+	coordinatedContact(): Contact {
 		const childrenContacts = this.children.map((c) => c.coordinatedContact())
 		const thisKeptServiceIds = (this.currentContact.subContacts ?? []).filter((sc) => sc.formId === this.rootForm.id).flatMap((sc) => (sc.services ?? []).map((s) => s.serviceId))
-		return new DecryptedContact({
+		return {
 			...this.currentContact,
-			services: childrenContacts
-				.reduce((acc: DecryptedService[], c: DecryptedContact) => acc.concat(c.services ?? []), [])
-				.concat((this.currentContact.services ?? []).filter((s) => thisKeptServiceIds.includes(s.id))),
+			services: childrenContacts.reduce((acc: Service[], c: Contact) => acc.concat(c.services ?? []), []).concat((this.currentContact.services ?? []).filter((s) => thisKeptServiceIds.includes(s.id))),
 			subContacts: childrenContacts
-				.reduce((acc: DecryptedSubContact[], c: DecryptedContact) => acc.concat(c.subContacts ?? []), [])
+				.reduce((acc: Service[], c: Contact) => acc.concat(c.subContacts ?? []), [])
 				.concat((this.currentContact.subContacts ?? []).filter((s) => s.formId === this.rootForm.id)),
-		})
+		}
 	}
 
 	/**
 	 * Returns a contact that combines the content of the contact in this form with the content of all contents stored in the children
 	 */
-	allForms(): CardinalForm[] {
+	allForms(): Form[] {
 		return [this.rootForm].concat(this.children.flatMap((c) => c.allForms()))
 	}
 
 	constructor(
-		rootForm: CardinalForm,
-		currentContact: DecryptedContact,
-		contactsHistory: DecryptedContact[],
-		serviceFactory: (label: string, serviceId?: string) => DecryptedService,
+		rootForm: ICureForm,
+		currentContact: Contact,
+		contactsHistory: Contact[],
+		serviceFactory: (label: string, serviceId?: string) => Service,
 		children: ContactFormValuesContainer[],
-		formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<CardinalForm>,
+		formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<ICureForm>,
 		formRecycler: (formId: string) => Promise<void>,
 		changeListeners: ((newValue: ContactFormValuesContainer) => void)[] = [],
 		initialised = true,
@@ -594,7 +592,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 						acc,
 					) ?? acc
 			return services
-		}, {} as VersionedData<DecryptedService>)
+		}, {} as VersionedData<Service>)
 
 		this.synchronise()
 	}
@@ -628,12 +626,12 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	}
 
 	static async fromFormsHierarchy(
-		rootForm: CardinalForm,
-		currentContact: DecryptedContact,
-		contactsHistory: DecryptedContact[],
-		serviceFactory: (label: string, serviceId?: string) => DecryptedService,
-		formChildrenProvider: (parentId: string | undefined) => Promise<CardinalForm[]>,
-		formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<CardinalForm>,
+		rootForm: ICureForm,
+		currentContact: Contact,
+		contactsHistory: Contact[],
+		serviceFactory: (label: string, serviceId?: string) => Service,
+		formChildrenProvider: (parentId: string | undefined) => Promise<ICureForm[]>,
+		formFactory: (parentId: string, anchorId: string, formTemplateId: string, label: string) => Promise<ICureForm>,
 		formRecycler: (formId: string) => Promise<void>,
 		changeListeners: ((newValue: ContactFormValuesContainer) => void)[] = [],
 	): Promise<ContactFormValuesContainer> {
@@ -691,7 +689,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		return Promise.resolve(undefined)
 	}
 
-	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<DecryptedService> {
+	getValues(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<Service> {
 		return Object.entries(this.getServicesInHistory(revisionsFilter)).reduce(
 			(acc, [id, history]) =>
 				history.length
@@ -746,7 +744,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 			(meta.codes && service.codes !== meta.codes) ||
 			(meta.tags && service.tags !== meta.tags)
 		) {
-			const newService = new DecryptedService({ ...service, modified: Date.now() })
+			const newService = new Service({ ...service, modified: Date.now() })
 			meta.responsible && (newService.responsible = meta.responsible)
 			meta.valueDate && (newService.valueDate = meta.valueDate)
 			meta.codes && (newService.codes = normalizeCodes(meta.codes))
@@ -770,7 +768,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		}
 	}
 
-	setValue(label: string, language: string, value?: DecryptedService, id?: string, metadata?: ServiceMetadata, changeListenersOverrider?: (fvc: ContactFormValuesContainer) => void): void {
+	setValue(label: string, language: string, value?: Service, id?: string, metadata?: ServiceMetadata, changeListenersOverrider?: (fvc: ContactFormValuesContainer) => void): void {
 		const service = (id && this.getServicesInHistory((sid: string, history) => (sid === id ? history.map((x) => x.revision) : []))[id]?.[0]?.value) || this.serviceFactory(label, id)
 		if (!service.id) {
 			throw new Error('Service id must be defined')
@@ -779,7 +777,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		const newContent = value?.content?.[language]
 		const newCodes = value?.codes ? normalizeCodes(value.codes) : []
 		if (!isContentEqual(service.content?.[language], newContent) || (newCodes && !areCodesEqual(newCodes, service.codes ?? []))) {
-			const newService = new DecryptedService({ ...service, modified: Date.now() })
+			const newService = new Service({ ...service, modified: Date.now() })
 			const newContents = newContent
 				? {
 						...(service.content || {}),
@@ -790,7 +788,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 				delete newContents[language]
 			}
 
-			let newCurrentContact: DecryptedContact
+			let newCurrentContact: Contact
 			if (!Object.entries(newContents).filter(([, cnt]) => cnt !== undefined).length) {
 				newCurrentContact = {
 					...this.currentContact,
@@ -805,12 +803,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 									return sc
 								}
 						  })
-						: (this.currentContact.subContacts ?? []).concat(
-								new DecryptedSubContact({
-									formId: this.rootForm.id,
-									services: [{ serviceId: service.id }],
-								}),
-						  ),
+						: (this.currentContact.subContacts ?? []).concat({ formId: this.rootForm.id, services: [{ serviceId: service.id }] }),
 					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
 						? (this.currentContact.services ?? []).filter((s) => s.id !== service.id)
 						: [...(this.currentContact.services ?? [])],
@@ -839,12 +832,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 									return sc
 								}
 						  })
-						: (this.currentContact.subContacts ?? []).concat(
-								new DecryptedSubContact({
-									formId: this.rootForm.id,
-									services: [{ serviceId: service.id }],
-								}),
-						  ),
+						: (this.currentContact.subContacts ?? []).concat({ formId: this.rootForm.id, services: [{ serviceId: service.id }] }),
 					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
 						? (this.currentContact.services ?? []).map((s) => (s.id === service.id ? newService : s))
 						: [...(this.currentContact.services ?? []), newService],
@@ -874,7 +862,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 					...this.currentContact,
 					services: this.currentContact.services?.map((s) =>
 						s.id === serviceId
-							? new DecryptedService({
+							? new Service({
 									...service,
 									endOfLife: Date.now(),
 							  })
@@ -902,7 +890,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	 * @private
 	 * @param revisionsFilter
 	 */
-	private getServicesInHistory(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<DecryptedService> {
+	private getServicesInHistory(revisionsFilter: (id: string, history: Version<ServiceMetadata>[]) => (string | null)[]): VersionedData<Service> {
 		//index services in history by id
 		return Object.entries(this.indexedServices)
 			.map(([id, history]) => {
@@ -920,7 +908,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 						},
 					})),
 				)
-				return [id, history.filter(({ revision }) => keptRevisions.includes(revision))] as [string, Version<DecryptedService>[]]
+				return [id, history.filter(({ revision }) => keptRevisions.includes(revision))] as [string, Version<Service>[]]
 			})
 			.reduce((acc, [id, history]) => ({ ...acc, [id]: history }), {})
 	}
@@ -946,7 +934,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		this.changeListeners.forEach((l) => notify(l, newContactFormValuesContainer))
 	}
 
-	private getServiceInCurrentContact(id: string): DecryptedService | undefined {
+	private getServiceInCurrentContact(id: string): Service | undefined {
 		const service = (this.currentContact.services || [])?.find((s) => s.id === id)
 		return service ?? undefined
 	}
@@ -979,22 +967,22 @@ const setValueOnContactFormValuesContainer = (
 	cfvc.setValue(
 		label,
 		language,
-		new DecryptedService({
+		{
 			id: id,
-			codes: fv?.codes?.map((x) => new CodeStub(x)) ?? [],
+			codes: fv?.codes ?? [],
 			content: value
 				? {
 						[language]: primitiveTypeToContent(language, value),
 				  }
 				: undefined,
-		}),
+		},
 		id,
 		metadata
 			? {
 					label: metadata?.label ?? label,
 					responsible: metadata?.owner,
 					valueDate: metadata?.valueDate,
-					tags: metadata?.tags?.map((x) => new CodeStub(x)),
+					tags: metadata?.tags,
 			  }
 			: undefined,
 		changeListenersOverrider,

@@ -5,9 +5,9 @@ import { Suggestion, Version } from '../../generic'
 import { calendarPatientPicto, i18nPicto, ownerPicto, resetPicto, searchPicto, versionPicto } from './styles/paths'
 import { format } from 'date-fns'
 import { anyDateToDate } from '../../utils/dates'
-import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-resolved-date'
-import { CustomEventDetail } from '@icure/motss-app-datepicker/dist/typings'
-import { MAX_DATE } from '@icure/motss-app-datepicker/dist/constants'
+import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-resolved-date.js'
+import { CustomEventDetail } from '@icure/motss-app-datepicker/dist/typings.js'
+import { MAX_DATE } from '@icure/motss-app-datepicker/dist/constants.js'
 import { languageName } from '../../utils/languages'
 
 // @ts-ignore

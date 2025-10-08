@@ -49,7 +49,7 @@
 	"access": "public",
 	"dependencies": {
 		"@icure/api": "5.3.18",
-		"@icure/motss-app-datepicker": "^6.0.0-rc.39",
+		"@icure/motss-app-datepicker": "^6.0.0-rc.40",
 		"@lit/task": "^1.0.2",
 		"@webcomponents/webcomponentsjs": "^2.7.0",
 		"date-fns": "^2.23.0",

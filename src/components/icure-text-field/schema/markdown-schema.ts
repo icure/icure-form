@@ -13,7 +13,7 @@ export function getMarkdownSpec(
 ): SchemaSpec {
 	const nodesSelector: (key: string, spec: NodeSpec) => boolean = (key: string, spec: NodeSpec) => {
 		// noinspection RedundantConditionalExpressionJS
-		return key === 'paragraph' ? true : (spec.group === 'block' || ['doc', 'list_item', 'hardbreak', 'image'].includes(key)) && type !== 'text-document' ? false : true
+		return key === 'paragraph' ? true : (spec.group === 'block' || ['doc', 'list_item', 'hard_break', 'image'].includes(key)) && type !== 'text-document' ? false : true
 	}
 	const marksSelector: (key: string, spec: MarkSpec) => boolean = (key: string) => {
 		// noinspection RedundantConditionalExpressionJS
@@ -154,31 +154,7 @@ export function getMarkdownSpec(
 					},
 				},
 
-				measure: {
-					content: 'decimal unit',
-					group: 'block',
-				},
-
-				decimal: {
-					content: 'inline*',
-					group: 'block',
-					parseDOM: [{ tag: 'span' }],
-					toDOM() {
-						return ['span', { class: 'measure' }, 0]
-					},
-					regexp: '[,.0-9-]',
-				},
-
-				unit: {
-					content: 'inline*',
-					group: 'block',
-					parseDOM: [{ tag: 'span' }],
-					toDOM() {
-						return ['span', { class: 'unit' }, 0]
-					},
-				},
-
-				hardbreak: {
+				hard_break: {
 					inline: true,
 					group: 'inline',
 					selectable: false,

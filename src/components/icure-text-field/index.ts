@@ -4,7 +4,7 @@ import { css, html, LitElement, nothing } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { EditorState, Plugin, TextSelection, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
-import { Node as ProsemirrorNode, Schema } from 'prosemirror-model'
+import { Fragment, Node as ProsemirrorNode, Schema, Slice } from 'prosemirror-model'
 import { history, redo, undo } from 'prosemirror-history'
 import { keymap } from 'prosemirror-keymap'
 import { baseKeymap, chainCommands, exitCode, joinDown, joinUp, setBlockType, toggleMark } from 'prosemirror-commands'
@@ -34,6 +34,8 @@ import { extractSingleValue, extractValues } from '../icure-form/fields/utils'
 import { preprocessEmptyNodes, SpacePreservingMarkdownParser } from '../../utils/markdown'
 import { measureOnFocusHandler, measureTransactionMapper } from './schema/measure-schema'
 import { anyDateToDate } from '../../utils/dates'
+import { icureFormLogging } from '../../index'
+import { resetPicto } from '../common/styles/paths'
 
 // Extend the LitElement base class
 export class IcureTextField extends Field {
@@ -73,8 +75,11 @@ export class IcureTextField extends Field {
 	}
 
 	_handleClickOutside(event: MouseEvent): void {
+		const pm = this.shadowRoot?.querySelectorAll('.ProseMirror')[0] as HTMLDivElement
 		if (!event.composedPath().includes(this)) {
 			event.stopPropagation()
+		} else if (pm && !event.composedPath().includes(pm)) {
+			pm.focus()
 		}
 	}
 
@@ -168,18 +173,26 @@ export class IcureTextField extends Field {
 		}
 	}
 
-	render() {
+	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }) {
 		const renderHash = Math.random()
 		let metadata: FieldMetadata | undefined
 		let rev: string | null | undefined
 		let versions: Version<FieldValue>[] | undefined
-		const validationError = this.validationErrorsProvider?.()?.length
+		const validationError = validationErrors.length
 		let valueForExistingLanguages: string[] | undefined = undefined
+
+		if (icureFormLogging) {
+			console.log(`Rendering text-field ${this.schema} ${this.label} [${this.displayedLabels}]`)
+		}
 
 		if (this.view) {
 			let parsedDoc: ProsemirrorNode | undefined
 
 			const data = this.valueProvider?.()
+			if (icureFormLogging) {
+				console.log(`Data for ${this.label} is ${JSON.stringify(data)}`)
+			}
+
 			if (this.isMultivalued()) {
 				const values = extractValues(data, this.metadataProvider ?? (() => ({})))
 				parsedDoc =
@@ -233,32 +246,58 @@ export class IcureTextField extends Field {
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
 						<div id="editor" class="${this.schema}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
+						${!this.displayMetadata && this.defaultValueProvider ? html`<div id="reset" class="reset-button" @click="${async () => await this.reset(renderHash)}">${resetPicto}</div` : nothing}
 					</div>
-
-					${this.displayMetadata && metadata
-						? html`
-								<div class="icure-metadata-container ${validationError ? 'icure-metadata-container__validationError' : ''}">
-									<icure-metadata-buttons-bar
-										.metadata="${metadata}"
-										.revision="${rev}"
-										.versions="${versions ?? []}"
-										.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
-										.defaultLanguage="${this.defaultLanguage}"
-										.selectedLanguage="${this.selectedLanguage}"
-										.languages="${this.languages}"
-										.handleMetadataChanged="${this.handleMetadataChanged}"
-										.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
-										.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
-										.ownersProvider="${this.ownersProvider}"
-										.existingLanguages="${valueForExistingLanguages ?? undefined}"
-									/>
-								</div>
-						  `
-						: ''}
+						${
+							this.displayMetadata && metadata
+								? html`
+										<div class="icure-metadata-container ${validationError ? 'icure-metadata-container__validationError' : ''}">
+											<icure-metadata-buttons-bar
+												.metadata="${metadata}"
+												.revision="${rev}"
+												.versions="${versions ?? []}"
+												.valueId="${extractSingleValue(this.valueProvider?.())?.[0]}"
+												.defaultLanguage="${this.defaultLanguage}"
+												.selectedLanguage="${this.selectedLanguage}"
+												.languages="${this.languages}"
+												.handleReset="${() => this.reset(renderHash)}"
+												.handleMetadataChanged="${this.handleMetadataChanged}"
+												.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
+												.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
+												.ownersProvider="${this.ownersProvider}"
+												.existingLanguages="${valueForExistingLanguages ?? undefined}"
+											/>
+										</div>
+								  `
+								: ''
+						}
+					</div>
+					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		`
+	}
+
+	private async reset(renderHash: number) {
+		if (this.view) {
+			const defaultValue = await this.defaultValueProvider?.()
+			const contentForLanguage = defaultValue?.content?.[this.language()] ?? defaultValue?.content?.[this.defaultLanguage] ?? defaultValue?.content?.['*']
+			const newState = EditorState.create({
+				schema: this.view.state.schema,
+				doc:
+					this.parser?.parse(
+						contentForLanguage ?? {
+							type: 'string',
+							value: '',
+						},
+						undefined,
+						renderHash,
+					) ?? undefined,
+				plugins: this.view.state.plugins,
+				selection: undefined,
+			})
+			this.view.updateState(newState)
+		}
 	}
 
 	mouseDown() {
@@ -288,8 +327,8 @@ export class IcureTextField extends Field {
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
 
 		if (this.container) {
-			const br = pms.nodes.hardbreak
-			const hardbreak = chainCommands(exitCode, (state, dispatch) => {
+			const br = pms.nodes.hard_break
+			const hard_break = chainCommands(exitCode, (state, dispatch) => {
 				dispatch && dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView())
 				return true
 			})
@@ -355,8 +394,8 @@ export class IcureTextField extends Field {
 								pms.marks.em ? { 'Mod-i': toggleMark(pms.marks.em) } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowUp': joinUp } : {},
 								pms.nodes.paragraph ? { 'Alt-ArrowDown': joinDown } : {},
-								pms.nodes.paragraph ? { 'Alt-Enter': hardbreak } : {},
-								pms.nodes.paragraph ? { 'Shift-Enter': hardbreak } : {},
+								pms.nodes.paragraph ? { 'Alt-Enter': hard_break } : {},
+								pms.nodes.paragraph ? { 'Shift-Enter': hard_break } : {},
 								pms.nodes.ordered_list ? { 'Shift-ctrl-1': wrapInList(pms.nodes.ordered_list) } : {},
 								pms.nodes.bullet_list ? { 'Shift-ctrl-*': wrapInList(pms.nodes.bullet_list) } : {},
 								pms.nodes.blockquote ? { 'Shift-ctrl-w': wrapInIfNeeded(pms.nodes.blockquote) } : {},
@@ -374,6 +413,34 @@ export class IcureTextField extends Field {
 						maskPlugin(),
 						regexpPlugin(),
 						hasContentClassPlugin(this.shadowRoot || undefined),
+						new Plugin({
+							props: {
+								transformPasted(slice) {
+									let ok = true
+									slice.content.forEach((node) => {
+										if (!pms.nodes[node.type.name]) {
+											ok = false
+										}
+									})
+
+									if (ok) {
+										return slice
+									}
+									if (pms.nodes.paragraph)
+										return new Slice(
+											Fragment.fromArray(
+												slice.content
+													.textBetween(0, slice.content.size, ' ')
+													.split('\n')
+													.map((line) => pms.nodes.paragraph.create({}, [pms.text(line)])),
+											),
+											0,
+											0,
+										)
+									else return new Slice(Fragment.fromArray([pms.text(slice.content.textBetween(0, slice.content.size, ' ').split('\n').join(' '))]), 0, 0)
+								},
+							},
+						}),
 						keymap(baseKeymap),
 					]
 						.filter((x) => !!x)
@@ -484,7 +551,10 @@ export class IcureTextField extends Field {
 							return undefined
 						}
 
-						const decimal = value.value?.toString() ?? ''
+						const decimal =
+							value.value !== undefined
+								? value.value.toFixed(this.styleOptions?.decimalPlaces || this.styleOptions?.decimalPlaces?.toString() === '0' ? parseInt(this.styleOptions.decimalPlaces.toString()) : 2)
+								: ''
 						const unit = value.unit
 
 						return pms.node(
@@ -497,7 +567,13 @@ export class IcureTextField extends Field {
 			: schemaName === 'decimal'
 			? {
 					parse: (value: PrimitiveType) => {
-						return value.type === 'number' ? pms.node('paragraph', {}, [pms.node('decimal', {}, [pms.text(value.value.toString())])]) : undefined
+						return value.type === 'number'
+							? pms.node('paragraph', {}, [
+									pms.node('decimal', {}, [
+										pms.text(value.value.toFixed(this.styleOptions?.decimalPlaces || this.styleOptions?.decimalPlaces?.toString() === '0' ? parseInt(this.styleOptions.decimalPlaces.toString()) : 2)),
+									]),
+							  ])
+							: undefined
 					},
 			  }
 			: schemaName === 'date-time'
@@ -535,7 +611,7 @@ export class IcureTextField extends Field {
 								alt: (tok.children || [])[0]?.content || null,
 							}),
 						},
-						hardbreak: { node: 'hardbreak' },
+						hard_break: { node: 'hard_break' },
 
 						em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 						strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },

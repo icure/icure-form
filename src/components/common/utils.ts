@@ -23,7 +23,7 @@ export function generateLabel(
 }
 
 export const makePromoter = (promotions: string[]) => {
-	const middle = promotions.indexOf('*' ?? '')
+	const middle = promotions.indexOf('*')
 	return (code: Code): number => {
 		const index = promotions.indexOf(code.id ?? '')
 		return index >= 0 ? index - middle : 0

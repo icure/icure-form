@@ -1,0 +1,3298 @@
+form: Preventi
+id: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+description: Preventi Questionnaire
+sections:
+  - section: Résumé
+    fields:
+      - group: "Données patient"
+        span: 24
+        fields:
+          - field: DP1
+            shortLabel: Nom
+            span: 12
+            type: text-field
+            readonly: true
+            computedProperties:
+              value: |
+                return [patient.firstName, patient.lastName].join(' ')
+          - field: DP2
+            shortLabel: Sexe
+            span: 6
+            type: text-field
+            readonly: true
+            computedProperties:
+              value: |
+                return `${patient.birthSex === Gender.Male ? 'Homme' : patient.birthSex === Gender.Female ? 'Femme' : 'Autre'})`
+          - field: DP3
+            shortLabel: Date de naissance
+            span: 6
+            type: text-field
+            readonly: true
+            computedProperties:
+              value: |
+                return `${patient.dateOfBirth?.toString().replace(/(....)(..)(..)/, '$3/$2/$1')} (${age(patient.dateOfBirth)})`
+          - field: GI08
+            shortLabel: Groupe sanguin
+            span: 6
+            type: text-field
+          - field: GI04
+            shortLabel: Tour de taille, cm
+            span: 6
+            type: number-field
+          - field: GI05
+            shortLabel: TA sys., mmHg
+            span: 6
+            type: number-field
+          - field: GI06
+            shortLabel: TA dia., mmHg
+            span: 6
+            type: number-field
+          - field: GI01
+            shortLabel: Poids, kg
+            span: 6
+            type: number-field
+          - field: GI02
+            shortLabel: Taille, cm
+            span: 6
+            type: number-field
+          - field: GI03
+            shortLabel: BMI, kg/m2
+            span: 6
+            type: number-field
+            computedProperties:
+              value: |
+                const w = parseContent(GI01[0]?.content)
+                let h = parseContent(GI02[0]?.content)
+                if (!w || !h) { return undefined }
+                if (h > 3) { h = h / 100 } 
+                return { content: { '*': { type: 'number', value: w / (h * h) } }, codes: [] }
+          - field: GI07
+            shortLabel: Fréquence cardiaque, bpm
+            span: 6
+            type: number-field
+      - group: "Résumé médical"
+        span: 24
+        fields:
+          - field: RM1
+            shortLabel: Traitements chroniques
+            span: 24
+            multiline: true
+            type: text-field
+            computedProperties:
+              defaultValue: |
+                return 'Aucun'
+          - field: RM2
+            shortLabel: Allergies
+            span: 24
+            multiline: true
+            type: text-field
+            computedProperties:
+              defaultValue: |
+                const at = [
+                  AT18
+                ].flatMap((f) => f).map((s) => parseContent(s?.content)).filter((x) => !!x)
+                return at.length ? at.join('\n') : 'Aucun'
+          - field: RM3
+            shortLabel: Antécédents médicaux
+            span: 24
+            multiline: true
+            type: text-field
+            computedProperties:
+              defaultValue: |
+                const at = [
+                  AT02,AT03,AT04,AT05,AT06,AT07,AT08,AT09,AT10,AT11,AT12,AT19,AT13,AT01
+                ].flatMap((f) => f).map((s) => parseContent(s?.content)).filter((x) => !!x)
+                return at.length ? at.join('\n') : 'Aucun'
+          - field: RM4
+            shortLabel: Antécédents chirurgicaux
+            span: 24
+            multiline: true
+            type: text-field
+            computedProperties:
+              defaultValue: |
+                const at = [
+                  AT15
+                ].flatMap((f) => f).map((s) => parseContent(s?.content)).filter((x) => !!x)
+                return at.length ? at.join('\n') : 'Aucun'
+          - field: RM5
+            shortLabel: Antécédents familiaux
+            span: 24
+            multiline: true
+            type: text-field
+            computedProperties:
+              defaultValue: |
+                const at = [
+                  AT16
+                ].flatMap((f) => f).map((s) => parseContent(s?.content)).filter((x) => !!x)
+                return at.length ? at.join('\n') : 'Aucun'
+
+      - group: Recommandations
+        span: 24
+        fields:
+          - field: RE01
+            shortLabel: "État général de santé"
+            span: 24
+            type: text-field
+            multiline: true
+          - field: RE02
+            shortLabel: "Context social et environnemental"
+            span: 24
+            type: text-field
+            multiline: true
+            computedProperties:
+              defaultValue: |
+                return Promise.all([
+                  translate(language, 'mistral', 'IC03', text(IC03)),
+                ]).then(([ic03]) => Promise.all([
+                  translate(language, 'mistral','RE02'),
+                  hasOption(IC04[0],'1') ? translate(language, 'mistral', 'IC04|1|1') : Promise.resolve(''),
+                  hasOption(IC01[0],'1') ? translate(language, 'mistral', 'IC01|1|1', Number.isFinite(parseContent(IC03[0]?.content)) ? ic03 : text(IC03), text(IC02)) : Promise.resolve('')
+                ]).then(([ic04, ic01]) => 
+                  summarize([ic04, ic01].filter((x) => !!x && x.length).join('\n'), [
+                    ['SO01',SO01[0]?.codes?.[0]?.id],
+                    ['SO02',SO02[0]?.codes?.[0]?.id],
+                    ['SO03',SO03[0]?.codes?.[0]?.id],
+                    ['SO04',SO04[0]?.codes?.[0]?.id],
+                    ['SO05',SO05[0]?.codes?.[0]?.id],
+                    ['HE01',HE01[0]?.codes?.[0]?.id],
+                    ['HE03',HE03[0]?.codes?.[0]?.id],
+                    ['HE04',HE04[0]?.codes?.[0]?.id],
+                    ['HE05',HE05[0]?.codes?.[0]?.id],
+                    ['HE06',HE06[0]?.codes?.[0]?.id],
+                    ['HE07',HE07[0]?.codes?.[0]?.id],
+                    ['HE09',HE09[0]?.codes?.[0]?.id],
+                    ['HE10',HE10[0]?.codes?.[0]?.id],
+                    ['HE11',HE11[0]?.codes?.[0]?.id],
+                    ['HE12',HE12[0]?.codes?.[0]?.id],
+                    ['HE13',HE13[0]?.codes?.[0]?.id],
+                    ['HE14',HE14[0]?.codes?.[0]?.id],
+                    ['HE15',HE15[0]?.codes?.[0]?.id],
+                    ['HE16',HE16[0]?.codes?.[0]?.id],
+                    ['HE17',HE17[0]?.codes?.[0]?.id],
+                  ])
+                )) 
+
+          - field: RE03
+            shortLabel: "Santé mentale et qualité du sommeil"
+            span: 24
+            type: text-field
+            multiline: true
+            computedProperties:
+              defaultValue: |
+                const nSM12 = parseContent(SM12[0]?.content)
+                const nSM19 = parseContent(SM19[0]?.content)
+                const nSM43 = parseContent(SM43[0]?.content)
+                const nSM56 = parseContent(SM56[0]?.content)
+                return Promise.all([
+                  translate(language, 'mental-health', 'SM14|' + text(SM14)),
+                  translate(language, 'mental-health', 'SM12|' + (nSM12 < 14 ? '0-13' : nSM12 < 27 ? '14-26' : '27-40')),
+                  translate(language, 'mental-health', 'SM19|' + (nSM19 < 12 ? '0-11' : nSM19 < 16 ? '12-15' : nSM19 < 21 ? '16-20' :'21-33')),
+                  translate(language, 'mental-health', 'SM43|' + (nSM43 < 5 ? '0-4' : nSM43 < 8 ? '5-7' : nSM43 < 15 ? '8-14' :'15-21')),
+                  translate(language, 'mental-health', 'SM56|' + (nSM56 < 5 ? '0-4' : nSM56 < 10 ? '5-9' : nSM56 < 15 ? '10-14' :'15-17')),
+                ]).then((ts) => ts.join('\n'))
+
+          - field: RE04
+            shortLabel: "Alimentation et activité physique"
+            span: 24
+            type: text-field
+            multiline: true
+            computedProperties:
+              defaultValue: |
+                return Promise.all([
+                  translate(language, 'mistral', 'PA01'),
+                  translate(language, 'mistral', 'PA09', text(PA09)),
+                  translate(language, 'mistral', 'PA12', text(PA12)),
+                  translate(language, 'mistral', 'PA17', text(PA17)),
+                  translate(language, 'mistral', 'PA19', text(PA19)),
+                  translate(language, 'mistral', 'PA23', text(PA23)),
+                  translate(language, 'mistral', 'PA27', text(PA27)),
+                  translate(language, 'mistral', 'NH00'),
+                  translate(language, 'mistral', 'NH02', text(NH02)),
+                  translate(language, 'mistral', 'NH04', text(NH04)),
+                  translate(language, 'mistral', 'NH11', text(NH11)),
+                ]).then(([pa01, pa09, pa12, pa17, pa19, pa23, pa27, nh00, nh02, nh04, nh11]) =>
+                  Promise.all([
+                    summarize(pa01, [
+                      ['PA05', PA05[0]?.codes?.[0]?.id],
+                      ['PA08', PA08[0]?.codes?.[0]?.id === 'PA08|1|1' ? pa09 : PA08[0]?.codes?.[0]?.id],
+                      ['PA10', PA10[0]?.codes?.[0]?.id],
+                      ['PA11', PA11[0]?.codes?.[0]?.id === 'PA11|1|1' ? pa12 : PA11[0]?.codes?.[0]?.id],
+                      ['PA13', PA13[0]?.codes?.[0]?.id],
+                      ['PA11', PA16[0]?.codes?.[0]?.id === 'PA16|1|1' ? pa17 : PA16[0]?.codes?.[0]?.id],
+                      ['PA18', pa19],
+                      ['PA22', PA22[0]?.codes?.[0]?.id === 'PA22|1|1' ? pa23 : PA22[0]?.codes?.[0]?.id],
+                      ['PA26', pa27],
+                    ]),
+                    summarize(nh00, [
+                      ['NH01', NH01[0]?.codes?.[0]?.id],
+                      ['NH02', nh02],
+                      ['NH03', NH03[0]?.codes?.[0]?.id],
+                      ['NH04', nh04],
+                      ['NH05', NH05[0]?.codes?.[0]?.id],
+                      ['NH06', NH06[0]?.codes?.[0]?.id],
+                      ['NH07', NH07[0]?.codes?.[0]?.id],
+                      ['NH08', NH08[0]?.codes?.[0]?.id],
+                      ['NH09', NH09[0]?.codes?.[0]?.id],
+                      ['NH10', nh11],
+                      ['NH12', NH12[0]?.codes?.[0]?.id],
+                      ['NH13', NH13[0]?.codes?.[0]?.id],
+                      ['NH14', NH14[0]?.codes?.[0]?.id],
+                      ['NH15', NH15[0]?.codes?.[0]?.id],
+                    ]),
+                ]).then(([summary1, summary2]) => summary1 + '\n\n' + summary2))
+
+          - field: RE05
+            shortLabel: "Consommation d'alcool et addictions"
+            span: 24
+            type: text-field
+            multiline: true
+          - field: RE06
+            shortLabel: "Qualité et espérance de vie"
+            span: 24
+            type: text-field
+            multiline: true
+          - field: RE07
+            shortLabel: "Parcours santé"
+            span: 24
+            type: text-field
+            multiline: true
+            computedProperties:
+              defaultValue: |
+                const sc32 = text(SC32)
+                
+                return (hasOption(SC31[0],'2') ? translate(language, 'health-journey', 'SC31') + '\n' : '') +
+                (sc32?.length > 0 ? translate(language, 'health-journey', 'SC32', sc32) + '\n' : '') +
+
+          - field: RE08
+            shortLabel: "Résultats de la prise de sang"
+            span: 24
+            type: text-field
+            multiline: true
+          - field: RE09
+            shortLabel: "Conclusion. Recommandations principales"
+            span: 24
+            type: text-field
+            multiline: true
+
+  - section: Informations générales
+    fields:
+      - field: GI01
+        shortLabel: Poids, kg
+        span: 24
+        type: number-field
+      - field: GI02
+        shortLabel: Taille, cm
+        span: 24
+        type: number-field
+      - field: GI03
+        shortLabel: BMI, kg/m2
+        span: 24
+        type: number-field
+        computedProperties:
+          value: |
+            const w = parseContent(GI01[0]?.content)
+            let h = parseContent(GI02[0]?.content)
+            if (!w || !h) { return undefined }
+            if (h > 3) { h = h / 100 } 
+            return { content: { '*': { type: 'number', value: w / (h * h) } }, codes: [] }
+      - field: GI04
+        shortLabel: Tour de taille, cm
+        span: 24
+        type: number-field
+      - field: GI05
+        shortLabel: Tension artérielle (systolique), mmHg
+        span: 24
+        type: number-field
+      - field: GI06
+        shortLabel: Tension artérielle (diastolique), mmHg
+        span: 24
+        type: number-field
+      - field: GI07
+        shortLabel: Fréquence cardiaque, bpm
+        span: 24
+        type: number-field
+      - field: GI08
+        shortLabel: Groupe sanguin
+        span: 24
+        type: text-field
+      - field: GI09
+        shortLabel: Combien d'enfants avez-vous
+        span: 24
+        type: text-field
+      - field: MS1
+        shortLabel: Bilan MST
+        span: 24
+        type: text-field
+      - field: CP1
+        shortLabel: Commentaire patient
+        span: 24
+        type: text-field
+  - section: Aidant proche
+    fields:
+      - field: IC01
+        shortLabel: Apportez-vous, au moins une fois par semaine, en dehors de votre
+          profession, de l'aide ou des soins à une ou plusieurs personnes ayant
+          des problèmes liés à l'âge, une maladie chronique, une affection de
+          longue durée ou un handicap?
+        span: 24
+        type: radio-button
+        options:
+          IC01|1|1: Oui
+          IC01|2|1: Non
+      - field: IC02
+        shortLabel: En dehors de votre profession, a qui apportez-vous le plus d'aide ou
+          de soins ? (une seule réponse possible)
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(IC01[0],'1')"
+        options:
+          IC02|1|1: Un ou plusieurs membre(s) du ménage
+          IC02|2|1: Un ou plusieurs membre(s) de la famille mais non-membre(s) du ménage
+          IC02|3|1: Une ou plusieurs personnes, non-membre(s) du ménage ou de la famille
+      - field: IC03
+        shortLabel: Au total, combien d'heures  par semaine consacrez-vous généralement
+          à apporter de l'aide ou des soins?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(IC01[0],'1')"
+        options:
+          IC03|1|1: Moins que 10 heures par semaine
+          IC03|2|1: Au moins 10 heures, mais moins que 20 heures par semaine
+          IC03|3|1: 20 heures par semaine ou plus
+      - field: IC04
+        shortLabel: Avez-vous des enfants en âge de se rendre à la crèche ?
+        span: 24
+        type: radio-button
+        options:
+          IC04|1|1: Oui
+          IC04|2|1: Non
+      - field: IC05
+        shortLabel: Y a-t-il la moindre chance que vous soyez actuellement enceinte ?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !(patient.birthSex === 'Female' || patient.gender === 'Female')"
+        options:
+          IC05|1|1: Oui
+          IC05|2|1: Non
+      - field: IC06
+        shortLabel: Souhaitez vous discuter de votre moyen de contraception avec le
+          médecin ?
+        span: 24
+        type: radio-button
+        options:
+          IC06|1|1: Oui
+          IC06|2|1: Non
+          IC06|3|1: Pouvez-vous fournir plus d'informations à ce sujet?
+      - field: IC07
+        shortLabel: Avez-vous un souhait de grossesse dans les 12 prochains mois ?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !(patient.birthSex === 'Female' || patient.gender === 'Female')"
+        options:
+          IC07|1|1: Oui
+          IC07|2|1: Non
+      - field: IC08
+        shortLabel: Proposition de bilan sanguin
+        span: 24
+        type: label
+  - section: Vie sociale
+    fields:
+      - field: SO01
+        shortLabel: Comment trouvez vous vos contacts sociaux ?
+        span: 24
+        type: radio-button
+        options:
+          SO01|1|1: Très satisfaisants
+          SO01|2|1: Plutôt satisfaisants
+          SO01|3|1: Plutôt insatisfaisants
+          SO01|4|1: Vraiment insatisfaisants
+      - field: SO02
+        shortLabel: Habituellement, à quelle fréquence avez-vous des contacts avec des
+          parents, des enfants, des amis, des connaissances …
+        span: 24
+        type: radio-button
+        options:
+          SO02|1|1: Au moins 1 fois par semaine
+          SO02|2|1: Au moins 1 fois par mois
+          SO02|3|1: Au moins 3 ou 4 fois par an
+          SO02|4|1: Au moins 1 fois par an
+          SO02|5|1: Jamais
+      - field: SO03
+        shortLabel: Combien de personnes sont suffisamment proches de vous pour que vous
+          puissiez compter sur elles lorsque vous avez de graves problèmes ?
+        span: 24
+        type: radio-button
+        options:
+          SO03|1|1: Aucune
+          SO03|2|1: 1 ou 2
+          SO03|3|1: 3 à 5
+          SO03|4|1: 6 ou plus
+      - field: SO04
+        shortLabel: Dans quelle mesure les gens se préoccupent-ils et s’intéressent-ils
+          à ce que vous faites ?
+        span: 24
+        type: radio-button
+        options:
+          SO04|1|1: Beaucoup
+          SO04|2|1: Moyennement
+          SO04|3|1: Je ne peux pas le dire avec certitude
+          SO04|4|1: un peu
+          SO04|5|1: Pas du tout
+      - field: SO05
+        shortLabel: Vous est-il facile d’obtenir, en cas de besoin, une aide pratique de
+          vos voisins ?
+        span: 24
+        type: radio-button
+        options:
+          SO05|1|1: Très facile
+          SO05|2|1: Facile
+          SO05|3|1: Possible
+          SO05|4|1: Difficile
+          SO05|5|1: Très difficile
+  - section: Facteurs environnementaux
+    fields:
+      - field: HE01
+        shortLabel: Je vais maintenant vous poser 2 séries de questions qui concernent
+          les facteurs environnementaux. La première série concerne les facteurs
+          environnementaux dans votre quartier, alors que la seconde concerne
+          les facteurs qui peuvent vous affecter, chez vous, à la maison.
+        span: 24
+        type: label
+      - group: "Série 1: Quartier"
+        span: 24
+        fields:
+          - field: HE03
+            shortLabel: Dans votre quartier ou voisinage, à quel point les conditions
+              suivantes posent-elles un problème?
+            span: 24
+            type: label
+          - field: HE04
+            shortLabel: La vitesse ou le volume du trafic pose-t-elle problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE04|1|1: Pas du tout un problème
+              HE04|2|1: Problème mineur
+              HE04|3|1: Assez gros problème
+              HE04|4|1: Très gros problème
+              HE04|5|1: Ne sait pas
+              HE04|6|1: Pas de réponse
+          - field: HE05
+            shortLabel: L'accumulation d'immondices pose-t-elle problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE05|1|1: Pas du tout un problème
+              HE05|2|1: Problème mineur
+              HE05|3|1: Assez gros problème
+              HE05|4|1: Très gros problème
+              HE05|5|1: Ne sait pas
+              HE05|6|1: Pas de réponse
+          - field: HE06
+            shortLabel: Vandalisme, graffitis ou endommagement délibéré de biens posent-ils
+              problèmes ?
+            span: 24
+            type: radio-button
+            options:
+              HE06|1|1: Pas du tout un problème
+              HE06|2|1: Problème mineur
+              HE06|3|1: Assez gros problème
+              HE06|4|1: Très gros problème
+              HE06|5|1: Ne sait pas
+              HE06|6|1: Pas de réponse
+          - field: HE07
+            shortLabel: Manque d'accès à des parcs ou d'autres espaces publics verts ou
+              récréatifs pose-t-il problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE07|1|1: Pas du tout un problème
+              HE07|2|1: Problème mineur
+              HE07|3|1: Assez gros problème
+              HE07|4|1: Très gros problème
+              HE07|5|1: Ne sait pas
+              HE07|6|1: Pas de réponse
+      - group: "Série 2: Maison"
+        span: 24
+        fields:
+          - field: HE09
+            shortLabel: Si vous pensez aux 12 derniers mois, quand vous êtes à domicile, de
+              quelle façon êtes-vous gêné(e), affecté(e) ou ennuyé(e), par les
+              conditions suivantes?
+            span: 24
+            type: label
+          - field: HE10
+            shortLabel: Pollution de l’air pose-t-elle problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE10|1|1: Pas du tout
+              HE10|2|1: Légèrement
+              HE10|3|1: Moyennement
+              HE10|4|1: Beaucoup
+              HE10|5|1: Extrêmement
+              HE10|6|1: Ne sait pas
+              HE10|7|1: Pas de réponse
+          - field: HE11
+            shortLabel: Mauvaises odeurs venant d'industries ou venant d'autres sources
+              (égouts, déchets, engrais) posent-ils problèmes ?
+            span: 24
+            type: radio-button
+            options:
+              HE11|1|1: Pas du tout
+              HE11|2|1: Légèrement
+              HE11|3|1: Moyennement
+              HE11|4|1: Beaucoup
+              HE11|5|1: Extrêmement
+              HE11|6|1: Ne sait pas
+              HE11|7|1: Pas de réponse
+          - field: HE12
+            shortLabel: Vibrations dues au trafic routier, aérien, ferroviaire, tram, métro
+              ou à des entreprises proches posent-elles problèmes ?
+            span: 24
+            type: radio-button
+            options:
+              HE12|1|1: Pas du tout
+              HE12|2|1: Légèrement
+              HE12|3|1: Moyennement
+              HE12|4|1: Beaucoup
+              HE12|5|1: Extrêmement
+              HE12|6|1: Ne sait pas
+              HE12|7|1: Pas de réponse
+          - field: HE13
+            shortLabel: Bruit du trafic routier pose-t-il problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE13|1|1: Pas du tout
+              HE13|2|1: Légèrement
+              HE13|3|1: Moyennement
+              HE13|4|1: Beaucoup
+              HE13|5|1: Extrêmement
+              HE13|6|1: Ne sait pas
+              HE13|7|1: Pas de réponse
+          - field: HE14
+            shortLabel: Bruit du trafic ferroviaire, du tram ou du métro pose-t-il problème
+              ?
+            span: 24
+            type: radio-button
+            options:
+              HE14|1|1: Pas du tout
+              HE14|2|1: Légèrement
+              HE14|3|1: Moyennement
+              HE14|4|1: Beaucoup
+              HE14|5|1: Extrêmement
+              HE14|6|1: Ne sait pas
+              HE14|7|1: Pas de réponse
+          - field: HE15
+            shortLabel: Bruit du trafic aérien pose-t-il problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE15|1|1: Pas du tout
+              HE15|2|1: Légèrement
+              HE15|3|1: Moyennement
+              HE15|4|1: Beaucoup
+              HE15|5|1: Extrêmement
+              HE15|6|1: Ne sait pas
+              HE15|7|1: Pas de réponse
+          - field: HE16
+            shortLabel: Bruit provenant des entreprises proches (usine, atelier) pose-t-il
+              problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE16|1|1: Pas du tout
+              HE16|2|1: Légèrement
+              HE16|3|1: Moyennement
+              HE16|4|1: Beaucoup
+              HE16|5|1: Extrêmement
+              HE16|6|1: Ne sait pas
+              HE16|7|1: Pas de réponse
+          - field: HE17
+            shortLabel: Bruit du voisinage pose-t-il problème ?
+            span: 24
+            type: radio-button
+            options:
+              HE17|1|1: Pas du tout
+              HE17|2|1: Légèrement
+              HE17|3|1: Moyennement
+              HE17|4|1: Beaucoup
+              HE17|5|1: Extrêmement
+              HE17|6|1: Ne sait pas
+              HE17|7|1: Pas de réponse
+  - section: Absence au travail
+    fields:
+      - field: AW01
+        shortLabel: Au cours des 12 derniers mois, avez-vous été absent(e) de votre
+          travail pour des raisons de santé? Prenez en considération toutes les
+          maladies, blessures et autres problèmes de santé que vous auriez eus
+          et qui ont impliqué une absence au travail..
+        span: 24
+        type: radio-button
+        options:
+          AW01|1|1: Oui
+          AW01|2|1: Non
+      - field: AW02
+        shortLabel: Au cours des 12 derniers mois, combien de jours au total étiez-vous
+          absent(e) de votre travail pour des raisons de santé? Si vous ne
+          connaissez pas le nombre exact de jours, donnez une estimation.
+        span: 24
+        type: number-field
+        computedProperties:
+          hidden: "return !hasOption(AW01[0],'1')"
+      - field: AW03
+        shortLabel: Quel est la raison principale de cette absence ?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(AW01[0],'1')"
+        options:
+          AW03|1|1: Dépression
+          AW03|2|1: Contexte social
+          AW03|3|1: problème de santé
+          AW03|4|1: Accident
+          AW03|5|1: Autre
+  - section: Anamnèse
+    fields:
+      - group: "Antécédents médicaux:"
+        span: 24
+        fields:
+          - field: AT02
+            shortLabel: Maladies respiratoires
+            span: 24
+            type: text-field
+          - field: AT03
+            shortLabel: Maladies cardiovasculaires
+            span: 24
+            type: text-field
+          - field: AT04
+            shortLabel: Maladies du système digestif
+            span: 24
+            type: text-field
+          - field: AT05
+            shortLabel: Maladies hormonales
+            span: 24
+            type: text-field
+          - field: AT06
+            shortLabel: Maladies du système nerveux
+            span: 24
+            type: text-field
+          - field: AT07
+            shortLabel: Reins et  voies urinaires
+            span: 24
+            type: text-field
+          - field: AT08
+            shortLabel: Saignement
+            span: 24
+            type: text-field
+          - field: AT09
+            shortLabel: Troubles mentaux
+            span: 24
+            type: text-field
+          - field: AT10
+            shortLabel: Traitements oncologiques
+            span: 24
+            type: text-field
+          - field: AT11
+            shortLabel: Maladies oculaires
+            span: 24
+            type: text-field
+          - field: AT12
+            shortLabel: Système musculosquelettique
+            span: 24
+            type: text-field
+          - field: AT13
+            shortLabel: Autres conditions ou maladies (congénitales)
+            span: 24
+            type: text-field
+          - field: AT01
+            shortLabel: Autres
+            span: 24
+            type: text-field
+
+      - group: "Autres antécédents:"
+        span: 24
+        fields:
+          - field: AT15
+            shortLabel: Antécédents chirurgicaux
+            span: 24
+            type: text-field
+          - field: AT16
+            shortLabel: Antécédents familiaux
+            span: 24
+            type: text-field
+          - field: AT17
+            shortLabel: Allergie
+            span: 24
+            type: text-field
+          - field: AT18
+            shortLabel: Médicaments
+            span: 24
+            type: text-field
+          - field: AT19
+            shortLabel: Santé dentaire
+            span: 24
+            type: text-field
+  - section: Reproduction/Ménopause
+    fields:
+      - field: CP01
+        shortLabel: "Utilisez-vous ou appliquez-vous actuellement un moyen de contraception?"
+        span: 24
+        type: radio-button
+        options:
+          CP01|1|1: Oui
+          CP01|2|1: Non
+          CP01|3|1: Ne préfère pas dire
+      - field: CP02
+        shortLabel: "Avez-vous eu vos règles au cours des 12 derniers mois?"
+        span: 24
+        type: radio-button
+        options:
+          CP02|1|1: Oui
+          CP02|2|1: Non
+          CP02|3|1: Ne préfère pas dire
+      - field: CP03
+        shortLabel: "Symptômes de ménopause: Avez-vous une ou plusieurs des plaintes suivantes?"
+        span: 24
+        type: radio-button
+        options:
+          CP03|1|1: Sécheresse vaginale
+          CP03|2|1: Transpiration excessive la nuit
+          CP03|3|1: Prise de poids involontaire
+          CP03|4|1: Bouffées de chaleur
+          CP03|5|1: Aucune de ces réponses
+          CP03|6|1: Troubles du sommeil
+          CP03|7|1: Sensation de battements cardiaques trop rapides ou manqués (palpitations)
+          CP03|8|1: Sautes d'humeur
+          CP03|9|1: Veuillez préciser le choix \"autre\
+          CP03|10|1: Difficultés de concentration
+          CP03|11|1: Autre
+          CP03|12|1: Fatigue inhabituelle (sensation anormale de fatigue non liée à l'exercice ou aux activités)
+      - field: CP04
+        shortLabel: Quelle est la fréquence de ces plaintes ?
+        span: 24
+        type: radio-button
+        options:
+          CP04|1|1: Parfois
+          CP04|2|1: Souvent
+          CP04|3|1: Très souvent
+      - field: CP05
+        shortLabel: "Est-ce qu'un diagnostic de ménopause a été posé par un médecin?"
+        span: 24
+        type: radio-button
+        options:
+          CP02|1|1: Oui
+          CP02|2|1: Non
+      - field: CP06
+        shortLabel: "Quel âge avait votre mère lorsqu'elle a ressenti les troubles de la ménopause ?"
+        span: 24
+        type: text-field
+
+  - section: Santé dentaire
+    fields:
+      - field: DHDC01
+        shortLabel: A quelle fréquence vous brossez-vous les dents habituellement?
+        span: 24
+        type: radio-button
+        options:
+          DHDC01|1|1: Plus de deux fois par jour
+          DHDC01|2|1: Deux fois par jour
+          DHDC01|3|1: Une fois par jour
+          DHDC01|4|1: Moins d’une fois par jour
+          DHDC01|5|1: Jamais
+          DHDC01|6|1: Non applicable (d'après le répondant)
+      - field: DHDC02
+        shortLabel: Globalement, comment qualifieriez-vous l’état de vos dents et de vos
+          gencives ?
+        span: 24
+        type: radio-button
+        options:
+          DHDC02|1|1: Très bon
+          DHDC02|2|1: Bon
+          DHDC02|3|1: Ni bon, ni mauvais
+          DHDC02|4|1: Mauvais
+          DHDC02|5|1: Très mauvais
+      - field: DHDC03
+        shortLabel: Au cours des 12 derniers mois, avez-vous eu des douleurs dans votre
+          bouche?
+        span: 24
+        type: radio-button
+        options:
+          DHDC03|1|1: Oui
+          DHDC03|2|1: Non
+      - field: DHDC04
+        shortLabel: Quand avez-vous consulté  votre dentiste ou orthodontiste pour la
+          dernière fois?
+        span: 24
+        type: radio-button
+        options:
+          DHDC04|1|1: Il y a moins de 6 mois
+          DHDC04|2|1: Il y a 6 moins ou plus, mais moins de 12 mois.
+          DHDC04|3|1: Il y a 12 mois ou plus
+          DHDC04|4|1: Jamais
+          DHDC04|5|1: Ne sait pas
+  - section: Dépistage du cancer
+    fields:
+      - group: Antécédents familiaux de cancer
+        span: 24
+        fields:
+          - field: SC02
+            shortLabel: Avez-vous connaissance de cancer dans la famille ? (parents
+              biologiques, oncles et tantes, frères et sœurs, cousins germains)
+            span: 24
+            type: radio-button
+            options:
+              SC02|1|1: Oui
+              SC02|2|1: Non
+          - field: SC03
+            shortLabel: Qui a eu un cancer dans votre famille ?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC02[0],'1')"
+            options:
+              SC03|1|1: Père biologique
+              SC03|2|1: Mère biologique
+              SC03|3|1: Frère biologique
+              SC03|4|1: Sœur biologique
+              SC03|5|1: Oncle / Tante
+              SC03|6|1: Cousin(e ) germain
+              SC03|7|1: Autre
+          - field: SC04
+            shortLabel: "Frère biologique: 1 ou plusieurs ?"
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'3') || !hasOption(SC02[0],'1')"
+            options:
+              SC04|1|1: "1"
+              SC04|2|1: Plusieurs
+          - field: SC05
+            shortLabel: Quel type de cancer ?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'3') || !hasOption(SC02[0],'1')"
+            options:
+              SC05|1|1: Cancer du sein
+              SC05|2|1: Cancer du col de l'utérus
+              SC05|3|1: Cancer des ovaires
+              SC05|4|1: Cancer de la prostate
+              SC05|5|1: Cancer sanguin (lymphome, leucémie,…)
+              SC05|6|1: Cancer pulmonaire
+              SC05|7|1: Cancer du colon
+              SC05|8|1: Cancer du pancréas
+              SC05|9|1: Cancer de la peau
+              SC05|10|1: "Autre: précisez"
+          - field: SC06
+            shortLabel: "Si autre, précisez:"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(SC05[0],'10') || !hasOption(SC02[0],'1')"
+          - field: SC07
+            shortLabel: "Sœur biologique: 1 ou plusieurs ?"
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'4') || !hasOption(SC02[0],'1')"
+            options:
+              SC07|1|1: "1"
+              SC07|2|1: Plusieurs
+          - field: SC08
+            shortLabel: Quel type de cancer ?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'4') || !hasOption(SC02[0],'1')"
+            options:
+              SC08|1|1: Cancer du sein
+              SC08|2|1: Cancer du col de l'utérus
+              SC08|3|1: Cancer des ovaires
+              SC08|4|1: Cancer de la prostate
+              SC08|5|1: Cancer sanguin (lymphome, leucémie,…)
+              SC08|6|1: Cancer pulmonaire
+              SC08|7|1: Cancer du colon
+              SC08|8|1: Cancer du pancréas
+              SC08|9|1: Cancer de la peau
+              SC08|10|1: "Autre: précisez"
+          - field: SC09
+            shortLabel: "Si autre, précisez:"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(SC08[0],'10') || !hasOption(SC02[0],'1')"
+          - field: SC10
+            shortLabel: "Oncle/Tante: 1 ou plusieurs ?"
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'5') || !hasOption(SC02[0],'1')"
+            options:
+              SC10|1|1: "1"
+              SC10|2|1: Plusieurs
+          - field: SC11
+            shortLabel: Quel type de cancer ?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'5') || !hasOption(SC02[0],'1')"
+            options:
+              SC11|1|1: Cancer du sein
+              SC11|2|1: Cancer du col de l'utérus
+              SC11|3|1: Cancer des ovaires
+              SC11|4|1: Cancer de la prostate
+              SC11|5|1: Cancer sanguin (lymphome, leucémie,…)
+              SC11|6|1: Cancer pulmonaire
+              SC11|7|1: Cancer du colon
+              SC11|8|1: Cancer du pancréas
+              SC11|9|1: Cancer de la peau
+              SC11|10|1: "Autre: précisez"
+          - field: SC12
+            shortLabel: "Si autre, précisez:"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(SC11[0],'10') || !hasOption(SC02[0],'1')"
+          - field: SC13
+            shortLabel: "Cousin(e) germain: 1 ou plusieurs ?"
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'6') || !hasOption(SC02[0],'1')"
+            options:
+              SC13|1|1: "1"
+              SC13|2|1: Plusieurs
+          - field: SC14
+            shortLabel: Quel type de cancer ?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'6') || !hasOption(SC02[0],'1')"
+            options:
+              SC14|1|1: Cancer du sein
+              SC14|2|1: Cancer du col de l'utérus
+              SC14|3|1: Cancer des ovaires
+              SC14|4|1: Cancer de la prostate
+              SC14|5|1: Cancer sanguin (lymphome, leucémie,…)
+              SC14|6|1: Cancer pulmonaire
+              SC14|7|1: Cancer du colon
+              SC14|8|1: Cancer du pancréas
+              SC14|9|1: Cancer de la peau
+              SC14|10|1: "Autre: précisez"
+          - field: SC15
+            shortLabel: "Si autre, précisez:"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(SC14[0],'10') || !hasOption(SC02[0],'1')"
+          - field: SC16
+            shortLabel: Qui? (Qui d’autre dans votre famille a eu un cancer ?)
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'7') || !hasOption(SC02[0],'1')"
+          - field: SC17
+            shortLabel: Quel type de cancer ?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !hasOption(SC03[0],'7') || !hasOption(SC02[0],'1')"
+            options:
+              SC17|1|1: Cancer du sein
+              SC17|2|1: Cancer du col de l'utérus
+              SC17|3|1: Cancer des ovaires
+              SC17|4|1: Cancer de la prostate
+              SC17|5|1: Cancer sanguin (lymphome, leucémie,…)
+              SC17|6|1: Cancer pulmonaire
+              SC17|7|1: Cancer du colon
+              SC17|8|1: Cancer du pancréas
+              SC17|9|1: Cancer de la peau
+              SC17|10|1: "Autre: précisez"
+          - field: SC18
+            shortLabel: "Si autre, précisez:"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(SC17[0],'10') || !hasOption(SC02[0],'1')"
+      - group: Cancer de la prostate.
+        span: 24
+        computedProperties:
+          hidden: "return !(patient.birthSex === 'Male' || patient.gender === 'Male')"
+        fields:
+          - field: SC20
+            shortLabel: "IPSS : International Prostate Score Symptom"
+            span: 24
+            type: label
+          - field: SC21
+            shortLabel: Au cours du dernier mois, avec quelle fréquence avez-vous eu la
+              sensation que votre vessie n’était pas complètement vidée après
+              avoir uriné ?
+            span: 24
+            type: radio-button
+            options:
+              SC21|0|1: Jamais
+              SC21|1|1: Environ 1 fois sur 5
+              SC21|2|1: Environ 1 fois sur 3
+              SC21|3|1: Environ 1 fois sur 2
+              SC21|4|1: Environ 2 fois sur 3
+              SC21|5|1: Presque toujours
+          - field: SC22
+            shortLabel: Au cours du dernier mois, avec quelle fréquence avez-vous eu besoin
+              d'uriner moins de 2 heures après avoir fini d'uriner ?
+            span: 24
+            type: radio-button
+            options:
+              SC22|0|1: Jamais
+              SC22|1|1: Environ 1 fois sur 5
+              SC22|2|1: Environ 1 fois sur 3
+              SC22|3|1: Environ 1 fois sur 2
+              SC22|4|1: Environ 2 fois sur 3
+              SC22|5|1: Presque toujours
+          - field: SC23
+            shortLabel: Au cours du dernier mois, avec quelle fréquence avez-vous eu une
+              interruption du jet d'urine, c'est-à-dire démarrage de la miction
+              puis arrêt puis redémarrage ?
+            span: 24
+            type: radio-button
+            options:
+              SC23|0|1: Jamais
+              SC23|1|1: Environ 1 fois sur 5
+              SC23|2|1: Environ 1 fois sur 3
+              SC23|3|1: Environ 1 fois sur 2
+              SC23|4|1: Environ 2 fois sur 3
+              SC23|5|1: Presque toujours
+          - field: SC24
+            shortLabel: Au cours du dernier mois, après avoir ressenti le besoin d'uriner,
+              avec quelle fréquence avez-vous eu des difficultés à vous retenir
+              d'uriner ?
+            span: 24
+            type: radio-button
+            options:
+              SC24|0|1: Jamais
+              SC24|1|1: Environ 1 fois sur 5
+              SC24|2|1: Environ 1 fois sur 3
+              SC24|3|1: Environ 1 fois sur 2
+              SC24|4|1: Environ 2 fois sur 3
+              SC24|5|1: Presque toujours
+          - field: SC25
+            shortLabel: Au cours du dernier mois, avec quelle fréquence avez-vous eu une
+              diminution de la taille ou de la force du jet d'urine ?
+            span: 24
+            type: radio-button
+            options:
+              SC25|0|1: Jamais
+              SC25|1|1: Environ 1 fois sur 5
+              SC25|2|1: Environ 1 fois sur 3
+              SC25|3|1: Environ 1 fois sur 2
+              SC25|4|1: Environ 2 fois sur 3
+              SC25|5|1: Presque toujours
+          - field: SC26
+            shortLabel: Au cours du dernier mois, avec quelle fréquence avez-vous dû forcer
+              ou pousser pour commencer à uriner ?
+            span: 24
+            type: radio-button
+            options:
+              SC26|0|1: Jamais
+              SC26|1|1: Environ 1 fois sur 5
+              SC26|2|1: Environ 1 fois sur 3
+              SC26|3|1: Environ 1 fois sur 2
+              SC26|4|1: Environ 2 fois sur 3
+              SC26|5|1: Presque toujours
+          - field: SC27
+            shortLabel: Au cours du dernier mois écoulé, combien de fois par nuit, en
+              moyenne, vous êtes-vous levé pour uriner (entre le moment de votre
+              coucher le soir et celui de votre lever définitif le matin) ?
+            span: 24
+            type: radio-button
+            options:
+              SC27|0|1: Jamais
+              SC27|1|1: 1 fois
+              SC27|2|1: 2 fois
+              SC27|3|1: 3 fois
+              SC27|4|1: 4 fois
+              SC27|5|1: 5 fois
+          - field: SC28
+            shortLabel: "Score total:"
+            span: 24
+            type: number-field
+            styleOptions:
+              decimalPlaces: 0
+            computedProperties:
+              value: |
+                return { content: { '*': { 
+                  type: 'number', 
+                  value: score(SC27[0])+score(SC21[0])+score(SC22[0])+score(SC23[0])+score(SC24[0])+score(SC25[0])+score(SC26[0]) 
+                } }, codes: [] }
+          - field: SC29
+            shortLabel: "IPSS notes: 0 – 7 = léger; 8 – 19 = modéré; 20 – 35 = sévère"
+            span: 24
+            type: label
+      - group: "Dépistage du cancer colorectal:"
+        span: 24
+        fields:
+          - field: SC31
+            shortLabel: Il existe un test de dépistage du cancer de l’intestin (colorectal)
+              qui consiste à détecter la présence de sang dans les selles.
+              Avez-vous déjà eu ce genre de test?
+            span: 24
+            type: radio-button
+            options:
+              SC31|1|1: Oui
+              SC31|2|1: Non
+          - field: SC32
+            shortLabel: Quand avez-vous eu un test pour détecter la présence de sang dans
+              les selles pour la dernière fois?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "!hasOption(SC31[0],'1')"
+            options:
+              SC32|1|1: Il y a moins d'un an
+              SC32|2|1: Il y a plus d’1 an mais moins de 2 ans
+              SC32|3|1: Il y a plus de 2 ans mais moins de 3 ans
+              SC32|4|1: Il y a plus de 3 ans
+          - field: SC33
+            shortLabel: Un examen plus sophistiqué consiste en un examen interne
+              (endoscopie) de l'intestin en utilisant une sonde. Cela s'appelle
+              une "colonoscopie". Avez-vous déjà eu une colonoscopie?
+            span: 24
+            type: radio-button
+            options:
+              SC33|1|1: Oui
+              SC33|2|1: Non
+              SC33|3|1: Ne sait pas
+          - field: SC34
+            shortLabel: Quand avez-vous eu une colonoscopie pour la dernière fois?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "!hasOption(SC33[0],'1')"
+            options:
+              SC34|1|1: Il y a moins d'un an
+              SC34|2|1: Il y a plus d’1 an mais moins de 2 ans
+              SC34|3|1: Il y a plus de 2 ans mais moins de 3 ans
+              SC34|4|1: Il y a plus de 3 ans
+      - group: "Dépistage du cancer du sein:"
+        span: 24
+        fields:
+          - field: SC36
+            shortLabel: Avez-vous déjà passé une mammographie (radiographie d’un ou de vos
+              deux seins)?
+            span: 24
+            type: radio-button
+            options:
+              SC36|1|1: Oui
+              SC36|2|1: Non
+              SC36|3|1: Ne sais pas
+          - field: SC37
+            shortLabel: Quand avez-vous passé une mammographie pour la dernière fois?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "!hasOption(SC36[0],'1')"
+            options:
+              SC37|1|1: Il y a moins d'un an
+              SC37|2|1: Il y a plus d’1 an mais moins de 2 ans
+              SC37|3|1: Il y a plus de 2 ans mais moins de 3 ans
+              SC37|4|1: Il y a plus de 3 ans
+      - group: "Dépistage du cancer de l'utérus:"
+        span: 24
+        fields:
+          - field: SC39
+            shortLabel: Avez-vous déjà eu un frottis du col de l’utérus?
+            span: 24
+            type: radio-button
+            options:
+              SC39|1|1: Oui
+              SC39|2|1: Non
+              SC39|3|1: Ne sais pas
+          - field: SC40
+            shortLabel: Quand avez-vous eu un frottis du col de l’utérus pour la dernière
+              fois?
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "!hasOption(SC39[0],'1')"
+            options:
+              SC40|1|1: Il y a moins d'un an
+              SC40|2|1: Il y a plus d’1 an mais moins de 2 ans
+              SC40|3|1: Il y a plus de 2 ans mais moins de 3 ans
+              SC40|4|1: Il y a plus de 3 ans mais moins de 5 ans
+              SC40|5|1: Il y a plus de 5 ans
+      - group: Cancer de la peau
+        span: 24
+        fields:
+          - field: SC42
+            shortLabel: "Vous avez:"
+            span: 24
+            type: radio-button
+            options:
+              SC42|1|1: Moins de 50 grains de beauté
+              SC42|2|1: Plus de 50 grains de beauté
+          - field: SC43
+            shortLabel: Votre type de peau
+            span: 24
+            type: label
+          - field: SC44
+            shortLabel: Quel est votre type de peau ?
+            span: 24
+            type: radio-button
+            options:
+              SC44|1|1: Votre peau est très claire et ne bronze pas
+              SC44|2|1: Elle est claire avec apparition de taches de rousseur au soleil
+              SC44|3|1: Elle est assez claire mais bronze relativement bien
+              SC44|4|1: Elle est mate et bronze facilement
+              SC44|5|1: Elle est noire
+          - field: SC45
+            shortLabel: Quelle est la couleur naturelle de vos cheveux ?
+            span: 24
+            type: radio-button
+            options:
+              SC45|1|1: Roux
+              SC45|2|1: Blond
+              SC45|3|1: Châtain clair
+              SC45|4|1: Brun
+              SC45|5|1: Noir
+          - field: SC46
+            shortLabel: Quelle est la couleur de vos yeux ?
+            span: 24
+            type: radio-button
+            options:
+              SC46|1|1: Bleu
+              SC46|2|1: Vert
+              SC46|3|1: Gris
+          - field: SC47
+            shortLabel: "Vous avez:"
+            span: 24
+            type: radio-button
+            options:
+              SC47|1|1: Moins de 50 grains de beauté
+              SC47|2|1: Plus de 50 grains de beauté
+          - field: SC48
+            shortLabel: Si vous avez plus de 50 grains de beauté, allez-vous les montrer
+              régulièrement à un médecin ?
+            span: 24
+            type: radio-button
+            options:
+              SC48|1|1: Oui
+              SC48|2|1: Non
+          - field: SC49
+            shortLabel: Vos antécédents
+            span: 24
+            type: label
+          - field: SC50
+            shortLabel: Vous êtes-vous exposé au soleil entre 0 et 10 ans ?
+            span: 24
+            type: radio-button
+            options:
+              SC50|1|1: Non
+              SC50|2|1: Un peu
+              SC50|3|1: Beaucoup
+          - field: SC51
+            shortLabel: Avez-vous déjà eu un cancer de la peau ?
+            span: 24
+            type: radio-button
+            options:
+              SC51|1|1: Oui
+              SC51|2|1: Non
+          - field: SC52
+            shortLabel: Si oui, à quel âge ?
+            span: 24
+            type: radio-button
+            options:
+              SC52|1|1: de 20 à 30 ans
+              SC52|2|1: de 30 à 40 ans
+              SC52|3|1: de 40 à 50 ans
+              SC52|4|1: de 50 à 60 ans
+              SC52|5|1: de 60 à 80 ans
+          - field: SC53
+            shortLabel: Y a-t-il eu dans votre famille des cancers de la peau (parents
+              proches) ?
+            span: 24
+            type: radio-button
+            options:
+              SC53|1|1: Oui
+              SC53|2|1: Non
+          - field: SC54
+            shortLabel: Si oui, les cancers de la peau dans votre famille étaient-ils
+              multiples ?
+            span: 24
+            type: radio-button
+            options:
+              SC54|1|1: Oui
+              SC54|2|1: Non
+          - field: SC55
+            shortLabel: Si vous avez déjà eu des coups de soleil, ont-ils laissé des taches
+              brunes ?
+            span: 24
+            type: radio-button
+            options:
+              SC55|1|1: Oui
+              SC55|2|1: Non
+          - field: SC56
+            shortLabel: Le soleil et vous
+            span: 24
+            type: label
+          - field: SC57
+            shortLabel: Exercez-vous une profession en extérieur qui vous conduit à être
+              exposé régulièrement au soleiL ?
+            span: 24
+            type: radio-button
+            options:
+              SC57|1|1: Oui
+              SC57|2|1: Non
+          - field: SC58
+            shortLabel: Si oui, avez-vous l’habitude de vous protéger avec des vêtements ou
+              un chapeau ?
+            span: 24
+            type: radio-button
+            options:
+              SC58|1|1: Oui
+              SC58|2|1: Non
+          - field: SC59
+            shortLabel: Si vous exercez une profession en extérieur qui vous expose au
+              soleil, vous protégez-vous avec des crèmes de protection solaire
+              renouvelées toutes les 2 heures ?
+            span: 24
+            type: radio-button
+            options:
+              SC59|1|1: Oui
+              SC59|2|1: Non
+          - field: SC60
+            shortLabel: "Pendant votre temps libre pratiquez-vous régulièrement un sport ou
+              une activité de plein air (exemple : voile, ski, natation, golf,
+              football, tennis, randonnée, marche, vélo, tonte de pelouse,
+              jardinage, chasse, pêche,…) ?"
+            span: 24
+            type: radio-button
+            options:
+              SC60|1|1: Oui
+              SC60|2|1: Non
+          - field: SC61
+            shortLabel: Si oui, avez-vous l’habitude de vous protéger avec des vêtements ou
+              un chapeau ?
+            span: 24
+            type: radio-button
+            options:
+              SC61|1|1: Oui
+              SC61|2|1: Non
+          - field: SC62
+            shortLabel: Pendant vos activités ou vos loisirs de plein air, vous
+              protégez-vous régulièrement avec des crèmes de protection solaire
+              renouvelées toutes les 2 h ?
+            span: 24
+            type: radio-button
+            options:
+              SC62|1|1: Toujours
+              SC62|2|1: Parfois
+          - field: SC63
+            shortLabel: Vous exposez-vous au soleil entre 12 h et 16 h notamment pendant les
+              vacances ?
+            span: 24
+            type: radio-button
+            options:
+              SC63|1|1: Oui
+              SC63|2|1: Non
+              SC63|3|1: Parfois
+          - field: SC64
+            shortLabel: Lorsque vous vous exposez, utilisez-vous des crèmes de protection
+              renouvelées toutes les 2 h ?
+            span: 24
+            type: radio-button
+            options:
+              SC64|1|1: "Oui : très haute protection"
+              SC64|2|1: "Oui : protection moyenne"
+              SC64|3|1: "Oui : protection faible"
+              SC64|4|1: Non
+          - field: SC65
+            shortLabel: "Lorsque vous êtes exposé à la lumière du soleil, avez-vous
+              l’habitude de protéger certaines zones à risques ? (par exemple,
+              pour les hommes chauves : le crâne et, pour tous, le dos des
+              mains, le dos des pieds et le haut des oreilles)"
+            span: 24
+            type: radio-button
+            options:
+              SC65|1|1: Oui
+              SC65|2|1: Non
+          - field: SC66
+            shortLabel: Faites-vous des séances de bronzage UV ?
+            span: 24
+            type: radio-button
+            options:
+              SC66|1|1: Plus de dix séances par an
+              SC66|2|1: Moins de dix séances par an
+              SC66|3|1: Jamais
+          - field: SC67
+            shortLabel: "Score total:"
+            span: 24
+            type: number-field
+            styleOptions:
+              decimalPlaces: 0
+            computedProperties:
+              value: |
+                return score(SC44[0])+score(SC45[0])+score(SC46[0])+score(SC47[0])+score(SC48[0])+score(SC50[0])+score(SC51[0])+score(SC52[0])+score(SC53[0])+score(SC54[0])+score(SC55[0])+score(SC57[0])+score(SC58[0])+score(SC59[0])+score(SC60[0])+score(SC61[0])+score(SC62[0])+score(SC63[0])+score(SC64[0])+score(SC65[0])+score(SC66[0])
+          - field: SC68
+            shortLabel: "Si vous totalisez entre 110 et 145 points: Vous vous comportez bien
+              vis-à-vis du soleil mais restez prudent. Il faut savoir tenir la
+              distance."
+            span: 24
+            type: label
+          - field: SC69
+            shortLabel: "Si vous avez entre 75 et 109 points: Vous devez désormais être plus
+              vigilant et demander les conseils d’un dermatologue."
+            span: 24
+            type: label
+          - field: SC70
+            shortLabel: "Si vous avez moins de 75 points: Il est impératif que vous changiez
+              vos habitudes car vous êtes en danger. Faites surveiller votre
+              peau dès maintenant par un dermatologue."
+            span: 24
+            type: label
+  - section: Maladies cardio-vasculaires
+    fields:
+      - field: PR01
+        shortLabel: Votre tension artérielle a-t-elle déjà été mesurée par un médecin,
+          une infirmière ou un autre professionnel de la santé?
+        span: 24
+        type: radio-button
+        options:
+          PR01|1|1: Oui
+          PR01|2|1: Non
+          PR01|3|1: Je ne sais pas
+      - field: PR02
+        shortLabel: Quand votre tension artérielle a-t-elle été mesurée pour la dernière
+          fois par un médecin, une infirmière ou un autre professionnel de la
+          santé?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "!hasOption(PR01[0],'1')"
+        options:
+          PR02|1|1: Moins d'un an
+          PR02|2|1: Il y a 1 an ou plus mais moins de 3 ans
+          PR02|3|1: Il y a 3 ans ou plus mais moins de 5 ans
+          PR02|4|1: II y a 5 ans ou plus
+          PR02|5|1: Je ne sais pas
+      - field: PR03
+        shortLabel: Si votre tension artérielle a été mesurée il y a moins d'un an, vous
+          souvenez vous de combien elle était ?
+        span: 24
+        type: checkbox
+        computedProperties:
+          hidden: "!hasOption(PR02[0],'1')"
+        options:
+          PR03|1|1: Supérieure à 140/90 mmHg
+          PR03|2|1: Entre 120/70 et 140/90 mmHg
+          PR03|3|1: Inférieure à 120/70 mmHg
+          PR03|4|1: Je ne sais plus
+      - field: PR04
+        shortLabel: Quand avez-vous réalisé une analyse de sang pour la dernière fois ?
+        span: 24
+        type: radio-button
+        options:
+          PR04|1|1: Moins d'un an
+          PR04|2|1: Il y a 1 an ou plus mais moins de 3 ans
+          PR04|3|1: Il y a 3 ans ou plus mais moins de 5 ans
+          PR04|4|1: Il y a 5 ans ou plus
+          PR04|5|1: Je ne sais pas
+  - section: Fragilité
+    fields:
+      - field: FR01
+        shortLabel: Les questions suivantes évaluent dans quelle mesure vous êtes
+          vulnérable aux problèmes de santé.
+        span: 24
+        type: label
+      - field: FR02
+        shortLabel: Au cours du dernier mois, avez-vous manqué d'énergie pour réaliser
+          les choses que vous vouliez faire?
+        span: 24
+        type: radio-button
+        options:
+          FR02|1|1: Oui
+          FR02|2|1: Non
+          FR02|3|1: Je ne sais pas
+      - field: FR03
+        shortLabel: Quel a été votre appétit dans le mois écoulé?
+        span: 24
+        type: text-field
+      - field: FR04
+        shortLabel: Donc, avez-vous mangé plus ou moins que d'habitude?
+        span: 24
+        type: radio-button
+        options:
+          FR04|1|1: Moins
+          FR04|2|1: Plus
+          FR04|3|1: Ni plus ni moins
+          FR04|4|1: Je ne sais pas
+      - field: FR05
+        shortLabel: A cause d'un problème de santé, éprouvez-vous des difficultés à
+          accomplir les activités suivantes? Ne tenez pas compte des difficultés
+          passagères qui, selon vous, n'excéderont pas trois mois.
+        span: 24
+        type: label
+      - field: FR06
+        shortLabel: Porter ou soulever des poids de plus de 5 kilos, comme un gros sac
+          de provisions?
+        span: 24
+        type: radio-button
+        options:
+          FR06|1|1: Oui, j'ai des difficultés
+          FR06|2|1: Non, je n'ai pas de difficultés
+          FR06|3|1: Je ne sais pas
+      - field: FR07
+        shortLabel: Marcher 100 mètres?
+        span: 24
+        type: radio-button
+        options:
+          FR07|1|1: Oui, j'ai des difficultés
+          FR07|2|1: Non, je n'ai pas de difficultés
+          FR07|3|1: Je ne sais pas
+      - field: FR08
+        shortLabel: Monter une volée d'escaliers sans se reposer?
+        span: 24
+        type: radio-button
+        options:
+          FR08|1|1: Oui, j'ai des difficultés
+          FR08|2|1: Non, je n'ai pas de difficultés
+          FR08|3|1: Je ne sais pas
+      - field: FR09
+        shortLabel: A quelle fréquence pratiquez-vous des activités exigeant des efforts
+          physiques légers ou modérés, telles que s'occuper du jardin, nettoyer
+          la voiture, se promener?
+        span: 24
+        type: radio-button
+        options:
+          FR09|1|1: Plusieurs fois par semaine
+          FR09|2|1: Une fois par semaine
+          FR09|3|1: Une à trois fois par mois
+          FR09|4|1: Presque jamais ou jamais
+          FR09|5|1: Je ne sais pas
+  - section: Risque ostéoporotique
+    fields:
+      - field: OP01
+        shortLabel: Avez-vous eu une fracture osseuse sans traumatisme à l'âge adulte ?
+        span: 24
+        type: text-field
+      - field: OP02
+        shortLabel: L'un de vos parents a-t-il eu une fracture de la hanche ?
+        span: 24
+        type: radio-button
+        options:
+          OP02|1|1: Oui
+          OP02|2|1: Non
+      - field: OP03
+        shortLabel: Prenez vous actuellement des corticoides en traitement ?
+        span: 24
+        type: radio-button
+        options:
+          OP03|1|1: Oui
+          OP03|2|1: Non
+      - field: OP04
+        shortLabel: Souffre vous de polyarthrite rhumatoide ?
+        span: 24
+        type: radio-button
+        options:
+          OP04|1|1: Oui
+          OP04|2|1: Non
+  - section: Douleur physique
+    fields:
+      - field: PI01
+        shortLabel: Les questions suivantes concernent toutes les douleurs physiques, de
+          quelque nature qu’elles soient, que vous auriez ressenties au cours
+          des 4 dernières semaines.
+        span: 24
+        type: label
+      - field: PI02
+        shortLabel: Au cours de ces 4 dernières semaines, quelle a été l’intensité de
+          vos douleurs physiques?
+        span: 24
+        type: radio-button
+        options:
+          PI02|1|1: Nulle
+          PI02|2|1: Très faible
+          PI02|3|1: Faible
+          PI02|4|1: Moyenne
+          PI02|5|1: Grande
+          PI02|6|1: Très grande
+          PI02|7|1: Ne sait pas
+      - field: PI03
+        shortLabel: Au cours de ces 4 dernières semaines, dans quelle mesure ces
+          douleurs vous ont-elles gênées dans votre travail ou vos activités
+          domestiques?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !(hasOption(PI02[0],'3') || hasOption(PI02[0],'4') || hasOption(PI02[0],'5') || hasOption(PI02[0],'6'))"
+        options:
+          PI03|1|1: Pas du tout
+          PI03|2|1: Un petit peu
+          PI03|3|1: Moyennement
+          PI03|4|1: Beaucoup
+          PI03|5|1: Enormément
+          PI03|6|1: Ne sait pas
+      - field: PI04
+        shortLabel: Montrer sur une représentation du corps à quels endroits le patient
+          éprouve des douleurs
+        span: 24
+        type: text-field
+  - section: Santé mentale
+    fields:
+      - group: Stress perçu
+        span: 24
+        fields:
+          - field: SM02
+            shortLabel: Au cours du dernier mois, à quelle fréquence avez-vous été
+              bouleversé à cause d'un événement inattendu?
+            span: 24
+            type: radio-button
+            options:
+              SM02|0|1: Jamais
+              SM02|1|1: Presque jamais
+              SM02|2|1: Parfois
+              SM02|3|1: Souvent
+              SM02|4|1: Très souvent
+          - field: SM03
+            shortLabel: Au cours du dernier mois, combien de fois avez-vous eu l'impression
+              de ne pas pouvoir contrôler les choses importantes de votre vie?
+            span: 24
+            type: radio-button
+            options:
+              SM03|0|1: Jamais
+              SM03|1|1: Presque jamais
+              SM03|2|1: Parfois
+              SM03|3|1: Souvent
+              SM03|4|1: Très souvent
+          - field: SM04
+            shortLabel: Au cours du dernier mois, à quelle fréquence vous êtes-vous senti
+              nerveux et stressé?
+            span: 24
+            type: radio-button
+            options:
+              SM04|0|1: Jamais
+              SM04|1|1: Presque jamais
+              SM04|2|1: Parfois
+              SM04|3|1: Souvent
+              SM04|4|1: Très souvent
+          - field: SM05
+            shortLabel: Au cours du dernier mois, à quelle fréquence vous êtes-vous senti
+              confiant quant à votre capacité à gérer vos problèmes personnels?
+            span: 24
+            type: radio-button
+            options:
+              SM05|4|1: Jamais
+              SM05|3|1: Presque jamais
+              SM05|2|1: Parfois
+              SM05|1|1: Souvent
+              SM05|0|1: Très souvent
+          - field: SM06
+            shortLabel: Au cours du dernier mois, à quelle fréquence avez-vous senti que les
+              choses allaient dans votre sens?
+            span: 24
+            type: radio-button
+            options:
+              SM06|4|1: Jamais
+              SM06|3|1: Presque jamais
+              SM06|2|1: Parfois
+              SM06|1|1: Souvent
+              SM06|0|1: Très souvent
+          - field: SM07
+            shortLabel: Au cours du dernier mois, combien de fois avez-vous constaté que
+              vous ne pouviez pas faire face à toutes les choses que vous deviez
+              faire?
+            span: 24
+            type: radio-button
+            options:
+              SM07|0|1: Jamais
+              SM07|1|1: Presque jamais
+              SM07|2|1: Parfois
+              SM07|3|1: Souvent
+              SM07|4|1: Très souvent
+          - field: SM08
+            shortLabel: Au cours du dernier mois, à quelle fréquence avez-vous pu contrôler
+              les irritations dans votre vie?
+            span: 24
+            type: radio-button
+            options:
+              SM08|4|1: Jamais
+              SM08|3|1: Presque jamais
+              SM08|2|1: Parfois
+              SM08|1|1: Souvent
+              SM08|0|1: Très souvent
+          - field: SM09
+            shortLabel: Au cours du dernier mois, à quelle fréquence avez-vous senti que
+              vous étiez au courant des choses?
+            span: 24
+            type: radio-button
+            options:
+              SM09|4|1: Jamais
+              SM09|3|1: Presque jamais
+              SM09|2|1: Parfois
+              SM09|1|1: Souvent
+              SM09|0|1: Très souvent
+          - field: SM10
+            shortLabel: Au cours du dernier mois, à quelle fréquence avez-vous été irrité à
+              cause de choses qui se sont déroulées hors de votre contrôle?
+            span: 24
+            type: radio-button
+            options:
+              SM10|0|1: Jamais
+              SM10|1|1: Presque jamais
+              SM10|2|1: Parfois
+              SM10|3|1: Souvent
+              SM10|4|1: Très souvent
+          - field: SM11
+            shortLabel: Au cours du dernier mois, à quelle fréquence avez-vous senti que les
+              difficultés s'accumulaient si haut que vous ne pouviez pas les
+              surmonter?
+            span: 24
+            type: radio-button
+            options:
+              SM11|0|1: Jamais
+              SM11|1|1: Presque jamais
+              SM11|2|1: Parfois
+              SM11|3|1: Souvent
+              SM11|4|1: Très souvent
+          - field: SM12
+            shortLabel: "Score total:"
+            span: 24
+            type: number-field
+            styleOptions:
+              decimalPlaces: 0
+            computedProperties:
+              value: |
+                return { content: { '*': { 
+                  type: 'number', 
+                  value: (score(SM11[0])+score(SM02[0])+score(SM03[0])+score(SM04[0])+score(SM05[0])+score(SM06[0])+score(SM07[0])+score(SM08[0])+score(SM09[0])+score(SM10[0])) 
+                } }, codes: [] }
+      - group: Bien-être et vitalité
+        span: 24
+        fields:
+          - field: SM14
+            shortLabel: Sur une échelle de 0 à 10, où 0 signifie “pas du tout satisfait(e)”
+              et 10 signifie “totalement satisfait(e)”, quel degré de
+              satisfaction éprouvez-vous actuellement à l’égard de votre vie ?
+            span: 24
+            type: number-field
+          - field: SM15
+            shortLabel: Au cours de ces dernières semaines, dans quelle mesure vous
+              êtes-vous senti(e)
+            span: 24
+            type: label
+          - field: SM16
+            shortLabel: Dynamique
+            span: 24
+            type: radio-button
+            options:
+              SM16|1|1: En permanence
+              SM16|2|1: Souvent
+              SM16|3|1: Quelques fois
+              SM16|4|1: Rarement
+              SM16|5|1: Jamais
+          - field: SM17
+            shortLabel: Débordant(e ) d'énergie
+            span: 24
+            type: radio-button
+            options:
+              SM17|1|1: En permanence
+              SM17|2|1: Souvent
+              SM17|3|1: Quelques fois
+              SM17|4|1: Rarement
+              SM17|5|1: Jamais
+          - field: SM18
+            shortLabel: Épuisé(e ), à bout
+            span: 24
+            type: radio-button
+            options:
+              SM18|1|1: En permanence
+              SM18|2|1: Souvent
+              SM18|3|1: Quelques fois
+              SM18|4|1: Rarement
+              SM18|5|1: Jamais
+          - field: SM19
+            shortLabel: Fatigué(e )
+            span: 24
+            type: radio-button
+            computedProperties:
+              hidden: "return !(hasOption(SM16[0], '4') || hasOption(SM16[0], '3') || hasOption(SM17[0], '4') || hasOption(SM17[0], '3') || hasOption(SM18[0], '1') || hasOption(SM18[0], '2'))"
+            options:
+              SM19|1|1: En permanence
+              SM19|2|1: Souvent
+              SM19|3|1: Quelques fois
+              SM19|4|1: Rarement
+              SM19|5|1: Jamais
+      - group: Fatigue. Echelle de Chalder
+        span: 24
+        fields:
+          - field: SM21
+            shortLabel: Symptômes physiques
+            span: 24
+            type: label
+          - field: SM22
+            shortLabel: Vous sentez-vous fatigué ?
+            span: 24
+            type: radio-button
+            options:
+              SM22|0|1: Moins que d’habitude
+              SM22|1|1: Pas plus que d’habitude
+              SM22|2|1: Plus que d’habitude
+              SM22|3|1: Bien plus que d’habitude
+
+          - field: SM23
+            shortLabel: Avez-vous besoin de vous reposer plus souvent ?
+            span: 24
+            type: radio-button
+            options:
+              SM23|0|1: Moins que d’habitude
+              SM23|1|1: Pas plus que d’habitude
+              SM23|2|1: Plus que d’habitude
+              SM23|3|1: Bien plus que d’habitude
+          - field: SM24
+            shortLabel: Vous sentez-vous somnolent, endormi ?
+            span: 24
+            type: radio-button
+            options:
+              SM24|0|1: Moins que d’habitude
+              SM24|1|1: Pas plus que d’habitude
+              SM24|2|1: Plus que d’habitude
+              SM24|3|1: Bien plus que d’habitude
+          - field: SM25
+            shortLabel: Avez-vous des difficultés pour commencer des activités ?
+            span: 24
+            type: radio-button
+            options:
+              SM25|0|1: Moins que d’habitude
+              SM25|1|1: Pas plus que d’habitude
+              SM25|2|1: Plus que d’habitude
+              SM25|3|1: Bien plus que d’habitude
+          - field: SM26
+            shortLabel: Manquez-vous d’énergie ?
+            span: 24
+            type: radio-button
+            options:
+              SM26|0|1: Moins que d’habitude
+              SM26|1|1: Pas plus que d’habitude
+              SM26|2|1: Plus que d’habitude
+              SM26|3|1: Bien plus que d’habitude
+          - field: SM27
+            shortLabel: Avez-vous moins de force dans vos muscles ?
+            span: 24
+            type: radio-button
+            options:
+              SM27|0|1: Moins que d’habitude
+              SM27|1|1: Pas plus que d’habitude
+              SM27|2|1: Plus que d’habitude
+              SM27|3|1: Bien plus que d’habitude
+          - field: SM28
+            shortLabel: Vous sentez-vous faible ?
+            span: 24
+            type: radio-button
+            options:
+              SM28|0|1: Moins que d’habitude
+              SM28|1|1: Pas plus que d’habitude
+              SM28|2|1: Plus que d’habitude
+              SM28|3|1: Bien plus que d’habitude
+          - field: SM29
+            shortLabel: Symptômes mentaux
+            span: 24
+            type: label
+          - field: SM30
+            shortLabel: Avez-vous des difficultés de concentration ?
+            span: 24
+            type: radio-button
+            options:
+              SM30|0|1: Moins que d’habitude
+              SM30|1|1: Pas plus que d’habitude
+              SM30|2|1: Plus que d’habitude
+              SM30|3|1: Bien plus que d’habitude
+          - field: SM31
+            shortLabel: Avez-vous des problèmes pour réfléchir clairement ?
+            span: 24
+            type: radio-button
+            options:
+              SM31|0|1: Moins que d’habitude
+              SM31|1|1: Pas plus que d’habitude
+              SM31|2|1: Plus que d’habitude
+              SM31|3|1: Bien plus que d’habitude
+          - field: SM32
+            shortLabel: Faites-vous des lapsus lorsque vous parlez ?
+            span: 24
+            type: radio-button
+            options:
+              SM32|0|1: Moins que d’habitude
+              SM32|1|1: Pas plus que d’habitude
+              SM32|2|1: Plus que d’habitude
+              SM32|3|1: Bien plus que d’habitude
+          - field: SM33
+            shortLabel: Avez-vous des difficultés de mémoire ?
+            span: 24
+            type: radio-button
+            options:
+              SM33|0|1: Moins que d’habitude
+              SM33|1|1: Pas plus que d’habitude
+              SM33|2|1: Plus que d’habitude
+              SM33|3|1: Bien plus que d’habitude
+      - group: Echelle Gad7, dépistage du trouble anxieux
+        span: 24
+        fields:
+          - field: SM35
+            shortLabel: Au cours des 2 dernières semaines. Selon quelle fréquence avez-vous
+              été gêné(e) par les problèmes suivants ?
+            span: 24
+            type: label
+          - field: SM36
+            shortLabel: Un sentiment de nervosité, d’anxiété ou de tension
+            span: 24
+            type: radio-button
+            options:
+              SM36|0|1: Jamais
+              SM36|1|1: Plusieurs jours
+              SM36|2|1: Plus de la moitié du temps
+              SM36|3|1: Presque tous les jours
+          - field: SM37
+            shortLabel: Une incapacité à arrêter de s’inquiéter ou à contrôler ses
+              inquiétudes
+            span: 24
+            type: radio-button
+            options:
+              SM37|0|1: Jamais
+              SM37|1|1: Plusieurs jours
+              SM37|2|1: Plus de la moitié du temps
+              SM37|3|1: Presque tous les jours
+          - field: SM38
+            shortLabel: Une inquiétude excessive à propos de différentes choses
+            span: 24
+            type: radio-button
+            options:
+              SM38|0|1: Jamais
+              SM38|1|1: Plusieurs jours
+              SM38|2|1: Plus de la moitié du temps
+              SM38|3|1: Presque tous les jours
+          - field: SM39
+            shortLabel: Des difficultés à se détendre
+            span: 24
+            type: radio-button
+            options:
+              SM39|0|1: Jamais
+              SM39|1|1: Plusieurs jours
+              SM39|2|1: Plus de la moitié du temps
+              SM39|3|1: Presque tous les jours
+          - field: SM40
+            shortLabel: Une agitation telle qu’il est difficile à tenir en place
+            span: 24
+            type: radio-button
+            options:
+              SM40|0|1: Jamais
+              SM40|1|1: Plusieurs jours
+              SM40|2|1: Plus de la moitié du temps
+              SM40|3|1: Presque tous les jours
+          - field: SM41
+            shortLabel: Une tendance à être facilement contrarié(e) ou irritable
+            span: 24
+            type: radio-button
+            options:
+              SM41|0|1: Jamais
+              SM41|1|1: Plusieurs jours
+              SM41|2|1: Plus de la moitié du temps
+              SM41|3|1: Presque tous les jours
+          - field: SM42
+            shortLabel: Un sentiment de peur comme si quelque chose de terrible risquait de
+              se produire
+            span: 24
+            type: radio-button
+            options:
+              SM42|0|1: Jamais
+              SM42|1|1: Plusieurs jours
+              SM42|2|1: Plus de la moitié du temps
+              SM42|3|1: Presque tous les jours
+          - field: SM43
+            shortLabel: "Score total:"
+            span: 24
+            type: number-field
+            styleOptions:
+              decimalPlaces: 0
+            computedProperties:
+              value: |
+                return { content: { '*': { 
+                  type: 'number', 
+                  value: (score(SM36[0])+score(SM37[0])+score(SM38[0])+score(SM39[0])+score(SM40[0])+score(SM41[0])+score(SM42[0])) 
+                } }, codes: [] }
+      - group: Echelle QSP9, Dépistage de la dépression
+        span: 24
+        fields:
+          - field: SM45
+            shortLabel: Veuillez répondre à chacune des questions en encerclant l’énoncé qui
+              correspond le mieux à votre situation
+            span: 24
+            type: label
+          - field: SM46
+            shortLabel: Au cours des deux dernières semaines, à quelle fréquence avez-vous
+              été dérangé par les problèmes suivants?
+            span: 24
+            type: label
+          - field: SM47
+            shortLabel: Peu d’intérêt ou de plaisir à faire les choses
+            span: 24
+            type: radio-button
+            options:
+              SM47|0|1: Jamais
+              SM47|1|1: Plusieurs jours
+              SM47|2|1: Plus de la moitié du temps
+              SM47|3|1: Presque tous les jours
+          - field: SM48
+            shortLabel: Vous sentir triste, déprimé ou désespéré
+            span: 24
+            type: radio-button
+            options:
+              SM48|0|1: Jamais
+              SM48|1|1: Plusieurs jours
+              SM48|2|1: Plus de la moitié du temps
+              SM48|3|1: Presque tous les jours
+          - field: SM49
+            shortLabel: Difficultés à vous endormir, à rester endormi ou trop dormir
+            span: 24
+            type: radio-button
+            options:
+              SM49|0|1: Jamais
+              SM49|1|1: Plusieurs jours
+              SM49|2|1: Plus de la moitié du temps
+              SM49|3|1: Presque tous les jours
+          - field: SM50
+            shortLabel: Vous sentir fatigué ou avoir peu d’énergie
+            span: 24
+            type: radio-button
+            options:
+              SM50|0|1: Jamais
+              SM50|1|1: Plusieurs jours
+              SM50|2|1: Plus de la moitié du temps
+              SM50|3|1: Presque tous les jours
+          - field: SM51
+            shortLabel: Peu d’appétit ou trop d’appétit
+            span: 24
+            type: radio-button
+            options:
+              SM51|0|1: Jamais
+              SM51|1|1: Plusieurs jours
+              SM51|2|1: Plus de la moitié du temps
+              SM51|3|1: Presque tous les jours
+          - field: SM52
+            shortLabel: Mauvaise perception de vous-même, vous pensez que vous êtes un
+              perdant ou que vous n’avez pas satisfait vos propres attentes ou
+              celles de votre famille
+            span: 24
+            type: radio-button
+            options:
+              SM52|0|1: Jamais
+              SM52|1|1: Plusieurs jours
+              SM52|2|1: Plus de la moitié du temps
+              SM52|3|1: Presque tous les jours
+          - field: SM53
+            shortLabel: Difficultés à vous concentrer sur des choses telles que lire le
+              journal ou regarder la télévision
+            span: 24
+            type: radio-button
+            options:
+              SM53|0|1: Jamais
+              SM53|1|1: Plusieurs jours
+              SM53|2|1: Plus de la moitié du temps
+              SM53|3|1: Presque tous les jours
+          - field: SM54
+            shortLabel: Vous bougez ou vous parlez si lentement que les autres personnes ont
+              pu le remarquer. Ou, au contraire, vous êtes si agité que vous
+              bougez beaucoup plus que d’habitude.
+            span: 24
+            type: radio-button
+            options:
+              SM54|0|1: Jamais
+              SM54|1|1: Plusieurs jours
+              SM54|2|1: Plus de la moitié du temps
+              SM54|3|1: Presque tous les jours
+          - field: SM55
+            shortLabel: Vous avez pensé que vous seriez mieux mort ou pensé à vous blesser
+              d’une façon ou d’une autre.
+            span: 24
+            type: radio-button
+            options:
+              SM55|0|1: Jamais
+              SM55|1|1: Plusieurs jours
+              SM55|2|1: Plus de la moitié du temps
+              SM55|3|1: Presque tous les jours
+          - field: SM56
+            shortLabel: "Score total:"
+            span: 24
+            type: number-field
+            styleOptions:
+              decimalPlaces: 0
+            computedProperties:
+              value: |
+                return { content: { '*': { 
+                  type: 'number', 
+                  value: (score(SM47[0])+score(SM48[0])+score(SM49[0])+score(SM50[0])+score(SM51[0])+score(SM52[0])+score(SM53[0])+score(SM54[0])+score(SM55[0])) 
+                } }, codes: [] }
+          - field: SM57
+            shortLabel: Si le patient répond oui à la question 9, une évaluation du risque
+              suicidaire ou de l’auto-agressivité par un professionnel de la
+              santé ou des services sociaux qualifié est conseillée.
+            span: 24
+            type: label
+          - field: SM58
+            shortLabel: "Si vous avez coché au moins un des problèmes nommés dans ce
+              questionnaire, répondez à la question suivante : Dans quelle
+              mesure ce ou ces problèmes ont-ils rendu difficiles votre travail,
+              vos tâches à la maison ou votre capacité à bien vous entendre avec
+              les autres?"
+            span: 24
+            type: radio-button
+            options:
+              SM58|1|1: Pas du tout difficile
+              SM58|2|1: Plutôt difficile
+              SM58|3|1: Très difficile
+              SM58|4|1: Extrêmement difficile
+      - group: Dépression et troubles anxieux
+        span: 24
+        fields:
+          - field: SM60
+            shortLabel: "Au cours des 2 dernières semaines, à quelle fréquence avez-vous
+              rencontré des difficultés telles que :"
+            span: 24
+            type: label
+          - field: SM61
+            shortLabel: Vous sentir nerveux(se), anxieux(se) ou tendu(e)
+            span: 24
+            type: radio-button
+            options:
+              SM61|1|1: Pas du tout
+              SM61|2|1: Plusieurs jours
+              SM61|3|1: Plus de la moitié du temps
+              SM61|4|1: Presque tous les jours
+          - field: SM62
+            shortLabel: Ne pas pouvoir arrêter de vous inquiéter ou ne pas pouvoir contrôler
+              vos inquiétudes
+            span: 24
+            type: radio-button
+            options:
+              SM62|1|1: Pas du tout
+              SM62|2|1: Plusieurs jours
+              SM62|3|1: Plus de la moitié du temps
+              SM62|4|1: Presque tous les jours
+          - field: SM63
+            shortLabel: Trop vous soucier à propos de différentes choses
+            span: 24
+            type: radio-button
+            options:
+              SM63|1|1: Pas du tout
+              SM63|2|1: Plusieurs jours
+              SM63|3|1: Plus de la moitié du temps
+              SM63|4|1: Presque tous les jours
+          - field: SM64
+            shortLabel: Avoir des difficultés à vous détendre
+            span: 24
+            type: radio-button
+            options:
+              SM64|1|1: Pas du tout
+              SM64|2|1: Plusieurs jours
+              SM64|3|1: Plus de la moitié du temps
+              SM64|4|1: Presque tous les jours
+          - field: SM65
+            shortLabel: Être si agité(e) qu’il vous est difficile de tenir en place
+            span: 24
+            type: radio-button
+            options:
+              SM65|1|1: Pas du tout
+              SM65|2|1: Plusieurs jours
+              SM65|3|1: Plus de la moitié du temps
+              SM65|4|1: Presque tous les jours
+          - field: SM66
+            shortLabel: Être facilement contrarié(e) ou irritable
+            span: 24
+            type: radio-button
+            options:
+              SM66|1|1: Pas du tout
+              SM66|2|1: Plusieurs jours
+              SM66|3|1: Plus de la moitié du temps
+              SM66|4|1: Presque tous les jours
+          - field: SM67
+            shortLabel: Vous sentir effrayé(e), comme si quelque chose de terrible allait se
+              produire
+            span: 24
+            type: radio-button
+            options:
+              SM67|1|1: Pas du tout
+              SM67|2|1: Plusieurs jours
+              SM67|3|1: Plus de la moitié du temps
+              SM67|4|1: Presque tous les jours
+          - field: SM68
+            shortLabel: Éprouver peu d’intérêt ou de plaisir à faire les choses
+            span: 24
+            type: radio-button
+            options:
+              SM68|1|1: Pas du tout
+              SM68|2|1: Plusieurs jours
+              SM68|3|1: Plus de la moitié du temps
+              SM68|4|1: Presque tous les jours
+          - field: SM69
+            shortLabel: Être triste, déprimé(e) ou désespéré(e)
+            span: 24
+            type: radio-button
+            options:
+              SM69|1|1: Pas du tout
+              SM69|2|1: Plusieurs jours
+              SM69|3|1: Plus de la moitié du temps
+              SM69|4|1: Presque tous les jours
+          - field: SM70
+            shortLabel: Avoir des difficultés à vous endormir ou à rester endormi(e), ou au
+              contraire, dormir trop
+            span: 24
+            type: radio-button
+            options:
+              SM70|1|1: Pas du tout
+              SM70|2|1: Plusieurs jours
+              SM70|3|1: Plus de la moitié du temps
+              SM70|4|1: Presque tous les jours
+          - field: SM71
+            shortLabel: Vous sentir fatigué(e) ou manquer d’énergie
+            span: 24
+            type: radio-button
+            options:
+              SM71|1|1: Pas du tout
+              SM71|2|1: Plusieurs jours
+              SM71|3|1: Plus de la moitié du temps
+              SM71|4|1: Presque tous les jours
+          - field: SM72
+            shortLabel: Manger d’appétit, ou alors manger beaucoup trop
+            span: 24
+            type: radio-button
+            options:
+              SM72|1|1: Pas du tout
+              SM72|2|1: Plusieurs jours
+              SM72|3|1: Plus de la moitié du temps
+              SM72|4|1: Presque tous les jours
+          - field: SM73
+            shortLabel: Avoir une mauvaise opinion de vous-même, vous considérer comme
+              nul(le) ou ne pas vous sentir à la hauteur de vos propres attentes
+              ou celles de vos proches
+            span: 24
+            type: radio-button
+            options:
+              SM73|1|1: Pas du tout
+              SM73|2|1: Plusieurs jours
+              SM73|3|1: Plus de la moitié du temps
+              SM73|4|1: Presque tous les jours
+          - field: SM74
+            shortLabel: Avoir du mal à vous concentrer sur des choses, telles que lire le
+              journal ou regarder la télévision
+            span: 24
+            type: radio-button
+            options:
+              SM74|1|1: Pas du tout
+              SM74|2|1: Plusieurs jours
+              SM74|3|1: Plus de la moitié du temps
+              SM74|4|1: Presque tous les jours
+          - field: SM75
+            shortLabel: Bouger ou parler si lentement que d’autres personnes ont pu le
+              remarquer, ou au contraire, être si agité(e) et impatient(e) que
+              vous bougiez beaucoup plus que d’habitude
+            span: 24
+            type: radio-button
+            options:
+              SM75|1|1: Pas du tout
+              SM75|2|1: Plusieurs jours
+              SM75|3|1: Plus de la moitié du temps
+              SM75|4|1: Presque tous les jours
+          - field: SM76
+            shortLabel: Penser que vous seriez mieux si vous étiez mort(e) ou songer à vous
+              blesser d’une façon ou d’une autre
+            span: 24
+            type: radio-button
+            options:
+              SM76|1|1: Pas du tout
+              SM76|2|1: Plusieurs jours
+              SM76|3|1: Plus de la moitié du temps
+              SM76|4|1: Presque tous les jours
+  - section: Accidents et blessures
+    fields:
+      - field: AI01
+        shortLabel: Chutes Accidentelles
+        span: 24
+        type: label
+      - field: AI02
+        shortLabel: Au cours des 12 derniers mois, avez-vous fait une chute, ou
+          avez-vous glissé ou trébuché, et perdu l’équilibre pour vous retrouver
+          par terre, ou plus bas?
+        span: 24
+        type: radio-button
+        options:
+          AI02|1|1: Oui
+          AI02|2|1: Non
+          AI02|3|1: Je ne sais pas
+          AI02|4|1: Pas de réponse
+      - field: AI03
+        shortLabel: Combien de fois êtes-vous tombé(e) au cours des 12 derniers mois?
+        span: 24
+        type: text-field
+      - field: AI04
+        shortLabel: "Avez-vous récemment pris des mesures pour éviter les chutes dans le
+          futur, comme (plusieurs réponses possibles):"
+        span: 24
+        type: checkbox
+        options:
+          AI04|1|1: Pratiquer des exercices de force et d'équilibre (par exemple, soulever
+            et étirer les jambes, pratiquer un sport léger comme la marche, le
+            vélo, la natation, la gymnastique en groupe, le tai-chi ou la danse)
+          AI04|2|1: Améliorer le niveau de sécurité à la maison (par exemple, en plaçant
+            des poignées dans les toilettes ou dans la salle de bain, en
+            améliorant l'éclairage, en fixant ou en retirant les tapis
+            glissants)
+          AI04|3|1: Utiliser des chaussures adaptées (par exemple en portant des
+            chaussures solides, avec des semelles adaptées)
+          AI04|4|1: Prendre quotidiennement de la vitamine D
+          AI04|5|1: Prendre quotidiennement du calcium
+          AI04|6|1: Contrôler les médicaments qui augmentent le risque de chute, comme les
+            somnifères
+          AI04|7|1: Contrôler la tension artérielle pour détecter une baisse soudaine de
+            tension lors du passage rapide de la position assise à la position
+            debout
+          AI04|8|1: Faire contrôler ses yeux (sa vue)
+          AI04|9|1: Pas de mesures particulières prises dans ce domaine
+          AI04|10|1: Ne sait pas
+      - field: AI05
+        shortLabel: "Qui vous a donné des conseils pour la prévention des chutes?
+          Plusieurs réponses possibles:"
+        span: 24
+        type: checkbox
+        options:
+          AI05|1|1: Personne
+          AI05|2|1: Le généraliste
+          AI05|3|1: Le kinésithérapeute
+          AI05|4|1: L'infirmière
+          AI05|5|1: L'ergothérapeute
+          AI05|6|1: La famille ou des amis
+          AI05|7|1: Autres
+          AI05|8|1: Ne sait pas
+  - section: Activité physique
+    fields:
+      - field: PA01
+        shortLabel: On voudrait à présent savoir dans quelle mesure vous êtes
+          physiquement actif.  On va d'abord s'intéresser aux activités
+          physiques dans le cadre du travail (y compris les travaux
+          domestiques), ensuite lors de vos déplacements et enfin, pendant vos
+          temps libres, incluant le sport et l'entrainement.
+        span: 24
+        type: label
+      - group: Travail et Activités Quotidiennes
+        span: 24
+        fields:
+          - field: PA03
+            shortLabel: Les questions suivantes concernent les activités physiques exercées
+              durant une semaine normale. Répondez aux questions même si vous ne
+              vous considérez pas comme quelqu'un de physiquement actif.
+            span: 24
+            type: label
+          - field: PA04
+            shortLabel: Pensez d'abord au TEMPS que vous consacrez au TRAVAIL. Par 'travail'
+              on entend les activités rémunérées ou non que vous devez accomplir
+              comme les activités professionnelles, les tâches ménagères,
+              s'occuper de la famille, étudier, aller au cours, être en stage…
+            span: 24
+            type: label
+          - field: PA05
+            shortLabel: "Lorsque vous TRAVAILLEZ, quelle proposition décrit le MIEUX ce que
+              vous faites? Etes-vous:"
+            span: 24
+            type: radio-button
+            options:
+              PA05|1|1: Je suis principalement assis(e) ou debout
+              PA05|2|1: Je suis principalement en train de marcher ou de faire des activités
+                qui demandent un effort modéré
+              PA05|3|1: Je suis principalement occupé(e) à un travail lourd ou physiquement
+                exigeant
+      - group: Déplacements et Transports
+        span: 24
+        fields:
+          - field: PA07
+            shortLabel: Les questions suivantes EXCLUENT les activités que vous venez de
+              mentionner pour le travail. Ici, je vous demande de penser
+              uniquement à la manière habituelle dont vous vous DÉPLACEZ POUR
+              ALLER D'UN ENDROIT À UN AUTRE. Par exemple, pour vous rendre au
+              travail, à l'école, au marché, pour aller faire du shopping...
+            span: 24
+            type: label
+          - field: PA08
+            shortLabel: Au cours d'une semaine normale, combien de jours MARCHEZ-vous au
+              moins 10 minutes d'affilée pour vous déplacer d'un endroit à un
+              autre?
+            span: 24
+            type: radio-button
+            options:
+              PA08|1|1: Nombre de jours
+              PA08|2|1: Je ne pratique jamais ce genre d'activité physique
+          - field: PA09
+            shortLabel: Nombre de jours
+            span: 24
+            type: number-field
+            computedProperties:
+              hidden: "return !hasOption(PA08[0],'1')"
+          - field: PA10
+            shortLabel: Au cours d'une journée habituelle, combien de temps passez‐vous à
+              marcher pour vous déplacer d'un endroit à un autre? (additionner
+              uniquement les temps de marche supérieurs à 10minutes d'affilée.)
+            span: 24
+            type: radio-button
+            options:
+              PA10|1|1: Moins de 10 minutes par jour
+              PA10|2|1: 10 à 30 minutes par jour
+              PA10|3|1: 30 à 60 minutes par jour
+              PA10|4|1: Plus de 60 minutes par jour
+          - field: PA11
+            shortLabel: Au cours d'une semaine normale, combien de  jours roulez‐vous à VÉLO
+              au moins 10 minutes d'affilée pour vous déplacer d'un endroit à un
+              autre?
+            span: 24
+            type: radio-button
+            options:
+              PA11|1|1: Nombre de jours
+              PA11|2|1: Je ne pratique jamais ce genre d'activité physique
+          - field: PA12
+            shortLabel: Nombre de jours
+            span: 24
+            type: number-field
+            computedProperties:
+              hidden: "return !hasOption(PA11[0],'1')"
+          - field: PA13
+            shortLabel: Au cours d'une journée habituelle, combien de  temps passez‐vous à
+              vélo pour vous déplacer d'un endroit à un autre?
+            span: 24
+            type: radio-button
+            options:
+              PA103|1|1: Moins de 10 minutes par jour
+              PA103|2|1: 10 à 30 minutes par jour
+              PA103|3|1: 30 à 60 minutes par jour
+              PA103|4|1: Plus de 60 minutes par jour
+      - group: Loisirs et Activités Physiques
+        span: 24
+        fields:
+          - field: PA15
+            shortLabel: Les questions qui suivent EXCLUENT toutes les activités liées au
+              travail ou aux déplacements que vous venez de mentionner. Ici, on
+              se réfère uniquement au SPORT, AU FITNESS ET AUX ACTIVITÉS
+              PHYSIQUES QUE VOUS FAITES DURANT VOS LOISIRS, et qui provoquent AU
+              MOINS une légère augmentation de la respiration ou du rythme
+              cardiaque. Par exemple, de la marche rapide, des sports de ballon,
+              du jogging, du vélo ou de la natation…
+            span: 24
+            type: label
+          - field: PA16
+            shortLabel: Au cours d'une semaine normale, combien de jours pratiquez‐vous du
+              sport, du fitness ou des activités physiques de loisir pendant au
+              moins 10 minutes d'affilée?
+            span: 24
+            type: radio-button
+            options:
+              PA16|1|1: Nombre de jours
+              PA16|2|1: Je ne pratique jamais ce genre d'activité physique
+          - field: PA17
+            shortLabel: Nombre de jours
+            span: 24
+            type: number-field
+          - field: PA18
+            shortLabel: Au cours d'une semaine normale, combien de  temps au total
+              consacrez‐vous au sport, au fitness ou aux activités physiques de
+              loisir?
+            span: 24
+            type: label
+          - field: PA19
+            shortLabel: Heure(s):minutes(s)
+            span: 12
+            type: text-field
+          - field: PA21
+            shortLabel: "Attention, indiquez d'abord le nombre d'heures par semaine.
+              Ensuite, indiquez le nombre de minutes additionelles par semaine.
+              Exemple: Pour une personne qui a fait 2h30 de sport par semaine,
+              complétez '2' pour les heures et '30' pour les minutes. Pour une
+              personne qui a fait 3h de sport par semaine, complétez '3' pour
+              les heures et \"0\" pour les minutes."
+            span: 24
+            type: label
+          - field: PA22
+            shortLabel: Au cours d'une semaine normale, combien de jour(s) pratiquez‐vous
+              des exercices physiques spécialement conçus pour renforcer les
+              muscles, comme des l'entrainement contre résistance ou les
+              exercices de musculation (altères, etc) qui développent la force ?
+            span: 24
+            type: label
+            options:
+              PA22|1|1: Nombre de jours
+              PA22|2|1: Je ne pratique jamais ce genre d'activité physique
+          - field: PA23
+            shortLabel: Nombre de jours
+            span: 24
+            type: number-field
+          - field: PA24
+            shortLabel: Inclure toutes les activités de ce type, même s'ils ont déjà été
+              mentionnés aupraravant.
+            span: 24
+            type: label
+      - group: Comportement Sédentaire
+        span: 24
+        fields:
+          - field: PA26
+            shortLabel: La dernière question dans ce module porte sur votre position assise
+              ou couchée au travail, à la maison, lors de vos déplacements ou
+              chez des amis. Nous faisons allusion au temps que vous passez
+              assis(e) au bureau, chez des amis, dans la voiture, le bus, le
+              train, à lire, à regarder la télévision,... mais pas le temps que
+              vous passez à dormir.
+            span: 24
+            type: label
+          - field: PA27
+            shortLabel: Au cours d'une journée habituelle, combien de temps passez‐vous
+              assis(e) ou couché(e) ?
+            span: 24
+            type: label
+          - field: PA28
+            shortLabel: Heure(s):minute(s)
+            span: 12
+            type: text-field
+  - section: Habitudes nutritionnelles
+    fields:
+      - field: NH01
+        shortLabel: A quelle fréquence mangez-vous des fruits? Les jus pressés de fruits
+          frais, à base de concentré ou de fruits transformés et les jus
+          édulcorés ne sont pas inclus
+        span: 24
+        type: radio-button
+        options:
+          NH01|1|1: 1 fois par jour ou plus
+          NH01|2|1: 4 à 6 fois par semaine
+          NH01|3|1: 1 à 3 fois par semaine
+          NH01|4|1: Moins d'une fois par semaine
+          NH01|5|1: Jamais
+          NH01|6|1: Ne sait pas
+      - field: NH02
+        shortLabel: Combien de portions de fruits mangez-vous chaque jour (quelque soit
+          le type de fruit)?
+        span: 24
+        type: number-field
+      - field: NH03
+        shortLabel: A quelle fréquence mangez-vous des légumes ou de la salade, à
+          l'exception des pommes de terre ? Les soupes (chaudes ou froides) et
+          les jus pressés de légumes frais ne sont pas inclus, tout comme les
+          jus à base de concentré ou de légumes transformés et les jus
+          édulcorés.
+        span: 24
+        type: radio-button
+        options:
+          NH03|1|1: 1 fois par jour ou plus
+          NH03|2|1: 4 à 6 fois par semaine
+          NH03|3|1: 1 à 3 fois par semaine
+          NH03|4|1: Moins d'une fois par semaine
+          NH03|5|1: Jamais
+          NH03|6|1: Ne sait pas
+      - field: NH04
+        shortLabel: Combien de portions de légumes ou de salade mangez-vous chaque jour
+          (sans compter ici les jus de légumes ou les pommes de terre)?
+        span: 24
+        type: number-field
+      - field: NH05
+        shortLabel: A quelle fréquence buvez-vous des jus de fruits ou de légumes 100%
+          purs  à l'exception des jus à base de concentré et de jus edulcorés?
+        span: 24
+        type: radio-button
+        options:
+          NH05|1|1: 1 fois par jour ou plus
+          NH05|2|1: 4 à 6 fois par semaine
+          NH05|3|1: 1 à 3 fois par semaine
+          NH05|4|1: Moins d'une fois par semaine
+          NH05|5|1: Jamais
+          NH05|6|1: Ne sait pas
+      - field: NH06
+        shortLabel: A quelle fréquence buvez-vous des boissons rafraîchissantes sucrées,
+          par exemple de la limonade, le cola ou le thé glacé? Veuillez exclure
+          les boissons allégées, diététiques (par exemple le cola 'light',
+          'zero', 'diet coke') ou edulcorées.
+        span: 24
+        type: radio-button
+        options:
+          NH06|1|1: 1 fois par jour ou plus
+          NH06|2|1: 4 à 6 fois par semaine
+          NH06|3|1: 1 à 3 fois par semaine
+          NH06|4|1: Moins d'une fois par semaine
+          NH06|5|1: Jamais
+          NH06|6|1: Ne sait pas
+      - field: NH07
+        shortLabel: Quelle quantité de boissons rafraîchissantes sucrées buvez-vous en
+          moyenne les jours où vous en consommez?
+        span: 24
+        type: radio-button
+        options:
+          NH07|1|1: Moins d'1 litre
+          NH07|2|1: Environ 1 litre
+          NH07|3|1: Plus d'1 litre
+          NH07|4|1: Ne sait pas
+      - field: NH08
+        shortLabel: A quelle fréquence mangez-vous des collations sucrées ou salées
+          comme des bonbons, du chocolat, des pâtisseries, des biscuits, des
+          crèmes glacées, des chips,...?
+        span: 24
+        type: radio-button
+        options:
+          NH08|1|1: 1 fois par jour ou plus
+          NH08|2|1: 4 à 6 fois par semaine
+          NH08|3|1: 1 à 3 fois par semaine
+          NH08|4|1: Moins d'une fois par semaine
+          NH08|5|1: Jamais
+          NH08|6|1: Ne sait pas
+      - field: NH09
+        shortLabel: A quelle fréquence mangez- ou buvez-vous des produits laitiers comme
+          du lait, du lait battu, du yahourt ou du fromage, ou bien des
+          substituts à base végétale enrichis en calcium comme du lait de soja?
+        span: 24
+        type: radio-button
+        options:
+          NH09|1|1: 1 fois par jour ou plus
+          NH09|2|1: 4 à 6 fois par semaine
+          NH09|3|1: 1 à 3 fois par semaine
+          NH09|4|1: Moins d'une fois par semaine
+          NH09|5|1: Jamais
+          NH09|6|1: Ne sait pas
+      - field: NH10
+        shortLabel: Combien de verres d'eau (de 150 ml environ) buvez-vous par jour?
+        span: 24
+        type: text-field
+      - field: NH11
+        shortLabel: "Nombre de verres:"
+        span: 24
+        type: number-field
+        computedProperties:
+          hidden: "return !hasOption(NH10[0],'1')"
+      - field: NH12
+        shortLabel: A quelle fréquence prenez-vous un petit déjeuner (le matin)?
+        span: 24
+        type: radio-button
+        options:
+          NH12|1|1: Tous les jours
+          NH12|2|1: 4 à 6 fois par semaine
+          NH12|3|1: 1 à 3 fois par semaine
+          NH12|4|1: 1 fois par semaine
+          NH12|5|1: Moins d'une fois par semaine
+          NH12|6|1: Jamais ou presque jamais
+          NH12|7|1: Ne sait pas
+      - field: NH13
+        shortLabel: Vous arrive t-il de grignoter en dehors des repas ? Que ce soient
+          des aliments sucrés ou salés ?
+        span: 24
+        type: radio-button
+        options:
+          NH13|1|1: 1 fois par jour ou plus
+          NH13|2|1: 4 à 6 fois par semaine
+          NH13|3|1: 1 à 3 fois par semaine
+          NH13|4|1: Moins d'une fois par semaine
+          NH13|5|1: Jamais
+          NH13|6|1: Ne sait pas
+      - field: NH14
+        shortLabel: Vous arrive t-il de manger des produits transformés ? (Pizza
+          surgelé, lasagnes surgelées, mortadelle, …)
+        span: 24
+        type: radio-button
+        options:
+          NH14|1|1: 1 fois par jour ou plus
+          NH14|2|1: 4 à 6 fois par semaine
+          NH14|3|1: 1 à 3 fois par semaine
+          NH14|4|1: Moins d'une fois par semaine
+          NH14|5|1: Jamais
+          NH14|6|1: Ne sait pas
+      - field: NH15
+        shortLabel: Vous arrive t-il de manger des fast foods (Hamburger, …)
+        span: 24
+        type: radio-button
+        options:
+          NH15|1|1: 1 fois par jour ou plus
+          NH15|2|1: 4 à 6 fois par semaine
+          NH15|3|1: 1 à 3 fois par semaine
+          NH15|4|1: Moins d'une fois par semaine
+          NH15|5|1: Jamais
+          NH15|6|1: Ne sait pas
+      - field: NH16
+        shortLabel: Avez-vous des intolérances ou des allergies alimentaires?
+        span: 24
+        type: text-field
+      - field: NH17
+        shortLabel: Quels sont les aliments que vous ne tolérez pas ou dont vous êtes
+          allergique? (Plusieurs réponses possibles)
+        span: 24
+        type: radio-button
+        options:
+          NH17|1|1: Lait (lactose)
+          NH17|2|1: Arachides
+          NH17|3|1: Noix
+          NH17|4|1: Noisettes
+          NH17|5|1: Autres noix
+          NH17|6|1: Crustacés
+          NH17|7|1: Soja
+          NH17|8|1: Céréales contenant du gluten
+          NH17|9|1: Œufs
+          NH17|10|1: Poisson
+          NH17|11|1: "Autre, spécifiez:"
+      - field: NH18
+        shortLabel: "Autre allergique, spécifiez:"
+        span: 24
+        type: text-field
+        computedProperties:
+          hidden: "return !hasOption(NH17,'11')"
+      - field: NH19
+        shortLabel: Cette intolérance ou allergie au lait (lactose) a-t-elle été
+          confirmée par un médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'1')"
+        options:
+          NH19|1|1: Oui
+          NH19|2|1: Non
+          NH19|3|1: Ne sait pas
+      - field: NH20
+        shortLabel: Cette intolérance ou allergie aux arachides a-t-elle été confirmée
+          par un médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'2')"
+        options:
+          NH20|1|1: Oui
+          NH20|2|1: Non
+          NH20|3|1: Ne sait pas
+      - field: NH21
+        shortLabel: Cette intolérance ou allergie aux noix a-t-elle été confirmée par un
+          médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return (!hasOption(NH17[0],'3') || !hasOption(NH17[0],'4') || !hasOption(NH17[0],'5'))"
+        options:
+          NH21|1|1: Oui
+          NH21|2|1: Non
+          NH21|3|1: Ne sait pas
+      - field: NH22
+        shortLabel: Cette intolérance ou allergie aux crustacés a-t-elle été confirmée
+          par un médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'6')"
+        options:
+          NH22|1|1: Oui
+          NH22|2|1: Non
+          NH22|3|1: Ne sait pas
+      - field: NH23
+        shortLabel: Cette intolérance ou allergie au soja a-t-elle été confirmée par un
+          médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'7')"
+        options:
+          NH23|1|1: Oui
+          NH23|2|1: Non
+          NH23|3|1: Ne sait pas
+      - field: NH24
+        shortLabel: Cette intolérance ou allergie au gluten a-t-elle été confirmée par
+          un médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'8')"
+        options:
+          NH24|1|1: Oui
+          NH24|2|1: Non
+          NH24|3|1: Ne sait pas
+      - field: NH25
+        shortLabel: Cette intolérance ou allergie aux œufs a-t-elle été confirmée par un
+          médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'9')"
+        options:
+          NH25|1|1: Oui
+          NH25|2|1: Non
+          NH25|3|1: Ne sait pas
+      - field: NH26
+        shortLabel: Cette intolérance ou allergie au poisson a-t-elle été confirmée par
+          un médecin?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(NH17[0],'10')"
+        options:
+          NH26|1|1: Oui
+          NH26|2|1: Non
+          NH26|3|1: Ne sait pas
+      - field: NH27
+        shortLabel: Une autre intolérance ou allergie a-t-elle été confirmée par un
+          médecin?
+        span: 24
+        type: text-field
+
+  - section: Qualité du sommeil
+    fields:
+      - field: CD01
+        shortLabel: Ce questionnaire permet d'évaluer la qualité de votre sommeil
+        span: 24
+        type: label
+      - field: CD02
+        shortLabel: Avez-vous du mal à vous endormir ?
+        span: 24
+        type: radio-button
+        options:
+          CD02|1|1: Jamais
+          CD02|2|1: Rarement
+          CD02|3|1: Occasionnellement
+          CD02|4|1: La plupart du temps
+          CD02|5|1: Toujours
+      - field: CD03
+        shortLabel: Avez-vous du mal à rester endormi ?
+        span: 24
+        type: radio-button
+        options:
+          CD03|1|1: Jamais
+          CD03|2|1: Rarement
+          CD03|3|1: Occasionnellement
+          CD03|4|1: La plupart du temps
+          CD03|5|1: Toujours
+      - field: CD04
+        shortLabel: Prenez vous des médicament pour vous aider à dormir ?
+        span: 24
+        type: radio-button
+        options:
+          CD04|1|1: Jamais
+          CD04|2|1: Rarement
+          CD04|3|1: Occasionnellement
+          CD04|4|1: La plupart du temps
+          CD04|5|1: Toujours
+      - field: CD05
+        shortLabel: Prenez vous de l'alcool pour vous aider à dormir ?
+        span: 24
+        type: radio-button
+        options:
+          CD05|1|1: Jamais
+          CD05|2|1: Rarement
+          CD05|3|1: Occasionnellement
+          CD05|4|1: La plupart du temps
+          CD05|5|1: Toujours
+      - field: CD06
+        shortLabel: Y a-t-il un problème de santé qui perturbe votre sommeil ?
+        span: 24
+        type: radio-button
+        options:
+          CD06|1|1: Jamais
+          CD06|2|1: Rarement
+          CD06|3|1: Occasionnellement
+          CD06|4|1: La plupart du temps
+          CD06|5|1: Toujours
+      - field: CD07
+        shortLabel: Avez-vous perdu tout intérêt pour vos activités et vos hobbies ?
+        span: 24
+        type: radio-button
+        options:
+          CD07|1|1: Jamais
+          CD07|2|1: Rarement
+          CD07|3|1: Occasionnellement
+          CD07|4|1: La plupart du temps
+          CD07|5|1: Toujours
+      - field: CD08
+        shortLabel: Vous sentez vous triste, irritable ou désespéré ?
+        span: 24
+        type: radio-button
+        options:
+          CD08|1|1: Jamais
+          CD08|2|1: Rarement
+          CD08|3|1: Occasionnellement
+          CD08|4|1: La plupart du temps
+          CD08|5|1: Toujours
+      - field: CD09
+        shortLabel: Vous sentez vous nerveux ou inquiet ?
+        span: 24
+        type: radio-button
+        options:
+          CD09|1|1: Jamais
+          CD09|2|1: Rarement
+          CD09|3|1: Occasionnellement
+          CD09|4|1: La plupart du temps
+          CD09|5|1: Toujours
+      - field: CD10
+        shortLabel: Pensez vous qu'il y a quelque chose qui ne va pas avec votre corps ?
+        span: 24
+        type: radio-button
+        options:
+          CD10|1|1: Jamais
+          CD10|2|1: Rarement
+          CD10|3|1: Occasionnellement
+          CD10|4|1: La plupart du temps
+          CD10|5|1: Toujours
+      - field: CD11
+        shortLabel: Votre horaire de travail est il variable ? Est ce que votre rythme
+          de sommeil est changeant ?
+        span: 24
+        type: radio-button
+        options:
+          CD11|1|1: Jamais
+          CD11|2|1: Rarement
+          CD11|3|1: Occasionnellement
+          CD11|4|1: La plupart du temps
+          CD11|5|1: Toujours
+      - field: CD12
+        shortLabel: Vos jambes sont-elles agitées et/ou inconfortable avant de dormir ?
+        span: 24
+        type: radio-button
+        options:
+          CD12|1|1: Jamais
+          CD12|2|1: Rarement
+          CD12|3|1: Occasionnellement
+          CD12|4|1: La plupart du temps
+          CD12|5|1: Toujours
+      - field: CD13
+        shortLabel: Vous a-t-on dit que vous êtes agité ou que vous donnez des coups de
+          piends pendant votre sommeil ?
+        span: 24
+        type: radio-button
+        options:
+          CD13|1|1: Jamais
+          CD13|2|1: Rarement
+          CD13|3|1: Occasionnellement
+          CD13|4|1: La plupart du temps
+          CD13|5|1: Toujours
+      - field: CD14
+        shortLabel: Avez-vous des attitudes ou des mouvements inhabituels durant votre
+          sommeil ?
+        span: 24
+        type: radio-button
+        options:
+          CD14|1|1: Jamais
+          CD14|2|1: Rarement
+          CD14|3|1: Occasionnellement
+          CD14|4|1: La plupart du temps
+          CD14|5|1: Toujours
+      - field: CD15
+        shortLabel: Est-ce que vous ronflez ?
+        span: 24
+        type: radio-button
+        options:
+          CD15|1|1: Jamais
+          CD15|2|1: Rarement
+          CD15|3|1: Occasionnellement
+          CD15|4|1: La plupart du temps
+          CD15|5|1: Toujours
+      - field: CD16
+        shortLabel: Vous a-t-on dit que vous arrêtiez de respirer, que vous ronflez ou
+          que vous vous étouffez dans votre sommeil ?
+        span: 24
+        type: radio-button
+        options:
+          CD16|1|1: Jamais
+          CD16|2|1: Rarement
+          CD16|3|1: Occasionnellement
+          CD16|4|1: La plupart du temps
+          CD16|5|1: Toujours
+      - field: CD17
+        shortLabel: Avez-vous du mal à rester éveillé durant la journée ?
+        span: 24
+        type: radio-button
+        options:
+          CD17|1|1: Jamais
+          CD17|2|1: Rarement
+          CD17|3|1: Occasionnellement
+          CD17|4|1: La plupart du temps
+          CD17|5|1: Toujours
+      - field: CD18
+        shortLabel: "Score total:"
+        span: 24
+        type: number-field
+        styleOptions:
+          decimalPlaces: 0
+        computedProperties:
+          value: |
+            return { content: { '*': { 
+              type: 'number', 
+              value: (score(CD02[0])+score(CD03[0])+score(CD04[0])+score(CD05[0])+score(CD06[0])+score(CD07[0])+score(CD08[0])+score(CD09[0])+score(CD10[0])+score(CD11[0])+score(CD12[0])+score(CD13[0])+score(CD14[0])+score(CD15[0])+score(CD16[0])+score(CD17[0])) 
+            } }, codes: [] }
+      - group: Note au medecin. Aide à l'interprétation des résultats
+        span: 24
+        fields:
+          - field: CD20
+            shortLabel: "SO1-15: Insomnie"
+            span: 24
+            type: label
+          - field: CD21
+            shortLabel: Avec une note de 3, 4 ou 5 pour n'importe quelle question, le
+              patient souffre probablement d'insomnie. S'ils répondent 3, 4 ou 5
+              pour deux éléments ou plus et présentent une déficience diurne
+              significative en matière d'insomnie nécessite une évaluation et
+              une gestion plus approfondies
+            span: 24
+            type: label
+          - field: CD22
+            shortLabel: "SO6-9: Troubles mentaux"
+            span: 24
+            type: label
+          - field: CD23
+            shortLabel: Les notes 4 ou 5 aux questions 6 à 9 nécessitent un dépistage plus
+              approfondi des troubles psychiatriques. Question 8 fait référence
+              à la somatisation et peut refléter un trouble somatoforme
+              sous-jacent qui nécessite traitement spécifique.
+            span: 24
+            type: label
+          - field: CD24
+            shortLabel: "SO10: Troubles du rythme circadien"
+            span: 24
+            type: label
+          - field: CD25
+            shortLabel: Une note de 4 ou 5 à la question 10 peut être un trouble du rythme
+              circadien. Interrogatoire supplémentaire concernant le travail
+              posté ou une préférence pour une phase de sommeil retardée.
+            span: 24
+            type: label
+          - field: CD26
+            shortLabel: "SO11-12: Syndrome des jambes sans repos"
+            span: 24
+            type: label
+          - field: CD27
+            shortLabel: Une note de 4 ou 5 à la question 11 ou 12 est significative et
+              contribue probablement au symptômes d'insomnie ou de sommeil non
+              réparateur. La question 11 fait référence au syndrome des jambes
+              sans repos et la question 12 fait référence aux troubles
+              périodiques du mouvement des membres.
+            span: 24
+            type: label
+          - field: CD28
+            shortLabel: "SO13: Parasomnies"
+            span: 24
+            type: label
+          - field: CD29
+            shortLabel: Une note de 2 à 5 à la question 14 devrait susciter des inquiétudes,
+              surtout si l'événement ou le mouvement est violent ou
+              potentiellement blessant pour le patient ou son partenaire de lit.
+            span: 24
+            type: label
+          - field: CD30
+            shortLabel: "SO14-16: Apnées du sommeil"
+            span: 24
+            type: label
+          - field: CD31
+            shortLabel: Une note de 4 ou 5 à la question 14 ou 15 nécessite à elle seule une
+              évaluation clinique plus approfondie de l'apnée du sommeil. Une
+              note supérieure à 3 aux questions 14 et 15 ou 14 et 16 est
+              également suspecte d'apnée du sommeil et une évaluation plus
+              approfondie devrait être effectuée.
+            span: 24
+            type: label
+  - section: Dépendances
+    fields:
+      - group: Tabac
+        span: 24
+        fields:
+          - field: DEP01
+            shortLabel: "Décrivez votre comportement tabagique:"
+            span: 24
+            type: radio-button
+            options:
+              DEP01|1|1: Je n'ai jamais fumé
+              DEP01|2|1: J'ai fumé, mais j'ai arrêté
+              DEP01|3|1: Je fume
+          - field: DEP11
+            shortLabel: "Depuis combien d'années avez-vous arrêté de fumer?"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(DEP01,'2')"
+          - field: DEP02
+            shortLabel: "Quantité consommée:"
+            span: 24
+            type: text-field
+          - field: DEP03
+            shortLabel: "Durée de consommation (en années):"
+            span: 24
+            type: text-field
+      - group: Alcool
+        span: 24
+        fields:
+          - field: DEP04
+            shortLabel: "Décrivez votre consommation de boissons alcoolisées:"
+            span: 24
+            type: radio-button
+            options:
+              DEP01|1|1: Je consomme de l'alcool
+              DEP01|2|1: Je n'ai jamais consommé d'alcool
+              DEP01|3|1: Je buvais de l'alcool, mais j'ai arrêté
+          - field: DEP12
+            shortLabel: "Depuis combien d'années avez-vous arrêté de consommer de l'alcool?"
+            span: 24
+            type: text-field
+            computedProperties:
+              hidden: "return !hasOption(DEP04,'3')"
+          - field: DEP05
+            shortLabel: "Quantité consommée:"
+            span: 24
+            type: text-field
+          - field: DEP06
+            shortLabel: "Durée de consommation (en années):"
+            span: 24
+            type: text-field
+      - group: Drogues
+        span: 24
+        fields:
+          - field: DEP08
+            shortLabel: "Type de drogue:"
+            span: 24
+            type: text-field
+          - field: DEP09
+            shortLabel: "Fréquence de consommation:"
+            span: 24
+            type: text-field
+          - field: DEP10
+            shortLabel: "Durée de consommation (en années):"
+            span: 24
+            type: text-field
+  - section: Consommation de drogues
+    fields:
+      - field: ID01
+        shortLabel: "! Les résultats ne doivent être visibles que par le médecin, ne
+          doivent pas être publiés en ligne !"
+        span: 24
+        type: label
+      - field: ID02
+        shortLabel: La réponse à ces questions est strictement confidentielle et elle
+          n'apparaitra pas dans votre résumé santé. Seul le médecin qui
+          analysera le questionnaire y aura accès et il s'entretiendra à ce
+          sujet avec vous de manière confidentielle.
+        span: 24
+        type: label
+      - field: ID03
+        shortLabel: Au cours des 12 derniers mois, vous est il arrivé de consommer du
+          cannabis ?
+        span: 24
+        type: radio-button
+        options:
+          ID03|1|1: Oui
+          ID03|2|1: Non
+      - field: ID04
+        shortLabel: A quel fréquence avez-vous consommé du cannabis ?
+        span: 24
+        type: radio-button
+        options:
+          ID04|1|1: Plus d'une fois par semaine
+          ID04|2|1: Une fois par mois (à l'occasion de fêtes par exemple)
+          ID04|3|1: "Une fois sur l'année (ex: pendant mes vacances)"
+      - field: ID05
+        shortLabel: "Avez-vous consommé d'autres substances ? Ex: Cocaine, amphétamines,
+          Ecstasy, …)"
+        span: 24
+        type: radio-button
+        options:
+          ID05|1|1: Oui
+          ID05|2|1: Non
+      - field: ID06
+        shortLabel: A quel fréquence ?
+        span: 24
+        type: radio-button
+        options:
+          ID06|1|1: Plus d'une fois par semaine
+          ID06|2|1: Une fois par mois (à l'occasion de fêtes par exemple)
+          ID06|3|1: "Une fois sur l'année (ex: pendant mes vacances)"
+      - field: ID07
+        shortLabel: "RECOMMANDATION : Consommation à risque. Nécessite prise en charge"
+        span: 24
+        type: label
+        computedProperties:
+          hidden: "return !(hasOption(ID03,'1') || hasOption(ID05,'2'))"
+  - section: Jeux de hasard ou d'argent
+    fields:
+      - field: GA01
+        shortLabel: "! Les résultats ne doivent être visibles que par le médecin, ne
+          doivent pas être publiés en ligne !"
+        span: 24
+        type: label
+      - field: GA02
+        shortLabel: La réponse à ces questions est strictement confidentielle et elle
+          n'apparaitra pas dans votre résumé santé. Seul le médecin qui
+          analysera le questionnaire y aura accès et il s'entretiendra à ce
+          sujet avec vous de manière confidentielle.
+        span: 24
+        type: label
+      - field: GA03
+        shortLabel: Au cours des 12 derniers mois, avez-vous dépensé de l'argent pour
+          des jeux de lotreir, des jeux de casino, des jeux de cafés, des paris
+          sportifs ou des courses ?
+        span: 24
+        type: radio-button
+        options:
+          GA03|1|1: Oui
+          GA03|2|1: Non
+      - field: GA04
+        shortLabel: Au cours des 12 derniers mois, à quelle fréquence avez-vous misé ou
+          dépensé de l'argent pour ces jeux ?
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: "return !hasOption(GA03[0],'1')"
+        options:
+          GA04|1|1: Tous les jours
+          GA04|2|1: Une fois par semaine ou plus
+          GA04|3|1: Une fois par mois ou plus
+          GA04|4|1: Moins d'une fois par mois
+      - field: GA05
+        shortLabel: Au cours des 12 derniers mois, combien avez-vous dépensé en moyenne
+          par mois à des jeux de hasard et d'argent ?
+        span: 24
+        type: radio-button
+        options:
+          GA05|1|1: Plus de 40 euros par mois
+          GA05|2|1: Moins de 40 euros par mois
+          GA05|3|1: Pouvez-vous fournir plus d'informations à ce sujet?
+      - field: GA06
+        shortLabel: "RECOMMANDATION : Consommation à risque. Nécessite prise en charge"
+        span: 24
+        type: label
+        computedProperties:
+          hidden: "return !hasOption(GA05[0],'1')"
+  - section: Médecin généraliste
+    fields:
+      - field: GP01
+        shortLabel: Contacts avec un médecin généraliste
+        span: 24
+        type: label
+      - field: GP02
+        shortLabel: Voici maintenant quelques questions au sujet de l’utilisation des
+          services de soins de santé. Attention, il s'agit toujours de
+          l'utilisation des services de soins pour vous-même.
+        span: 24
+        type: label
+      - field: GP03
+        shortLabel: Avez-vous un médecin généraliste attitré ou un groupe de médecins
+          généralistes (il peut s’agir d’une maison médicale) attitré?
+        span: 24
+        type: radio-button
+        options:
+          GP03|1|1: Oui
+          GP03|2|1: Non
+          GP03|3|1: Ne sait pas
+      - field: GP04
+        shortLabel: Les questions qui suivent concernent vos consultations avec le
+          médecin généraliste. Il s’agit  des consultations au cabinet du
+          médecin, mais aussi des visites à domicile ou , mais aussi des
+          conseils par téléphone.
+        span: 24
+        type: label
+      - field: GP05
+        shortLabel: Quand avez-vous consulté un médecin généraliste pour la dernière fois?
+        span: 24
+        type: radio-button
+        options:
+          GP05|1|1: Il y a moins de 6 mois
+          GP05|2|1: Il y a plus de 6 mois
+          GP05|3|1: Jamais
+          GP05|4|1: Ne sait pas

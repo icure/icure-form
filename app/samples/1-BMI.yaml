@@ -27,4 +27,11 @@ sections:
             if (!w || !h) { return undefined }
             if (h > 3) { h = h / 100 } 
             return { content: { '*': { type: 'measure', value: w / (h * h) } }, codes: [] }
+      - field: bmi-default
+        type: measure-field
+        shortLabel: default BMI
+        computedProperties:
+          defaultValue: |
+            return 10
+
 

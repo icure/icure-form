@@ -1,4 +1,4 @@
-@import 'math';
+@use 'sass:math';
 
 // colors
 $gray-900: #1D2235;
@@ -60,6 +60,71 @@ $select-dropdown-row-background: white;
 $select-dropdown-row-font-size: 12px;
 $select-dropdown-row-font-weight: 400;
 $select-dropdown-row-hover-background: $blue-400;
+.tab-container {
+	display: flex;
+	flex-direction: column;
+
+	.tab-bar {
+		display: flex;
+		align-self: stretch;
+		padding: 0;
+
+		ul {
+			width: 100%;
+			display: flex;
+			align-items: flex-end;
+			justify-content: flex-start;
+			align-self: stretch;
+			padding: 0;
+			margin: 0;
+			gap:2px;
+			box-sizing: border-box;
+			position: relative;
+
+			&:before{
+				border-bottom: 1px solid  $blue-400;
+				content: "";
+				left: 0;
+				position: absolute;
+				right: 0;
+			}
+		}
+
+		li {
+			display: inline-block;
+			padding: 8px 16px;
+			cursor: pointer;
+			color: $gray-800;
+			font-size: $label-font-size;
+			font-weight: 400;
+			border-radius: 8px 8px 0px 0px;
+			z-index: 2;
+			border-bottom: 2px solid transparent;
+
+			//border: 1px solid $blue-400;
+			//border-bottom: none;
+			//background-color: rgba($blue-400, 0.5);
+
+			&.active {
+				background-color: white;
+				border-bottom: 2px solid $blue-800;
+				color: $blue-800;
+				font-weight: 600;
+			}
+		}
+	}
+	.tab-content {
+		padding-top: 8px;
+
+		.tab {
+			display: none;
+
+			&.active {
+				display: block;
+			}
+		}
+	}
+}
 
 .icure-text-field,
 .icure-button-group {

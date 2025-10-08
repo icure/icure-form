@@ -1,4 +1,4 @@
-import { html } from 'lit'
+import { html, TemplateResult } from 'lit'
 import { Field } from '../../../common'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 import { property } from 'lit/decorators.js'
@@ -6,7 +6,7 @@ import { Code } from '../../../model'
 
 export class RadioButton extends Field {
 	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Code[]> = async () => []
-	render() {
+	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`

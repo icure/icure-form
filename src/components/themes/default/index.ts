@@ -1,18 +1,4 @@
-import {
-	CheckBox,
-	DatePicker,
-	DateTimePicker,
-	DropdownField,
-	ItemsListField,
-	Label,
-	Button,
-	MeasureField,
-	NumberField,
-	RadioButton,
-	TextField,
-	TimePicker,
-	TokenField,
-} from '../../icure-form/fields'
+import { CheckBox, DatePicker, DateTimePicker, DropdownField, ItemsListField, Label, Button, MeasureField, NumberField, RadioButton, TextField, TimePicker, TokenField } from '../../icure-form/fields'
 import { IcureButtonGroup } from '../../icure-button-group'
 import { IcureDatePickerField } from '../../icure-date-picker'
 import { IcureDropdownField } from '../../icure-dropdown-field'

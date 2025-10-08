@@ -1,9 +1,9 @@
-import { html } from 'lit'
+import { html, TemplateResult } from 'lit'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 import { Field } from '../../../common'
 
 export class MeasureField extends Field {
-	render() {
+	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`
@@ -14,6 +14,7 @@ export class MeasureField extends Field {
 					.displayedLabels="${this.displayedLabels}"
 					.defaultLanguage="${this.defaultLanguage}"
 					.languages="${this.languages}"
+					.styleOptions="${this.styleOptions}"
 					schema="measure"
 					.ownersProvider=${this.ownersProvider}
 					.translationProvider=${this.translationProvider}

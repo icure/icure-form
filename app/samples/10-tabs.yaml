@@ -1,0 +1,43 @@
+form: abortion-forms.NOTE
+id: 4a4aeaba-3f08-4833-b084-d65debab7e9f
+description: abortion-forms.NOTE
+sections:
+  - section: Tab 1
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Note 1
+            type: textfield
+            rowSpan: 5
+            span: 12
+            tags:
+              - MS-ABORTION-ITEM|comment-note|1
+              - MS-ABORTION-NOTITIES-ITEM|notes|1
+  - section: Tab 2
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Note 2
+            type: textfield
+            rowSpan: 5
+            span: 12
+            tags:
+              - MS-ABORTION-ITEM|comment-note|1
+              - MS-ABORTION-NOTITIES-ITEM|notes|1
+  - section: Tab 3
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Note 3
+            type: textfield
+            rowSpan: 5
+            span: 12
+            tags:
+              - MS-ABORTION-ITEM|comment-note|1
+              - MS-ABORTION-NOTITIES-ITEM|notes|1

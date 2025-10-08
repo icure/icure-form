@@ -1,4 +1,4 @@
-@import 'math';
+@use 'sass:math';
 
 // theme
 $label-color: #212529;
@@ -26,6 +26,17 @@ $floating-label-transition: 0.2s ease-out !default;
 $floating-label-scale: 1 !default;
 $floating-label-height: $textbox-line-height * $floating-label-scale;
 $font-weight-label: 500;
+
+
+.tab-container {
+	.tab-bar {
+		li {
+			&.active {
+				background-color: $accent;
+			}
+		}
+	}
+}
 
 .icure-text-field,
 .icure-button-group {

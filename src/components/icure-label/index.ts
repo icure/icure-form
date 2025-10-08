@@ -3,6 +3,7 @@ import { generateLabel } from '../common/utils'
 import { property } from 'lit/decorators.js'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
+import { icureFormLogging } from '../../index'
 
 export class IcureLabel extends LitElement {
 	@property() label?: string
@@ -19,6 +20,10 @@ export class IcureLabel extends LitElement {
 		if (!this.visible) {
 			return html``
 		}
-		return html`${generateLabel(this.label ? this.translationProvider(this.defaultLanguage, this.label) : '', this.labelPosition ?? 'float', 'en')}`
+		if (icureFormLogging) {
+			console.log(`Rendering label ${this.label}`)
+		}
+
+		return html`${generateLabel(this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : '', this.labelPosition ?? 'float', 'en')}`
 	}
 }

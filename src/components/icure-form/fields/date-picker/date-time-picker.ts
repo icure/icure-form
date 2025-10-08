@@ -1,10 +1,10 @@
-import { html } from 'lit'
+import { html, TemplateResult } from 'lit'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 
 import { Field } from '../../../common'
 
 export class DateTimePicker extends Field {
-	render() {
+	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field

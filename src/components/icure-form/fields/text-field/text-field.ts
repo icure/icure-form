@@ -1,4 +1,4 @@
-import { html } from 'lit'
+import { html, TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { Field } from '../../../common'
 import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
@@ -12,14 +12,13 @@ export class TextField extends Field {
 	@property() grows = false
 	@property() unit?: string = ''
 	@property() suggestionStopWords: Set<string> = new Set<string>()
-	@property() linksProvider: (sug: { id: string; code: string; text: string; terms: string[] }) => Promise<{ href: string; title: string } | undefined> = () =>
-		Promise.resolve(undefined)
+	@property() linksProvider: (sug: { id: string; code: string; text: string; terms: string[] }) => Promise<{ href: string; title: string } | undefined> = () => Promise.resolve(undefined)
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
 	@property() codeColorProvider: (type: string, code: string) => string = () => 'XI'
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 
-	render() {
+	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field
@@ -41,6 +40,7 @@ export class TextField extends Field {
 				.codeColorProvider=${this.codeColorProvider}
 				.linkColorProvider=${this.linkColorProvider}
 				.codeContentProvider=${this.codeContentProvider}
+				.defaultValueProvider=${this.defaultValueProvider}
 				.valueProvider=${singleValueProvider(this.valueProvider, id)}
 				.validationErrorsProvider=${this.validationErrorsProvider}
 				.metadataProvider=${this.metadataProvider}

@@ -1,7 +1,9 @@
+@use 'sass:math';
+
 // Add two
 @function add-two( $one, $two, $multiplier: 1 ) {
-	$_unit-1: unit($one);
-	$_unit-2: unit($two);
+	$_unit-1: math.unit($one);
+	$_unit-2: math.unit($two);
 
 	$_one: $multiplier * $one;
 	$_two: $multiplier * $two;
@@ -27,9 +29,9 @@
 
 // Add three
 @function add-three( $one, $two, $three, $multiplier: 1 ) {
-	$_unit-1: unit($one);
-	$_unit-2: unit($two);
-	$_unit-3: unit($three);
+	$_unit-1: math.unit($one);
+	$_unit-2: math.unit($two);
+	$_unit-3: math.unit($three);
 
 	$_one: $multiplier * $one;
 	$_two: $multiplier * $two;

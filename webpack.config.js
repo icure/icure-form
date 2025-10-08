@@ -4,6 +4,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { resolve } = require('path')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const webpack = require('webpack')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require('dotenv').config({ path: './.env' })
 
 module.exports = ({ mode }) => {
 	return {
@@ -12,12 +16,13 @@ module.exports = ({ mode }) => {
 		entry: {
 			app: { import: './app/demo-app.ts', dependOn: ['codes'] },
 			codes: { import: './app/codes.ts' },
-			icure: { import: '@icure/api', dependOn: ['lodash', 'dateFns', 'moment'] },
-			lodash: 'lodash',
+			icure: { import: '@icure/cardinal-sdk', dependOn: ['dateFns'] },
 			dateFns: 'date-fns',
-			moment: 'moment',
 		},
 		plugins: [
+			new webpack.DefinePlugin({
+				'process.env': JSON.stringify(process.env),
+			}),
 			new HtmlWebpackPlugin({
 				template: 'index.html',
 			}),

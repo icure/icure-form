@@ -1,10 +1,10 @@
 import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
 import { generateLabels } from '../common/utils'
 import { property, state } from 'lit/decorators.js'
-import 'app-datepicker'
-import { CustomEventDetail } from 'app-datepicker/dist/typings'
-import { MAX_DATE } from 'app-datepicker/dist/constants'
-import { toResolvedDate } from 'app-datepicker/dist/helpers/to-resolved-date'
+import '@icure/motss-app-datepicker'
+import { CustomEventDetail } from '@icure/motss-app-datepicker/dist/typings'
+import { MAX_DATE } from '@icure/motss-app-datepicker/dist/constants'
+import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-resolved-date'
 import { Field } from '../common'
 import { datePicto } from '../common/styles/paths'
 import { extractSingleValue } from '../icure-form/fields/utils'
@@ -12,6 +12,8 @@ import { format } from 'date-fns'
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
 import { anyDateToDate } from '../../utils/dates'
+import { icureFormLogging } from '../../index'
+import { FieldMetadata } from '../model'
 
 export class IcureDatePickerField extends Field {
 	//TODO: support different date formats
@@ -53,13 +55,17 @@ export class IcureDatePickerField extends Field {
 		return undefined
 	}
 
-	render(): TemplateResult {
+	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }): TemplateResult {
 		if (!this.visible) {
 			return html``
 		}
 
+		if (icureFormLogging) {
+			console.log(`Rendering dat epicker ${this.label}`)
+		}
+
 		const value = this.getValueFromProvider()
-		const validationError = this.validationErrorsProvider?.()?.length
+		const validationError = validationErrors.length
 
 		return html` <div id="root" class="icure-text-field ${value && value != '' ? 'has-content' : ''}" data-placeholder="${this.placeholder}">
 			${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
@@ -79,7 +85,7 @@ export class IcureDatePickerField extends Field {
 						  </div>`
 						: ''}
 				</div>
-				<div class="error">${this.validationErrorsProvider?.().map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
 			</div>
 		</div>`
 	}

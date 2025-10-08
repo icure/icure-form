@@ -8,82 +8,88 @@ import { makeInterpreter } from '../src/utils/interpreter'
 import MiniSearch, { SearchResult } from 'minisearch'
 import { codes, icd10, icpc2 } from './codes'
 import { Field, FieldMetadata, Form, Group, Subform, Validator } from '../src/components/model'
-import { Contact, Form as ICureForm, normalizeCode, sleep } from '@icure/api'
+import { CodeStub, DecryptedContact, DecryptedContent, DecryptedForm, DecryptedService, DecryptedSubContact } from '@icure/cardinal-sdk'
 import { Suggestion, Version } from '../src/generic'
 import { getRevisionsFilter } from '../src/utils/fields-values-provider'
 import { v4 as uuid } from 'uuid'
+import { normalizeCode } from '../src/utils/code-utils'
+import { defaultTranslationProvider } from '../src/utils/languages'
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
-const currentContact = new Contact({
+const currentContact = new DecryptedContact({
 	id: 'c2',
-	rev: null,
 	created: +new Date(),
-	subContacts: [{ formId: 'f1', services: [{ serviceId: 's1' }, { serviceId: 's2' }] }],
+	subContacts: [new DecryptedSubContact({ formId: 'f1', services: [{ serviceId: 's1' }, { serviceId: 's2' }] })],
 	services: [
-		{
+		new DecryptedService({
 			id: 's1',
 			label: 'history',
 			valueDate: 20181012,
-			tags: [{ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|HISTORY|1' }],
-			content: { en: { stringValue: 'commentaire' } },
-		},
-		{
+			tags: [new CodeStub({ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|HISTORY|1' })],
+			content: { en: new DecryptedContent({ stringValue: 'commentaire' }) },
+		}),
+		new DecryptedService({
 			id: 's2',
 			label: 'inTakeDate',
-			tags: [{ id: 'MS-ABORTION-DATE|intake|1' }, { id: 'MS-ABORTION-ITEM|date|1' }, { id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|IN-TAKE-DATE|1' }],
-			content: { en: { fuzzyDateValue: 19960823 } },
-		},
+			tags: [new CodeStub({ id: 'MS-ABORTION-DATE|intake|1' }), new CodeStub({ id: 'MS-ABORTION-ITEM|date|1' }), new CodeStub({ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|IN-TAKE-DATE|1' })],
+			content: { en: new DecryptedContent({ fuzzyDateValue: 19960823 }) },
+		}),
 	],
 })
 
 const history = [
-	new Contact({
+	new DecryptedContact({
 		id: 'c1',
 		rev: '1-12345',
 		created: +new Date() - 1000 * 60 * 60 * 24 * 7,
-		subContacts: [{ formId: 'f1', services: [{ serviceId: 's1' }, { serviceId: 's2' }, { serviceId: 's3' }] }],
+		subContacts: [
+			new DecryptedSubContact({
+				formId: 'f1',
+				services: [{ serviceId: 's1' }, { serviceId: 's2' }, { serviceId: 's3' }],
+			}),
+		],
 		services: [
-			{
+			new DecryptedService({
 				id: 's1',
 				label: 'abortion-forms.field-labels.HISTORY',
-				tags: [{ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|HISTORY|1' }],
-				content: { en: { stringValue: 'test' } },
-			},
-			{
+				tags: [new CodeStub({ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|HISTORY|1' })],
+				content: { en: new DecryptedContent({ stringValue: 'test' }) },
+			}),
+			new DecryptedService({
 				id: 's2',
 				label: 'abortion-forms.field-labels.IN-TAKE-DATE',
-				tags: [{ id: 'MS-ABORTION-DATE|intake|1' }, { id: 'MS-ABORTION-ITEM|date|1' }, { id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|IN-TAKE-DATE|1' }],
-				content: { en: { fuzzyDateValue: 20220404 } },
-			},
-			{
+				tags: [new CodeStub({ id: 'MS-ABORTION-DATE|intake|1' }), new CodeStub({ id: 'MS-ABORTION-ITEM|date|1' }), new CodeStub({ id: 'MS-ABORTION-PSYCHOSOCIAL-INTERVIEW-ITEM|IN-TAKE-DATE|1' })],
+				content: { en: new DecryptedContent({ fuzzyDateValue: 20220404 }) },
+			}),
+			new DecryptedService({
 				id: 's3',
 				label: 'abortion-forms.field-labels.NOTES',
 				valueDate: 20181012,
-				content: { fr: { stringValue: 'Un commentaire' } },
+				content: { fr: new DecryptedContent({ stringValue: 'Un commentaire' }) },
 				responsible: '2',
 				tags: [
-					{
+					new CodeStub({
 						id: 'MS-ABORTION-ITEM|comment-note|1',
-					},
-					{
+					}),
+					new CodeStub({
 						id: 'MS-ABORTION-CONTROL-ITEM|medicalNotes|1',
-					},
+					}),
 				],
-			},
+			}),
 		],
 	}),
 ]
 
-const rootForm = new ICureForm({
+const rootForm = new DecryptedForm({
 	id: 'f1',
 	rev: '12345',
 	formTemplateId: 'abortion',
 })
 
 const db = JSON.parse(localStorage.getItem('com.icure.storage') || '{}') as {
-	forms?: Record<string, ICureForm>
-	contacts?: Record<string, Contact>
+	forms?: Record<string, DecryptedForm>
+	contacts?: Record<string, DecryptedContact>
 }
 if (!db.forms) {
 	db.forms = { [rootForm.id!]: rootForm }
@@ -99,18 +105,19 @@ async function destroyForm(fid: string) {
 	localStorage.setItem('com.icure.storage', JSON.stringify(db))
 }
 
-async function makeForm(f: ICureForm): Promise<ICureForm> {
+async function makeForm(f: DecryptedForm): Promise<DecryptedForm> {
 	const form = (db.forms![f.id!] = f)
 	localStorage.setItem('com.icure.storage', JSON.stringify(db))
 	return form
 }
 
-async function getForms(formTemplateId: string | undefined, parentId: string | undefined): Promise<ICureForm[]> {
+async function getForms(formTemplateId: string | undefined, parentId: string | undefined): Promise<DecryptedForm[]> {
 	const forms = Object.values(db.forms!).filter((f) => (!formTemplateId || f.formTemplateId === formTemplateId) && (f.parent === parentId || (!f.parent && !parentId)))
 	return forms
 }
 
 export class DecoratedForm extends LitElement {
+	@property() renderer = 'form'
 	@property() form: Form
 	@property() language?: string = 'fr'
 
@@ -118,7 +125,7 @@ export class DecoratedForm extends LitElement {
 	private redoStack: BridgedFormValuesContainer[] = []
 
 	@state() formValuesContainer: BridgedFormValuesContainer | undefined = undefined
-	@state() observedForms: Record<string, Form> = {}
+	@state() observedForms: Record<string, DecryptedForm> = {}
 
 	private miniSearch: MiniSearch = new MiniSearch({
 		fields: ['text'], // fields to index for full-text search
@@ -179,7 +186,7 @@ export class DecoratedForm extends LitElement {
 		const form =
 			forms[0] ??
 			(await makeForm(
-				new ICureForm({
+				new DecryptedForm({
 					id: uuid(),
 					rev: uuid(),
 					formTemplateId: this.form.id,
@@ -188,7 +195,7 @@ export class DecoratedForm extends LitElement {
 		const contactFormValuesContainer = await makeFormValuesContainer(this.observedForms, form, Object.values(db.contacts ?? {}).find((c) => c.rev === null) ?? currentContact, history, (parentId) =>
 			getForms(undefined, parentId),
 		)
-		contactFormValuesContainer.allForms().forEach((f) => (this.observedForms[f.id!] = this.form))
+		contactFormValuesContainer.allForms().forEach((f) => (this.observedForms[f.id!] = f))
 		const responsible = '1'
 
 		const findForm = (form: Form, anchorId: string | undefined, templateId: string | undefined): Form | undefined => {
@@ -234,7 +241,7 @@ export class DecoratedForm extends LitElement {
 								{
 									metadata: {
 										label: fg.label(),
-										tags: fg.tags?.map((id) => ({ label: {}, ...normalizeCode({ id: id }), id: id! })),
+										tags: fg.tags?.map((id) => ({ ...normalizeCode(new CodeStub({ id: id })), id: id!, label: {} })),
 									},
 									revisionsFilter: getRevisionsFilter(fg),
 									formula,
@@ -278,7 +285,7 @@ export class DecoratedForm extends LitElement {
 										{
 											metadata: {
 												label: fg.label(),
-												tags: fg.tags?.map((id) => ({ label: {}, ...normalizeCode({ id: id }), id: id! })),
+												tags: fg.tags?.map((id) => ({ ...normalizeCode(new CodeStub({ id: id })), id: id!, label: {} })),
 											},
 											validators,
 										},
@@ -293,6 +300,16 @@ export class DecoratedForm extends LitElement {
 			},
 			this.language,
 			undefined,
+			{
+				language: () => this.language ?? 'fr',
+				summarize: () => (context: string, questions: [string, string][]) =>
+					new Promise((resolve) => {
+						setTimeout(() => {
+							resolve(`${context} \n ${questions.map(([question, answer]) => `${question}: ${answer}`).join('\n')}`)
+						}, 1000)
+					}),
+				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,
+			},
 		)
 
 		this.formValuesContainer = initialisedFormValueContainer
@@ -386,7 +403,6 @@ export class DecoratedForm extends LitElement {
 	}
 
 	async optionsProvider(language: string, codifications: string[], searchTerms: string[]) {
-		await sleep(100)
 		const codeSplited: string[][] = codifications?.map((codification) => codification.split('|'))
 		if (codeSplited.some((codification) => codification[0] === 'ENTITY-LIST')) {
 			return [
@@ -405,7 +421,6 @@ export class DecoratedForm extends LitElement {
 	}
 
 	async ownersProvider(terms: string[], ids?: string[], specialties?: string[]): Promise<Suggestion[]> {
-		await sleep(100)
 		return [
 			{ id: '1', name: 'Dr. John Doe', specialties: ['General Medicine'] },
 			{ id: '2', name: 'Dr. Jane Doe', specialties: ['ORL'] },
@@ -425,9 +440,9 @@ export class DecoratedForm extends LitElement {
 			<icure-form
 				.form="${this.form}"
 				labelPosition="above"
-				renderer="form"
+				renderer="${this.renderer}"
 				.readOnly="${false}"
-				.displayMetadata="${true}"
+				.displayMetadata="${false}"
 				.language="${this.language}"
 				.formValuesContainer="${this.formValuesContainer}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"

@@ -43,24 +43,23 @@ export const normalizeUnit = (value: number, unit?: string): number => {
 }
 
 export type ParsedPrimitiveType = number | string | boolean | Date | ParsedPrimitiveType[]
-export const parsePrimitive = (value: PrimitiveType): ParsedPrimitiveType | undefined => {
+export const parsePrimitive = (value: PrimitiveType, toString = false, language?: string): ParsedPrimitiveType | undefined => {
 	switch (value.type) {
 		case 'measure':
-			const normalizedValue = value.value ? normalizeUnit(+value.value, value.unit) : undefined
-			return normalizedValue
+			return value.value || value.value === 0 ? (toString ? `${value.value} ${value.unit ?? ''}` : normalizeUnit(+value.value, value.unit)) : undefined
 		case 'datetime':
-			return anyDateToDate(value.value)
+			return toString ? anyDateToDate(value.value)?.toLocaleString() : anyDateToDate(value.value)
 		case 'timestamp':
-			return anyDateToDate(value.value)
+			return toString ? anyDateToDate(value.value)?.toLocaleString() : anyDateToDate(value.value)
 		case 'number':
-			return +value.value
+			return toString ? (+value.value).toString() : +value.value
 		case 'boolean':
-			return value.value
+			return toString ? value.value.toString() : value.value
 		case 'string':
-			return value.value
+			return toString ? value.value.toString() : value.value
 		case 'compound':
 			return Object.values(value.value)
-				.map(parsePrimitive)
+				.map((x) => parsePrimitive(x, toString, language))
 				.filter((x) => x !== undefined) as ParsedPrimitiveType[]
 	}
 }

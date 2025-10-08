@@ -31,6 +31,7 @@ import obstetrics_followup_short from './samples/obstetrics-followup-short.json'
 import obstetrics_followup_midwife from './samples/obstetrics-followup-midwife.json'
 import incapacity from './samples/incapacity.json'
 
+import { FormLayout, IccHcpartyXApi } from '@icure/api'
 import { css, html, LitElement } from 'lit'
 // @ts-ignore
 import { convertLegacy } from '../src/conversion/icure-convert'
@@ -85,16 +86,9 @@ import YAML from 'yaml'
 import './decorated-form'
 
 import { DecoratedForm } from './decorated-form'
-import { AuthenticationMethod, CardinalBaseSdk } from '@icure/cardinal-sdk'
-import UsingCredentials = AuthenticationMethod.UsingCredentials
 
 class DemoApp extends LitElement {
-	private hcpApi = CardinalBaseSdk.initialize(
-		undefined,
-		'https://nightly.icure.cloud',
-		new UsingCredentials.UsernamePassword(process.env.CARDINAL_USERNAME ?? 'user', process.env.CARDINAL_PASSWORD ?? 'password'),
-		{ groupSelector: async () => process.env.CARDINAL_GROUP_ID ?? '' },
-	).then((sdk) => sdk.healthcareParty)
+	private hcpApi: IccHcpartyXApi = new IccHcpartyXApi('https://kraken.svc.icure.cloud/rest/v1', { Authorization: 'Basic YWJkZW1vQGljdXJlLmNsb3VkOmtuYWxvdQ==' })
 	private samples = [
 		...[
 			{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
@@ -207,7 +201,7 @@ class DemoApp extends LitElement {
 	}
 	async ownersProvider(terms: string[], ids?: string[], specialties?: string[]) {
 		const longestTerm = terms.reduce((w, t) => (w.length >= t.length ? w : t), '')
-		const candidates = await (await this.hcpApi).findHealthcarePartiesByName({ name: longestTerm })
+		const candidates = await this.hcpApi.findByName(longestTerm)
 		return (candidates.rows || []).map((x) => ({
 			id: x.id,
 			text: [x.firstName, x.lastName].filter((x) => x?.length).join(' '),

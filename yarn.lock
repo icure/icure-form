@@ -501,9 +501,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@icure/api@npm:5.3.7":
-  version: 5.3.7
-  resolution: "@icure/api@npm:5.3.7"
+"@icure/api@npm:5.3.18":
+  version: 5.3.18
+  resolution: "@icure/api@npm:5.3.18"
   dependencies:
     date-fns: ^2.23.0
     libphonenumber-js: ^1.7.18
@@ -512,7 +512,7 @@ __metadata:
     text-encoding: ^0.7.0
     uuid: ^8.3.2
     uuid-encoder: ^1.1.0
-  checksum: 4d9cc565ab04c5e0b95e5d2df780b9bd2ddb085309d5adbf2b1c9cb793531d54c0915e9b06bee7f60fd2243fb09fe289caecc9b8ef3d015c81801d846dfb4ad1
+  checksum: 0da319f009c6307d34bb268beb147727a21ef423c9e15e09ec7f632a8457bc5cbc8300a81f7b7ee8747b2d996d8f6cecb7daae3f88e593d3919479af92042874
   languageName: node
   linkType: hard
 
@@ -523,8 +523,8 @@ __metadata:
     "@babel/core": ^7.26.10
     "@babel/eslint-parser": ^7.26.10
     "@babel/traverse": ^7.26.10
-    "@icure/api": 5.3.7
-    "@icure/motss-app-datepicker": ^6.0.0-rc.39
+    "@icure/api": 5.3.18
+    "@icure/motss-app-datepicker": ^6.0.0-rc.40
     "@lit/task": ^1.0.2
     "@types/jest": ^27.0.2
     "@types/markdown-it": ^14.1.2
@@ -581,9 +581,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@icure/motss-app-datepicker@npm:^6.0.0-rc.39":
-  version: 6.0.0-rc.39
-  resolution: "@icure/motss-app-datepicker@npm:6.0.0-rc.39"
+"@icure/motss-app-datepicker@npm:^6.0.0-rc.40":
+  version: 6.0.0-rc.40
+  resolution: "@icure/motss-app-datepicker@npm:6.0.0-rc.40"
   dependencies:
     "@material/mwc-base": ^0.27.0
     "@material/mwc-button": ^0.27.0
@@ -593,7 +593,7 @@ __metadata:
     "@material/mwc-textfield": ^0.27.0
     lit: ^2.7.0
     tslib: ^2.5.0
-  checksum: eefaed31a8c7fcb01a0779a415a9937ba4076b9c927087e018ffe7c78fef6b8fa7a6983bd9220108c9a058cccfa8ff28ca4b8b2497d885ee7e332d16b898aadd
+  checksum: 9bbe2bed341b03065aa18a44107859b6711d84b2963833e561cae0c6d5c605243a6569ead6091fd761abde9059de6b789470e18825f2d2ec1a87450b016567ae
   languageName: node
   linkType: hard
 

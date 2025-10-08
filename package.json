@@ -73,7 +73,6 @@
 		"@babel/core": "^7.26.10",
 		"@babel/eslint-parser": "^7.26.10",
 		"@babel/traverse": "^7.26.10",
-		"@icure/api": "5.3.7",
 		"@types/jest": "^27.0.2",
 		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^18.16.3",

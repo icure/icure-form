@@ -1,7 +1,7 @@
 import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
 import { generateLabels } from '../common/utils'
 import { property, state } from 'lit/decorators.js'
-import '@icure/motss-app-datepicker.js'
+import '@icure/motss-app-datepicker'
 import { CustomEventDetail } from '@icure/motss-app-datepicker/dist/typings.js'
 import { MAX_DATE } from '@icure/motss-app-datepicker/dist/constants.js'
 import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-resolved-date.js'

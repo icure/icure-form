@@ -8,7 +8,7 @@
 		"build": "node lit-inject-scss.js src tmp && jq '{include:[\"tmp\"], compilerOptions:.compilerOptions}' < tsconfig.json > tsconfig.tmp.json && tsc -p tsconfig.tmp.json",
 		"dist": "webpack --env.mode production",
 		"prepare": "yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
-		"publish": "yarn run prepare && cd lib && touch yarn.lock && yarn install && rm -rf node_modules && npm publish --tolerate-republish --access public && cd ..",
+		"publish": "npm login && yarn run prepare && cd lib && touch yarn.lock && yarn install && rm -rf node_modules && npm publish --tolerate-republish --access public && cd ..",
 		"test": "jest",
 		"lint:commit": "eslint . --ext .ts",
 		"pre-commit": "lint-staged"

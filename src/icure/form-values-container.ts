@@ -1,4 +1,4 @@
-import { CodeStub, DecryptedContact, DecryptedForm as CardinalForm, DecryptedService, DecryptedSubContact } from '@icure/cardinal-sdk'
+import { CodeStub, DecryptedContact, DecryptedForm as CardinalForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
 import { sortedBy } from '../utils/no-lodash'
 import { FormValuesContainer, Version, VersionedData } from '../generic'
 import { ServiceMetadata } from './model'
@@ -754,10 +754,10 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 
 			const newFormValuesContainer = new ContactFormValuesContainer(
 				this.rootForm,
-				{
+				new DecryptedContact({
 					...this.currentContact,
 					services: this.currentContact.services?.map((s) => (s.id === service.id ? newService : s)),
-				},
+				}),
 				this.contactsHistory,
 				this.serviceFactory,
 				this.children,
@@ -792,15 +792,15 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 
 			let newCurrentContact: DecryptedContact
 			if (!Object.entries(newContents).filter(([, cnt]) => cnt !== undefined).length) {
-				newCurrentContact = {
+				newCurrentContact = new DecryptedContact({
 					...this.currentContact,
 					subContacts: (this.currentContact.subContacts ?? []).some((sc) => sc.formId === this.rootForm.id)
 						? (this.currentContact.subContacts ?? []).map((sc) => {
 								if (sc.formId === this.rootForm.id) {
-									return {
+									return new DecryptedSubContact({
 										...sc,
-										services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([{ serviceId: service.id }]),
-									}
+										services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([new ServiceLink({ serviceId: service.id })]),
+									})
 								} else {
 									return sc
 								}
@@ -808,13 +808,13 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 						: (this.currentContact.subContacts ?? []).concat(
 								new DecryptedSubContact({
 									formId: this.rootForm.id,
-									services: [{ serviceId: service.id }],
+									services: [new ServiceLink({ serviceId: service.id })],
 								}),
 						  ),
 					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
 						? (this.currentContact.services ?? []).filter((s) => s.id !== service.id)
 						: [...(this.currentContact.services ?? [])],
-				}
+				})
 			} else {
 				newService.content = newContents
 				newService.codes = newCodes
@@ -826,15 +826,15 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 					newService.label = metadata.label ?? newService.label
 				}
 
-				newCurrentContact = {
+				newCurrentContact = new DecryptedContact({
 					...this.currentContact,
 					subContacts: (this.currentContact.subContacts ?? []).some((sc) => sc.formId === this.rootForm.id)
 						? (this.currentContact.subContacts ?? []).map((sc) => {
 								if (sc.formId === this.rootForm.id) {
-									return {
+									return new DecryptedSubContact({
 										...sc,
-										services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([{ serviceId: service.id }]),
-									}
+										services: (sc.services ?? []).filter((s) => s.serviceId !== service.id).concat([new ServiceLink({ serviceId: service.id })]),
+									})
 								} else {
 									return sc
 								}
@@ -842,13 +842,13 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 						: (this.currentContact.subContacts ?? []).concat(
 								new DecryptedSubContact({
 									formId: this.rootForm.id,
-									services: [{ serviceId: service.id }],
+									services: [new ServiceLink({ serviceId: service.id })],
 								}),
 						  ),
 					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
 						? (this.currentContact.services ?? []).map((s) => (s.id === service.id ? newService : s))
 						: [...(this.currentContact.services ?? []), newService],
-				}
+				})
 			}
 			const newFormValuesContainer = new ContactFormValuesContainer(
 				this.rootForm,
@@ -870,7 +870,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		if (service) {
 			const newFormValuesContainer = new ContactFormValuesContainer(
 				this.rootForm,
-				{
+				new DecryptedContact({
 					...this.currentContact,
 					services: this.currentContact.services?.map((s) =>
 						s.id === serviceId
@@ -880,7 +880,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 							  })
 							: s,
 					),
-				},
+				}),
 				this.contactsHistory,
 				this.serviceFactory,
 				this.children,

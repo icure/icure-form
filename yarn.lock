@@ -516,14 +516,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@icure/cardinal-sdk@npm:^1.3.0-ts-2":
-  version: 1.3.0-ts-2
-  resolution: "@icure/cardinal-sdk@npm:1.3.0-ts-2"
+"@icure/cardinal-sdk@npm:2.0.0-PREVIEW-24":
+  version: 2.0.0-PREVIEW-24
+  resolution: "@icure/cardinal-sdk@npm:2.0.0-PREVIEW-24"
   dependencies:
     "@js-joda/core": 3.2.0
-    format-util: ^1.0.5
     ws: 8.18.0
-  checksum: 86e1497829631bb7c415c05333fc77bb05e0553a85b8fc4295469b4408fc4086d86464b5f388eafd02e121854f6e127b75d12bc74760d4a4778d86e27f802b61
+  checksum: f28f2fce2baa09e188efc806dd889b612af07cf232994069063f220eb4a378fd3358447c1fd0548c7201a17399369c68e6cd32af300b30d263e18dad76c2895b
   languageName: node
   linkType: hard
 
@@ -535,7 +534,7 @@ __metadata:
     "@babel/eslint-parser": ^7.26.10
     "@babel/traverse": ^7.26.10
     "@icure/api": 5.3.7
-    "@icure/cardinal-sdk": ^1.3.0-ts-2
+    "@icure/cardinal-sdk": 2.0.0-PREVIEW-24
     "@icure/motss-app-datepicker": ^6.0.0-rc.39
     "@lit/task": ^1.0.2
     "@types/jest": ^27.0.2
@@ -590,6 +589,8 @@ __metadata:
     webpack-cli: 5.1.4
     webpack-dev-server: ^5.2.0
     yaml: 2.3.4
+  peerDependencies:
+    "@icure/cardinal-sdk": 2.0.0-PREVIEW-24
   languageName: unknown
   linkType: soft
 
@@ -4880,13 +4881,6 @@ __metadata:
     cross-spawn: ^7.0.6
     signal-exit: ^4.0.1
   checksum: b2c1a6fc0bf0233d645d9fefdfa999abf37db1b33e5dab172b3cbfb0662b88bfbd2c9e7ab853533d199050ec6b65c03fcf078fc212d26e4990220e98c6930eef
-  languageName: node
-  linkType: hard
-
-"format-util@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "format-util@npm:1.0.5"
-  checksum: 0c8622e54ad899ca184ff0b4999e9ff9567965051bade140911209d60554c2ea4d43075763c1cf574d2f740966afe46469c9284357919505cdddf1a0b65ff85c
   languageName: node
   linkType: hard
 

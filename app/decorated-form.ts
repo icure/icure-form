@@ -247,7 +247,7 @@ export class DecoratedForm extends LitElement {
 				}
 			}) ?? []
 
-		const initialisedFormValueContainer = new BridgedFormValuesContainer(
+		const initialisedFormValueContainer = await new BridgedFormValuesContainer(
 			responsible,
 			contactFormValuesContainer,
 			makeInterpreter(),
@@ -304,7 +304,7 @@ export class DecoratedForm extends LitElement {
 					}),
 				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,
 			},
-		)
+		).init()
 
 		this.formValuesContainer = initialisedFormValueContainer
 		initialisedFormValueContainer.registerChangeListener((newValue) => {

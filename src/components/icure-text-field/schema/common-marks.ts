@@ -27,10 +27,7 @@ export const colors: { [key: string]: [string, string] } = {
 
 const getColor = (c: string) => colors[c] || [c, 'white']
 
-export function getMarks(
-	contentProvider: (codes: { type: string; code: string }[]) => string,
-	colorProvider: (type: string, code: string, isCode: boolean) => string,
-): { [key: string]: MarkSpec } {
+export function getMarks(contentProvider: (codes: { type: string; code: string }[]) => string, colorProvider: (type: string, code: string, isCode: boolean) => string): { [key: string]: MarkSpec } {
 	return {
 		em: {
 			parseDOM: [{ tag: 'i' }, { tag: 'em' }, { style: 'font-style', getAttrs: (value) => value === 'italic' && null }],

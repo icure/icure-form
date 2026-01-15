@@ -63,12 +63,14 @@ export class IcureTextField extends Field {
 	private codesExtractor: (doc?: ProsemirrorNode) => Code[] = () => []
 
 	@state() private view?: EditorView
+	@state() private pasteWarning?: string
 
 	private container?: HTMLElement
 	private readonly windowListeners: [string, () => void][] = []
 	private suggestionPalette?: SuggestionPalette
 	private mouseCount = 0
 	private trToSave?: Transaction = undefined
+	private pasteWarningTimeout?: number
 
 	constructor() {
 		super()
@@ -101,6 +103,12 @@ export class IcureTextField extends Field {
 		document.removeEventListener('click', this._handleClickOutside.bind(this))
 
 		this.windowListeners.forEach((wl) => window.removeEventListener(wl[0], wl[1]))
+
+		// Clean up paste warning timeout
+		if (this.pasteWarningTimeout) {
+			window.clearTimeout(this.pasteWarningTimeout)
+			this.pasteWarningTimeout = undefined
+		}
 	}
 
 	static get styles() {
@@ -108,6 +116,48 @@ export class IcureTextField extends Field {
 			css`
 				.unit::before {
 					content: ' ';
+				}
+				.paste-warning {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+					padding: 0.75rem 1rem;
+					margin-top: 0.5rem;
+					background-color: #fff3cd;
+					border: 1px solid #ffc107;
+					border-radius: 4px;
+					color: #856404;
+					font-size: 0.875rem;
+					cursor: pointer;
+					animation: slideIn 0.3s ease-out;
+				}
+				.paste-warning-icon {
+					font-size: 1rem;
+					flex-shrink: 0;
+				}
+				.paste-warning-message {
+					flex: 1;
+				}
+				.paste-warning-dismiss {
+					font-size: 1.25rem;
+					font-weight: bold;
+					opacity: 0.6;
+					transition: opacity 0.2s;
+					flex-shrink: 0;
+					cursor: pointer;
+				}
+				.paste-warning-dismiss:hover {
+					opacity: 1;
+				}
+				@keyframes slideIn {
+					from {
+						opacity: 0;
+						transform: translateY(-10px);
+					}
+					to {
+						opacity: 1;
+						transform: translateY(0);
+					}
 				}
 			`,
 			baseCss,
@@ -273,6 +323,17 @@ export class IcureTextField extends Field {
 						}
 					</div>
 					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+					${
+						this.pasteWarning
+							? html`
+									<div class="paste-warning" @click="${() => this.dismissPasteWarning()}">
+										<span class="paste-warning-icon">⚠️</span>
+										<span class="paste-warning-message">${this.pasteWarning}</span>
+										<span class="paste-warning-dismiss">✕</span>
+									</div>
+							  `
+							: nothing
+					}
 				</div>
 			</div>
 		`
@@ -311,6 +372,29 @@ export class IcureTextField extends Field {
 				;(x as HTMLElement).style.display = 'none'
 			})
 		}
+	}
+
+	private showPasteWarning(message: string) {
+		// Clear any existing timeout
+		if (this.pasteWarningTimeout) {
+			window.clearTimeout(this.pasteWarningTimeout)
+		}
+
+		this.pasteWarning = message
+
+		// Auto-dismiss after 5 seconds
+		this.pasteWarningTimeout = window.setTimeout(() => {
+			this.pasteWarning = undefined
+			this.pasteWarningTimeout = undefined
+		}, 5000)
+	}
+
+	private dismissPasteWarning() {
+		if (this.pasteWarningTimeout) {
+			window.clearTimeout(this.pasteWarningTimeout)
+			this.pasteWarningTimeout = undefined
+		}
+		this.pasteWarning = undefined
 	}
 
 	firstUpdated() {
@@ -415,29 +499,85 @@ export class IcureTextField extends Field {
 						hasContentClassPlugin(this.shadowRoot || undefined),
 						new Plugin({
 							props: {
-								transformPasted(slice) {
-									let ok = true
+								transformPasted: (slice) => {
+									let hasInvalidNodes = false
+									let hasInvalidMarks = false
+									const invalidNodeTypes: string[] = []
+									const invalidMarkTypes: string[] = []
+
+									// Check if all nodes in the pasted content are valid for this schema
 									slice.content.forEach((node) => {
 										if (!pms.nodes[node.type.name]) {
-											ok = false
+											hasInvalidNodes = true
+											if (!invalidNodeTypes.includes(node.type.name)) {
+												invalidNodeTypes.push(node.type.name)
+											}
 										}
+
+										// Also check marks on the node
+										node.marks.forEach((mark) => {
+											if (!pms.marks[mark.type.name]) {
+												hasInvalidMarks = true
+												if (!invalidMarkTypes.includes(mark.type.name)) {
+													invalidMarkTypes.push(mark.type.name)
+												}
+											}
+										})
+
+										// Recursively check child nodes
+										node.forEach((child) => {
+											if (!pms.nodes[child.type.name]) {
+												hasInvalidNodes = true
+												if (!invalidNodeTypes.includes(child.type.name)) {
+													invalidNodeTypes.push(child.type.name)
+												}
+											}
+											child.marks.forEach((mark) => {
+												if (!pms.marks[mark.type.name]) {
+													hasInvalidMarks = true
+													if (!invalidMarkTypes.includes(mark.type.name)) {
+														invalidMarkTypes.push(mark.type.name)
+													}
+												}
+											})
+										})
 									})
 
-									if (ok) {
+									// If content is valid, return as-is
+									if (!hasInvalidNodes && !hasInvalidMarks) {
 										return slice
 									}
-									if (pms.nodes.paragraph)
-										return new Slice(
-											Fragment.fromArray(
-												slice.content
-													.textBetween(0, slice.content.size, ' ')
-													.split('\n')
-													.map((line) => pms.nodes.paragraph.create({}, [pms.text(line)])),
-											),
-											0,
-											0,
-										)
-									else return new Slice(Fragment.fromArray([pms.text(slice.content.textBetween(0, slice.content.size, ' ').split('\n').join(' '))]), 0, 0)
+
+									// Content has invalid elements - show warning and convert to plain text
+									let warningMessage = 'Pasted content contains unsupported formatting'
+									if (hasInvalidNodes) {
+										warningMessage += ` (unsupported elements: ${invalidNodeTypes.join(', ')})`
+									}
+									if (hasInvalidMarks) {
+										warningMessage += ` (unsupported styles: ${invalidMarkTypes.join(', ')})`
+									}
+									warningMessage += '. Content was converted to plain text.'
+
+									// Show warning to user
+									cmp.showPasteWarning(warningMessage)
+
+									// Extract plain text and create valid nodes
+									const plainText = slice.content.textBetween(0, slice.content.size, '\n', '\0')
+
+									// Try to preserve some structure based on schema capabilities
+									if (pms.nodes.paragraph) {
+										// Split by newlines and create paragraphs
+										const lines = plainText.split('\n').filter((line) => line.length > 0)
+										if (lines.length === 0) {
+											// Empty paste - return empty paragraph
+											return new Slice(Fragment.fromArray([pms.nodes.paragraph.create({}, [])]), 0, 0)
+										}
+										return new Slice(Fragment.fromArray(lines.map((line) => pms.nodes.paragraph.create({}, line.length ? [pms.text(line)] : []))), slice.openStart, slice.openEnd)
+									} else {
+										// No paragraph support - just plain text
+										const cleanText = plainText.split('\n').join(' ')
+										return new Slice(Fragment.fromArray(cleanText.length ? [pms.text(cleanText)] : []), 0, 0)
+									}
 								},
 							},
 						}),

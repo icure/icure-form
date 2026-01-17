@@ -1,6 +1,6 @@
 {
 	"name": "@icure/form",
-	"version": "3.0.42",
+	"version": "3.0.45",
 	"description": "",
 	"main": "lib/index.js",
 	"scripts": {
@@ -31,7 +31,18 @@
 			"json",
 			"node",
 			"yaml"
-		]
+		],
+		"transform": {
+			"^.+\\.tsx?$": [
+				"ts-jest",
+				{
+					"tsconfig": {
+						"esModuleInterop": true,
+						"allowSyntheticDefaultImports": true
+					}
+				}
+			]
+		}
 	},
 	"husky": {
 		"hooks": {
@@ -101,7 +112,7 @@
 		"raw-loader": "^4.0.2",
 		"sass": "^1.85.1",
 		"sass-loader": "^16.0.5",
-		"ts-jest": "^27.0.4",
+		"ts-jest": "^29.0.0",
 		"ts-loader": "^9.4.2",
 		"ts-node": "^10.9.1",
 		"typescript": "^5.8.2",

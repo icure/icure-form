@@ -6,47 +6,46 @@ import { Schema } from 'prosemirror-model'
 import { preprocessEmptyNodes } from '../../src/utils/markdown'
 
 describe('Form parsing tests', () => {
+	const tokenizer = MarkdownIt('commonmark', { html: false })
+
+	const pms = new Schema(
+		getMarkdownSpec(
+			'text-document',
+			() => '',
+			() => '#666666',
+		),
+	)
+	const mdp = new MarkdownParser(pms, tokenizer, {
+		blockquote: { block: 'blockquote' },
+		paragraph: { block: 'paragraph' },
+		list_item: { block: 'list_item' },
+		bullet_list: { block: 'bullet_list' },
+		ordered_list: { block: 'ordered_list', getAttrs: (tok) => ({ order: +(tok.attrGet('start') || 1) }) },
+		heading: { block: 'heading', getAttrs: (tok) => ({ level: +tok.tag.slice(1) }) },
+		hr: { node: 'horizontal_rule' },
+		image: {
+			node: 'image',
+			getAttrs: (tok) => ({
+				src: tok.attrGet('src'),
+				title: tok.attrGet('title') || null,
+				alt: (tok.children || [])[0]?.content || null,
+			}),
+		},
+		hardbreak: { node: 'hard_break' },
+
+		em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
+		strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },
+		link: hasMark(pms.spec.marks, 'link')
+			? {
+					mark: 'link',
+					getAttrs: (tok) => ({
+						href: tok.attrGet('href'),
+						title: tok.attrGet('title') || null,
+					}),
+			  }
+			: { ignore: true },
+	})
 	it('should Render simple form', () => {
-		const tokenizer = MarkdownIt('commonmark', { html: false })
-
-		const pms = new Schema(
-			getMarkdownSpec(
-				'text-document',
-				() => '',
-				() => '#666666',
-			),
-		)
-		const mdp = new MarkdownParser(pms, tokenizer, {
-			blockquote: { block: 'blockquote' },
-			paragraph: { block: 'paragraph' },
-			list_item: { block: 'list_item' },
-			bullet_list: { block: 'bullet_list' },
-			ordered_list: { block: 'ordered_list', getAttrs: (tok) => ({ order: +(tok.attrGet('start') || 1) }) },
-			heading: { block: 'heading', getAttrs: (tok) => ({ level: +tok.tag.slice(1) }) },
-			hr: { node: 'horizontal_rule' },
-			image: {
-				node: 'image',
-				getAttrs: (tok) => ({
-					src: tok.attrGet('src'),
-					title: tok.attrGet('title') || null,
-					alt: (tok.children || [])[0]?.content || null,
-				}),
-			},
-			hard_break: { node: 'hard_break' },
-
-			em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
-			strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },
-			link: hasMark(pms.spec.marks, 'link')
-				? {
-						mark: 'link',
-						getAttrs: (tok) => ({
-							href: tok.attrGet('href'),
-							title: tok.attrGet('title') || null,
-						}),
-				  }
-				: { ignore: true },
-		})
-
 		const tokens = tokenizer.parse('## Hello world\n\n\n\ndone\n\n', {})
 		console.log(tokens)
 
@@ -85,5 +84,14 @@ describe('Form parsing tests', () => {
 		const start_sz = defaultMarkdownSerializer.serialize(preprocessEmptyNodes(start, pms))
 
 		console.log(start_sz)
+	})
+
+	it('should handle hardbreaks', () => {
+		const text = ['Bien sûr', ' ', '\uD83D', '\uDE42', '\\', '\n', 'Tu veux **quel type de message**  ?', '\n', '\n', 'Dis-moi juste :\n\n* **À qui** (ami, collègue, client']
+		const md = text.join('')
+		const node = mdp.parse(md)!
+		const sz = defaultMarkdownSerializer.serialize(preprocessEmptyNodes(node, pms))
+
+		console.log(sz)
 	})
 })

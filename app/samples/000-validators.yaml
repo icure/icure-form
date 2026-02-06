@@ -322,6 +322,9 @@ sections:
             type: textfield
             tags:
               - MS-ABORTION-CONTROL-ITEM|brandNameContraceptive|1
+            computedProperties:
+              defaultValue: |
+                return 'None'
           - field: abortion-forms.field-labels.CONTRACEPTIVE-NUMBER
             type: textfield
             tags:

@@ -55,7 +55,7 @@ export interface FormValuesContainer<Value, Metadata> {
 	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<T | undefined>
 	getLabel(): string
 	getFormId(): string | undefined
-	getDefaultValue(label: string): Promise<FieldValue | undefined>
+	getDefaultValueProvider(label: string): (() => Promise<FieldValue | undefined>) | undefined
 	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>
 	getChildren(): Promise<FormValuesContainer<Value, Metadata>[]>

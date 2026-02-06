@@ -85,6 +85,7 @@ The Field class represents a generic field within a form. It is designed to be e
 - unit: string - Optional unit of the field (used by measure fields).
 - multiline: boolean - Optional property indicating if a text field supports multiple lines.
 - computedProperties: Record<string, string> - Optional computed properties for the field, any property of the field can be computed. A computed property will replace the value provided independently.
+- defaultValue: string - Optional default value formula for the field, used when the form is created.
 - validators: Validator[] - Optional validators for the field. See [Validators](#validators).
 - translate: boolean - Optional property indicating if the field supports translation. Defaults to true.
 - now: boolean - Optional property for date/time picker fields. When true, the field defaults to the current date/time.
@@ -201,6 +202,44 @@ When computing the value of a field (via `defaultValue` or `value`), the return 
 
 Formulas can use the [built-in functions](#built-in-functions) defined in the Form Values Container, such as `hasOption`, `score`, `text`, `parseContent`, etc.
 
+### Computed Properties
+
+Computed properties allow you to dynamically calculate the value of a field property or the value of the field itself based on other values in the form. The `computedProperties` field is a map where the key is the name of the property to compute and the value is a JavaScript formula (as a string) that returns the value for that property.
+
+#### Field Properties
+
+You can compute standard properties of a field (e.g., `readonly`, `hidden`, `label`, `styleOptions`). The formula is evaluated, and the result is directly assigned to the property.
+
+Example:
+```yaml
+computedProperties:
+  readonly: "return age > 18"
+  label: "return age > 18 ? 'Adult comment' : 'Child comment'"
+```
+
+#### Field Value (`value` and `defaultValue`)
+
+Two special keys control the content of the field:
+
+- **`defaultValue`**: Calculates the initial value of the field. This formula is evaluated when the form is initialized, and only if the field is empty.
+- **`value`**: continuously calculates the value of the field. This overrides any manual input.
+
+#### Return Value Format
+
+When computing the value of a field (via `defaultValue` or `value`), the return value of the formula is automatically converted to the internal `FieldValue` format (`{ content: ..., codes: ... }`). The conversion rules are:
+
+- **`FieldValue` object**: Used as is.
+- **`number`**: Converted to `{ content: { '*': { type: 'number', value: ... } } }`.
+- **`string`**: Converted to `{ content: { '*': { type: 'string', value: ... } } }`.
+- **`boolean`**: Converted to `{ content: { '*': { type: 'boolean', value: ... } } }`.
+- **`Date`**: Converted to a timestamp content (formatted as YYYYMMDDHHmmss).
+- **`{ value: number, unit: string }`**: Converted to `{ content: { '*': { type: 'measure', value: ..., unit: ... } } }`.
+- **Array**: Converted to a compound content.
+
+#### Available functions
+
+Formulas can use the [built-in functions](#built-in-functions) defined in the Form Values Container, such as `hasOption`, `score`, `text`, `parseContent`, etc.
+
 ### Codification
 
 The Codification class represents a codification for a form or field. It is used to associate a code with a specific value, allowing for standardized data entry and analysis.
@@ -231,6 +270,7 @@ All form value containers must implement a FormValuesContainer interface that de
 - `compute(formula: string, sandbox?: S): Promise<T | undefined>` : computes a formula based on the values of the form, inside a provided sandbox. If no sandbox is provided, the default sandbox is used. Returns a promise.
 - `getLabel(): string` : returns the label of the form values container (used to display the title of the form in hierarchical contexts)
 - `getFormId(): string | undefined` : returns the id of the form values container
+- `getDefaultValueProvider(label: string): (() => Promise<FieldValue | undefined>) | undefined` : returns a function that provides the default value for a specific field label.
 - `getDefaultValueProvider(label: string): (() => Promise<FieldValue | undefined>) | undefined` : returns a function that provides the default value for a specific field label.
 - `getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>` : obtains the values to be displayed in the form, using a filter to select the desired versioned data that are to be displayed in a specific field.
 - `getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>` : obtains the metadata of a specific value, for the specified revisions.

@@ -85,7 +85,6 @@ The Field class represents a generic field within a form. It is designed to be e
 - unit: string - Optional unit of the field (used by measure fields).
 - multiline: boolean - Optional property indicating if a text field supports multiple lines.
 - computedProperties: Record<string, string> - Optional computed properties for the field, any property of the field can be computed. A computed property will replace the value provided independently.
-- defaultValue: string - Optional default value formula for the field, used when the form is created.
 - validators: Validator[] - Optional validators for the field. See [Validators](#validators).
 - translate: boolean - Optional property indicating if the field supports translation. Defaults to true.
 - now: boolean - Optional property for date/time picker fields. When true, the field defaults to the current date/time.
@@ -208,14 +207,17 @@ Computed properties allow you to dynamically calculate the value of a field prop
 
 #### Field Properties
 
-You can compute standard properties of a field (e.g., `readonly`, `hidden`, `label`, `styleOptions`). The formula is evaluated, and the result is directly assigned to the property.
+You can compute standard properties of a field (e.g., `readonly`, `hidden`, `label`, `span`, `styleOptions`). The formula is evaluated, and the result is directly assigned to the property.
 
 Example:
 ```yaml
 computedProperties:
   readonly: "return age > 18"
+  hidden: "return !self['show-details']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
   label: "return age > 18 ? 'Adult comment' : 'Child comment'"
 ```
+
+The `hidden` computed property is particularly useful: when it evaluates to `true`, the field (or group, or subform) is not rendered at all.
 
 #### Field Value (`value` and `defaultValue`)
 

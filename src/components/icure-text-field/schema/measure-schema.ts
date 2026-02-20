@@ -49,8 +49,6 @@ export const measureTransactionMapper = (tr: Transaction) => {
 
 	const from = tr.selection.from
 
-	console.log(`[${decimalText}] <${unitText}> : ${from} - ${tr.selection.to}`)
-
 	if (decimalText?.match(/^[0-9.,-]+$/)) {
 		return tr
 	}

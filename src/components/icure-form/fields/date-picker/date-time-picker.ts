@@ -1,5 +1,4 @@
 import { html, TemplateResult } from 'lit'
-import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 
 import { Field } from '../../../common'
 
@@ -17,11 +16,11 @@ export class DateTimePicker extends Field {
 				schema="date-time"
 				.ownersProvider=${this.ownersProvider}
 				.translationProvider=${this.translationProvider}
-				.valueProvider=${singleValueProvider(this.valueProvider, id)}
+				.valueProvider=${this.singleValueProvider(id)}
 				.validationErrorsProvider=${this.validationErrorsProvider}
 				.metadataProvider=${this.metadataProvider}
-				.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}
-				.handleMetadataChanged=${handleSingleMetadataChanged(this.handleMetadataChanged, id)}
+				.handleValueChanged=${this.handleSingleValueChanged(id)}
+				.handleMetadataChanged=${this.handleSingleMetadataChanged(id)}
 			></icure-text-field>`
 		})
 	}

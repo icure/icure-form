@@ -30,11 +30,14 @@ export function makeMetadata(field: Field, owner?: string, index?: number) {
 }
 
 export const getValidationErrorProvider =
-	(formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>, field?: Field): (() => Promise<[FieldMetadata, string][]>) =>
-	async () => {
-		const validators = formsValueContainer ? await formsValueContainer.getValidationErrors() : []
-		return validators.filter(([metadata]) => metadata.label === field?.label())
-	}
+	(formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>, field?: Field): (() => Promise<[FieldMetadata, string] | null>[]) =>
+	() =>
+		formsValueContainer
+			? formsValueContainer.getValidationErrors().map(async (p) => {
+					const result = await p
+					return result && result[0].label === field?.label() ? result : null
+			  })
+			: []
 
 export const handleValueChangedProvider = (formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>, field?: Field, owner?: string) => {
 	return (label: string, language: string, value?: FieldValue, id?: string) => {

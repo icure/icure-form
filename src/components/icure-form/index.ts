@@ -81,8 +81,6 @@ export class IcureForm extends LitElement {
 	})
 
 	render() {
-		console.log('Render metadata', this.displayMetadata)
-
 		if (!this.visible) {
 			return nothing
 		}

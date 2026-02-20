@@ -296,6 +296,7 @@ export class DecoratedForm extends LitElement {
 			undefined,
 			{
 				language: () => this.language ?? 'fr',
+				delay: () => (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
 				summarize: () => (context: string, questions: [string, string][]) =>
 					new Promise((resolve) => {
 						setTimeout(() => {
@@ -304,7 +305,8 @@ export class DecoratedForm extends LitElement {
 					}),
 				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,
 			},
-		).init()
+		)
+		await initialisedFormValueContainer.init()
 
 		this.formValuesContainer = initialisedFormValueContainer
 		initialisedFormValueContainer.registerChangeListener((newValue) => {

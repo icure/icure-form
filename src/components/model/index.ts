@@ -64,6 +64,11 @@ export interface CompoundType {
 	value: { [label: string]: PrimitiveType }
 }
 
+function hasChanges<T>(target: T, properties: Partial<T>): boolean {
+	const keys = Object.keys(properties) as (keyof T)[]
+	return keys.length > 0 && keys.some((k) => target[k] !== properties[k])
+}
+
 export type Position = 'top' | 'left' | 'right' | 'bottom' | 'float' | 'add' | 'remove'
 
 export type Labels = Partial<Record<Position, string>>
@@ -224,7 +229,7 @@ export abstract class Field {
 		this.payload = payload
 	}
 
-	abstract copy(properties: Partial<Field>): Field
+	abstract copyIfNeeded(properties: Partial<Field>): Field
 
 	static parse(json: Field): Field {
 		return (
@@ -373,8 +378,8 @@ export class TextField extends Field {
 		})
 	}
 
-	override copy(properties: Partial<TextField>): TextField {
-		return new TextField(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<TextField>): TextField {
+		return hasChanges(this, properties) ? new TextField(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -436,8 +441,8 @@ export class MeasureField extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<MeasureField>): MeasureField {
-		return new MeasureField(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<MeasureField>): MeasureField {
+		return hasChanges(this, properties) ? new MeasureField(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -499,8 +504,8 @@ export class NumberField extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<NumberField>): NumberField {
-		return new NumberField(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<NumberField>): NumberField {
+		return hasChanges(this, properties) ? new NumberField(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -562,8 +567,8 @@ export class TokenField extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<TokenField>): TokenField {
-		return new TokenField(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<TokenField>): TokenField {
+		return hasChanges(this, properties) ? new TokenField(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -625,8 +630,8 @@ export class ItemsListField extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<ItemsListField>): ItemsListField {
-		return new ItemsListField(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<ItemsListField>): ItemsListField {
+		return hasChanges(this, properties) ? new ItemsListField(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -691,8 +696,8 @@ export class DatePicker extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<DatePicker>): DatePicker {
-		return new DatePicker(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<DatePicker>): DatePicker {
+		return hasChanges(this, properties) ? new DatePicker(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -757,8 +762,8 @@ export class TimePicker extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<TimePicker>): TimePicker {
-		return new TimePicker(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<TimePicker>): TimePicker {
+		return hasChanges(this, properties) ? new TimePicker(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -823,8 +828,8 @@ export class DateTimePicker extends Field {
 			styleOptions,
 		})
 	}
-	override copy(properties: Partial<DateTimePicker>): DateTimePicker {
-		return new DateTimePicker(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<DateTimePicker>): DateTimePicker {
+		return hasChanges(this, properties) ? new DateTimePicker(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -867,8 +872,8 @@ export class DropdownField extends Field {
 		})
 		this.sortOptions = options.sortOptions ?? undefined
 	}
-	override copy(properties: Partial<DropdownField>): DropdownField {
-		return new DropdownField(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<DropdownField>): DropdownField {
+		return hasChanges(this, properties) ? new DropdownField(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -930,8 +935,8 @@ export class RadioButton extends Field {
 		})
 		this.sortOptions = sortOptions ?? undefined
 	}
-	override copy(properties: Partial<RadioButton>): RadioButton {
-		return new RadioButton(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<RadioButton>): RadioButton {
+		return hasChanges(this, properties) ? new RadioButton(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -990,16 +995,16 @@ export class CheckBox extends Field {
 		})
 		this.sortOptions = sortOptions ?? undefined
 	}
-	override copy(properties: Partial<CheckBox>): CheckBox {
-		return new CheckBox(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<CheckBox>): CheckBox {
+		return hasChanges(this, properties) ? new CheckBox(this.field, { ...this, ...properties }) : this
 	}
 }
 export class Label extends Field {
 	constructor(label: string, { shortLabel, grows, span }: { shortLabel?: string; grows?: boolean; span?: number; rowSpan?: number }) {
 		super('label', label, { shortLabel, grows, span })
 	}
-	override copy(properties: Partial<Label>): Label {
-		return new Label(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<Label>): Label {
+		return hasChanges(this, properties) ? new Label(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -1007,8 +1012,8 @@ export class Button extends Field {
 	constructor(label: string, { shortLabel, grows, span, event, payload }: { shortLabel?: string; grows?: boolean; span?: number; rowSpan?: number; event?: string; payload?: unknown }) {
 		super('action', label, { shortLabel, grows, span, event, payload })
 	}
-	override copy(properties: Partial<Button>): Button {
-		return new Button(this.field, { ...this, ...properties })
+	override copyIfNeeded(properties: Partial<Button>): Button {
+		return hasChanges(this, properties) ? new Button(this.field, { ...this, ...properties }) : this
 	}
 }
 
@@ -1057,8 +1062,8 @@ export class Group {
 		this.styleOptions = styleOptions
 	}
 
-	copy(properties: Partial<Group>): Group {
-		return new Group(this.group, this.fields ?? [], { ...this, ...properties })
+	copyIfNeeded(properties: Partial<Group>): Group {
+		return hasChanges(this, properties) ? new Group(this.group, this.fields ?? [], { ...this, ...properties }) : this
 	}
 
 	static parse({
@@ -1161,8 +1166,8 @@ export class Subform {
 		this.labels = labels ?? {}
 	}
 
-	copy(properties: Partial<Subform>): Subform {
-		return new Subform(this.id, this.forms, { ...this, ...properties })
+	copyIfNeeded(properties: Partial<Subform>): Subform {
+		return hasChanges(this, properties) ? new Subform(this.id, this.forms, { ...this, ...properties }) : this
 	}
 
 	static parse(json: {

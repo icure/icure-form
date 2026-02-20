@@ -415,11 +415,11 @@ export const render: Renderer = async (
 		const fgRowSpan = (computedProperties['rowSpan'] ?? fg.rowSpan ?? 1) as number
 
 		if (fg.clazz === 'group' && fg.fields?.length) {
-			return await renderGroup((fg as Group).copy({ ...computedProperties }), fgSpan, level)
+			return await renderGroup((fg as Group).copyIfNeeded({ ...computedProperties }), fgSpan, level)
 		} else if (fg.clazz === 'subform' && (fg.id || computedProperties['title'])) {
-			return await renderSubform((fg as Subform).copy({ ...computedProperties }), fgSpan, level)
+			return await renderSubform((fg as Subform).copyIfNeeded({ ...computedProperties }), fgSpan, level)
 		} else if (fg.clazz === 'field') {
-			const field = fg.copy({ ...computedProperties })
+			const field = fg.copyIfNeeded({ ...computedProperties })
 			return html`${fg.type === 'text-field'
 				? await renderTextField(fgSpan, fgRowSpan, field)
 				: fg.type === 'measure-field'

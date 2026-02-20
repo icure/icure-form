@@ -523,7 +523,6 @@ export class IcureTextField extends Field {
 				},
 				dispatchTransaction: (tro) => {
 					const tr = this.schema === 'measure' ? measureTransactionMapper(tro) : tro
-					console.log(`Setting selection to ${tr.selection.from} - ${tr.selection.to}`)
 					this.view && this.view.updateState(this.view.state.apply(tr))
 					if (this.view && tr.doc != tr.before && this.handleValueChanged) {
 						this.trToSave = tr
@@ -792,7 +791,6 @@ export class MetadataButtonBarWrapper extends LitElement {
 	@state() private selectedRevision?: string
 
 	render() {
-		console.log('Rendering metadata buttons')
 		const parent = (this.shadowRoot?.host?.closest('div#root')?.parentNode as ShadowRoot)?.host as IcureTextField
 		if (!parent || !this.id) {
 			return

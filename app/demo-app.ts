@@ -97,14 +97,14 @@ class DemoApp extends LitElement {
 	).then((sdk) => sdk.healthcareParty)
 	private samples = [
 		...[
-			{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
+			/*{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
 			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_search)) },
 			{ title: '000 - Validators', form: Form.parse(YAML.parse(validators)) },
-			{ title: '01 - Token fields', form: Form.parse(YAML.parse(tokenFields)) },
+			{ title: '01 - Token fields', form: Form.parse(YAML.parse(tokenFields)) },*/
 			{ title: '1 - BMI', form: Form.parse(YAML.parse(bmi)) },
 			// { title: '1 - Time of appointment', form: Form.parse(YAML.parse(time_of_appointment)) },
-			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
+			/*{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
 			{ title: '3 - Preliminary medical interview', form: Form.parse(YAML.parse(preliminary_medical_interview)) },
 			{ title: '4 - Termination of pregnancy curetage', form: Form.parse(YAML.parse(termination_of_pregnancy_curetage)) },
 			{ title: '5 - Interuption of pregnancy medical part 1', form: Form.parse(YAML.parse(interruption_of_pregnancy_medical_part_1)) },
@@ -114,7 +114,7 @@ class DemoApp extends LitElement {
 			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },
 			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },
 			{ title: '11 - Preventi', form: Form.parse(YAML.parse(preventi)) },
-			/*{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
+			{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_measure)) },
 			{ title: 'OKIDO - Evaluation', form: Form.parse(YAML.parse(okido_evaluation)) },
 			{ title: 'OKIDO - Planification', form: Form.parse(YAML.parse(okido_planification)) },

@@ -1,7 +1,6 @@
 import { html, TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { Field } from '../../../common'
-import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 import { Suggestion } from '../../../../generic'
 
 export class TextField extends Field {
@@ -41,11 +40,11 @@ export class TextField extends Field {
 				.linkColorProvider=${this.linkColorProvider}
 				.codeContentProvider=${this.codeContentProvider}
 				.defaultValueProvider=${this.defaultValueProvider}
-				.valueProvider=${singleValueProvider(this.valueProvider, id)}
+				.valueProvider=${this.singleValueProvider(id)}
 				.validationErrorsProvider=${this.validationErrorsProvider}
 				.metadataProvider=${this.metadataProvider}
-				.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}
-				.handleMetadataChanged=${handleSingleMetadataChanged(this.handleMetadataChanged, id)}
+				.handleValueChanged=${this.handleSingleValueChanged(id)}
+				.handleMetadataChanged=${this.handleSingleMetadataChanged(id)}
 				.styleOptions=${this.styleOptions}
 			></icure-text-field>`
 		})

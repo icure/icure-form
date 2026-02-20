@@ -1,6 +1,5 @@
 import { html, TemplateResult } from 'lit'
 import { Field } from '../../../common'
-import { handleSingleMetadataChanged, handleSingleValueChanged, singleValueProvider } from '../utils'
 import { property } from 'lit/decorators.js'
 import { Code } from '../../../model'
 
@@ -22,11 +21,11 @@ export class RadioButton extends Field {
 					.optionsProvider=${this.optionsProvider}
 					.ownersProvider=${this.ownersProvider}
 					.translationProvider=${this.translationProvider}
-					.valueProvider=${singleValueProvider(this.valueProvider, id)}
+					.valueProvider=${this.singleValueProvider(id)}
 					.validationErrorsProvider=${this.validationErrorsProvider}
 					.metadataProvider=${this.metadataProvider}
-					.handleValueChanged=${handleSingleValueChanged(this.handleValueChanged, id)}
-					.handleMetadataChanged=${handleSingleMetadataChanged(this.handleMetadataChanged, id)}
+					.handleValueChanged=${this.handleSingleValueChanged(id)}
+					.handleMetadataChanged=${this.handleSingleMetadataChanged(id)}
 					.styleOptions=${this.styleOptions}
 				></icure-button-group>
 			`

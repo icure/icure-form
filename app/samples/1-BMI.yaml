@@ -32,6 +32,31 @@ sections:
         shortLabel: default BMI
         computedProperties:
           defaultValue: |
-            return 10
+            return { value: 10, unit: 'cm' }
+      - field: bmiDelayedDependence
+        type: text-field
+        shortLabel: Del. BMI stat.
+        computedProperties:
+          value: |
+            return new Promise(async (resolve) => {
+              await delay(1000)
+              const bmic = parseContent(bmi[0]?.content)
+              if (!bmic) { resolve('N/A') }
+              resolve(bmi < 15 ? 'too thin' : bmic>25 ? 'too fat' : 'good')
+            })
+      - field: bmiDelayedDependence2
+        type: text-field
+        shortLabel: Del. BMI stat. 2
+        computedProperties:
+          value: |
+            return new Promise(async (resolve) => {
+              await delay(500)
+              const bmic = parseContent(bmiDelayedDependence[0]?.content)
+              if (!bmic) { resolve('N/A') }
+              resolve(bmic+'!')
+            })
+            
+            
+
 
 

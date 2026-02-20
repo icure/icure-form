@@ -2,6 +2,7 @@ import { FieldMetadata, FieldValue } from '../components/model'
 
 /**
  * VersionedData is a structure that contains the values of a form, organized by id and version.
+ * Versions are ordered most recent first.
  */
 export interface VersionedData<T> {
 	[id: string]: Version<T>[]
@@ -52,24 +53,31 @@ export type ID = string
  */
 export interface FormValuesContainer<Value, Metadata> {
 	//information retrieval
-	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<T | undefined>
+	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<ComputationResult<T>>
 	getLabel(): string
 	getFormId(): string | undefined
 	getDefaultValueProvider(label: string): (() => Promise<FieldValue | undefined>) | undefined
 	getValues(revisionsFilter: (id: string, history: Version<Metadata>[]) => (string | null)[]): VersionedData<Value>
 	getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>
 	getChildren(): Promise<FormValuesContainer<Value, Metadata>[]>
-	getValidationErrors(): Promise<[FieldMetadata, string][]>
+	getValidationErrors(): Promise<[FieldMetadata, string] | null>[]
 	//modification
-	setValue(label: string, language: string, data?: Value, id?: string, metadata?: Metadata, changeListenersOverrider?: (fvc: FormValuesContainer<Value, Metadata>) => void): void
+	setValue(
+		label: string,
+		language: string,
+		data?: Value,
+		id?: string,
+		metadata?: Metadata,
+		changeListenersOverrider?: (fvc: FormValuesContainer<Value, Metadata>, changedKeys: string[] | null) => void,
+	): void
 	setMetadata(metadata: Metadata, id?: string): void
 	delete(serviceId: string): void
 	//hierarchy
 	addChild(anchorId: string, templateId: string, label: string): Promise<void>
 	removeChild(container: FormValuesContainer<Value, Metadata>): Promise<void>
 	//listeners
-	registerChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
-	unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void
+	registerChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>, changedKeys: string[] | null, force: boolean) => void): void
+	unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>, changedKeys: string[] | null, force: boolean) => void): void
 
 	synchronise(): FormValuesContainer<Value, Metadata>
 }
@@ -83,3 +91,8 @@ export interface FormValuesContainerMutation<Value, Metadata, FVC extends FormVa
 }
 
 export type Suggestion = { id: string; code?: string; text: string; terms: string[]; label: { [lng: string]: string } }
+
+export interface ComputationResult<T> {
+	value: T | undefined
+	dependencies: string[]
+}

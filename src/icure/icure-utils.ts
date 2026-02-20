@@ -18,9 +18,7 @@ export function areCodesEqual(c1s: CodeStub[], c2s: CodeStub[]): boolean {
 }
 
 export function isServiceEqual(svc1: Service, svc2: Service): boolean {
-	return (
-		svc1.id === svc2.id && svc1.valueDate === svc2.valueDate && areCodesEqual(svc1.codes || [], svc2.codes || []) && isServiceContentEqual(svc1.content || {}, svc2.content || {})
-	)
+	return svc1.id === svc2.id && svc1.valueDate === svc2.valueDate && areCodesEqual(svc1.codes || [], svc2.codes || []) && isServiceContentEqual(svc1.content || {}, svc2.content || {})
 }
 
 function deepEqual(a: any, b: any): boolean {
@@ -45,7 +43,7 @@ function deepEqual(a: any, b: any): boolean {
 	return keysA.every((key) => deepEqual(a[key], b[key])) && keysB.every((key) => deepEqual(a[key], b[key]))
 }
 
-function setsEqual(a: DecryptedService[] | undefined | null, b: DecryptedService[] | undefined | null): boolean {
+function setsEqual(a: Service[] | undefined | null, b: Service[] | undefined | null): boolean {
 	if (!a && !b) return true
 	if (!a || !b) return false
 	return a.every((s1) => b.some((s2) => isServiceEqual(s1, s2))) && b.every((s2) => a.some((s1) => isServiceEqual(s1, s2)))

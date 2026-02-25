@@ -63,10 +63,12 @@ export const render: Renderer = async (
 	}
 
 	async function renderGroup(fg: Group, fgSpan: number, level: number) {
+		const tp = translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))
 		const subElements = (await Promise.all((fg.fields ?? []).map((fieldOrGroup: Field | Group) => renderFieldGroupOrSubform(fieldOrGroup, level + 1)))).filter((x) => !!x && x !== nothing)
+		const groupTitle = fg.translate && tp && props.language ? tp(props.language, fg.group) : fg.group
 		return subElements.length
 			? html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
-					${fg.borderless ? nothing : html`<div>${h(level, '', html`${fg.group}`)}</div>`}
+					${fg.borderless ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
 					<div class="icure-form">${subElements}</div>
 			  </div>`
 			: nothing

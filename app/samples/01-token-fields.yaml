@@ -1,6 +1,22 @@
 form: test-forms.BMI
 id: c789794e-d0f4-8988-1234-e758a782473b
 description: test-forms.BMI
+translations:
+  - language: en
+    translations:
+      abortion-forms.field-options.VAGINAL: Vaginal
+      abortion-forms.field-options.BUCCAL: Buccal
+      abortion-forms.field-options.SUBLINGUAL: Sublingual
+  - language: fr
+    translations:
+      abortion-forms.field-options.VAGINAL: Vaginale
+      abortion-forms.field-options.BUCCAL: Buccale
+      abortion-forms.field-options.SUBLINGUAL: Sublinguale
+  - language: nl
+    translations:
+      abortion-forms.field-options.VAGINAL: Vaginale
+      abortion-forms.field-options.BUCCAL: Buccale
+      abortion-forms.field-options.SUBLINGUAL: Sublinguale
 sections:
   - section: main
     fields:
@@ -16,5 +32,12 @@ sections:
         multiline: true
         rowSpan: 3
         span: 24
+      - field: radiobutton
+        shortLabel: Radios
+        type: radio-button
+        options:
+          RAD|VAG|1: abortion-forms.field-options.VAGINAL
+          RAD|BUC|1: abortion-forms.field-options.BUCCAL
+          RAD|SUB|1: abortion-forms.field-options.SUBLINGUAL
 
 

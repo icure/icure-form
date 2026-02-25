@@ -297,10 +297,10 @@ export class DecoratedForm extends LitElement {
 			{
 				language: () => this.language ?? 'fr',
 				delay: () => (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
-				summarize: () => (context: string, questions: [string, string][]) =>
+				summarize: () => (domain: string, status: string, questions: [string, string][]) =>
 					new Promise((resolve) => {
 						setTimeout(() => {
-							resolve(`${context} \n ${questions.map(([question, answer]) => `${question}: ${answer}`).join('\n')}`)
+							resolve(`${domain} \n ${questions.map(([question, answer]) => `${question}: ${answer}`).join('\n')}`)
 						}, 1000)
 					}),
 				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,

@@ -7,7 +7,7 @@ const { resolve } = require('path')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpack = require('webpack')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config({ path: './.env' })
+const Dotenv = require('dotenv-webpack')
 
 module.exports = ({ mode }) => {
 	return {
@@ -20,9 +20,7 @@ module.exports = ({ mode }) => {
 			dateFns: 'date-fns',
 		},
 		plugins: [
-			new webpack.DefinePlugin({
-				'process.env': JSON.stringify(process.env),
-			}),
+			new Dotenv(),
 			new HtmlWebpackPlugin({
 				template: 'index.html',
 			}),

@@ -404,7 +404,8 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -423,6 +424,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
   c3704e08-b292-4b9f-a629-d616c9aa8d83:
     form: okido-forms.okido.field.labels.anatomicalStructure
     description: okido-forms.okido.field.labels.anatomicalStructure

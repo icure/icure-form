@@ -99,21 +99,21 @@ The Field class represents a generic field within a form. It is designed to be e
 
 The Field class has several specific implementations, each tailored to handle different types of input within a form. Here are the possible implementations:
 
-| Class | Type string | Description |
-|---|---|---|
-| TextField | `text-field` | A very flexible field that allows the user to input a single line of text or to provide a fully customizable text editor with styling options. |
-| TokenField | `token-field` | A field that allows the user to handle a tokenized list of items. |
-| ItemsListField | `items-list-field` | A field that allows the user to handle a list of items. |
-| DatePicker | `date-picker` | A field that allows the user to input a date (date pickers are supported). |
-| TimePicker | `time-picker` | A field that allows the user to input a time (time pickers are supported). |
-| DateTimePicker | `date-time-picker` | A field that allows the user to input a date and time (date-time pickers are supported). |
-| NumberField | `number-field` | A field that allows the user to input a number. |
-| MeasureField | `measure-field` | A field that allows the user to input a number with a unit. |
-| DropdownField | `dropdown` | A field that allows the user to select an option from a dropdown list. |
-| RadioButton | `radio-button` | A field that allows the user to select an option from a list of radio buttons. |
-| CheckBox | `checkbox` | A field that allows the user to select one or more options from a list of checkboxes. |
-| Label | `label` | A static label/text element. |
-| Button | `action` | A button that can trigger events with an optional payload. |
+| Class          | Type string        | Description                                                                                                                                    |
+|----------------|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| TextField      | `text-field`       | A very flexible field that allows the user to input a single line of text or to provide a fully customizable text editor with styling options. |
+| TokenField     | `token-field`      | A field that allows the user to handle a tokenized list of items.                                                                              |
+| ItemsListField | `items-list-field` | A field that allows the user to handle a list of items.                                                                                        |
+| DatePicker     | `date-picker`      | A field that allows the user to input a date (date pickers are supported).                                                                     |
+| TimePicker     | `time-picker`      | A field that allows the user to input a time (time pickers are supported).                                                                     |
+| DateTimePicker | `date-time-picker` | A field that allows the user to input a date and time (date-time pickers are supported).                                                       |
+| NumberField    | `number-field`     | A field that allows the user to input a number.                                                                                                |
+| MeasureField   | `measure-field`    | A field that allows the user to input a number with a unit.                                                                                    |
+| DropdownField  | `dropdown`         | A field that allows the user to select an option from a dropdown list.                                                                         |
+| RadioButton    | `radio-button`     | A field that allows the user to select an option from a list of radio buttons.                                                                 |
+| CheckBox       | `checkbox`         | A field that allows the user to select one or more options from a list of checkboxes.                                                          |
+| Label          | `label`            | A static label/text element.                                                                                                                   |
+| Button         | `action`           | A button that can trigger events with an optional payload.                                                                                     |
 
 Note: When a type string is not recognized during parsing, it defaults to TextField.
 
@@ -222,7 +222,7 @@ flowchart
 
 The form is defined by a Form object that contains all the necessary information to represent the form.
 The renderer is responsible for rendering the form based on the form object. Several renderers can be implemented to render the form in different ways (e.g. as a web form, as a one section by page form (à la typeforms)).
-The form values container is responsible for storing the values of the form. The form values container is immutable and can be modified by creating a new form values container with the desired modifications.
+The form values container is responsible for storing the values of the form. The form values container is immutable and can only be modified by creating a new form values container with the desired modifications.
 
 ### The form values container
 

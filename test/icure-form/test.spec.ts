@@ -19,17 +19,17 @@ describe('Form parsing tests', () => {
 		strictEqual(
 			text,
 			'form: Waiting room GP\n' +
-				'id: Fill in the patient information inside the waiting room\n' +
+				'description: Fill in the patient information inside the waiting room\n' +
 				'sections:\n' +
 				'  - section: The reason of your visit\n' +
 				'    fields:\n' +
 				'      - clazz: field\n' +
 				'        field: What symptoms, or more generally what reason motivated your visit\n' +
 				'        type: text-field\n' +
-				'        grows: true\n' +
+				'        grows: false\n' +
+				'        span: 1\n' +
 				'        schema: styled-text-with-codes\n' +
-				'        readonly: false\n' +
-				'        multiline: false\n' +
+				'        now: false\n' +
 				'        translate: true\n',
 		)
 	})
@@ -46,9 +46,9 @@ describe('Form parsing tests', () => {
 			'        grows: false\n' +
 			'        span: 1\n' +
 			'        schema: styled-text-with-codes\n' +
-			'        readonly: false\n' +
-			'        multiline: false\n' +
-			'        translate: true\n'
+			'        now: false\n' +
+			'        translate: true\n' +
+			'actions: []\n'
 		const form = Form.parse(YAML.parse(original))
 		const text = YAML.stringify(JSON.parse(JSON.stringify(form)))
 		console.log(text)
@@ -124,7 +124,7 @@ describe('Form parsing tests', () => {
 		strictEqual(
 			text,
 			`form: Waiting room GP
-id: Fill in the patient information inside the waiting room
+description: Fill in the patient information inside the waiting room
 sections:
   - section: All fields
     fields:
@@ -132,50 +132,61 @@ sections:
         field: This field is a TextField
         type: text-field
         shortLabel: TextField
-        grows: true
+        grows: false
+        span: 1
         schema: styled-text-with-codes
-        readonly: false
-        multiline: false
+        now: false
         translate: true
       - clazz: field
         field: This field is a NumberField
         type: number-field
         shortLabel: NumberField
-        grows: true
-        readonly: false
+        grows: false
+        span: 1
         multiline: false
+        now: false
         translate: true
       - clazz: field
         field: This field is a MeasureField
         type: measure-field
         shortLabel: MeasureField
-        grows: true
-        readonly: false
+        grows: false
+        span: 1
         multiline: false
+        now: false
         translate: true
       - clazz: field
         field: This field is a DatePicker
         type: date-picker
         shortLabel: DatePicker
-        grows: true
-        readonly: false
+        grows: false
+        span: 1
         multiline: false
         translate: true
       - clazz: field
         field: This field is a TimePicker
         type: time-picker
         shortLabel: TimePicker
-        grows: true
-        readonly: false
+        grows: false
+        span: 1
         multiline: false
         translate: true
       - clazz: field
         field: This field is a DateTimePicker
         type: date-time-picker
         shortLabel: DateTimePicker
-        grows: true
-        readonly: false
+        grows: false
+        span: 1
         multiline: false
+        translate: true
+      - clazz: field
+        field: This field is a MultipleChoice
+        type: multiple-choice
+        shortLabel: MultipleChoice
+        grows: false
+        span: 1
+        multiline: false
+        now: false
         translate: true
   - section: Grouped fields
     fields:
@@ -186,53 +197,62 @@ sections:
             field: This field is a TextField
             type: text-field
             shortLabel: TextField
-            grows: true
+            grows: false
+            span: 1
             schema: styled-text-with-codes
-            readonly: false
-            multiline: false
+            now: false
             translate: true
           - clazz: field
             field: This field is a NumberField
             type: number-field
             shortLabel: NumberField
-            grows: true
-            readonly: false
+            grows: false
+            span: 1
             multiline: false
+            now: false
             translate: true
           - clazz: field
             field: This field is a MeasureField
             type: measure-field
             shortLabel: MeasureField
-            grows: true
-            readonly: false
+            grows: false
+            span: 1
             multiline: false
+            now: false
             translate: true
           - clazz: field
             field: This field is a DatePicker
             type: date-picker
             shortLabel: DatePicker
-            grows: true
-            readonly: false
+            grows: false
+            span: 1
             multiline: false
             translate: true
           - clazz: field
             field: This field is a TimePicker
             type: time-picker
             shortLabel: TimePicker
-            grows: true
-            readonly: false
+            grows: false
+            span: 1
             multiline: false
             translate: true
           - clazz: field
             field: This field is a DateTimePicker
             type: date-time-picker
             shortLabel: DateTimePicker
-            grows: true
-            readonly: false
+            grows: false
+            span: 1
             multiline: false
             translate: true
-        borderless: false
-        translate: true
+          - clazz: field
+            field: This field is a MultipleChoice
+            type: multiple-choice
+            shortLabel: MultipleChoice
+            grows: false
+            span: 1
+            multiline: false
+            now: false
+            translate: true
       - clazz: group
         group: And you can add tags and codes
         fields:
@@ -248,10 +268,9 @@ sections:
             codifications:
               - BE-THESAURUS
               - ICD10
-            readonly: false
             options:
               option: blink
-            multiline: false
+            now: false
             translate: true
           - clazz: field
             field: This field is a NumberField
@@ -263,10 +282,10 @@ sections:
               - CD-ITEM|parameter|1
               - CD-PARAMETER|bmi|1
             codifications: []
-            readonly: false
             options:
               option: bang
             multiline: false
+            now: false
             translate: true
           - clazz: field
             field: This field is a MeasureField
@@ -278,13 +297,25 @@ sections:
               - CD-ITEM|parameter|1
               - CD-PARAMETER|heartbeat|1
             codifications: []
-            readonly: false
             options:
               unit: bpm
             multiline: false
+            now: false
             translate: true
-        borderless: false
-        translate: true
+          - clazz: field
+            field: This field is a MultipleChoice
+            type: multiple-choice
+            shortLabel: MultipleChoice
+            grows: false
+            span: 4
+            tags: []
+            codifications:
+              - KATZ
+            options:
+              many: no
+            multiline: false
+            now: false
+            translate: true
 `,
 		)
 	})
@@ -302,8 +333,7 @@ sections:
 			'        grows: false\n' +
 			'        span: 1\n' +
 			'        schema: styled-text-with-codes\n' +
-			'        readonly: false\n' +
-			'        multiline: false\n' +
+			'        now: false\n' +
 			'        translate: true\n' +
 			'      - clazz: field\n' +
 			'        field: This field is a NumberField\n' +
@@ -311,8 +341,8 @@ sections:
 			'        shortLabel: NumberField\n' +
 			'        grows: false\n' +
 			'        span: 1\n' +
-			'        readonly: false\n' +
 			'        multiline: false\n' +
+			'        now: false\n' +
 			'        translate: true\n' +
 			'      - clazz: field\n' +
 			'        field: This field is a MeasureField\n' +
@@ -320,8 +350,8 @@ sections:
 			'        shortLabel: MeasureField\n' +
 			'        grows: false\n' +
 			'        span: 1\n' +
-			'        readonly: false\n' +
 			'        multiline: false\n' +
+			'        now: false\n' +
 			'        translate: true\n' +
 			'      - clazz: field\n' +
 			'        field: This field is a DatePicker\n' +
@@ -329,7 +359,6 @@ sections:
 			'        shortLabel: DatePicker\n' +
 			'        grows: false\n' +
 			'        span: 1\n' +
-			'        readonly: false\n' +
 			'        multiline: false\n' +
 			'        translate: true\n' +
 			'      - clazz: field\n' +
@@ -338,7 +367,6 @@ sections:
 			'        shortLabel: TimePicker\n' +
 			'        grows: false\n' +
 			'        span: 1\n' +
-			'        readonly: false\n' +
 			'        multiline: false\n' +
 			'        translate: true\n' +
 			'      - clazz: field\n' +
@@ -347,18 +375,16 @@ sections:
 			'        shortLabel: DateTimePicker\n' +
 			'        grows: false\n' +
 			'        span: 1\n' +
-			'        readonly: false\n' +
 			'        multiline: false\n' +
 			'        translate: true\n' +
 			'      - clazz: field\n' +
 			'        field: This field is a MultipleChoice\n' +
-			'        type: text-field\n' +
+			'        type: multiple-choice\n' +
 			'        shortLabel: MultipleChoice\n' +
 			'        grows: false\n' +
 			'        span: 1\n' +
-			'        schema: styled-text-with-codes\n' +
-			'        readonly: false\n' +
 			'        multiline: false\n' +
+			'        now: false\n' +
 			'        translate: true\n' +
 			'  - section: Grouped fields\n' +
 			'    fields:\n' +
@@ -372,8 +398,7 @@ sections:
 			'            grows: false\n' +
 			'            span: 1\n' +
 			'            schema: styled-text-with-codes\n' +
-			'            readonly: false\n' +
-			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a NumberField\n' +
@@ -381,8 +406,8 @@ sections:
 			'            shortLabel: NumberField\n' +
 			'            grows: false\n' +
 			'            span: 1\n' +
-			'            readonly: false\n' +
 			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a MeasureField\n' +
@@ -390,8 +415,8 @@ sections:
 			'            shortLabel: MeasureField\n' +
 			'            grows: false\n' +
 			'            span: 1\n' +
-			'            readonly: false\n' +
 			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a DatePicker\n' +
@@ -399,7 +424,6 @@ sections:
 			'            shortLabel: DatePicker\n' +
 			'            grows: false\n' +
 			'            span: 1\n' +
-			'            readonly: false\n' +
 			'            multiline: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
@@ -408,7 +432,6 @@ sections:
 			'            shortLabel: TimePicker\n' +
 			'            grows: false\n' +
 			'            span: 1\n' +
-			'            readonly: false\n' +
 			'            multiline: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
@@ -417,21 +440,17 @@ sections:
 			'            shortLabel: DateTimePicker\n' +
 			'            grows: false\n' +
 			'            span: 1\n' +
-			'            readonly: false\n' +
 			'            multiline: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a MultipleChoice\n' +
-			'            type: text-field\n' +
+			'            type: multiple-choice\n' +
 			'            shortLabel: MultipleChoice\n' +
 			'            grows: false\n' +
 			'            span: 1\n' +
-			'            schema: styled-text-with-codes\n' +
-			'            readonly: false\n' +
 			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
-			'        borderless: false\n' +
-			'        translate: true\n' +
 			'      - clazz: group\n' +
 			'        group: And you can add tags and codes\n' +
 			'        fields:\n' +
@@ -447,10 +466,9 @@ sections:
 			'            codifications:\n' +
 			'              - BE-THESAURUS\n' +
 			'              - ICD10\n' +
-			'            readonly: false\n' +
 			'            options:\n' +
 			'              option: blink\n' +
-			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a NumberField\n' +
@@ -462,10 +480,10 @@ sections:
 			'              - CD-ITEM|parameter|1\n' +
 			'              - CD-PARAMETER|bmi|1\n' +
 			'            codifications: []\n' +
-			'            readonly: false\n' +
 			'            options:\n' +
 			'              option: bang\n' +
 			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a MeasureField\n' +
@@ -477,28 +495,26 @@ sections:
 			'              - CD-ITEM|parameter|1\n' +
 			'              - CD-PARAMETER|heartbeat|1\n' +
 			'            codifications: []\n' +
-			'            readonly: false\n' +
 			'            options:\n' +
 			'              unit: bpm\n' +
 			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
 			'          - clazz: field\n' +
 			'            field: This field is a MultipleChoice\n' +
-			'            type: text-field\n' +
+			'            type: multiple-choice\n' +
 			'            shortLabel: MultipleChoice\n' +
 			'            grows: false\n' +
 			'            span: 4\n' +
-			'            schema: styled-text-with-codes\n' +
 			'            tags: []\n' +
 			'            codifications:\n' +
 			'              - KATZ\n' +
-			'            readonly: false\n' +
 			'            options:\n' +
 			'              many: no\n' +
 			'            multiline: false\n' +
+			'            now: false\n' +
 			'            translate: true\n' +
-			'        borderless: false\n' +
-			'        translate: true\n'
+			'actions: []\n'
 		const form = Form.parse(YAML.parse(original))
 		const text = YAML.stringify(JSON.parse(JSON.stringify(form)))
 		console.log(text)
@@ -590,7 +606,7 @@ sections:
           "type": "radio-button"
         },
         {
-          "field": "Nombre d'enfants",
+          "field": "Nombre d’enfants",
           "shortLabel": "ChildNumber",
           "tags": [
             "CD-CUSTOM-IVG|CHILD-NUMBER|1"
@@ -602,7 +618,7 @@ sections:
           "type": "number-field"
         },
         {
-          "field": "Nombre d'enfants à charge",
+          "field": "Nombre d’enfants à charge",
           "shortLabel": "ChildInChargeNumber",
           "tags": [
             "CD-CUSTOM-IVG|CHILD-IN-CHARGE-NUMBER|1"

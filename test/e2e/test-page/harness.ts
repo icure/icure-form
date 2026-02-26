@@ -1,7 +1,7 @@
 // Import the default theme to register all custom elements
 import '../../../src/components/themes/default/index'
 
-import { Form, Field, Group, Subform, FieldMetadata, FieldValue, Validator } from '../../../src/components/model'
+import { Form, Field, Group, Subform, FieldMetadata, Validator } from '../../../src/components/model'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
 import { Version } from '../../../src/generic'
 import { makeInterpreter } from '../../../src/utils/interpreter'
@@ -176,9 +176,7 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 					if (fg.clazz === 'group') return extractValidators(fg.fields ?? [])
 					if (fg.clazz === 'field') {
 						const validators = fg.validators
-						return validators?.length
-							? [{ metadata: { label: fg.label(), tags: fg.tags?.map((id) => ({ ...normalizeCode(new CodeStub({ id: id })), id: id!, label: {} })) }, validators }]
-							: []
+						return validators?.length ? [{ metadata: { label: fg.label(), tags: fg.tags?.map((id) => ({ ...normalizeCode(new CodeStub({ id: id })), id: id!, label: {} })) }, validators }] : []
 					}
 					return []
 				}) ?? []
@@ -193,7 +191,7 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 				new Promise((resolve) => {
 					setTimeout(() => resolve(`${_domain}\n${questions.map(([q, a]) => `${q}: ${a}`).join('\n')}`), 100)
 				}),
-			translate: () => async (lang: string, text: string) => (form.translations ? defaultTranslationProvider(form.translations)(lang, text) : text),
+			translate: () => async (lang: string, text: string) => form.translations ? defaultTranslationProvider(form.translations)(lang, text) : text,
 		},
 	)
 

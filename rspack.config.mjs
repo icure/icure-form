@@ -20,7 +20,7 @@ export default {
 	entry: {
 		app: { import: './app/demo-app.ts', dependOn: ['codes'] },
 		codes: { import: './app/codes.ts' },
-		icure: { import: '@icure/cardinal-sdk', dependOn: ['dateFns'] },
+		icure: { import: '@icure/api', dependOn: ['dateFns'] },
 		dateFns: 'date-fns',
 	},
 	plugins: [

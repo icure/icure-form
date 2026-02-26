@@ -484,8 +484,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -564,8 +563,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -645,8 +643,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -726,8 +723,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -806,8 +802,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -873,8 +868,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -934,8 +928,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -995,8 +988,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -1056,8 +1048,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -1117,8 +1108,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -1178,8 +1168,7 @@ subForms:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
               - field: status
-              - shortLabel: okido-forms.okido.field.labels.status
-
+                shortLabel: okido-forms.okido.field.labels.status
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS

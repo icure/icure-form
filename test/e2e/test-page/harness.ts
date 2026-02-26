@@ -6,10 +6,10 @@ import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../..
 import { Version } from '../../../src/generic'
 import { makeInterpreter } from '../../../src/utils/interpreter'
 import { getRevisionsFilter } from '../../../src/utils/fields-values-provider'
-import { normalizeCode } from '../../../src/utils/code-utils'
 import { defaultTranslationProvider } from '../../../src/utils/languages'
-import { CodeStub, DecryptedContact, DecryptedForm, DecryptedService } from '@icure/cardinal-sdk'
+
 import YAML from 'yaml'
+import { CodeStub, Contact, normalizeCode, Service, Form as ICureForm } from '@icure/api'
 
 let formCounter = 0
 
@@ -118,31 +118,31 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 	// Create empty contacts
 	const formId = `f-${++formCounter}`
-	const rootForm = new DecryptedForm({
+	const rootForm = new ICureForm({
 		id: formId,
 		rev: uuid(),
 		formTemplateId: form.id ?? 'test',
 	})
 
-	const currentContact = new DecryptedContact({
+	const currentContact = new Contact({
 		id: uuid(),
 		created: +new Date(),
 		subContacts: [],
 		services: [],
 	})
 
-	const observedForms: Record<string, DecryptedForm> = {}
+	const observedForms: Record<string, ICureForm> = {}
 	const now = +new Date()
 
 	const contactFormValuesContainer = await ContactFormValuesContainer.fromFormsHierarchy(
 		rootForm,
 		currentContact,
 		[],
-		(label, serviceId) => new DecryptedService({ label, id: serviceId ?? uuid(), created: now, modified: now, responsible: '1' }),
+		(label, serviceId) => new Service({ label, id: serviceId ?? uuid(), created: now, modified: now, responsible: '1' }),
 		async () => [],
 		async (parentId: string, anchorId: string, fti) => {
 			const id = uuid()
-			return (observedForms[id] = new DecryptedForm({
+			return (observedForms[id] = new ICureForm({
 				id,
 				created: +new Date(),
 				modified: +new Date(),

@@ -1009,7 +1009,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 				true,
 			)
 
-			this.changeListeners.forEach((l) => notify(l, newFormValuesContainer, [service.label ?? service.id] /* only the label is going to propagate the changes for the formulas */))
+			this.changeListeners.forEach((l) => notify(l, newFormValuesContainer, [service.label ?? service.id ?? ''] /* only the label is going to propagate the changes for the formulas */))
 		}
 	}
 

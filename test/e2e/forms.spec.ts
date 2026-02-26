@@ -91,7 +91,7 @@ test.describe('Form rendering', () => {
 			// Verify the icure-form element is present and has shadow content
 			const hasShadowContent = await page.evaluate(() => {
 				const el = document.querySelector('icure-form')
-				return el?.shadowRoot?.children?.length ?? 0 > 0
+				return (el?.shadowRoot?.children?.length ?? 0) > 0
 			})
 			expect(hasShadowContent).toBe(true)
 		})

@@ -8,6 +8,10 @@
 .DS_Store
 
 .env
+
+# E2E test build artifacts
+test/e2e/test-page/harness.bundle.js
+test/e2e/test-results/
 .yarn/*
 .yarn/cache
 .yarn/patches

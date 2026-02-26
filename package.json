@@ -10,6 +10,7 @@
 		"prepare": "yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
 		"publish": "npm login && yarn run prepare && cd lib && touch yarn.lock && yarn install && rm -rf node_modules && npm publish --tolerate-republish --access public && cd ..",
 		"test": "jest",
+		"test:e2e": "playwright test --config test/e2e/playwright.config.ts",
 		"lint:commit": "eslint . --ext .ts",
 		"pre-commit": "lint-staged"
 	},
@@ -22,7 +23,8 @@
 	"jest": {
 		"preset": "ts-jest",
 		"testEnvironment": "node",
-		"testRegex": "(/test/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+		"testRegex": "(/test/(?!e2e/).*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+		"testPathIgnorePatterns": ["/node_modules/", "/test/e2e/"],
 		"moduleFileExtensions": [
 			"ts",
 			"tsx",
@@ -85,6 +87,7 @@
 		"@babel/traverse": "^7.26.10",
 		"@icure/api": "5.3.7",
 		"@icure/cardinal-sdk": "2.0.0-PREVIEW-24",
+		"@playwright/test": "^1.40.0",
 		"@types/jest": "^27.0.2",
 		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^18.16.3",
@@ -96,6 +99,7 @@
 		"css-loader": "^6.7.3",
 		"dotenv": "^16.4.7",
 		"dotenv-webpack": "^8.1.1",
+		"esbuild": "^0.20.0",
 		"eslint": "^8.35.0",
 		"eslint-config-prettier": "^8.7.0",
 		"eslint-plugin-import": "^2.27.5",

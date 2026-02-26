@@ -254,11 +254,13 @@ export class DecoratedForm extends LitElement {
 			undefined,
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
-				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['defaultValue']) : []
+				const foundInitialValuesFormulas = form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['defaultValue']) : []
+				return foundInitialValuesFormulas
 			},
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
-				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['value']) : []
+				const fondDependentValuesFormulas = form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['value']) : []
+				return fondDependentValuesFormulas
 			},
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)

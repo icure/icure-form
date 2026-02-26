@@ -483,7 +483,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -502,6 +504,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
   e5e1f790-ed79-4a68-b024-ed29e698aa96:
     form: okido-forms.okido.field.labels.participation
     description: okido-forms.okido.field.labels.participation
@@ -558,7 +563,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -577,6 +584,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   a3618495-fc40-4b95-99c0-acb0cb302554:
     form: okido-forms.okido.field.labels.activity
     description: okido-forms.okido.field.labels.activity
@@ -633,7 +644,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -652,6 +665,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   e36b1823-1047-4aaa-b4a5-a2cb1274fabf:
     form: okido-forms.okido.field.labels.externalFactor
     description: okido-forms.okido.field.labels.externalFactor
@@ -708,7 +725,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -727,6 +746,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
   d941ec5d-254c-4af2-ac87-e4c4c5bbd502:
     form: okido-forms.okido.field.labels.individualFactor
     description: okido-forms.okido.field.labels.individualFactor
@@ -783,7 +805,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -802,6 +826,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   bdf9ba36-74d4-4588-b660-ece73da4d1af:
     form: okido-forms.okido.field.labels.medicalData
     description: okido-forms.okido.field.labels.medicalData
@@ -844,7 +872,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -857,6 +887,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   a8acea51-1982-4dbf-9f81-cbe00394ff46:
     form: okido-forms.okido.field.labels.surgicalData
     description: okido-forms.okido.field.labels.surgicalData
@@ -899,7 +933,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -912,6 +948,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   0842ece4-2fa2-4880-983e-296a7e485c06:
     form: okido-forms.okido.field.labels.medicalCareDrug
     description: okido-forms.okido.field.labels.medicalCareDrug
@@ -954,7 +994,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -967,6 +1009,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   c013306c-df74-47a8-aa32-e448d933b779:
     form: okido-forms.okido.field.labels.medicalCareActe
     description: okido-forms.okido.field.labels.medicalCareActe
@@ -1009,7 +1055,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -1022,6 +1070,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   86196719-cb66-4af3-a99d-68cb0c2d8175:
     form: okido-forms.okido.field.labels.paramedicalCare
     description: okido-forms.okido.field.labels.paramedicalCare
@@ -1064,7 +1116,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -1077,6 +1131,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   b76a4b84-cd79-4bd6-bd36-c7aa0c29994b:
     form: okido-forms.okido.field.labels.physiotherapyCare
     description: okido-forms.okido.field.labels.physiotherapyCare
@@ -1119,7 +1177,9 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|description|1
                   - CD-ITEM|complaint|1
-              - field: okido-forms.okido.field.labels.status
+              - field: status
+              - shortLabel: okido-forms.okido.field.labels.status
+
                 type: dropdown
                 codifications:
                   - MS-OKIDO-CARE-STATUS
@@ -1132,6 +1192,10 @@ subForms:
                 tags:
                   - MS-OKIDO-FUNCTIONAL_DISORDER-ITEM|repercussion|1
                   - CD-ITEM|transactionreason|1
+                computedProperties:
+                  value: |
+                    return parseContent(status[0]?.content) ?? 'unknown'
+
   baca774a-b96c-44af-84ff-15619e0af0e9:
     form: okido-forms.okido.field.labels.stateOfPhysiotherapy
     description: okido-forms.okido.field.labels.stateOfPhysiotherapy

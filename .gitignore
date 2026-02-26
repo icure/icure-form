@@ -3,6 +3,7 @@
 /tmp/
 /lib/
 /dist/
+/test-results/
 /tsconfig.tmp.json
 
 .DS_Store

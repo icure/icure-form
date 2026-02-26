@@ -734,7 +734,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 					this.anchorId,
 					true,
 				)
-				this.changeListeners.forEach((l) => notify(l, newContactFormValuesContainer, [`subForms_${anchorId}`] /* no changed keys except the anchor*/))
+				this.changeListeners.forEach((l) => notify(l, newContactFormValuesContainer, null))
 			},
 		]
 	}
@@ -1090,7 +1090,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		)
 		newContactFormValuesContainer.registerChildFormValuesContainer(childFVC, anchorId)
 		this.changeListeners.forEach((l) => {
-			notify(l, newContactFormValuesContainer, [`subForms_${anchorId}`])
+			notify(l, newContactFormValuesContainer, null)
 		})
 	}
 

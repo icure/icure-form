@@ -7,7 +7,7 @@ import { MeasureSchema } from '../icure-text-field/schema/measure-schema'
 
 export interface Code {
 	id: string
-	label: { [key: string]: string }
+	label?: { [key: string]: string }
 }
 
 export interface FieldMetadata {

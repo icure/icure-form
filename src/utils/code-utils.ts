@@ -28,17 +28,12 @@ export const sortSuggestions = (codes: (Code | Suggestion)[], language: string, 
 	(sortOptions?.sort && sortOptions?.sort !== 'natural'
 		? codes.sort(defaultCodesComparator(language, sortOptions?.sort === 'asc', sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
 		: codes.sort(naturalCodesComparator(sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
-	).map((c) => ({ id: c.id, label: c.label, text: c.label[language] ?? '', terms: [] }))
+	).map((c) => ({ id: c.id, label: c.label ?? { [language]: c.id }, text: c.label?.[language] ?? c.id, terms: [] }))
 
-export const filterAndSortOptionsFromFieldDefinition = (
-	language: string,
-	fg: Field,
-	translationProvider: ((language: string, text: string) => string) | undefined,
-	terms?: string[],
-) =>
+export const filterAndSortOptionsFromFieldDefinition = (language: string, fg: Field, translationProvider: ((language: string, text: string) => string) | undefined, terms?: string[]) =>
 	Promise.resolve(
 		sortCodes(
-			optionMapper(language, fg, translationProvider).filter((x) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => x.label[language].toLowerCase().includes(st))),
+			optionMapper(language, fg, translationProvider).filter((x) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => (x.label?.[language] ?? x.id).toLowerCase().includes(st))),
 			language,
 			fg.sortOptions,
 		),

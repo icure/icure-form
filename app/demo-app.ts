@@ -90,8 +90,8 @@ import { DecoratedForm } from './decorated-form'
 class DemoApp extends LitElement {
 	private samples = [
 		...[
-			{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
-			/*{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
+			/*{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
+			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_search)) },
 			{ title: '000 - Validators', form: Form.parse(YAML.parse(validators)) },
 			{ title: '01 - Token fields', form: Form.parse(YAML.parse(tokenFields)) },
@@ -105,9 +105,9 @@ class DemoApp extends LitElement {
 			{ title: '7 - Control', form: Form.parse(YAML.parse(control)) },
 			{ title: '8 - Extra', form: Form.parse(YAML.parse(extra)) },
 			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },
-			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },
+			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },*/
 			{ title: '11 - Preventi', form: Form.parse(YAML.parse(preventi)) },
-			{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
+			/*{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_measure)) },
 			{ title: 'OKIDO - Evaluation', form: Form.parse(YAML.parse(okido_evaluation)) },
 			{ title: 'OKIDO - Planification', form: Form.parse(YAML.parse(okido_planification)) },

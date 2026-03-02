@@ -203,7 +203,7 @@ sections:
                 const negCount = [SO01, SO03, HE04, HE07, HE10, HE13, HE16]
                   .filter((f) => f[0]?.codes?.[0]?.id?.match(/\|[3-6]\|/)).length
                 const status = negCount === 0 ? 'POINT FORT' : negCount <= 3 ? "POINT D'ATTENTION" : 'POINT DE VIGILANCE'
-                return summarize('social-context', status, [
+                return summarize({ domain: 'social-context', status, questions: [
                   ['SO01', SO01[0]?.codes?.[0]?.id],
                   ['SO03', SO03[0]?.codes?.[0]?.id],
                   ['HE01', HE01[0]?.codes?.[0]?.id],
@@ -214,9 +214,9 @@ sections:
                   ['HE10', HE10[0]?.codes?.[0]?.id],
                   ['HE13', HE13[0]?.codes?.[0]?.id],
                   ['HE16', HE16[0]?.codes?.[0]?.id],
-                ])
+                ] }).then(r => r?.text ? ({ content: { '*': { type: 'string', value: r.text } }, codes: r.score ? [{ id: `PREVENTI-SOCIAL-SCORE|${r.score}|1`}] : [] }) : undefined)
           - field: RE03
-            shortLabel: field.RE03.label.Mental_health_and_sleep_quality
+            shortLabel: field.RE03.label.Mental_health
             span: 24
             type: text-field
             multiline: true
@@ -227,40 +227,45 @@ sections:
                 const nSM56 = parseContent(SM56[0]?.content)
                 const mentalStatus = (nSM12 >= 27 || nSM43 >= 15 || nSM56 >= 15) ? 'POINT DE VIGILANCE'
                   : (nSM12 < 14 && nSM43 < 5 && nSM56 < 5) ? 'POINT FORT' : "POINT D'ATTENTION"
+                return summarize({ domain: 'mental-health', status: mentalStatus, questions: [
+                  ['SM02', SM02[0]?.codes?.[0]?.id], ['SM03', SM03[0]?.codes?.[0]?.id],
+                  ['SM04', SM04[0]?.codes?.[0]?.id], ['SM05', SM05[0]?.codes?.[0]?.id],
+                  ['SM06', SM06[0]?.codes?.[0]?.id], ['SM07', SM07[0]?.codes?.[0]?.id],
+                  ['SM08', SM08[0]?.codes?.[0]?.id], ['SM09', SM09[0]?.codes?.[0]?.id],
+                  ['SM10', SM10[0]?.codes?.[0]?.id], ['SM11', SM11[0]?.codes?.[0]?.id],
+                  ['SM14', text(SM14)],
+                  ['SM36', SM36[0]?.codes?.[0]?.id], ['SM37', SM37[0]?.codes?.[0]?.id],
+                  ['SM38', SM38[0]?.codes?.[0]?.id], ['SM39', SM39[0]?.codes?.[0]?.id],
+                  ['SM40', SM40[0]?.codes?.[0]?.id], ['SM41', SM41[0]?.codes?.[0]?.id],
+                  ['SM42', SM42[0]?.codes?.[0]?.id],
+                  ['SM47', SM47[0]?.codes?.[0]?.id], ['SM48', SM48[0]?.codes?.[0]?.id],
+                  ['SM49', SM49[0]?.codes?.[0]?.id], ['SM50', SM50[0]?.codes?.[0]?.id],
+                  ['SM51', SM51[0]?.codes?.[0]?.id], ['SM52', SM52[0]?.codes?.[0]?.id],
+                  ['SM53', SM53[0]?.codes?.[0]?.id], ['SM54', SM54[0]?.codes?.[0]?.id],
+                  ['SM55', SM55[0]?.codes?.[0]?.id],
+                ] }).then(r => r?.text ? ({ content: { '*': { type: 'string', value: r.text } }, codes: r.score ? [{ id: `PREVENTI-MH-SCORE|${r.score}|1`}] : [] }) :  undefined)
+          - field: RE03B
+            shortLabel: field.RE03B.label.Sleep_quality
+            span: 24
+            type: text-field
+            multiline: true
+            computedProperties:
+              defaultValue: |
                 const sleepNeg = [CD02,CD03,CD04,CD05,CD06,CD07,CD08,CD09,CD10,CD11,CD12,CD13,CD14,CD15,CD16,CD17]
                   .filter((f) => score(f[0]) >= 3).length
                 const sleepStatus = sleepNeg === 0 ? 'POINT FORT' : sleepNeg <= 4 ? "POINT D'ATTENTION" : 'POINT DE VIGILANCE'
-                return Promise.all([
-                  summarize('mental-health', mentalStatus, [
-                    ['SM02', SM02[0]?.codes?.[0]?.id], ['SM03', SM03[0]?.codes?.[0]?.id],
-                    ['SM04', SM04[0]?.codes?.[0]?.id], ['SM05', SM05[0]?.codes?.[0]?.id],
-                    ['SM06', SM06[0]?.codes?.[0]?.id], ['SM07', SM07[0]?.codes?.[0]?.id],
-                    ['SM08', SM08[0]?.codes?.[0]?.id], ['SM09', SM09[0]?.codes?.[0]?.id],
-                    ['SM10', SM10[0]?.codes?.[0]?.id], ['SM11', SM11[0]?.codes?.[0]?.id],
-                    ['SM14', text(SM14)],
-                    ['SM36', SM36[0]?.codes?.[0]?.id], ['SM37', SM37[0]?.codes?.[0]?.id],
-                    ['SM38', SM38[0]?.codes?.[0]?.id], ['SM39', SM39[0]?.codes?.[0]?.id],
-                    ['SM40', SM40[0]?.codes?.[0]?.id], ['SM41', SM41[0]?.codes?.[0]?.id],
-                    ['SM42', SM42[0]?.codes?.[0]?.id],
-                    ['SM47', SM47[0]?.codes?.[0]?.id], ['SM48', SM48[0]?.codes?.[0]?.id],
-                    ['SM49', SM49[0]?.codes?.[0]?.id], ['SM50', SM50[0]?.codes?.[0]?.id],
-                    ['SM51', SM51[0]?.codes?.[0]?.id], ['SM52', SM52[0]?.codes?.[0]?.id],
-                    ['SM53', SM53[0]?.codes?.[0]?.id], ['SM54', SM54[0]?.codes?.[0]?.id],
-                    ['SM55', SM55[0]?.codes?.[0]?.id],
-                  ]),
-                  summarize('sleep', sleepStatus, [
-                    ['CD02', CD02[0]?.codes?.[0]?.id], ['CD03', CD03[0]?.codes?.[0]?.id],
-                    ['CD04', CD04[0]?.codes?.[0]?.id], ['CD05', CD05[0]?.codes?.[0]?.id],
-                    ['CD06', CD06[0]?.codes?.[0]?.id], ['CD07', CD07[0]?.codes?.[0]?.id],
-                    ['CD08', CD08[0]?.codes?.[0]?.id], ['CD09', CD09[0]?.codes?.[0]?.id],
-                    ['CD10', CD10[0]?.codes?.[0]?.id], ['CD11', CD11[0]?.codes?.[0]?.id],
-                    ['CD12', CD12[0]?.codes?.[0]?.id], ['CD13', CD13[0]?.codes?.[0]?.id],
-                    ['CD14', CD14[0]?.codes?.[0]?.id], ['CD15', CD15[0]?.codes?.[0]?.id],
-                    ['CD16', CD16[0]?.codes?.[0]?.id], ['CD17', CD17[0]?.codes?.[0]?.id],
-                  ]),
-                ]).then(([mh, sl]) => mh + '\n\n' + sl)
+                return summarize({ domain: 'sleep', status: sleepStatus, questions: [
+                  ['CD02', CD02[0]?.codes?.[0]?.id], ['CD03', CD03[0]?.codes?.[0]?.id],
+                  ['CD04', CD04[0]?.codes?.[0]?.id], ['CD05', CD05[0]?.codes?.[0]?.id],
+                  ['CD06', CD06[0]?.codes?.[0]?.id], ['CD07', CD07[0]?.codes?.[0]?.id],
+                  ['CD08', CD08[0]?.codes?.[0]?.id], ['CD09', CD09[0]?.codes?.[0]?.id],
+                  ['CD10', CD10[0]?.codes?.[0]?.id], ['CD11', CD11[0]?.codes?.[0]?.id],
+                  ['CD12', CD12[0]?.codes?.[0]?.id], ['CD13', CD13[0]?.codes?.[0]?.id],
+                  ['CD14', CD14[0]?.codes?.[0]?.id], ['CD15', CD15[0]?.codes?.[0]?.id],
+                  ['CD16', CD16[0]?.codes?.[0]?.id], ['CD17', CD17[0]?.codes?.[0]?.id],
+                ] }).then(r => r?.text ? ({ content: { '*': { type: 'string', value: r.text } }, codes: r.score ? [{ id: `PREVENTI-SLEEP-SCORE|${r.score}|1`}] : [] }) : undefined)
           - field: RE04
-            shortLabel: field.RE04.label.Nutrition_and_physical_activity
+            shortLabel: field.RE04.label.Physical_activity
             span: 24
             type: text-field
             multiline: true
@@ -270,36 +275,43 @@ sections:
                 const pa08Score = score(PA08[0])
                 const paStatus = (pa05Score >= 2 && pa08Score >= 2) ? 'POINT FORT'
                   : (pa05Score === 0 || pa08Score === 0) ? 'POINT DE VIGILANCE' : "POINT D'ATTENTION"
+                return Promise.all([
+                  translate(language, 'mistral', 'PA09', text(PA09)),
+                  translate(language, 'mistral', 'PA12', text(PA12)),
+                ]).then(([pa09, pa12]) =>
+                  summarize({ domain: 'physical-activity', status: paStatus, questions: [
+                    ['PA05', PA05[0]?.codes?.[0]?.id],
+                    ['PA08', PA08[0]?.codes?.[0]?.id === 'PA08|1|1' ? pa09 : PA08[0]?.codes?.[0]?.id],
+                    ['PA10', PA10[0]?.codes?.[0]?.id],
+                    ['PA11', PA11[0]?.codes?.[0]?.id === 'PA11|1|1' ? pa12 : PA11[0]?.codes?.[0]?.id],
+                  ] }).then(r => r?.text ? ({ content: { '*': { type: 'string', value: r.text } }, codes: r.score ? [{ id: `PREVENTI-PA-SCORE|${r.score}|1`}] : [] }) : undefined))
+          - field: RE04B
+            shortLabel: field.RE04B.label.Nutrition
+            span: 24
+            type: text-field
+            multiline: true
+            computedProperties:
+              defaultValue: |
                 const nhNeg = [NH01,NH03,NH05,NH06,NH07,NH08,NH09]
                   .filter((f) => f[0]?.codes?.[0]?.id?.match(/\|[4-5]\|/)).length
                 const nhStatus = nhNeg === 0 ? 'POINT FORT' : nhNeg <= 2 ? "POINT D'ATTENTION" : 'POINT DE VIGILANCE'
                 return Promise.all([
-                  translate(language, 'mistral', 'PA09', text(PA09)),
-                  translate(language, 'mistral', 'PA12', text(PA12)),
                   translate(language, 'mistral', 'NH02', text(NH02)),
                   translate(language, 'mistral', 'NH04', text(NH04)),
-                  translate(language, 'mistral', 'NH11', text(NH11)),
-                ]).then(([pa09, pa12, nh02, nh04, nh11]) =>
-                  Promise.all([
-                    summarize('physical-activity', paStatus, [
-                      ['PA05', PA05[0]?.codes?.[0]?.id],
-                      ['PA08', PA08[0]?.codes?.[0]?.id === 'PA08|1|1' ? pa09 : PA08[0]?.codes?.[0]?.id],
-                      ['PA10', PA10[0]?.codes?.[0]?.id],
-                      ['PA11', PA11[0]?.codes?.[0]?.id === 'PA11|1|1' ? pa12 : PA11[0]?.codes?.[0]?.id],
-                    ]),
-                    summarize('nutrition', nhStatus, [
-                      ['NH01', NH01[0]?.codes?.[0]?.id],
-                      ['NH02', nh02],
-                      ['NH03', NH03[0]?.codes?.[0]?.id],
-                      ['NH04', nh04],
-                      ['NH05', NH05[0]?.codes?.[0]?.id],
-                      ['NH06', NH06[0]?.codes?.[0]?.id],
-                      ['NH07', NH07[0]?.codes?.[0]?.id],
-                      ['NH08', NH08[0]?.codes?.[0]?.id],
-                      ['NH09', NH09[0]?.codes?.[0]?.id],
-                      ['NH10', nh11],
-                    ]),
-                  ]).then(([s1, s2]) => s1 + '\n\n' + s2))
+                  translate(language, 'mistral', 'NH16', text(NH16)),
+                ]).then(([nh02, nh04, nh16]) =>
+                  summarize({ domain: 'nutrition', status: nhStatus, questions: [
+                    ['NH01', NH01[0]?.codes?.[0]?.id],
+                    ['NH02', nh02],
+                    ['NH03', NH03[0]?.codes?.[0]?.id],
+                    ['NH04', nh04],
+                    ['NH05', NH05[0]?.codes?.[0]?.id],
+                    ['NH06', NH06[0]?.codes?.[0]?.id],
+                    ['NH07', NH07[0]?.codes?.[0]?.id],
+                    ['NH08', NH08[0]?.codes?.[0]?.id],
+                    ['NH09', NH09[0]?.codes?.[0]?.id],
+                    ['NH16', nh16],
+                  ] }).then(r => r?.text ? ({ content: { '*': { type: 'string', value: r.text } }, codes: r.score ? [{ id: `PREVENTI-NH-SCORE|${r.score}|1`}] : [] }) : undefined))
           - field: RE05
             shortLabel: field.RE05.label.Alcohol_consumption_and
             span: 24
@@ -313,7 +325,7 @@ sections:
                 const neverDrank = hasOption(DEP04[0], '2')
                 const status = (neverSmoked && neverDrank) ? 'POINT FORT'
                   : (smokes || drinks) ? 'POINT DE VIGILANCE' : "POINT D'ATTENTION"
-                return summarize('dependencies', status, [
+                return summarize({ domain: 'dependencies', status, questions: [
                   ['DEP01', DEP01[0]?.codes?.[0]?.id],
                   ['DEP11', text(DEP11)],
                   ['DEP02', text(DEP02)],
@@ -322,7 +334,7 @@ sections:
                   ['DEP12', text(DEP12)],
                   ['DEP05', text(DEP05)],
                   ['DEP06', text(DEP06)],
-                ])
+                ] }).then(r => r?.text ? ({ content: { '*': { type: 'string', value: r.text } }, codes: r.score ? [{ id: `PREVENTI-DEP-SCORE|${r.score}|1`}] : [] }) : undefined)
           - field: RE06
             shortLabel: field.RE06.label.Quality_and_life_expectancy
             span: 24
@@ -420,6 +432,75 @@ sections:
             span: 24
             type: text-field
             multiline: true
+            computedProperties:
+              defaultValue: |
+                const re02Text = RE02[0]?.content?.['*']?.value ?? text(RE02)
+                const re03Text = RE03[0]?.content?.['*']?.value ?? text(RE03)
+                const re03bText = RE03B[0]?.content?.['*']?.value ?? text(RE03B)
+                const re04Text = RE04[0]?.content?.['*']?.value ?? text(RE04)
+                const re04bText = RE04B[0]?.content?.['*']?.value ?? text(RE04B)
+                const re05Text = RE05[0]?.content?.['*']?.value ?? text(RE05)
+                const re06Text = RE06[0]?.content?.['*']?.value ?? text(RE06)
+                const re07Text = RE07[0]?.content?.['*']?.value ?? text(RE07)
+
+                if (!re02Text || !re03Text || !re03bText || !re04Text || !re04bText || !re05Text || !re06Text || !re07Text) {
+                  return undefined
+                }
+
+                const socialNeg = [SO01, SO03, HE04, HE07, HE10, HE13, HE16]
+                  .filter((f) => f[0]?.codes?.[0]?.id?.match(/\|[3-6]\|/)).length
+                const socialStatus = socialNeg === 0 ? 'POINT FORT' : socialNeg <= 3 ? "POINT D'ATTENTION" : 'POINT DE VIGILANCE'
+
+                const nSM12 = parseContent(SM12[0]?.content)
+                const nSM43 = parseContent(SM43[0]?.content)
+                const nSM56 = parseContent(SM56[0]?.content)
+                const mentalStatus = (nSM12 >= 27 || nSM43 >= 15 || nSM56 >= 15) ? 'POINT DE VIGILANCE'
+                  : (nSM12 < 14 && nSM43 < 5 && nSM56 < 5) ? 'POINT FORT' : "POINT D'ATTENTION"
+
+                const sleepNeg = [CD02,CD03,CD04,CD05,CD06,CD07,CD08,CD09,CD10,CD11,CD12,CD13,CD14,CD15,CD16,CD17]
+                  .filter((f) => score(f[0]) >= 3).length
+                const sleepStatus = sleepNeg === 0 ? 'POINT FORT' : sleepNeg <= 4 ? "POINT D'ATTENTION" : 'POINT DE VIGILANCE'
+
+                const pa05Score = score(PA05[0])
+                const pa08Score = score(PA08[0])
+                const paStatus = (pa05Score >= 2 && pa08Score >= 2) ? 'POINT FORT'
+                  : (pa05Score === 0 || pa08Score === 0) ? 'POINT DE VIGILANCE' : "POINT D'ATTENTION"
+
+                const nhNeg = [NH01,NH03,NH05,NH06,NH07,NH08,NH09]
+                  .filter((f) => f[0]?.codes?.[0]?.id?.match(/\|[4-5]\|/)).length
+                const nhStatus = nhNeg === 0 ? 'POINT FORT' : nhNeg <= 2 ? "POINT D'ATTENTION" : 'POINT DE VIGILANCE'
+
+                const smokes = hasOption(DEP01[0], '3')
+                const drinks = hasOption(DEP04[0], '1')
+                const neverSmoked = hasOption(DEP01[0], '1')
+                const neverDrank = hasOption(DEP04[0], '2')
+                const depStatus = (neverSmoked && neverDrank) ? 'POINT FORT'
+                  : (smokes || drinks) ? 'POINT DE VIGILANCE' : "POINT D'ATTENTION"
+
+                const allStatuses = [socialStatus, mentalStatus, sleepStatus, paStatus, nhStatus, depStatus]
+                const hasVigilance = allStatuses.includes('POINT DE VIGILANCE')
+                const hasAttention = allStatuses.includes("POINT D'ATTENTION")
+                const globalStatus = hasVigilance ? 'ATTENTION_MEDICALE' : hasAttention ? 'EQUILIBRE_FRAGILE' : 'EQUILIBRE_SATISFAISANT'
+
+                const domainStatuses = {
+                  'social-context': socialStatus,
+                  'mental-health': mentalStatus,
+                  'sleep': sleepStatus,
+                  'physical-activity': paStatus,
+                  'nutrition': nhStatus,
+                  'dependencies': depStatus,
+                }
+
+                return summarize({ domain: 'conclusion', globalStatus, domainStatuses, questions: [
+                  ['RE02', re02Text],
+                  ['RE03', re03Text],
+                  ['RE03B', re03bText],
+                  ['RE04', re04Text],
+                  ['RE04B', re04bText],
+                  ['RE05', re05Text],
+                  ['RE06', re06Text],
+                  ['RE07', re07Text],
+                ] }).then(r => ({ content: { '*': { type: 'string', value: r.text } } }))
   - section: section.General_Information
     fields:
       - field: GI01
@@ -1980,7 +2061,7 @@ sections:
         span: 24
         type: text-field
         computedProperties:
-          hidden: return !hasOption(NH17,'11')
+          hidden: return !hasOption(NH17[0],'11')
       - field: NH19
         shortLabel: field.NH19.label.Has_this_milk_lactose
         span: 24
@@ -2006,7 +2087,7 @@ sections:
         span: 24
         type: radio-button
         computedProperties:
-          hidden: return (!hasOption(NH17[0],'3') || !hasOption(NH17[0],'4') || !hasOption(NH17[0],'5'))
+          hidden: return (!hasOption(NH17[0],'3') && !hasOption(NH17[0],'4') && !hasOption(NH17[0],'5'))
         options:
           NH21|1|1: field.NH21.option.Yes
           NH21|2|1: field.NH21.option.No
@@ -2312,7 +2393,7 @@ sections:
             span: 24
             type: text-field
             computedProperties:
-              hidden: return !hasOption(DEP01,'2')
+              hidden: return !hasOption(DEP01[0],'2')
           - field: DEP02
             shortLabel: field.DEP02.label.Amount_consumed
             span: 24
@@ -2337,7 +2418,7 @@ sections:
             span: 24
             type: text-field
             computedProperties:
-              hidden: return !hasOption(DEP04,'3')
+              hidden: return !hasOption(DEP04[0],'3')
           - field: DEP05
             shortLabel: field.DEP05.label.Amount_consumed
             span: 24
@@ -2404,7 +2485,8 @@ translations:
       group.Recommendations: Recommandations
       field.RE01.label.General_health_status: État général de santé
       field.RE02.label.Social_and_environmental_context: Context social et environnemental
-      field.RE03.label.Mental_health_and_sleep_quality: Santé mentale et qualité du sommeil
+      field.RE03.label.Mental_health: Santé mentale
+      field.RE03B.label.Sleep_quality: Qualité du sommeil
       field.RE04.label.Nutrition_and_physical_activity: Alimentation et activité physique
       field.RE05.label.Alcohol_consumption_and: Consommation d'alcool et addictions
       field.RE06.label.Quality_and_life_expectancy: Qualité et espérance de vie
@@ -3400,7 +3482,8 @@ translations:
       group.Recommendations: Recommendations
       field.RE01.label.General_health_status: General health status
       field.RE02.label.Social_and_environmental_context: Social and environmental context
-      field.RE03.label.Mental_health_and_sleep_quality: Mental health and sleep quality
+      field.RE03.label.Mental_health: Mental health
+      field.RE03B.label.Sleep_quality: Sleep quality
       field.RE04.label.Nutrition_and_physical_activity: Nutrition and physical activity
       field.RE05.label.Alcohol_consumption_and: Alcohol consumption and addictions
       field.RE06.label.Quality_and_life_expectancy: Quality and life expectancy
@@ -4396,7 +4479,8 @@ translations:
       group.Recommendations: Aanbevelingen
       field.RE01.label.General_health_status: Algemene gezondheidstoestand
       field.RE02.label.Social_and_environmental_context: Sociale en omgevingscontext
-      field.RE03.label.Mental_health_and_sleep_quality: Mentale gezondheid en slaapkwaliteit
+      field.RE03.label.Mental_health: Mentale gezondheid
+      field.RE03B.label.Sleep_quality: Slaapkwaliteit
       field.RE04.label.Nutrition_and_physical_activity: Voeding en lichaamsbeweging
       field.RE05.label.Alcohol_consumption_and: Alcoholgebruik en verslavingen
       field.RE06.label.Quality_and_life_expectancy: Levenskwaliteit en levensverwachting

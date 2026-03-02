@@ -14,8 +14,18 @@ import { getRevisionsFilter } from '../src/utils/fields-values-provider'
 import { v4 as uuid } from 'uuid'
 import { normalizeCode } from '../src/utils/code-utils'
 import { defaultTranslationProvider } from '../src/utils/languages'
+import { getAge, getAgeDescription } from './date'
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
+
+export interface MistralSummarizeParams {
+	domain: string
+	status?: string
+	questions: [string, string][]
+	globalStatus?: string
+	domainStatuses?: Record<string, string>
+	formTemplate?: Form
+}
 
 const currentContact = new DecryptedContact({
 	id: 'c2',
@@ -305,12 +315,33 @@ export class DecoratedForm extends LitElement {
 			{
 				language: () => this.language ?? 'fr',
 				delay: () => (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
-				summarize: () => (domain: string, status: string, questions: [string, string][]) =>
-					new Promise((resolve) => {
+				ageText: () => getAgeDescription,
+				age: () => getAge,
+				summarize: () => (domainOrParams: string | Partial<MistralSummarizeParams>, questionsArg?: [string, string][]) => {
+					const params: MistralSummarizeParams =
+						typeof domainOrParams === 'string'
+							? {
+									domain: 'summary',
+									questions: (questionsArg ?? []).filter(([, r]) => !!r?.length),
+									formTemplate: this.form,
+							  }
+							: {
+									domain: domainOrParams.domain!,
+									status: domainOrParams.status ?? 'unknown',
+									questions: (domainOrParams.questions ?? []).filter(([, r]) => !!r?.length),
+									globalStatus: domainOrParams.globalStatus,
+									domainStatuses: domainOrParams.domainStatuses,
+									formTemplate: domainOrParams.formTemplate ?? this.form,
+							  }
+
+					return new Promise((resolve) => {
 						setTimeout(() => {
-							resolve(`${domain} \n ${questions.map(([question, answer]) => `${question}: ${answer}`).join('\n')}`)
+							const result = `${params.domain} \n ${(params.questions ?? []).map(([question, answer]) => `${question}: ${answer}`).join('\n') ?? 'Generic answer'}`
+							console.log('Summarization result:', result)
+							resolve(result)
 						}, 1000)
-					}),
+					})
+				},
 				translate: () => async (language: string, text: string) => this.form.translations ? defaultTranslationProvider(this.form.translations)(language, text) : text,
 			},
 		)

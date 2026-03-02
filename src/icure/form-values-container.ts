@@ -167,21 +167,18 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 
 	/* init can be called several times on the same instance but the initialisation will only be done once */
 	async init(changedKeys: string[] | null = null, pendingComputationIteration?: Promise<[string | undefined, FieldMetadata, string, FieldValue | undefined][]>): Promise<BridgedFormValuesContainer> {
-		if (this.contactFormValuesContainer.mustBeInitialised()) {
-			await this.computeInitialValues()
-		}
 		let changedKeysByInit: string[] = []
 		if (pendingComputationIteration) {
 			const changes = await pendingComputationIteration
 
 			if (changes.length > 0) {
 				this.quietlyApplyChangesOnContactFormValueContainer(changes)
-				changedKeysByInit = await this.computeDependentValues([...(changedKeys ?? []), ...changes.map(([, metadata]) => metadata.label)])
+				changedKeysByInit = await this.computeDependentValues([...(changedKeys ?? []), ...changes.map(([, metadata]) => metadata.label)], this.contactFormValuesContainer.mustBeInitialised())
 			} else {
-				changedKeysByInit = await this.computeDependentValues(changedKeys)
+				changedKeysByInit = await this.computeDependentValues(changedKeys, this.contactFormValuesContainer.mustBeInitialised())
 			}
 		} else {
-			changedKeysByInit = await this.computeDependentValues(changedKeys)
+			changedKeysByInit = await this.computeDependentValues(changedKeys, this.contactFormValuesContainer.mustBeInitialised())
 		}
 
 		//After all the silent updates, we need a last one that causes a new BridgedFormValuesContainer to be created and broadcasted to the listeners, so that they get the final values with all the dependencies computed
@@ -326,90 +323,61 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	}
 
 	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
-	private async computeInitialValues() {
-		if (this.contactFormValuesContainer.rootForm.formTemplateId) {
-			await Promise.all(
-				this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map(async ({ metadata, revisionsFilter, formula }) => {
-					try {
-						const currentValue = this.getValues(revisionsFilter)
-						if (!currentValue || !Object.keys(currentValue).length) {
-							const computedValue = (await this.compute(formula)).value
-							const newValue = computedValue ? this.convertRawValue(computedValue) : undefined
-							if (newValue !== undefined) {
-								const lng = this.language ?? 'en'
-								if (newValue && !newValue.content[lng] && newValue.content['*']) {
-									newValue.content[lng] = newValue.content['*']
-								}
-								if (newValue) {
-									delete newValue.content['*']
-								}
-								setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, lng, newValue, undefined, metadata, (fvc: ContactFormValuesContainer) => {
-									const currentContact = this.contactFormValuesContainer.currentContact
-									this.contactFormValuesContainer = fvc
-									if (this.contact === currentContact) {
-										this.contact = fvc.currentContact
-									}
-								})
-							}
-						}
-					} catch (e) {
-						console.log(`Error while computing formula : ${formula}`, e)
-					}
-				}),
-			)
-		}
-	}
-
-	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
-	private async computeDependentValues(changedKeys: string[] | null) {
+	private async computeDependentValues(changedKeys: string[] | null, computeInitialValues: boolean): Promise<string[]> {
 		const iterate = async (changedKeys: string[] | null, iterationCount: number): Promise<[string, FieldMetadata, string, FieldValue | undefined][]> => {
 			if (this.contactFormValuesContainer.rootForm.formTemplateId) {
 				console.log(`% ${iterationCount}, keys: ${changedKeys ? changedKeys.join(', ') : 'all'}`)
 				return await Promise.all(
-					this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map(async ({ metadata, revisionsFilter, formula }) => {
-						try {
-							if (!changedKeys || !this.dependenciesCache[formula] || this.dependenciesCache[formula].some((d) => changedKeys.includes(d))) {
-								const currentValue = this.getValues(revisionsFilter)
-								try {
-									const computationResult = await this.compute(formula)
-									this.dependenciesCache[formula] = [...(this.dependenciesCache[formula] ?? []), ...computationResult.dependencies].filter((d, idx, array) => array.indexOf(d) === idx)
-									const newValue = computationResult.value ? this.convertRawValue(computationResult.value) : undefined
+					this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId)
+						.concat(computeInitialValues ? this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId) : [])
+						.map(async ({ metadata, revisionsFilter, formula }) => {
+							try {
+								if (!changedKeys || !this.dependenciesCache[formula] || this.dependenciesCache[formula].some((d) => changedKeys.includes(d))) {
+									const currentValue = this.getValues(revisionsFilter)
+									try {
+										const computationResult = await this.compute(formula)
+										this.dependenciesCache[formula] = [...(this.dependenciesCache[formula] ?? []), ...computationResult.dependencies].filter((d, idx, array) => array.indexOf(d) === idx)
+										const newValue = computationResult.value ? this.convertRawValue(computationResult.value) : undefined
 
-									if (newValue !== undefined || (currentValue != undefined && Object.keys(currentValue).length > 0 && currentValue[Object.keys(currentValue)[0]][0].value)) {
-										const lng = this.language ?? 'en'
-										if (newValue && !newValue.content[lng] && newValue.content['*']) {
-											newValue.content[lng] = newValue.content['*']
+										if (newValue !== undefined || (currentValue != undefined && Object.keys(currentValue).length > 0 && currentValue[Object.keys(currentValue)[0]][0].value)) {
+											const lng = this.language ?? 'en'
+											if (newValue && !newValue.content[lng] && newValue.content['*']) {
+												newValue.content[lng] = newValue.content['*']
+											}
+											if (newValue) {
+												delete newValue.content['*']
+											}
+											return [Object.keys(currentValue ?? {})[0], metadata, lng, newValue] as [string, FieldMetadata, string, FieldValue | undefined]
 										}
-										if (newValue) {
-											delete newValue.content['*']
-										}
-										return [Object.keys(currentValue ?? {})[0], metadata, lng, newValue] as [string, FieldMetadata, string, FieldValue | undefined]
+									} catch (e) {
+										console.log(`Error while computing formula : ${formula}`, e)
 									}
-								} catch (e) {
-									console.log(`Error while computing formula : ${formula}`, e)
 								}
+							} catch (e) {
+								console.log(`Error while computing formula : ${formula}`, e)
 							}
-						} catch (e) {
-							console.log(`Error while computing formula : ${formula}`, e)
-						}
-						return null
-					}),
-				).then((results) => results.filter((r) => !!r))
+							return null
+						}),
+				).then((results) => {
+					return results.filter((r) => !!r)
+				})
 			} else {
 				return []
 			}
 		}
 
 		let latestKeys = changedKeys
-		let iterationCount = 0
+		const iterationCount = 0
 		const allChangedKeys: string[] = []
 		while (true) {
 			if (latestKeys != null && latestKeys.length === 0) {
 				this.dependentValuesComputationIteration = undefined
 				break
 			}
-			const changes = await (this.dependentValuesComputationIteration = iterate(latestKeys, iterationCount++))
-			latestKeys = this.quietlyApplyChangesOnContactFormValueContainer(changes)
+			const changesPromise = iterate(latestKeys, iterationCount)
+			this.dependentValuesComputationIteration = changesPromise
+			const changesResult = await changesPromise
+			latestKeys = this.quietlyApplyChangesOnContactFormValueContainer(changesResult)
 			allChangedKeys.push(...latestKeys)
 		}
 

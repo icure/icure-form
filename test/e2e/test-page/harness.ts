@@ -189,7 +189,7 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 			delay: () => (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
 			summarize: () => (_domain: string, _status: string, questions: [string, string][]) =>
 				new Promise((resolve) => {
-					setTimeout(() => resolve(`${_domain}\n${questions.map(([q, a]) => `${q}: ${a}`).join('\n')}`), 100)
+					setTimeout(() => resolve(`${_domain}\n${(questions ?? []).map(([q, a]) => `${q}: ${a}`).join('\n')}`), 100)
 				}),
 			translate: () => async (lang: string, text: string) => form.translations ? defaultTranslationProvider(form.translations)(lang, text) : text,
 		},

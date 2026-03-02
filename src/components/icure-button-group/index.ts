@@ -82,7 +82,8 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 									Object.entries(this.displayedLabels ?? {})
 										.filter(
 											//If we have less than 2 options, we don't need to display the label except if it is different from the first option
-											([, l]) => (this.displayedOptions?.length ?? 0) > 1 || (this.displayedOptions?.length && l !== this.displayedOptions[0].label[this.language()]),
+											([, l]) =>
+												(this.displayedOptions?.length ?? 0) > 1 || (this.displayedOptions?.length && l !== (this.displayedOptions[0].label?.[this.language()] ?? this.displayedOptions[0].id)),
 										)
 										.reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
 									this.language(),

@@ -511,7 +511,7 @@ sections:
         shortLabel: field.GI02.label.Height_cm_2
         span: 24
         type: number-field
-      - field: GI03
+      - field: GI03-bis
         shortLabel: field.GI03.label.BMI_kg_m2_2
         span: 24
         type: number-field

@@ -8,6 +8,13 @@ import { parsePrimitive } from '../utils/primitive'
 import { anyDateToDate, dateToFuzzyDate } from '../utils/dates'
 import { normalizeCodes } from '../utils/code-utils'
 
+interface ComputedValueChange {
+	serviceId: string | undefined
+	metadata: FieldMetadata
+	language: string
+	value: FieldValue | undefined
+}
+
 let _ordinal = 0
 
 function notify<Value, Metadata>(
@@ -64,7 +71,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	private contactFormValuesContainer: ContactFormValuesContainer
 	private _id = ''
 	private readonly mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer, changedKeys: string[] | null) => void
-	private dependentValuesComputationIteration?: Promise<[string | undefined, FieldMetadata, string, FieldValue | undefined][]> = undefined
+	private dependentValuesComputationIteration?: Promise<ComputedValueChange[]> = undefined
 
 	toString(): string {
 		return `Bridged(${this.contactFormValuesContainer.rootForm.formTemplateId}[${this.contactFormValuesContainer.rootForm.id}]) - ${this._id}`
@@ -154,34 +161,42 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 				this.dependenciesCache,
 			)
 
+			console.log(`- init started ${newBridgedFormValueContainer._id} with changed keys: ${changedKeys ? changedKeys.join(', ') : 'all'}`)
 			const initPromise = newBridgedFormValueContainer.init(changedKeys, this.dependentValuesComputationIteration)
 			this.changeListeners.forEach((l) => notify(l, newBridgedFormValueContainer, changedKeys))
 
-			initPromise.catch((e) => {
-				console.log('Error while initializing new BridgedFormValuesContainer', e)
-			})
+			initPromise
+				.catch((e) => {
+					console.log('Error while initializing new BridgedFormValuesContainer', e)
+				})
+				.finally(() => {
+					console.log(`- init finished ${newBridgedFormValueContainer._id}`)
+				})
 		}
 		this.contactFormValuesContainer.registerChangeListener(this.mutateAndNotify)
 		this.contact = contact ?? contactFormValuesContainer.currentContact
 	}
 
 	/* init can be called several times on the same instance but the initialisation will only be done once */
-	async init(changedKeys: string[] | null = null, pendingComputationIteration?: Promise<[string | undefined, FieldMetadata, string, FieldValue | undefined][]>): Promise<BridgedFormValuesContainer> {
+	async init(changedKeys: string[] | null = null, pendingComputationIteration?: Promise<ComputedValueChange[]>): Promise<BridgedFormValuesContainer> {
 		let changedKeysByInit: string[] = []
 		if (pendingComputationIteration) {
 			const changes = await pendingComputationIteration
 
 			if (changes.length > 0) {
 				this.quietlyApplyChangesOnContactFormValueContainer(changes)
-				changedKeysByInit = await this.computeDependentValues([...(changedKeys ?? []), ...changes.map(([, metadata]) => metadata.label)], this.contactFormValuesContainer.mustBeInitialised())
+				changedKeysByInit = await this.computeDependentValues([...(changedKeys ?? []), ...changes.map(({ metadata }) => metadata.label)], this.contactFormValuesContainer.mustBeInitialised())
 			} else {
 				changedKeysByInit = await this.computeDependentValues(changedKeys, this.contactFormValuesContainer.mustBeInitialised())
 			}
 		} else {
+			console.log('Start compute')
 			changedKeysByInit = await this.computeDependentValues(changedKeys, this.contactFormValuesContainer.mustBeInitialised())
+			console.log('Finish compute')
 		}
 
 		//After all the silent updates, we need a last one that causes a new BridgedFormValuesContainer to be created and broadcasted to the listeners, so that they get the final values with all the dependencies computed
+		console.log('Launch refresh')
 		this.contactFormValuesContainer.changeListeners.forEach((l) => notify(l, this.contactFormValuesContainer, changedKeysByInit, changedKeysByInit.length > 0))
 
 		return this
@@ -324,23 +339,21 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 
 	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
 	private async computeDependentValues(changedKeys: string[] | null, computeInitialValues: boolean): Promise<string[]> {
-		const initialValues = (computeInitialValues ? this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId) : [])
-			.filter(({ revisionsFilter }) => {
+		const initialValues = (computeInitialValues ? this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId) : []).filter(
+			({ revisionsFilter }) => {
 				const currentValue = this.getValues(revisionsFilter)
 				return !currentValue || !Object.keys(currentValue).length
-			})
-			.map((provider) => ({ ...provider, initial: true }))
-		const dependentValues = this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map((provider) => ({
-			...provider,
-			initial: false,
-		}))
+			},
+		)
 
-		const iterate = async (changedKeys: string[] | null, iterationCount: number): Promise<[string, FieldMetadata, string, FieldValue | undefined][]> => {
+		const dependentValues = this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId)
+
+		const iterate = async (changedKeys: string[] | null, iterationCount: number): Promise<ComputedValueChange[]> => {
 			if (this.contactFormValuesContainer.rootForm.formTemplateId) {
 				console.log(`% ${iterationCount}, keys: ${changedKeys ? changedKeys.join(', ') : 'all'}`)
 
 				return await Promise.all(
-					dependentValues.concat(initialValues).map(async ({ metadata, revisionsFilter, formula, initial }) => {
+					dependentValues.concat(initialValues).map(async ({ metadata, revisionsFilter, formula }) => {
 						try {
 							if (!changedKeys || !this.dependenciesCache[formula] || this.dependenciesCache[formula].some((d) => changedKeys.includes(d))) {
 								const currentValue = this.getValues(revisionsFilter)
@@ -357,7 +370,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 										if (newValue) {
 											delete newValue.content['*']
 										}
-										return [Object.keys(currentValue ?? {})[0], metadata, lng, newValue] as [string, FieldMetadata, string, FieldValue | undefined]
+										return { serviceId: Object.keys(currentValue ?? {})[0], metadata, language: lng, value: newValue } as ComputedValueChange
 									}
 								} catch (e) {
 									console.log(`Error while computing formula : ${formula}`, e)
@@ -394,7 +407,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return allChangedKeys
 	}
 
-	private quietlyApplyChangesOnContactFormValueContainer(changes: [string | undefined, FieldMetadata, string, FieldValue | undefined][]): string[] {
+	private quietlyApplyChangesOnContactFormValueContainer(changes: ComputedValueChange[]): string[] {
 		const allChangedKeys: string[] = []
 		const interceptor = (fvc: ContactFormValuesContainer, changedKeys: string[] | null) => {
 			const currentContact = this.contactFormValuesContainer.currentContact
@@ -405,11 +418,11 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			allChangedKeys.push(...(changedKeys ?? []))
 		}
 
-		changes.forEach(([id, metadata, language, newValue]) => {
+		changes.forEach(({ serviceId, metadata, language, value }) => {
 			try {
-				setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, language, newValue ?? undefined, id, metadata, interceptor)
+				setValueOnContactFormValuesContainer(this.contactFormValuesContainer, metadata.label, language, value ?? undefined, serviceId, metadata, interceptor)
 			} catch (e) {
-				console.log(`Error while applying dependent value change for ${metadata.label} (${id})`, e)
+				console.log(`Error while applying dependent value change for ${metadata.label} (${serviceId})`, e)
 			}
 		})
 

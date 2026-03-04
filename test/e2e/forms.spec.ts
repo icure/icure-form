@@ -269,3 +269,109 @@ test.describe('Form filling', () => {
 		})
 	}
 })
+
+// ============================================================
+// Part D: Dynamic hidden fields in preventi form
+// ============================================================
+test.describe('Dynamic hidden fields', () => {
+	test('reveals allergy follow-up fields when NH17 checkboxes are selected in preventi', async ({ page }) => {
+		const content = readSample('preventi.yaml')
+
+		await page.goto('/')
+		await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
+
+		await page.evaluate(async (yamlContent: string) => {
+			return await (window as any).initForm({ yaml: yamlContent, language: 'en' })
+		}, content)
+
+		await waitForFormRender(page)
+
+		// Helper: check if a field with a given label exists in the rendered shadow DOM
+		const fieldExists = async (fieldLabel: string): Promise<boolean> => {
+			return await page.evaluate((label: string) => {
+				const el = document.querySelector('icure-form')
+				if (!el?.shadowRoot) return false
+				// Search for any icure-form field component whose .label property matches
+				const allFields = el.shadowRoot.querySelectorAll('.icure-form-field')
+				for (const field of allFields) {
+					if ((field as any).label === label) return true
+				}
+				return false
+			}, fieldLabel)
+		}
+
+		// Verify follow-up fields NH19 (milk) and NH25 (eggs) are initially hidden
+		expect(await fieldExists('NH19')).toBe(false)
+		expect(await fieldExists('NH25')).toBe(false)
+
+		// Find the NH17 checkbox field and click the "Milk (lactose)" option (option 1)
+		await page.evaluate(() => {
+			const el = document.querySelector('icure-form')
+			if (!el?.shadowRoot) throw new Error('No icure-form shadow root')
+			const checkboxFields = el.shadowRoot.querySelectorAll('icure-form-checkbox')
+			for (const cb of checkboxFields) {
+				if ((cb as any).label === 'NH17') {
+					const buttonGroup = cb.shadowRoot?.querySelector('icure-button-group')
+					const input = buttonGroup?.shadowRoot?.querySelector('input[type="checkbox"]') as HTMLInputElement
+					if (input) {
+						input.click()
+						return
+					}
+				}
+			}
+			throw new Error('NH17 checkbox field not found')
+		})
+
+		// Wait for NH19 (milk follow-up) to appear after value change triggers re-render
+		await page.waitForFunction(
+			(label: string) => {
+				const el = document.querySelector('icure-form')
+				if (!el?.shadowRoot) return false
+				const allFields = el.shadowRoot.querySelectorAll('.icure-form-field')
+				for (const field of allFields) {
+					if ((field as any).label === label) return true
+				}
+				return false
+			},
+			'NH19',
+			{ timeout: 5_000 },
+		)
+
+		// NH25 (eggs follow-up) should still be hidden
+		expect(await fieldExists('NH25')).toBe(false)
+
+		// Now check the "Eggs" option (option 9) in NH17
+		await page.evaluate(() => {
+			const el = document.querySelector('icure-form')
+			if (!el?.shadowRoot) throw new Error('No icure-form shadow root')
+			const checkboxFields = el.shadowRoot.querySelectorAll('icure-form-checkbox')
+			for (const cb of checkboxFields) {
+				if ((cb as any).label === 'NH17') {
+					const buttonGroup = cb.shadowRoot?.querySelector('icure-button-group')
+					const inputs = buttonGroup?.shadowRoot?.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>
+					// Option 9 (Eggs) is the 9th checkbox (0-indexed: index 8)
+					if (inputs && inputs.length > 8) {
+						inputs[8].click()
+						return
+					}
+				}
+			}
+			throw new Error('NH17 eggs checkbox not found')
+		})
+
+		// Wait for NH25 (eggs follow-up) to appear
+		await page.waitForFunction(
+			(label: string) => {
+				const el = document.querySelector('icure-form')
+				if (!el?.shadowRoot) return false
+				const allFields = el.shadowRoot.querySelectorAll('.icure-form-field')
+				for (const field of allFields) {
+					if ((field as any).label === label) return true
+				}
+				return false
+			},
+			'NH25',
+			{ timeout: 5_000 },
+		)
+	})
+})

@@ -2043,7 +2043,7 @@ sections:
       - field: NH17
         shortLabel: field.NH17.label.Which_foods_are_you_intolerant
         span: 24
-        type: radio-button
+        type: checkbox
         options:
           NH17|1|1: field.NH17.option.Milk_lactose
           NH17|2|1: field.NH17.option.Peanuts

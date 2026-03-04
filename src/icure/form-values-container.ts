@@ -324,40 +324,50 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 
 	//This method mutates the BridgedFormValuesContainer but can only be called from the constructor
 	private async computeDependentValues(changedKeys: string[] | null, computeInitialValues: boolean): Promise<string[]> {
+		const initialValues = (computeInitialValues ? this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId) : [])
+			.filter(({ revisionsFilter }) => {
+				const currentValue = this.getValues(revisionsFilter)
+				return !currentValue || !Object.keys(currentValue).length
+			})
+			.map((provider) => ({ ...provider, initial: true }))
+		const dependentValues = this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).map((provider) => ({
+			...provider,
+			initial: false,
+		}))
+
 		const iterate = async (changedKeys: string[] | null, iterationCount: number): Promise<[string, FieldMetadata, string, FieldValue | undefined][]> => {
 			if (this.contactFormValuesContainer.rootForm.formTemplateId) {
 				console.log(`% ${iterationCount}, keys: ${changedKeys ? changedKeys.join(', ') : 'all'}`)
-				return await Promise.all(
-					this.dependentValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId)
-						.concat(computeInitialValues ? this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId) : [])
-						.map(async ({ metadata, revisionsFilter, formula }) => {
-							try {
-								if (!changedKeys || !this.dependenciesCache[formula] || this.dependenciesCache[formula].some((d) => changedKeys.includes(d))) {
-									const currentValue = this.getValues(revisionsFilter)
-									try {
-										const computationResult = await this.compute(formula)
-										this.dependenciesCache[formula] = [...(this.dependenciesCache[formula] ?? []), ...computationResult.dependencies].filter((d, idx, array) => array.indexOf(d) === idx)
-										const newValue = computationResult.value ? this.convertRawValue(computationResult.value) : undefined
 
-										if (newValue !== undefined || (currentValue != undefined && Object.keys(currentValue).length > 0 && currentValue[Object.keys(currentValue)[0]][0].value)) {
-											const lng = this.language ?? 'en'
-											if (newValue && !newValue.content[lng] && newValue.content['*']) {
-												newValue.content[lng] = newValue.content['*']
-											}
-											if (newValue) {
-												delete newValue.content['*']
-											}
-											return [Object.keys(currentValue ?? {})[0], metadata, lng, newValue] as [string, FieldMetadata, string, FieldValue | undefined]
+				return await Promise.all(
+					dependentValues.concat(initialValues).map(async ({ metadata, revisionsFilter, formula, initial }) => {
+						try {
+							if (!changedKeys || !this.dependenciesCache[formula] || this.dependenciesCache[formula].some((d) => changedKeys.includes(d))) {
+								const currentValue = this.getValues(revisionsFilter)
+								try {
+									const computationResult = await this.compute(formula)
+									this.dependenciesCache[formula] = [...(this.dependenciesCache[formula] ?? []), ...computationResult.dependencies].filter((d, idx, array) => array.indexOf(d) === idx)
+									const newValue = computationResult.value ? this.convertRawValue(computationResult.value) : undefined
+
+									if (newValue !== undefined || (currentValue != undefined && Object.keys(currentValue).length > 0 && currentValue[Object.keys(currentValue)[0]][0].value)) {
+										const lng = this.language ?? 'en'
+										if (newValue && !newValue.content[lng] && newValue.content['*']) {
+											newValue.content[lng] = newValue.content['*']
 										}
-									} catch (e) {
-										console.log(`Error while computing formula : ${formula}`, e)
+										if (newValue) {
+											delete newValue.content['*']
+										}
+										return [Object.keys(currentValue ?? {})[0], metadata, lng, newValue] as [string, FieldMetadata, string, FieldValue | undefined]
 									}
+								} catch (e) {
+									console.log(`Error while computing formula : ${formula}`, e)
 								}
-							} catch (e) {
-								console.log(`Error while computing formula : ${formula}`, e)
 							}
-							return null
-						}),
+						} catch (e) {
+							console.log(`Error while computing formula : ${formula}`, e)
+						}
+						return null
+					}),
 				).then((results) => {
 					return results.filter((r) => !!r)
 				})

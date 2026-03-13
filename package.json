@@ -28,6 +28,10 @@
 			"/node_modules/",
 			"/test/e2e/"
 		],
+		"moduleNameMapper": {
+			"^lit$": "<rootDir>/test/__mocks__/lit.js",
+			"^lit/(.*)$": "<rootDir>/test/__mocks__/lit.js"
+		},
 		"moduleFileExtensions": [
 			"ts",
 			"tsx",

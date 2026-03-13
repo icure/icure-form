@@ -1166,7 +1166,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		// Services in current contact: mark with endOfLife if in history, remove otherwise
 		const updatedServices = (this.currentContact.services ?? [])
 			.filter((s) => !(s.id && childServiceIds.has(s.id) && !childServiceIdsInHistory.has(s.id)))
-			.map((s) => (s.id && childServiceIdsInHistory.has(s.id) ? new Service({ id: s.id, created: s.created, modified: now, endOfLife: now }) : s))
+			.map((s) => (s.id && childServiceIdsInHistory.has(s.id) ? new DecryptedService({ id: s.id, created: s.created, modified: now, endOfLife: now }) : s))
 
 		// Services only in history (not in current contact): add with endOfLife
 		for (const serviceId of childServiceIdsInHistory) {
@@ -1174,7 +1174,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 				for (const ctc of this.contactsHistory) {
 					const historyService = ctc.services?.find((s) => s.id === serviceId)
 					if (historyService) {
-						updatedServices.push(new Service({ id: historyService.id, created: historyService.created, modified: now, endOfLife: now }))
+						updatedServices.push(new DecryptedService({ id: historyService.id, created: historyService.created, modified: now, endOfLife: now }))
 						break
 					}
 				}
@@ -1184,11 +1184,11 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		// Remove subContact entries for all removed forms
 		const updatedSubContacts = (this.currentContact.subContacts ?? []).filter((sc) => !sc.formId || !removedFormIds.has(sc.formId))
 
-		const updatedContact = {
+		const updatedContact = new DecryptedContact({
 			...this.currentContact,
 			services: updatedServices,
 			subContacts: updatedSubContacts,
-		}
+		})
 
 		// Recycle all removed forms
 		for (const formId of removedFormIds) {

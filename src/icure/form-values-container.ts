@@ -626,10 +626,18 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 	 */
 	coordinatedContact(): Contact {
 		const childrenContacts = this.children.map((c) => c.coordinatedContact())
-		const thisKeptServiceIds = (this.currentContact.subContacts ?? []).filter((sc) => sc.formId === this.rootForm.id).flatMap((sc) => (sc.services ?? []).map((s) => s.serviceId))
+		const thisKeptServiceIds = new Set((this.currentContact.subContacts ?? []).filter((sc) => sc.formId === this.rootForm.id).flatMap((sc) => (sc.services ?? []).map((s) => s.serviceId)))
+		const thisFormServices = (this.currentContact.services ?? []).filter((s) => thisKeptServiceIds.has(s.id))
+		// Include endOfLife services not linked to any subcontact (from deleted subforms)
+		const allSubContactServiceIds = new Set((this.currentContact.subContacts ?? []).flatMap((sc) => (sc.services ?? []).map((s) => s.serviceId)))
+		const endOfLifeServices = (this.currentContact.services ?? []).filter((s) => s.endOfLife && s.id && !allSubContactServiceIds.has(s.id))
+
 		return {
 			...this.currentContact,
-			services: childrenContacts.reduce((acc: Service[], c: Contact) => acc.concat(c.services ?? []), []).concat((this.currentContact.services ?? []).filter((s) => thisKeptServiceIds.includes(s.id))),
+			services: childrenContacts
+				.reduce((acc: Service[], c: Contact) => acc.concat(c.services ?? []), [])
+				.concat(thisFormServices)
+				.concat(endOfLifeServices),
 			subContacts: childrenContacts
 				.reduce((acc: Service[], c: Contact) => acc.concat(c.subContacts ?? []), [])
 				.concat((this.currentContact.subContacts ?? []).filter((s) => s.formId === this.rootForm.id)),
@@ -672,10 +680,17 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		this.changeListeners = changeListeners
 		this._initialised = initialised
 
+		// Collect IDs of services that have been marked with endOfLife in the most recent contact
+		const endOfLifeServiceIds = new Set<string>()
+		const mostRecentContact = this.currentContact
+		for (const s of mostRecentContact.services ?? []) {
+			if (s.id && s.endOfLife) endOfLifeServiceIds.add(s.id)
+		}
+
 		this.indexedServices = [this.currentContact].concat(this.contactsHistory).reduce((acc, ctc) => {
 			return (
 				ctc.services
-					?.filter((s) => ctc.subContacts?.some((sc) => sc.formId === this.rootForm.id && sc.services?.some((sss) => sss.serviceId === s.id)))
+					?.filter((s) => !endOfLifeServiceIds.has(s.id!) && ctc.subContacts?.some((sc) => sc.formId === this.rootForm.id && sc.services?.some((sss) => sss.serviceId === s.id)))
 					?.reduce(
 						(acc, s) =>
 							s.id
@@ -1090,10 +1105,89 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		return service ?? undefined
 	}
 
+	private static collectFormIds(container: ContactFormValuesContainer): Set<string> {
+		const ids = new Set<string>()
+		if (container.rootForm.id) ids.add(container.rootForm.id)
+		for (const child of container.children) {
+			for (const id of ContactFormValuesContainer.collectFormIds(child)) {
+				ids.add(id)
+			}
+		}
+		return ids
+	}
+
 	async removeChild(container: ContactFormValuesContainer): Promise<void> {
+		// Collect all form IDs in the subtree being removed (child + its descendants)
+		const removedFormIds = ContactFormValuesContainer.collectFormIds(container)
+
+		// Collect service IDs linked to any removed form across current contact and history
+		const allContacts = [this.currentContact, ...this.contactsHistory]
+		const childServiceIds = new Set<string>()
+		for (const ctc of allContacts) {
+			for (const sc of ctc.subContacts ?? []) {
+				if (sc.formId && removedFormIds.has(sc.formId)) {
+					for (const sRef of sc.services ?? []) {
+						if (sRef.serviceId) childServiceIds.add(sRef.serviceId)
+					}
+				}
+			}
+		}
+
+		// Build the updated current contact:
+		// - Services that exist in history must be marked with endOfLife (not removed)
+		// - Services that only exist in the current contact can be simply removed
+		// - Remove subContact entries for all removed forms
+		const now = Date.now()
+
+		// Determine which child services exist in history
+		const childServiceIdsInHistory = new Set<string>()
+		for (const ctc of this.contactsHistory) {
+			for (const sc of ctc.subContacts ?? []) {
+				if (sc.formId && removedFormIds.has(sc.formId)) {
+					for (const sRef of sc.services ?? []) {
+						if (sRef.serviceId && childServiceIds.has(sRef.serviceId)) childServiceIdsInHistory.add(sRef.serviceId)
+					}
+				}
+			}
+		}
+
+		const existingServiceIds = new Set((this.currentContact.services ?? []).map((s) => s.id))
+
+		// Services in current contact: mark with endOfLife if in history, remove otherwise
+		const updatedServices = (this.currentContact.services ?? [])
+			.filter((s) => !(s.id && childServiceIds.has(s.id) && !childServiceIdsInHistory.has(s.id)))
+			.map((s) => (s.id && childServiceIdsInHistory.has(s.id) ? new Service({ id: s.id, created: s.created, modified: now, endOfLife: now }) : s))
+
+		// Services only in history (not in current contact): add with endOfLife
+		for (const serviceId of childServiceIdsInHistory) {
+			if (!existingServiceIds.has(serviceId)) {
+				for (const ctc of this.contactsHistory) {
+					const historyService = ctc.services?.find((s) => s.id === serviceId)
+					if (historyService) {
+						updatedServices.push(new Service({ id: historyService.id, created: historyService.created, modified: now, endOfLife: now }))
+						break
+					}
+				}
+			}
+		}
+
+		// Remove subContact entries for all removed forms
+		const updatedSubContacts = (this.currentContact.subContacts ?? []).filter((sc) => !sc.formId || !removedFormIds.has(sc.formId))
+
+		const updatedContact = {
+			...this.currentContact,
+			services: updatedServices,
+			subContacts: updatedSubContacts,
+		}
+
+		// Recycle all removed forms
+		for (const formId of removedFormIds) {
+			await this.formRecycler(formId)
+		}
+
 		const newContactFormValuesContainer = new ContactFormValuesContainer(
 			this.rootForm,
-			this.currentContact,
+			updatedContact,
 			this.contactsHistory,
 			this.serviceFactory,
 			this.children.filter((c) => c.rootForm.id !== container.rootForm.id),

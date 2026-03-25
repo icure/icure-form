@@ -2,7 +2,7 @@ import { html, nothing, TemplateResult } from 'lit'
 import { Renderer, RendererProps } from '../index'
 import { fieldValuesProvider, getValidationErrorProvider, handleMetadataChangedProvider, handleValueChangedProvider } from '../../../../utils/fields-values-provider'
 import { FieldMetadata, FieldValue, Form, Field, Group, Subform, SortOptions } from '../../../model'
-import { FormValuesContainer, Suggestion } from '../../../../generic'
+import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 
 import { defaultTranslationProvider } from '../../../../utils/languages'
 import { getLabels } from '../../../common/utils'
@@ -16,6 +16,7 @@ export const render: Renderer = async (
 	props: RendererProps,
 	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
 	translationProvider?: (language: string, text: string) => string,
+	revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[],
 	ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> = async () => [],
 	optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>,
 	actionListener: (event: string, payload: unknown) => void = () => undefined,
@@ -103,7 +104,7 @@ export const render: Renderer = async (
 					templates.push(html`
 						<div class="subform__child">
 							<h3 class="subform__child__title">${localisedTitle}</h3>
-							${await render(childForm, props, child, translationProvider, ownersProvider, optionsProvider, actionListener, languages, readonly, displayMetadata)}
+							${await render(childForm, props, child, translationProvider, revisionsFilter, ownersProvider, optionsProvider, actionListener, languages, readonly, displayMetadata)}
 							${readonly ? nothing : html` <button class="subform__removeBtn" @click="${() => formsValueContainer?.removeChild?.(child)}">${localisedRemove}</button>`}
 						</div>
 					`)
@@ -134,7 +135,7 @@ export const render: Renderer = async (
 			.linkColorProvider=${fg.options?.linkColorProvider}
 			.codeContentProvider=${fg.options?.codeContentProvider}
 			.defaultValueProvider=${formsValueContainer?.getDefaultValueProvider(fg.field)}
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -158,7 +159,7 @@ export const render: Renderer = async (
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -182,7 +183,7 @@ export const render: Renderer = async (
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -203,7 +204,7 @@ export const render: Renderer = async (
 			.defaultLanguage="${props.language}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -223,7 +224,7 @@ export const render: Renderer = async (
 			.defaultLanguage="${props.language}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -243,7 +244,7 @@ export const render: Renderer = async (
 			.defaultLanguage="${props.language}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -263,7 +264,7 @@ export const render: Renderer = async (
 			.defaultLanguage="${props.language}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -283,7 +284,7 @@ export const render: Renderer = async (
 			.defaultLanguage="${props.language}"
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -309,7 +310,7 @@ export const render: Renderer = async (
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -335,7 +336,7 @@ export const render: Renderer = async (
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider=${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
@@ -362,7 +363,7 @@ export const render: Renderer = async (
 			.ownersProvider="${ownersProvider}"
 			.translationProvider="${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}"
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
 			.metadataProvider="${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}"
 			.handleValueChanged="${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}"
 			.handleMetadataChanged="${handleMetadataChangedProvider(formsValueContainer)}"

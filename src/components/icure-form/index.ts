@@ -4,8 +4,8 @@ import { property, state } from 'lit/decorators.js'
 
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form/form'
-import { FieldMetadata, FieldValue, Form } from '../model'
-import { FormValuesContainer, Suggestion } from '../../generic'
+import { Field, FieldMetadata, FieldValue, Form } from '../model'
+import { FormValuesContainer, Suggestion, Version } from '../../generic'
 
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
@@ -26,6 +26,7 @@ export class IcureForm extends LitElement {
 	@property() languages?: { [iso: string]: string } = languages
 	@property() formValuesContainer?: FormValuesContainer<FieldValue, FieldMetadata> = undefined
 	@property() translationProvider?: (language: string, text: string) => string
+	@property() revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[]
 	@property() ownersProvider?: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>
 	@property() optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>
 	@property() actionListener?: (event: string, payload: unknown) => void = () => undefined
@@ -68,6 +69,7 @@ export class IcureForm extends LitElement {
 				{ labelPosition: this.labelPosition, language },
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
+				this.revisionsFilter,
 				this.ownersProvider,
 				this.optionsProvider,
 				this.actionListener,
@@ -97,8 +99,7 @@ export class IcureForm extends LitElement {
 			? html`<div class="tab-container">
 					<div class="tab-bar">
 						<ul>
-							${(this.form?.sections ?? []).map(
-								(s, idx) => {
+							${(this.form?.sections ?? []).map((s, idx) => {
 								const tp = this.translationProvider ?? (this.form?.translations ? defaultTranslationProvider(this.form.translations) : undefined)
 								const sectionTitle = tp && this.language ? tp(this.language, s.section) : s.section
 								return html`<li
@@ -110,8 +111,7 @@ export class IcureForm extends LitElement {
 								>
 									${sectionTitle}
 								</li>`
-							},
-							)}
+							})}
 						</ul>
 					</div>
 					<div class="tab-content">${render}</div>

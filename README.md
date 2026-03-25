@@ -31,10 +31,28 @@ and add the following tag:
 	.formValuesContainer="${this.formValuesContainer}"
 	.optionsProvider="${this.optionsProvider}"
 	.translationProvider="${this.translationProvider}"
+	.revisionsFilter="${this.revisionsFilter}"
 	.ownersProvider="${this.ownersProvider}"
 	.actionListener="${this.actionListener}"
 ></icure-form>
 ```
+
+The revisions filter can for example filter on label and tags:
+
+```typescript
+const revistionsFilter = (field: Field, id: string, history: Version<FieldMetadata>[]):string[] => history
+		.filter((fmd) => (field.tags?.length ? field.tags.every((t) => fmd?.value?.tags?.some((tt) => tt.id === t)) : fmd?.value?.label === field.label()))
+		.map((fmd) => fmd.revision)
+		.filter((r) => r !== undefined) as string[] //null is used as a new revision indicator
+```
+
+or just on label
+
+```typescript
+const revistionsFilter = (field: Field, id: string, history: Version<FieldMetadata>[]):string[] => 
+	history.filter((fmd) => fmd?.value?.label === field.label()).map((fmd) => fmd.revision).filter((r) => r !== undefined) as string[] //null is used as a new revision indicator
+```
+
 
 ## Data model
 
@@ -332,6 +350,7 @@ The icure-form component accepts the following properties:
 - optionsProvider: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]> - an optional provider that provides options for some fields of the form (like dropdown fields)
 - translationProvider: (language: string, text: string) => string - an optional provider that provides translations for the form
 - ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> - an optional provider that provides owner suggestions
+- revisionsFilter: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[] - an optional callback to customize which revisions of a field value are visible. By default, revisions are filtered by matching field tags or label (see `getRevisionsFilter` in `src/utils/fields-values-provider.ts`). When provided, this callback replaces the default logic, receiving the field definition, the value id, and its full version history, and must return the list of revision strings to display.
 - actionListener: (event: string, payload: unknown) => void - an optional listener for action/button events
 
 ### Themes

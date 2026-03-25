@@ -12,9 +12,13 @@ export function getRevisionsFilter(field: Field): (id: string, history: Version<
 }
 
 export const fieldValuesProvider =
-	(formValuesContainer: FormValuesContainer<FieldValue, FieldMetadata>, field: Field): (() => VersionedData<FieldValue>) =>
+	(
+		formValuesContainer: FormValuesContainer<FieldValue, FieldMetadata>,
+		field: Field,
+		revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[],
+	): (() => VersionedData<FieldValue>) =>
 	() =>
-		formValuesContainer.getValues(getRevisionsFilter(field))
+		formValuesContainer.getValues(revisionsFilter ? (id, history: Version<FieldMetadata>[]) => revisionsFilter(field, id, history) : getRevisionsFilter(field))
 
 export function makeMetadata(field: Field, owner?: string, index?: number) {
 	return {

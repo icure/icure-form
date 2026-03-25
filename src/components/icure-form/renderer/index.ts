@@ -1,6 +1,6 @@
 import { TemplateResult } from 'lit'
-import { FormValuesContainer, Suggestion } from '../../../generic'
-import { FieldMetadata, FieldValue, Form } from '../../model'
+import { FormValuesContainer, Suggestion, Version } from '../../../generic'
+import { Field, FieldMetadata, FieldValue, Form } from '../../model'
 
 export interface RendererProps {
 	language?: string
@@ -13,6 +13,7 @@ export type Renderer = (
 	props: RendererProps,
 	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
 	translationProvider?: (language: string, text: string) => string,
+	revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[],
 	ownersProvider?: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>,
 	optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>,
 	actionListener?: (event: string, payload: unknown) => void,

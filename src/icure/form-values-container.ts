@@ -53,10 +53,10 @@ function primitiveTypeToString(pt: PrimitiveType): string {
  * - It broadcasts changes from the wrapped ContactFormValuesContainer to its listeners
  * - It provides a way to compute formulas in a sandboxed environment
  * - It bridges the setValues and setMetadata methods with the wrapped ContactFormValuesContainer by
- * 		- converting the FieldValue to a Service
+ * 		- converting the FieldValue to a DecryptedService
  * 		- converting the FieldMetadata to a ServiceMetadata
  * - It bridges the getValues and getMetadata methods with the wrapped ContactFormValuesContainer by
- * 		- converting the Service to a FieldValue
+ * 		- converting the DecryptedService to a FieldValue
  * 		- converting the ServiceMetadata to a FieldMetadata
  * - It lazily creates bridges the children by
  *    - lazily creating BridgedFormValuesContainer when the children of the wrapped ContactFormValuesContainer are accessed
@@ -857,7 +857,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	setMetadata(meta: ServiceMetadata, id?: string): void {
 		const service = (id && this.getServiceInCurrentContact(id)) || this.serviceFactory(meta.label, id)
 		if (!service.id) {
-			throw new Error('Service id must be defined')
+			throw new Error('DecryptedService id must be defined')
 		}
 		if (
 			(meta.responsible && service.responsible !== meta.responsible) ||
@@ -901,7 +901,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 	): void {
 		const service = (id && this.getServicesInHistory((sid: string, history) => (sid === id ? history.map((x) => x.revision) : []))[id]?.[0]?.value) || this.serviceFactory(label, id)
 		if (!service.id) {
-			throw new Error('Service id must be defined')
+			throw new Error('DecryptedService id must be defined')
 		}
 		console.log(
 			`Setting value of service ${service.label} [${service.id}] to ${Object.entries(value?.content ?? {}).map(([k, c]) => `${k}: ${JSON.stringify(contentToPrimitiveType(k, c))}`)} and md`,

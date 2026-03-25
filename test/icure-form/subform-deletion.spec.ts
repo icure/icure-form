@@ -1,5 +1,5 @@
-import { Contact, Form as ICureForm, Service } from '@icure/api'
-import { ContactFormValuesContainer } from '../../src/icure/form-values-container'
+import { DecryptedContact, DecryptedContent, DecryptedForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
+import { ContactFormValuesContainer } from '../../src/icure'
 
 /**
  * E2E test reproducing the subForm deletion bug:
@@ -17,8 +17,8 @@ const CHILD_FORM_TEMPLATE_ID = 'child-template-id'
 const ANCHOR_ID = 'subform-anchor'
 
 let serviceOrdinal = 0
-const serviceFactory = (label: string, serviceId?: string): Service => {
-	return new Service({
+const serviceFactory = (label: string, serviceId?: string): DecryptedService => {
+	return new DecryptedService({
 		id: serviceId ?? `service-${++serviceOrdinal}`,
 		label,
 		created: Date.now(),
@@ -27,8 +27,8 @@ const serviceFactory = (label: string, serviceId?: string): Service => {
 	})
 }
 
-const formFactory = async (_parentId: string, anchorId: string, formTemplateId: string, label: string): Promise<ICureForm> => {
-	return new ICureForm({
+const formFactory = async (_parentId: string, anchorId: string, formTemplateId: string, label: string): Promise<DecryptedForm> => {
+	return new DecryptedForm({
 		id: `new-child-form-${Date.now()}`,
 		formTemplateId,
 		descr: label,
@@ -40,16 +40,16 @@ const formRecycler = async (_formId: string): Promise<void> => {
 	// no-op
 }
 
-function makeParentForm(): ICureForm {
-	return new ICureForm({
+function makeParentForm(): DecryptedForm {
+	return new DecryptedForm({
 		id: PARENT_FORM_ID,
 		formTemplateId: PARENT_FORM_TEMPLATE_ID,
 		descr: 'Parent Form',
 	})
 }
 
-function makeChildForm(): ICureForm {
-	return new ICureForm({
+function makeChildForm(): DecryptedForm {
+	return new DecryptedForm({
 		id: CHILD_FORM_ID,
 		formTemplateId: CHILD_FORM_TEMPLATE_ID,
 		descr: ANCHOR_ID,
@@ -74,22 +74,22 @@ describe('SubForm deletion — endOfLife handling', () => {
 	 */
 	it('should delete the child service and subcontact subForm is removed in the same contact', async () => {
 		// -- Step 1: Build the hierarchy with parent + child, each having one service --
-		const parentService = new Service({
+		const parentService = new DecryptedService({
 			id: 'parent-service-1',
 			label: 'ParentField',
 			created: Date.now(),
 			modified: Date.now(),
-			content: { en: { stringValue: 'parent value' } },
+			content: { en: new DecryptedContent({ stringValue: 'parent value' }) },
 		})
-		const childService = new Service({
+		const childService = new DecryptedService({
 			id: 'child-service-1',
 			label: 'ChildField',
 			created: Date.now(),
 			modified: Date.now(),
-			content: { en: { stringValue: 'child value' } },
+			content: { en: new DecryptedContent({ stringValue: 'child value' }) },
 		})
 
-		const contactWithSubForm: Contact = new Contact({
+		const contactWithSubForm: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: Date.now(),
@@ -166,22 +166,22 @@ describe('SubForm deletion — endOfLife handling', () => {
 
 	it('should mark child services with endOfLife when subForm is removed in a **NEW** contact', async () => {
 		// -- Step 1: Build the hierarchy with parent + child, each having one service --
-		const parentService = new Service({
+		const parentService = new DecryptedService({
 			id: 'parent-service-1',
 			label: 'ParentField',
 			created: Date.now(),
 			modified: Date.now(),
-			content: { en: { stringValue: 'parent value' } },
+			content: { en: new DecryptedContent({ stringValue: 'parent value' }) },
 		})
-		const childService = new Service({
+		const childService = new DecryptedService({
 			id: 'child-service-1',
 			label: 'ChildField',
 			created: Date.now(),
 			modified: Date.now(),
-			content: { en: { stringValue: 'child value' } },
+			content: { en: new DecryptedContent({ stringValue: 'child value' }) },
 		})
 
-		const contactWithSubForm: Contact = new Contact({
+		const contactWithSubForm: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: Date.now(),
@@ -192,7 +192,7 @@ describe('SubForm deletion — endOfLife handling', () => {
 			],
 		})
 
-		const emptyNewContact: Contact = new Contact({
+		const emptyNewContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-new',
 			created: Date.now() + 1,
 			services: [],
@@ -261,21 +261,21 @@ describe('SubForm deletion — endOfLife handling', () => {
 		// (this is the expected state after a correct removeChild implementation)
 		const savedTimestamp = Date.now() - 10000
 
-		const parentService = new Service({
+		const parentService = new DecryptedService({
 			id: 'parent-service-1',
 			label: 'ParentField',
 			created: savedTimestamp,
 			modified: savedTimestamp,
-			content: { en: { stringValue: 'parent value' } },
+			content: { en: new DecryptedContent({ stringValue: 'parent value' }) },
 		})
-		const childServiceWithEndOfLife = new Service({
+		const childServiceWithEndOfLife = new DecryptedService({
 			id: 'child-service-1',
 			created: savedTimestamp,
 			modified: savedTimestamp,
 			endOfLife: savedTimestamp + 5000, // marked as deleted
 		})
 
-		const savedContact: Contact = new Contact({
+		const savedContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '2-def',
 			created: savedTimestamp + 5000,
@@ -284,24 +284,24 @@ describe('SubForm deletion — endOfLife handling', () => {
 		})
 
 		// History: the first version of the contact (before subForm removal)
-		const historyContact: Contact = new Contact({
+		const historyContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: savedTimestamp,
 			services: [
-				new Service({
+				new DecryptedService({
 					id: 'parent-service-1',
 					label: 'ParentField',
 					created: savedTimestamp,
 					modified: savedTimestamp,
-					content: { en: { stringValue: 'parent value' } },
+					content: { en: new DecryptedContent({ stringValue: 'parent value' }) },
 				}),
-				new Service({
+				new DecryptedService({
 					id: 'child-service-1',
 					label: 'ChildField',
 					created: savedTimestamp,
 					modified: savedTimestamp,
-					content: { en: { stringValue: 'child value' } },
+					content: { en: new DecryptedContent({ stringValue: 'child value' }) },
 				}),
 			],
 			subContacts: [
@@ -313,7 +313,7 @@ describe('SubForm deletion — endOfLife handling', () => {
 		// -- Step 5: Reconstruct the hierarchy using fromFormsHierarchy --
 		// The child form no longer exists (it was deleted), so formChildrenProvider
 		// returns nothing for the parent form.
-		const formChildrenProvider = async (_parentId: string | undefined): Promise<ICureForm[]> => {
+		const formChildrenProvider = async (_parentId: string | undefined): Promise<DecryptedForm[]> => {
 			return [] // no child forms anymore — the subForm was removed
 		}
 
@@ -346,14 +346,14 @@ describe('SubForm deletion — endOfLife handling', () => {
 		const savedTimestamp = Date.now() - 10000
 
 		// History contact with one service per form
-		const historyContact: Contact = new Contact({
+		const historyContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: savedTimestamp,
 			services: [
-				new Service({ id: 'parent-svc', label: 'ParentField', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'p' } } }),
-				new Service({ id: 'a-svc', label: 'AField', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'a' } } }),
-				new Service({ id: 'b-svc', label: 'BField', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'b' } } }),
+				new DecryptedService({ id: 'parent-svc', label: 'ParentField', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'p' }) } }),
+				new DecryptedService({ id: 'a-svc', label: 'AField', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'a' }) } }),
+				new DecryptedService({ id: 'b-svc', label: 'BField', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b' }) } }),
 			],
 			subContacts: [
 				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-svc' }] },
@@ -363,7 +363,7 @@ describe('SubForm deletion — endOfLife handling', () => {
 		})
 
 		// Empty current contact (new editing session)
-		const emptyContact: Contact = new Contact({
+		const emptyContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-new',
 			created: Date.now(),
 			services: [],
@@ -371,8 +371,8 @@ describe('SubForm deletion — endOfLife handling', () => {
 		})
 
 		// Build hierarchy: parent -> subform A -> subform B
-		const subFormB = new ICureForm({ id: SUBFORM_B_ID, formTemplateId: SUBFORM_B_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
-		const subFormA = new ICureForm({ id: SUBFORM_A_ID, formTemplateId: SUBFORM_A_TEMPLATE_ID, descr: ANCHOR_A, parent: PARENT_FORM_ID })
+		const subFormB = new DecryptedForm({ id: SUBFORM_B_ID, formTemplateId: SUBFORM_B_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
+		const subFormA = new DecryptedForm({ id: SUBFORM_A_ID, formTemplateId: SUBFORM_A_TEMPLATE_ID, descr: ANCHOR_A, parent: PARENT_FORM_ID })
 
 		const cfvcB = new ContactFormValuesContainer(subFormB, emptyContact, [historyContact], serviceFactory, [], formFactory, formRecycler, [], ANCHOR_B, true)
 		const cfvcA = new ContactFormValuesContainer(subFormA, emptyContact, [historyContact], serviceFactory, [cfvcB], formFactory, formRecycler, [], ANCHOR_A, true)
@@ -425,17 +425,17 @@ describe('SubForm deletion — endOfLife handling', () => {
 		const savedTimestamp = Date.now() - 10000
 
 		// History contact: one service per form, plus B2 has two services
-		const historyContact: Contact = new Contact({
+		const historyContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: savedTimestamp,
 			services: [
-				new Service({ id: 'parent-svc', label: 'ParentField', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'p' } } }),
-				new Service({ id: 'a-svc', label: 'AField', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'a' } } }),
-				new Service({ id: 'b1-svc', label: 'B1Field', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'b1' } } }),
-				new Service({ id: 'b2-svc-1', label: 'B2Field1', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'b2-1' } } }),
-				new Service({ id: 'b2-svc-2', label: 'B2Field2', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'b2-2' } } }),
-				new Service({ id: 'b3-svc', label: 'B3Field', created: savedTimestamp, modified: savedTimestamp, content: { en: { stringValue: 'b3' } } }),
+				new DecryptedService({ id: 'parent-svc', label: 'ParentField', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'p' }) } }),
+				new DecryptedService({ id: 'a-svc', label: 'AField', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'a' }) } }),
+				new DecryptedService({ id: 'b1-svc', label: 'B1Field', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b1' }) } }),
+				new DecryptedService({ id: 'b2-svc-1', label: 'B2Field1', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b2-1' }) } }),
+				new DecryptedService({ id: 'b2-svc-2', label: 'B2Field2', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b2-2' }) } }),
+				new DecryptedService({ id: 'b3-svc', label: 'B3Field', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b3' }) } }),
 			],
 			subContacts: [
 				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-svc' }] },
@@ -447,7 +447,7 @@ describe('SubForm deletion — endOfLife handling', () => {
 		})
 
 		// Empty current contact (new editing session)
-		const emptyContact: Contact = new Contact({
+		const emptyContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-new',
 			created: Date.now(),
 			services: [],
@@ -455,10 +455,10 @@ describe('SubForm deletion — endOfLife handling', () => {
 		})
 
 		// Build hierarchy: parent -> A -> { B1, B2, B3 }
-		const subFormB1 = new ICureForm({ id: SUBFORM_B1_ID, formTemplateId: SUBFORM_B1_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
-		const subFormB2 = new ICureForm({ id: SUBFORM_B2_ID, formTemplateId: SUBFORM_B2_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
-		const subFormB3 = new ICureForm({ id: SUBFORM_B3_ID, formTemplateId: SUBFORM_B3_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
-		const subFormA = new ICureForm({ id: SUBFORM_A_ID, formTemplateId: SUBFORM_A_TEMPLATE_ID, descr: ANCHOR_A, parent: PARENT_FORM_ID })
+		const subFormB1 = new DecryptedForm({ id: SUBFORM_B1_ID, formTemplateId: SUBFORM_B1_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
+		const subFormB2 = new DecryptedForm({ id: SUBFORM_B2_ID, formTemplateId: SUBFORM_B2_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
+		const subFormB3 = new DecryptedForm({ id: SUBFORM_B3_ID, formTemplateId: SUBFORM_B3_TEMPLATE_ID, descr: ANCHOR_B, parent: SUBFORM_A_ID })
+		const subFormA = new DecryptedForm({ id: SUBFORM_A_ID, formTemplateId: SUBFORM_A_TEMPLATE_ID, descr: ANCHOR_A, parent: PARENT_FORM_ID })
 
 		// Track which forms are recycled
 		const recycledFormIds: string[] = []
@@ -522,23 +522,23 @@ describe('SubForm deletion — endOfLife handling', () => {
 		// cleaned up), services with endOfLife in that child should not be visible.
 		const savedTimestamp = Date.now() - 10000
 
-		const parentService = new Service({
+		const parentService = new DecryptedService({
 			id: 'parent-service-1',
 			label: 'ParentField',
 			created: savedTimestamp,
 			modified: savedTimestamp,
-			content: { en: { stringValue: 'parent value' } },
+			content: { en: new DecryptedContent({ stringValue: 'parent value' }) },
 		})
-		const childServiceWithEndOfLife = new Service({
+		const childServiceWithEndOfLife = new DecryptedService({
 			id: 'child-service-1',
 			label: 'ChildField',
 			created: savedTimestamp,
 			modified: savedTimestamp,
 			endOfLife: savedTimestamp + 5000,
-			content: { en: { stringValue: 'child value' } },
+			content: { en: new DecryptedContent({ stringValue: 'child value' }) },
 		})
 
-		const currentContact: Contact = new Contact({
+		const currentContact: DecryptedContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '2-def',
 			created: savedTimestamp + 5000,
@@ -550,7 +550,7 @@ describe('SubForm deletion — endOfLife handling', () => {
 		})
 
 		// Suppose formChildrenProvider still returns the child form
-		const formChildrenProvider = async (parentId: string | undefined): Promise<ICureForm[]> => {
+		const formChildrenProvider = async (parentId: string | undefined): Promise<DecryptedForm[]> => {
 			if (parentId === PARENT_FORM_ID) {
 				return [makeChildForm()]
 			}

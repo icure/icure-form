@@ -690,21 +690,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@icure/api@npm:5.3.7":
-  version: 5.3.7
-  resolution: "@icure/api@npm:5.3.7"
-  dependencies:
-    date-fns: ^2.23.0
-    libphonenumber-js: ^1.7.18
-    lodash: ^4.17.21
-    moment: ^2.22.1
-    text-encoding: ^0.7.0
-    uuid: ^8.3.2
-    uuid-encoder: ^1.1.0
-  checksum: 4d9cc565ab04c5e0b95e5d2df780b9bd2ddb085309d5adbf2b1c9cb793531d54c0915e9b06bee7f60fd2243fb09fe289caecc9b8ef3d015c81801d846dfb4ad1
-  languageName: node
-  linkType: hard
-
 "@icure/cardinal-sdk@npm:2.0.0-PREVIEW-24":
   version: 2.0.0-PREVIEW-24
   resolution: "@icure/cardinal-sdk@npm:2.0.0-PREVIEW-24"
@@ -722,7 +707,6 @@ __metadata:
     "@babel/core": ^7.26.10
     "@babel/eslint-parser": ^7.26.10
     "@babel/traverse": ^7.26.10
-    "@icure/api": 5.3.7
     "@icure/cardinal-sdk": 2.0.0-PREVIEW-24
     "@icure/motss-app-datepicker": ^6.0.0-rc.39
     "@lit/task": ^1.0.2
@@ -3222,13 +3206,6 @@ __metadata:
   version: 0.6.1
   resolution: "batch@npm:0.6.1"
   checksum: 61f9934c7378a51dce61b915586191078ef7f1c3eca707fdd58b96ff2ff56d9e0af2bdab66b1462301a73c73374239e6542d9821c0af787f3209a23365d07e7f
-  languageName: node
-  linkType: hard
-
-"big-integer@npm:^1.6.46":
-  version: 1.6.52
-  resolution: "big-integer@npm:1.6.52"
-  checksum: 6e86885787a20fed96521958ae9086960e4e4b5e74d04f3ef7513d4d0ad631a9f3bde2730fc8aaa4b00419fc865f6ec573e5320234531ef37505da7da192c40b
   languageName: node
   linkType: hard
 
@@ -6665,13 +6642,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libphonenumber-js@npm:^1.7.18":
-  version: 1.12.6
-  resolution: "libphonenumber-js@npm:1.12.6"
-  checksum: 98ae28d3c8709f6e2c75396178b45b11bea47cd0638f2165170b4a32dd1ba911fdee9a51dd19d1f19feaa5d10faff4554d4ff96caa1341e77d3a7b3796f20e5e
-  languageName: node
-  linkType: hard
-
 "lilconfig@npm:2.1.0":
   version: 2.1.0
   resolution: "lilconfig@npm:2.1.0"
@@ -6814,13 +6784,6 @@ __metadata:
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
   checksum: ad580b4bdbb7ca1f7abf7e1bce63a9a0b98e370cf40194b03380a46b4ed799c9573029599caebc1b14e3f24b111aef72b96674a56cfa105e0f5ac70546cdc005
-  languageName: node
-  linkType: hard
-
-"lodash@npm:^4.17.21":
-  version: 4.17.21
-  resolution: "lodash@npm:4.17.21"
-  checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
   languageName: node
   linkType: hard
 
@@ -7162,13 +7125,6 @@ __metadata:
   bin:
     mkdirp: dist/cjs/src/bin.js
   checksum: 972deb188e8fb55547f1e58d66bd6b4a3623bf0c7137802582602d73e6480c1c2268dcbafbfb1be466e00cc7e56ac514d7fd9334b7cf33e3e2ab547c16f83a8d
-  languageName: node
-  linkType: hard
-
-"moment@npm:^2.22.1":
-  version: 2.30.1
-  resolution: "moment@npm:2.30.1"
-  checksum: 859236bab1e88c3e5802afcf797fc801acdbd0ee509d34ea3df6eea21eb6bcc2abd4ae4e4e64aa7c986aa6cba563c6e62806218e6412a765010712e5fa121ba6
   languageName: node
   linkType: hard
 
@@ -9030,13 +8986,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"text-encoding@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "text-encoding@npm:0.7.0"
-  checksum: b6109a843fb1b8748b32e1ecd6df74d370f46c13ac136bcb6ca15db70209bb0b8ec1f296ebb4b0dd9961150e205dcc044b89f8cf7657f6faef78c7569a2a81bc
-  languageName: node
-  linkType: hard
-
 "text-table@npm:^0.2.0":
   version: 0.2.0
   resolution: "text-table@npm:0.2.0"
@@ -9455,15 +9404,6 @@ __metadata:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
-  languageName: node
-  linkType: hard
-
-"uuid-encoder@npm:^1.1.0":
-  version: 1.2.0
-  resolution: "uuid-encoder@npm:1.2.0"
-  dependencies:
-    big-integer: ^1.6.46
-  checksum: dd06230f089e14eb004542214290b05c56833dbc7268469133f55ce269af3a1242f579e36503ed16912de480591f9e6ab63a44473333c46355cb3f2e59d44b07
   languageName: node
   linkType: hard
 

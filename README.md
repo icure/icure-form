@@ -253,7 +253,7 @@ We cannot state enough how important it is to keep the form values container imm
 It also allows for optimisations as the values of the form values container can be reused in a new form values container if they have not changed.
 
 It is also very important in the design to keep all code that is not under src/icure and src/conversion completely agnostic in terms of data model.
-For example, it is not a good idea to make assumptions about the kind of data structure that are going to be available to the fields (like relying on it being a Service).
+For example, it is not a good idea to make assumptions about the kind of data structure that are going to be available to the fields (like relying on it being a DecryptedService).
 
 #### Built-in functions
 

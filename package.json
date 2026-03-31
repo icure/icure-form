@@ -1,13 +1,13 @@
 {
 	"name": "@icure/form",
-	"version": "2.1.5",
+	"version": "2.1.7",
 	"description": "",
 	"main": "lib/index.js",
 	"scripts": {
 		"start": "rspack serve --mode development",
 		"build": "node lit-inject-scss.js src tmp && jq '{include:[\"tmp\"], compilerOptions:.compilerOptions}' < tsconfig.json > tsconfig.tmp.json && tsc -p tsconfig.tmp.json",
 		"dist": "rspack build --mode production",
-		"prepare": "rm -r lib && yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
+		"prepare": "rm -fr lib && yarn run build && jq '{name:.name, version:.version, description:.description, main:.main, types:.types, dependencies:.dependencies, author:.author, license:.license, bugs:.bugs, homepage:.homepage}' < package.json > lib/package.json",
 		"publish": "npm login && yarn run prepare && cd lib && touch yarn.lock && yarn install && rm -rf node_modules && npm publish --tolerate-republish --access public && cd ..",
 		"test": "jest",
 		"test:e2e": "playwright test --config test/e2e/playwright.config.ts",

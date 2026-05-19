@@ -75,8 +75,6 @@ import okido_medical_care from './samples/okido_medical_care.yaml'
 import okido_physiotherapy_care from './samples/okido_physiotherapy_care.yaml'
 // @ts-ignore
 import okido_paramedical_care from './samples/okido_paramedical_care.yaml'
-// @ts-ignore
-import preventi from './samples/preventi.yaml'
 
 import { Form } from '../src/components/model'
 import { state } from 'lit/decorators.js'
@@ -88,7 +86,7 @@ import { DecoratedForm } from './decorated-form'
 class DemoApp extends LitElement {
 	private samples = [
 		...[
-			/*{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
+			{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
 			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_search)) },
 			{ title: '000 - Validators', form: Form.parse(YAML.parse(validators)) },
@@ -103,9 +101,8 @@ class DemoApp extends LitElement {
 			{ title: '7 - Control', form: Form.parse(YAML.parse(control)) },
 			{ title: '8 - Extra', form: Form.parse(YAML.parse(extra)) },
 			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },
-			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },*/
-			{ title: '11 - Preventi', form: Form.parse(YAML.parse(preventi)) },
-			/*{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
+			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },
+			{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
 			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_measure)) },
 			{ title: 'OKIDO - Evaluation', form: Form.parse(YAML.parse(okido_evaluation)) },
 			{ title: 'OKIDO - Planification', form: Form.parse(YAML.parse(okido_planification)) },
@@ -120,7 +117,7 @@ class DemoApp extends LitElement {
 			{ title: 'OKIDO - Anamnèse - Donnée chirurgicale', form: Form.parse(YAML.parse(okido_surgical_data)) },
 			{ title: 'OKIDO - Anamnèse - Soin médical', form: Form.parse(YAML.parse(okido_medical_care)) },
 			{ title: 'OKIDO - Anamnèse - Soin paramédical', form: Form.parse(YAML.parse(okido_paramedical_care)) },
-			{ title: 'OKIDO - Anamnèse - Soin kinésithérapeutique', form: Form.parse(YAML.parse(okido_physiotherapy_care)) },*/
+			{ title: 'OKIDO - Anamnèse - Soin kinésithérapeutique', form: Form.parse(YAML.parse(okido_physiotherapy_care)) },
 		], //.filter((x, idx) => idx === 0),
 	]
 

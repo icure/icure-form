@@ -1,8 +1,9 @@
-import { SchemaSpec } from 'prosemirror-model'
+import { SchemaSpec as ProseMirrorSchemaSpec } from 'prosemirror-model'
+import { SchemaSpec } from './schema-spec'
 
 export type DecimalSchema = 'decimal'
 
-export function getDecimalSpec(): SchemaSpec {
+export function getDecimalSpec(): ProseMirrorSchemaSpec {
 	return {
 		topNode: 'paragraph',
 		nodes: {
@@ -26,4 +27,9 @@ export function getDecimalSpec(): SchemaSpec {
 		},
 		marks: {},
 	}
+}
+
+export const decimalSchemaSpec: SchemaSpec = {
+	proseMirror: getDecimalSpec(),
+	multivalue: false,
 }

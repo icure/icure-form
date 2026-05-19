@@ -1,9 +1,10 @@
-import { SchemaSpec } from 'prosemirror-model'
+import { SchemaSpec as ProseMirrorSchemaSpec } from 'prosemirror-model'
 import { reduceNodes } from './utils'
+import { multivalueExtractor, SchemaSpec } from './schema-spec'
 
 export type ItemsListSchema = 'items-list'
 
-export function getItemsListSpec(): SchemaSpec {
+export function getItemsListSpec(): ProseMirrorSchemaSpec {
 	return {
 		nodes: reduceNodes({
 			doc: {
@@ -26,4 +27,10 @@ export function getItemsListSpec(): SchemaSpec {
 		}),
 		marks: {},
 	}
+}
+
+export const itemsListSchemaSpec: SchemaSpec = {
+	proseMirror: getItemsListSpec(),
+	multivalue: true,
+	primitiveTypesExtractor: multivalueExtractor,
 }

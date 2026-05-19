@@ -1,32 +1,28 @@
-import { Schema } from 'prosemirror-model'
-import { getMarkdownSpec } from './markdown-schema'
-import { getDateSpec, getDateTimeSpec, getTimeSpec } from './date-time-schema'
-import { getTokensSpec } from './token-schema'
-import { getMeasureSpec } from './measure-schema'
-import { getDecimalSpec } from './decimal-schema'
-import { getItemsListSpec } from './items-list-schema'
+import { markdownSchemaSpec } from './markdown-schema'
+import { dateSchemaSpec, dateTimeSchemaSpec, timeSchemaSpec } from './date-time-schema'
+import { tokensSchemaSpec } from './token-schema'
+import { measureSchemaSpec } from './measure-schema'
+import { decimalSchemaSpec } from './decimal-schema'
+import { itemsListSchemaSpec } from './items-list-schema'
 import { IcureTextFieldSchema } from '../../model'
+import { SchemaSpec } from './schema-spec'
 
-export function createSchema(
+export type { SchemaSpec, EditRequestContext, PrimitivesExtractorContext } from './schema-spec'
+export { multivalueExtractor } from './schema-spec'
+
+export function createSchemaSpec(
 	type: IcureTextFieldSchema,
 	colorProvider: (type: string, code: string, isCode: boolean) => string,
 	contentProvider: (codes: { type: string; code: string }[]) => string,
-): Schema {
-	return new Schema(
-		type === 'decimal'
-			? getDecimalSpec()
-			: type === 'measure'
-			? getMeasureSpec()
-			: type === 'date'
-			? getDateSpec()
-			: type === 'time'
-			? getTimeSpec()
-			: type === 'date-time'
-			? getDateTimeSpec()
-			: type === 'items-list'
-			? getItemsListSpec()
-			: type === 'tokens-list' || type === 'styled-tokens-list' || type === 'tokens-list-with-codes' || type === 'styled-tokens-list-with-codes'
-			? getTokensSpec(type, contentProvider, colorProvider)
-			: getMarkdownSpec(type, contentProvider, colorProvider),
-	)
+): SchemaSpec {
+	if (type === 'decimal') return decimalSchemaSpec
+	if (type === 'measure') return measureSchemaSpec
+	if (type === 'date') return dateSchemaSpec
+	if (type === 'time') return timeSchemaSpec
+	if (type === 'date-time') return dateTimeSchemaSpec
+	if (type === 'items-list') return itemsListSchemaSpec
+	if (type === 'tokens-list' || type === 'styled-tokens-list' || type === 'tokens-list-with-codes' || type === 'styled-tokens-list-with-codes') {
+		return tokensSchemaSpec(type, contentProvider, colorProvider)
+	}
+	return markdownSchemaSpec(type, contentProvider, colorProvider)
 }

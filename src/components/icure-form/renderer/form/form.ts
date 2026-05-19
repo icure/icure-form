@@ -140,6 +140,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
 		></icure-form-text-field>`
 	}

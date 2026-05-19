@@ -10,7 +10,7 @@ import { keymap } from 'prosemirror-keymap'
 import { baseKeymap, chainCommands, exitCode, joinDown, joinUp, setBlockType, toggleMark } from 'prosemirror-commands'
 import { liftListItem, sinkListItem, splitListItem, wrapInList } from 'prosemirror-schema-list'
 
-import { createSchema } from './schema'
+import { createSchemaSpec, SchemaSpec } from './schema'
 import MarkdownIt from 'markdown-it'
 import { defaultMarkdownSerializer, MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown'
 import { unwrapFrom, wrapInIfNeeded } from './prosemirror-commands'
@@ -52,7 +52,10 @@ export class IcureTextField extends Field {
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
+	@property() actionListener?: (event: string, payload: unknown) => void = undefined
 
+	private schemaSpec?: SchemaSpec
+	private editRequestPending = false
 	private proseMirrorSchema?: Schema
 	private parser?: SpacePreservingMarkdownParser | { parse: (value: PrimitiveType, id?: string, renderHash?: number) => ProsemirrorNode | undefined }
 	private serializer: MarkdownSerializer | { serialize: (content: ProsemirrorNode) => string } = {
@@ -136,12 +139,8 @@ export class IcureTextField extends Field {
 		]
 	}
 
-	private isMultivalued() {
-		return this.schema.includes('tokens-list') || this.schema.includes('items-list')
-	}
-
 	private updateValue(tr: Transaction) {
-		if (this.isMultivalued()) {
+		if (this.schemaSpec?.multivalue) {
 			const values = extractValues(this.valueProvider?.(), this.metadataProvider ?? (() => ({})))
 			const valuesFromField = this.primitiveTypesExtractor?.(tr.doc) ?? []
 
@@ -215,7 +214,7 @@ export class IcureTextField extends Field {
 				console.log(`Data for ${this.label} is ${JSON.stringify(data)}`)
 			}
 
-			if (this.isMultivalued()) {
+			if (this.schemaSpec?.multivalue) {
 				const values = extractValues(data, this.metadataProvider ?? (() => ({})))
 				parsedDoc =
 					this.proseMirrorSchema?.topNodeType.createAndFill(
@@ -355,14 +354,15 @@ export class IcureTextField extends Field {
 	firstUpdated() {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const cmp = this
-		const pms: Schema = (this.proseMirrorSchema = createSchema(this.schema, (t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)), this.codeContentProvider))
+		const spec = (this.schemaSpec = createSchemaSpec(this.schema, (t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)), this.codeContentProvider))
+		const pms: Schema = (this.proseMirrorSchema = new Schema(spec.proseMirror))
 
 		const parser = this.makeParser(this.schema, pms)
 		this.parser = parser
 		const serializer = this.makeSerializer(this.schema, pms)
 		this.serializer = serializer
 		this.primitiveTypeExtractor = this.makePrimitiveExtractor(this.schema)
-		this.primitiveTypesExtractor = this.makePrimitivesExtractor(this.schema)
+		this.primitiveTypesExtractor = (doc?: ProsemirrorNode) => spec.primitiveTypesExtractor?.(doc, { serialize: (n) => this.serializer.serialize(n) }) ?? []
 		this.codesExtractor = this.makeCodesExtractor(this.schema)
 
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
@@ -507,15 +507,32 @@ export class IcureTextField extends Field {
 					},
 					focus: (view) => {
 						this.schema === 'measure' && measureOnFocusHandler(view)
+						this.invokeFieldEditRequest(view)
 					},
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
 							const el = event.target as HTMLElement
-							if (el?.classList.contains('token') && Math.abs(el.getBoundingClientRect().right - 10 - event.x) < 6 && Math.abs(el.getBoundingClientRect().bottom - 9 - event.y) < 6) {
-								const pos = view.posAtCoords({ left: event.x, top: event.y })
-								if (pos?.pos) {
-									const rp = view.state.tr.doc.resolve(pos?.pos)
-									this.view?.dispatch(view.state.tr.deleteRange(rp.before(), rp.after()))
+							if (el?.classList.contains('token')) {
+								const isDeleteHit = Math.abs(el.getBoundingClientRect().right - 10 - event.x) < 6 && Math.abs(el.getBoundingClientRect().bottom - 9 - event.y) < 6
+								if (isDeleteHit) {
+									const pos = view.posAtCoords({ left: event.x, top: event.y })
+									if (pos?.pos) {
+										const rp = view.state.tr.doc.resolve(pos?.pos)
+										this.view?.dispatch(view.state.tr.deleteRange(rp.before(), rp.after()))
+									}
+								} else if (this.schemaSpec?.onEditRequest) {
+									const pos = view.posAtCoords({ left: event.x, top: event.y })
+									const node = pos?.pos !== undefined ? view.state.doc.nodeAt(pos.pos) : undefined
+									void this.schemaSpec.onEditRequest({
+										trigger: 'token-click',
+										tokenId: node?.attrs?.id,
+										tokenContent: node?.textContent,
+										label: this.label,
+										language: this.language(),
+										schema: this.schema,
+										readonly: this.readonly,
+										actionListener: this.actionListener,
+									})
 								}
 							}
 						}
@@ -770,17 +787,21 @@ export class IcureTextField extends Field {
 			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: this.serializer.serialize(doc) } : undefined)
 	}
 
-	private makePrimitivesExtractor(schemaName: string): (doc?: ProsemirrorNode) => [string, PrimitiveType][] {
-		return schemaName.includes('tokens-list') || schemaName.includes('items-list')
-			? (doc?: ProsemirrorNode) =>
-					doc?.childCount
-						? [...Array(doc.childCount).keys()].map((idx) => {
-								const child = doc.child(idx)
-								const id = child.attrs.id ?? ''
-								return [id, { type: 'string', value: this.serializer.serialize(child) }]
-						  })
-						: []
-			: () => []
+	private invokeFieldEditRequest(view: EditorView) {
+		const onReq = this.schemaSpec?.onEditRequest
+		if (!onReq || this.editRequestPending) return
+		this.editRequestPending = true
+		void onReq({
+			trigger: 'field-edit',
+			label: this.label,
+			language: this.language(),
+			schema: this.schema,
+			readonly: this.readonly,
+			actionListener: this.actionListener,
+		}).then((handled) => {
+			this.editRequestPending = false
+			if (handled) (view.dom as HTMLElement).blur()
+		})
 	}
 }
 

@@ -1,6 +1,7 @@
-import { MarkSpec, NodeSpec, SchemaSpec } from 'prosemirror-model'
+import { MarkSpec, NodeSpec, SchemaSpec as ProseMirrorSchemaSpec } from 'prosemirror-model'
 import { reduceMarks, reduceNodes } from './utils'
 import { getMarks } from './common-marks'
+import { SchemaSpec } from './schema-spec'
 
 export type DocumentSchema = 'text-document'
 export type InlineSchema = 'styled-text' | 'text' | 'text-with-codes' | 'styled-text-with-codes'
@@ -10,7 +11,7 @@ export function getMarkdownSpec(
 	type: DocumentSchema | InlineSchema,
 	contentProvider: (codes: { type: string; code: string }[]) => string,
 	colorProvider: (type: string, code: string, isCode: boolean) => string,
-): SchemaSpec {
+): ProseMirrorSchemaSpec {
 	const nodesSelector: (key: string, spec: NodeSpec) => boolean = (key: string, spec: NodeSpec) => {
 		// noinspection RedundantConditionalExpressionJS
 		return key === 'paragraph' ? true : (spec.group === 'block' || ['doc', 'list_item', 'hard_break', 'image'].includes(key)) && type !== 'text-document' ? false : true
@@ -167,5 +168,16 @@ export function getMarkdownSpec(
 			nodesSelector,
 		),
 		marks: reduceMarks(getMarks(contentProvider, colorProvider), marksSelector),
+	}
+}
+
+export function markdownSchemaSpec(
+	type: DocumentSchema | InlineSchema,
+	contentProvider: (codes: { type: string; code: string }[]) => string,
+	colorProvider: (type: string, code: string, isCode: boolean) => string,
+): SchemaSpec {
+	return {
+		proseMirror: getMarkdownSpec(type, contentProvider, colorProvider),
+		multivalue: false,
 	}
 }

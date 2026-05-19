@@ -1,10 +1,11 @@
-import { SchemaSpec } from 'prosemirror-model'
+import { SchemaSpec as ProseMirrorSchemaSpec } from 'prosemirror-model'
+import { SchemaSpec } from './schema-spec'
 
 export type DateSchema = 'date'
 export type TimeSchema = 'time'
 export type DateTimeSchema = 'date-time'
 
-export function getDateSpec(): SchemaSpec {
+export function getDateSpec(): ProseMirrorSchemaSpec {
 	return {
 		topNode: 'paragraph',
 		nodes: {
@@ -31,7 +32,7 @@ export function getDateSpec(): SchemaSpec {
 	}
 }
 
-export function getTimeSpec(): SchemaSpec {
+export function getTimeSpec(): ProseMirrorSchemaSpec {
 	return {
 		topNode: 'paragraph',
 		nodes: {
@@ -58,7 +59,7 @@ export function getTimeSpec(): SchemaSpec {
 	}
 }
 
-export function getDateTimeSpec(): SchemaSpec {
+export function getDateTimeSpec(): ProseMirrorSchemaSpec {
 	return {
 		topNode: 'paragraph',
 		nodes: {
@@ -94,4 +95,19 @@ export function getDateTimeSpec(): SchemaSpec {
 		},
 		marks: {},
 	}
+}
+
+export const dateSchemaSpec: SchemaSpec = {
+	proseMirror: getDateSpec(),
+	multivalue: false,
+}
+
+export const timeSchemaSpec: SchemaSpec = {
+	proseMirror: getTimeSpec(),
+	multivalue: false,
+}
+
+export const dateTimeSchemaSpec: SchemaSpec = {
+	proseMirror: getDateTimeSpec(),
+	multivalue: false,
 }

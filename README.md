@@ -290,6 +290,89 @@ The following standard JavaScript builtins are also available: `parseInt`, `pars
 Note: field values are also accessible directly by their label as variables in the formula scope. For example, if a field has `field: weight`, you can reference it as `weight` in a formula (equivalent to `self['weight']`).
 
 
+### iCure Service mapping
+
+The `BridgedFormValuesContainer` (in `src/icure/`) is the bridge between the generic `FormValuesContainer<FieldValue, FieldMetadata>` interface and the iCure Cardinal SDK's `DecryptedContact` / `DecryptedService` model. Each iCure `DecryptedService` is exposed to the renderer as a `(FieldValue, FieldMetadata)` pair, and writes are translated back to mutations on the underlying `DecryptedContact`. All conversions live in `src/icure/icure-utils.ts` and `src/icure/form-values-container.ts`.
+
+#### Service → FieldValue / FieldMetadata
+
+| `DecryptedService` field | Mapped to                          | Notes                                                                       |
+|--------------------------|------------------------------------|-----------------------------------------------------------------------------|
+| `id`                     | key of `VersionedData`             | The service id is the key under which versions are indexed.                 |
+| `modified`               | `Version.modified`                 | Per-revision timestamp used to sort versions (most recent first).           |
+| (parent contact `rev`)   | `Version.revision`                 | Revisions come from the wrapping `DecryptedContact.rev`.                    |
+| `label`                  | `FieldMetadata.label`              | Falls back to `service.id` when missing.                                    |
+| `responsible`            | `FieldMetadata.owner`              | Renamed on the way in and out.                                              |
+| `valueDate`              | `FieldMetadata.valueDate`          | Passed through verbatim.                                                    |
+| `tags` (`CodeStub[]`)    | `FieldMetadata.tags` (`Code[]`)    | Converted via `codeStubToCode`.                                             |
+| `codes` (`CodeStub[]`)   | `FieldValue.codes` (`Code[]`)      | Converted via `codeStubToCode`.                                             |
+| `content[language]`      | `FieldValue.content[language]`     | Converted via `contentToPrimitiveType` (see below).                         |
+
+`FieldMetadata.discordantMetadata` is computed on the fly: it returns the subset of metadata whose values differ from the responsible/contact-of-the-day, so the renderer can flag revisions that look exceptional (different owner, date older than 24h, etc.).
+
+#### DecryptedContent ↔ PrimitiveType
+
+`DecryptedService.content` is a `{ [language]: DecryptedContent }` map. A `DecryptedContent` carries several mutually-exclusive value slots; `contentToPrimitiveType` picks the first non-empty slot in the order shown below, and `primitiveTypeToContent` writes the matching slot on the way back.
+
+| `DecryptedContent` slot                  | `PrimitiveType`                                                  |
+|------------------------------------------|------------------------------------------------------------------|
+| `numberValue`                            | `{ type: 'number', value }`                                      |
+| `measureValue` (`{ value, unit }`)       | `{ type: 'measure', value, unit }`                               |
+| `stringValue`                            | `{ type: 'string', value }`                                      |
+| `fuzzyDateValue`                         | `{ type: 'datetime', value }`                                    |
+| `booleanValue`                           | `{ type: 'boolean', value }`                                     |
+| `instantValue`                           | `{ type: 'timestamp', value }`                                   |
+| `compoundValue` (`DecryptedService[]`)   | `{ type: 'compound', value: { [label]: PrimitiveType } }`        |
+
+#### Visual overview
+
+```mermaid
+flowchart LR
+    subgraph iCure["iCure Cardinal SDK"]
+        Contact["DecryptedContact"]
+        Service["DecryptedService"]
+        Content["DecryptedContent"]
+        Contact -- "services[]" --> Service
+        Service -- "content[lang]" --> Content
+    end
+
+    subgraph Generic["Generic form model"]
+        FM["FieldMetadata"]
+        FV["FieldValue"]
+        PT["PrimitiveType"]
+        FV -- "content[lang]" --> PT
+    end
+
+    Service -- "id" --> Key[("VersionedData key")]
+    Service -- "modified + contact.rev" --> Ver[("Version{revision, modified}")]
+
+    Service -- "label" --> FM
+    Service -- "responsible → owner" --> FM
+    Service -- "valueDate" --> FM
+    Service -- "tags (CodeStub→Code)" --> FM
+
+    Service -- "codes (CodeStub→Code)" --> FV
+    Content -- "contentToPrimitiveType" --> PT
+
+    Content -- "numberValue" --> PTn["type: number"]
+    Content -- "measureValue" --> PTm["type: measure"]
+    Content -- "stringValue" --> PTs["type: string"]
+    Content -- "fuzzyDateValue" --> PTd["type: datetime"]
+    Content -- "booleanValue" --> PTb["type: boolean"]
+    Content -- "instantValue" --> PTt["type: timestamp"]
+    Content -- "compoundValue" --> PTc["type: compound"]
+
+    PTn --> PT
+    PTm --> PT
+    PTs --> PT
+    PTd --> PT
+    PTb --> PT
+    PTt --> PT
+    PTc --> PT
+```
+
+The bridge is bidirectional: reads (`getValues`, `getMetadata`) follow the arrows above; writes (`setValue`, `setMetadata`) invert them, building a fresh `DecryptedService` whose `content[language]` is produced by `primitiveTypeToContent` and whose `codes`/`tags` are mapped back to `CodeStub`s.
+
 ### The renderer
 
 The renderer is instantiated by the icure-form component and is responsible for rendering the form based on the form object and the form values container.

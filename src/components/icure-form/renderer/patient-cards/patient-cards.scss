@@ -159,6 +159,35 @@
 	color: var(--patient-cards-accent-text);
 }
 
+.patient-cards__start,
+.patient-cards__continue,
+.patient-cards__submit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.patient-cards__key-hint {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	border-radius: 4px;
+	border: 1px solid currentColor;
+	font-size: 11px;
+	line-height: 1;
+	opacity: 0.85;
+}
+
+.patient-cards__start[disabled] .patient-cards__key-hint,
+.patient-cards__continue[disabled] .patient-cards__key-hint,
+.patient-cards__submit[disabled] .patient-cards__key-hint {
+	opacity: 0.5;
+}
+
 .patient-cards__continue:hover:not(:disabled),
 .patient-cards__submit:hover:not(:disabled),
 .patient-cards__start:hover:not(:disabled) {
@@ -250,6 +279,10 @@
 .patient-cards__review-label {
 	font-weight: 500;
 	color: #333;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
 }
 
 .patient-cards__review-value {

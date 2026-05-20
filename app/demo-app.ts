@@ -125,6 +125,7 @@ class DemoApp extends LitElement {
 	]
 
 	@state() private selectedForm: Form = this.samples[0].form
+	@state() private rendererMode: 'form:tab' | 'patient-cards' = 'form:tab'
 	static get styles() {
 		return css`
 			.container {
@@ -171,6 +172,35 @@ class DemoApp extends LitElement {
 				flex: 9;
 				padding: 10px;
 			}
+
+			.renderer-toggle {
+				display: flex;
+				gap: 4px;
+				padding: 8px;
+				border-bottom: 1px solid #d4dde6;
+			}
+
+			.renderer-toggle button {
+				flex: 1;
+				padding: 8px 10px;
+				font-size: 13px;
+				border: 1px solid #b9c5d2;
+				background: #ffffff;
+				color: #1a1a1a;
+				border-radius: 4px;
+				cursor: pointer;
+			}
+
+			.renderer-toggle button.active {
+				background: #1d4ed8;
+				color: #ffffff;
+				border-color: #1d4ed8;
+			}
+
+			.renderer-toggle button:focus-visible {
+				outline: 2px solid #1d4ed8;
+				outline-offset: 2px;
+			}
 		`
 	}
 
@@ -203,6 +233,19 @@ class DemoApp extends LitElement {
 		return html`
 			<div class="container">
 				<div class="master">
+					<div class="renderer-toggle" role="group" aria-label="Renderer mode">
+						<button type="button" class="${this.rendererMode === 'form:tab' ? 'active' : ''}" aria-pressed="${this.rendererMode === 'form:tab'}" @click="${() => (this.rendererMode = 'form:tab')}">
+							Clinician
+						</button>
+						<button
+							type="button"
+							class="${this.rendererMode === 'patient-cards' ? 'active' : ''}"
+							aria-pressed="${this.rendererMode === 'patient-cards'}"
+							@click="${() => (this.rendererMode = 'patient-cards')}"
+						>
+							Patient cards
+						</button>
+					</div>
 					<ul>
 						${this.samples.map((s) => {
 							return html`<li class="${s.form === this.selectedForm ? 'selected' : ''}" @click="${() => (this.selectedForm = s.form)}">${s.title}</li>`
@@ -212,7 +255,7 @@ class DemoApp extends LitElement {
 				<div class="detail">
 					${this.samples.map((s) => {
 						return html`<div style="${s.form === this.selectedForm ? '' : 'display: none;'}">
-							<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}" renderer="form:tab"></decorated-form>
+							<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}" renderer="${this.rendererMode}"></decorated-form>
 						</div>`
 					})}
 				</div>

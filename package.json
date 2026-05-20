@@ -89,6 +89,7 @@
 		"uuid": "^9.0.1"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.11.3",
 		"@babel/core": "^7.26.10",
 		"@babel/eslint-parser": "^7.26.10",
 		"@babel/traverse": "^7.26.10",

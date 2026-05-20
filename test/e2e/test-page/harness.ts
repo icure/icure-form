@@ -1,7 +1,10 @@
 // Import the default theme to register all custom elements
 import '../../../src/components/themes/default/index'
+// Side-effect import: register the patient-cards internal element.
+import '../../../src/components/icure-form/renderer/patient-cards/register'
 
 import { Form, Field, Group, Subform, FieldMetadata, Validator } from '../../../src/components/model'
+import { flatten as patientCardsFlatten } from '../../../src/components/icure-form/renderer/patient-cards/flatten'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
 import { Version } from '../../../src/generic'
 import { makeInterpreter } from '../../../src/utils/interpreter'
@@ -24,6 +27,15 @@ function uuid() {
 interface InitFormOptions {
 	yaml: string
 	language?: string
+	renderer?: string
+	/** Patient-cards renderer only: max interactive fields per card (1 or 2). */
+	questionsPerCard?: number
+	/**
+	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted.
+	 * Used by Phase 5 tests to simulate "resume" scenarios where the patient is returning to a
+	 * partially-completed form.
+	 */
+	prefill?: Array<{ label: string; language?: string; value: string }>
 }
 
 interface InitFormResult {
@@ -86,7 +98,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en' } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard } = options
 
 	// Parse the form
 	let parsed: any
@@ -197,6 +209,20 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 	await bridgedFormValuesContainer.init()
 
+	// Phase 5: apply prefill values BEFORE the renderer mounts. BridgedFormValuesContainer requires
+	// at least one registered listener for its setValue mutations to propagate (otherwise the new
+	// container is silently dropped). Register a tracking listener to capture each mutation.
+	let currentFvc: BridgedFormValuesContainer = bridgedFormValuesContainer
+	const prefillListener = (newValue: BridgedFormValuesContainer) => {
+		currentFvc = newValue
+	}
+	bridgedFormValuesContainer.registerChangeListener(prefillListener)
+	if (prefill?.length) {
+		for (const p of prefill) {
+			currentFvc.setValue(p.label, p.language ?? language, { content: { [p.language ?? language]: { type: 'string', value: p.value } as any } } as any)
+		}
+	}
+
 	// Remove any previous form
 	const container = document.getElementById('form-container')!
 	while (container.firstChild) {
@@ -206,18 +232,24 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	// Create and configure icure-form element
 	const icureFormEl = document.createElement('icure-form') as any
 	icureFormEl.form = form
-	icureFormEl.formValuesContainer = bridgedFormValuesContainer
+	// Use `currentFvc` so that any prefill applied above is reflected in the renderer's initial container.
+	icureFormEl.formValuesContainer = currentFvc
+	;(window as any).__currentFvc = currentFvc
 
-	// Register change listener to update icure-form when the container changes (e.g., subform add/remove)
-	bridgedFormValuesContainer.registerChangeListener((newValue: BridgedFormValuesContainer) => {
+	// Register change listener to update icure-form when the container changes (e.g., subform add/remove).
+	// Shares the same listener array as `prefillListener`, so further mutations propagate here too.
+	currentFvc.registerChangeListener((newValue: BridgedFormValuesContainer) => {
 		icureFormEl.formValuesContainer = newValue
 		;(window as any).__currentFvc = newValue
 	})
 	icureFormEl.language = language
 	icureFormEl.readonly = false
 	icureFormEl.displayMetadata = false
-	icureFormEl.renderer = 'form'
+	icureFormEl.renderer = renderer
 	icureFormEl.labelPosition = 'above'
+	if (questionsPerCard !== undefined) {
+		icureFormEl.questionsPerCard = questionsPerCard
+	}
 
 	const translationTables = form.translations
 	if (translationTables) {
@@ -244,4 +276,40 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	if (!fvc) return null
 	const values = fvc.getValues(() => [null])
 	return values
+}
+
+// Patient-cards helpers exposed for Playwright tests:
+;(window as any).patientCardsFlatten = (formJson: any) => {
+	const f = Form.parse(formJson)
+	return patientCardsFlatten(f).map((c) => ({
+		sectionTitle: c.sectionTitle,
+		groupTitle: c.groupTitle,
+		fieldLabels: c.fields.map((field) => field.field),
+	}))
+}
+;(window as any).parseForm = (formJson: any) => Form.parse(formJson)
+;(window as any).formToJson = (formJson: any) => Form.parse(formJson).toJson()
+
+// Cycle-detection test helper. Builds a Form whose Subform tree cycles via mutation
+// (Form.parse rejects duplicate subform ids, so this can't be constructed from JSON).
+import { Section as ModelSection } from '../../../src/components/model'
+;(window as any).testCyclicSubformFlatten = () => {
+	const warnings: string[] = []
+	const origWarn = console.warn
+	console.warn = (...args: unknown[]) => {
+		warnings.push(String(args[0] ?? ''))
+	}
+	try {
+		const formA = new Form('A', [])
+		const formB = new Form('B', [])
+		// Subform from A pointing to B, and from B pointing to A — mutual reference.
+		const subformAToB = new Subform('SubB', { b: formB }, { id: 'subB' })
+		const subformBToA = new Subform('SubA', { a: formA }, { id: 'subA' })
+		formA.sections = [new ModelSection('SecA', [subformAToB])]
+		formB.sections = [new ModelSection('SecB', [subformBToA])]
+		const cards = patientCardsFlatten(formA)
+		return { cardCount: cards.length, warnings }
+	} finally {
+		console.warn = origWarn
+	}
 }

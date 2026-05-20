@@ -4,6 +4,7 @@ import { property, state } from 'lit/decorators.js'
 
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form/form'
+import { render as renderAsPatientCards } from './renderer/patient-cards'
 import { Field, FieldMetadata, FieldValue, Form } from '../model'
 import { FormValuesContainer, Suggestion, Version } from '../../generic'
 
@@ -30,6 +31,7 @@ export class IcureForm extends LitElement {
 	@property() ownersProvider?: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>
 	@property() optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>
 	@property() actionListener?: (event: string, payload: unknown) => void = () => undefined
+	@property({ type: Number }) questionsPerCard = 1
 
 	@state() selectedTab = 0
 
@@ -50,7 +52,8 @@ export class IcureForm extends LitElement {
 			}
 
 			const variant = this.renderer?.split(':')
-			const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : undefined
+			const renderer: Renderer | undefined =
+				variant[0] === 'form' ? renderAsForm : variant[0] === 'patient-cards' ? renderAsPatientCards : undefined
 
 			if (!renderer) {
 				return html`<p>unknown renderer</p>`
@@ -66,7 +69,7 @@ export class IcureForm extends LitElement {
 
 			return renderer(
 				form,
-				{ labelPosition: this.labelPosition, language },
+				{ labelPosition: this.labelPosition, language, questionsPerCard: this.questionsPerCard },
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
 				this.revisionsFilter,
@@ -79,7 +82,7 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab],
+		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.questionsPerCard],
 	})
 
 	render() {

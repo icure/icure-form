@@ -12,6 +12,7 @@ import { icureFormLogging } from '../../index'
 
 export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 	@property() type: 'radio' | 'checkbox' = 'radio'
+	@property({ attribute: false }) keyboardHints?: (string | number)[]
 
 	//override
 	static get styles(): CSSResultGroup[] {
@@ -108,12 +109,15 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 					  `
 					: nothing}
 				<div style="${this.generateStyle()}">
-					${(this.displayedOptions?.length ? this.displayedOptions : [{ id: this.label, label: {} }]).map((x) => {
+					${(this.displayedOptions?.length ? this.displayedOptions : [{ id: this.label, label: {} }]).map((x, idx) => {
 						const text = (x.label ?? {})[this.language()] ?? ''
+						const hint = this.keyboardHints?.[idx]
+						const hintBadge = hint !== undefined && hint !== '' ? html`<span class="icure-button-group-keyboard-hint" aria-hidden="true">${hint}</span>` : nothing
 						if (this.readonly) {
 							return html` <div>
 								<input class="icure-checkbox" disabled type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" .checked="${inputValues?.includes(x.id)}" />
 								<label class="icure-button-group-label" for="${x.id}"><span>${text}</span></label>
+								${hintBadge}
 							</div>`
 						}
 						return html` <div>
@@ -122,6 +126,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 								for="${x.id}"
 								><span>${text}</span></label
 							>
+							${hintBadge}
 						</div>`
 					})}
 				</div>

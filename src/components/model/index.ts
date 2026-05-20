@@ -147,6 +147,13 @@ export abstract class Field {
 	hasOther?: boolean
 	event?: string
 	payload?: unknown
+	hiddenForPatient?: boolean
+	/**
+	 * Patient-cards renderer only: when `true`, this Field is rendered on its own card regardless
+	 * of `questionsPerCard`. Adjacent fields are pushed to subsequent cards. Has no effect on the
+	 * clinician renderer.
+	 */
+	standalone?: boolean
 
 	label(): string {
 		return this.field
@@ -232,7 +239,7 @@ export abstract class Field {
 	abstract copyIfNeeded(properties: Partial<Field>): Field
 
 	static parse(json: Field): Field {
-		return (
+		const result =
 			(
 				{
 					'text-field': () => new TextField(json.field, { ...json }),
@@ -250,7 +257,13 @@ export abstract class Field {
 					action: () => new Button(json.field, { ...json }),
 				} as { [key: string]: () => Field }
 			)[json.type as string]?.() ?? new TextField(json.field, { ...json })
-		)
+		if ((json as any).hiddenForPatient !== undefined) {
+			result.hiddenForPatient = !!(json as any).hiddenForPatient
+		}
+		if ((json as any).standalone !== undefined) {
+			result.standalone = !!(json as any).standalone
+		}
+		return result
 	}
 
 	// noinspection JSUnusedGlobalSymbols
@@ -288,6 +301,8 @@ export abstract class Field {
 		shortLabel: string | undefined
 		computedProperties: { [key: string]: string } | undefined
 		value: string | undefined
+		hiddenForPatient: boolean | undefined
+		standalone: boolean | undefined
 	} {
 		return {
 			field: this.field,
@@ -309,6 +324,8 @@ export abstract class Field {
 			sortOptions: this.sortOptions,
 			width: this.width,
 			styleOptions: this.styleOptions,
+			hiddenForPatient: this.hiddenForPatient,
+			standalone: this.standalone,
 		}
 	}
 }
@@ -1028,6 +1045,7 @@ export class Group {
 	computedProperties?: { [_key: string]: string }
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
+	hiddenForPatient?: boolean
 
 	constructor(
 		title: string,
@@ -1040,6 +1058,7 @@ export class Group {
 			computedProperties,
 			width,
 			styleOptions,
+			hiddenForPatient,
 		}: {
 			borderless?: boolean
 			translate?: boolean
@@ -1048,6 +1067,7 @@ export class Group {
 			computedProperties?: { [_key: string]: string }
 			width?: number
 			styleOptions?: { [_key: string]: unknown }
+			hiddenForPatient?: boolean
 		},
 	) {
 		this.group = title
@@ -1060,6 +1080,7 @@ export class Group {
 		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
+		this.hiddenForPatient = hiddenForPatient
 	}
 
 	copyIfNeeded(properties: Partial<Group>): Group {
@@ -1074,6 +1095,7 @@ export class Group {
 		group,
 		translate,
 		width,
+		hiddenForPatient,
 	}: {
 		group: string
 		fields?: Array<Field | Group | Subform>
@@ -1083,6 +1105,7 @@ export class Group {
 		rowSpan?: number
 		computedProperties?: { [_key: string]: string }
 		width?: number
+		hiddenForPatient?: boolean
 	}): Group {
 		return new Group(
 			group,
@@ -1099,6 +1122,7 @@ export class Group {
 				translate: translate,
 				computedProperties: computedProperties,
 				width: width,
+				hiddenForPatient: hiddenForPatient,
 			},
 		)
 	}
@@ -1112,6 +1136,7 @@ export class Group {
 			translatable: this.translate,
 			span: this.span,
 			width: this.width,
+			hiddenForPatient: this.hiddenForPatient,
 		}
 	}
 }
@@ -1128,6 +1153,7 @@ export class Subform {
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
 	labels: Labels
+	hiddenForPatient?: boolean
 
 	constructor(
 		title: string,
@@ -1142,6 +1168,7 @@ export class Subform {
 			styleOptions,
 			refs,
 			labels,
+			hiddenForPatient,
 		}: {
 			id?: string
 			shortLabel?: string
@@ -1152,6 +1179,7 @@ export class Subform {
 			styleOptions?: { [_key: string]: unknown }
 			refs?: string[]
 			labels?: Labels
+			hiddenForPatient?: boolean
 		},
 	) {
 		this.id = id || title
@@ -1164,6 +1192,7 @@ export class Subform {
 		this.styleOptions = styleOptions
 		this.refs = refs
 		this.labels = labels ?? {}
+		this.hiddenForPatient = hiddenForPatient
 	}
 
 	copyIfNeeded(properties: Partial<Subform>): Subform {
@@ -1182,6 +1211,7 @@ export class Subform {
 		styleOptions?: { [_key: string]: unknown }
 		labels?: Labels
 		id: string
+		hiddenForPatient?: boolean
 	}): Subform {
 		return new Subform(json.subform, json.forms ?? {}, {
 			id: json.id,
@@ -1192,6 +1222,7 @@ export class Subform {
 			styleOptions: json.styleOptions,
 			refs: json.refs,
 			labels: json.labels,
+			hiddenForPatient: json.hiddenForPatient,
 		})
 	}
 
@@ -1204,6 +1235,7 @@ export class Subform {
 			computedProperties: this.computedProperties,
 			width: this.width,
 			styleOptions: this.styleOptions,
+			hiddenForPatient: this.hiddenForPatient,
 		}
 	}
 }
@@ -1212,12 +1244,14 @@ export class Section {
 	fields: Array<Field | Group | Subform>
 	description?: string
 	keywords?: string[]
+	hiddenForPatient?: boolean
 
-	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[]) {
+	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], hiddenForPatient?: boolean) {
 		this.section = title
 		this.fields = fields
 		this.description = description
 		this.keywords = keywords
+		this.hiddenForPatient = hiddenForPatient
 	}
 
 	static parse(json: {
@@ -1227,6 +1261,7 @@ export class Section {
 		sections?: Array<Field | Group | Subform>
 		description?: string
 		keywords?: string[]
+		hiddenForPatient?: boolean
 	}): Section {
 		return new Section(
 			json.section,
@@ -1239,6 +1274,7 @@ export class Section {
 			),
 			json.description,
 			json.keywords,
+			json.hiddenForPatient,
 		)
 	}
 
@@ -1247,12 +1283,14 @@ export class Section {
 		keywords?: string[]
 		description?: string
 		fields: (Field | Group | Subform)[]
+		hiddenForPatient?: boolean
 	} {
 		return {
 			section: this.section,
 			fields: this.fields.map((f: Field | Group | Subform) => (f && f.toJson ? f.toJson() : JSON.stringify(f))),
 			description: this.description,
 			keywords: this.keywords,
+			hiddenForPatient: this.hiddenForPatient,
 		}
 	}
 }

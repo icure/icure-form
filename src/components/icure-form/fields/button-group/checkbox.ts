@@ -5,6 +5,7 @@ import { Code } from '../../../model'
 
 export class CheckBox extends Field {
 	@property() optionsProvider: (language: string, searchTerm?: string) => Promise<Code[]> = async () => []
+	@property({ attribute: false }) keyboardHints?: (string | number)[]
 	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
@@ -27,6 +28,7 @@ export class CheckBox extends Field {
 					.handleValueChanged=${this.handleSingleValueChanged(id)}
 					.handleMetadataChanged=${this.handleSingleMetadataChanged(id)}
 					.styleOptions=${this.styleOptions}
+					.keyboardHints=${this.keyboardHints}
 				></icure-button-group>
 			`
 		})

@@ -8,15 +8,15 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCard(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -24,7 +24,7 @@ async function waitForInternal(page: Page) {
 
 async function clickByClass(page: Page, cls: string) {
 	const ok = await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		if (!btn || (btn as HTMLButtonElement).disabled) return false
 		btn.click()
@@ -37,7 +37,7 @@ async function clickByClass(page: Page, cls: string) {
 async function clickOption(page: Page, fieldTag: string, optionId: string) {
 	const ok = await page.evaluate(
 		({ fieldTag, optionId }: { fieldTag: string; optionId: string }) => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 			const fieldEl = internal?.shadowRoot?.querySelector(fieldTag)
 			const buttonGroup = fieldEl?.shadowRoot?.querySelector('icure-button-group')
 			const input = buttonGroup?.shadowRoot?.querySelector(`input[id="${optionId}"]`) as HTMLInputElement | null
@@ -54,7 +54,7 @@ async function clickOption(page: Page, fieldTag: string, optionId: string) {
 async function isOptionChecked(page: Page, fieldTag: string, optionId: string): Promise<boolean> {
 	return await page.evaluate(
 		({ fieldTag, optionId }: { fieldTag: string; optionId: string }) => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 			const fieldEl = internal?.shadowRoot?.querySelector(fieldTag)
 			const buttonGroup = fieldEl?.shadowRoot?.querySelector('icure-button-group')
 			const input = buttonGroup?.shadowRoot?.querySelector(`input[id="${optionId}"]`) as HTMLInputElement | null
@@ -108,33 +108,33 @@ sections:
 test.describe('Radio / checkbox back-restore', () => {
 	test('radio selection survives Continue → Back', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, simpleYaml)
+		await initCard(page, simpleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(500)
 		await clickOption(page, 'icure-form-radio-button', 'GENDER|female|1')
 		await page.waitForTimeout(500)
 		expect(await isOptionChecked(page, 'icure-form-radio-button', 'GENDER|female|1')).toBe(true)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__back')
+		await clickByClass(page, 'card__back')
 		await page.waitForTimeout(1500)
 		expect(await isOptionChecked(page, 'icure-form-radio-button', 'GENDER|female|1')).toBe(true)
 	})
 
 	test('checkbox selection survives Continue → Back (control)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, simpleYaml)
+		await initCard(page, simpleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(500)
 		await clickOption(page, 'icure-form-checkbox', 'ALLERGIES|milk|1')
 		await page.waitForTimeout(300)
 		expect(await isOptionChecked(page, 'icure-form-checkbox', 'ALLERGIES|milk|1')).toBe(true)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__back')
+		await clickByClass(page, 'card__back')
 		await page.waitForTimeout(1500)
 		expect(await isOptionChecked(page, 'icure-form-checkbox', 'ALLERGIES|milk|1')).toBe(true)
 	})
@@ -144,20 +144,20 @@ test.describe('Radio / checkbox back-restore', () => {
 		// has DIFFERENT option ids, so an "options stuck on first field" bug surfaces as
 		// unchecked-or-missing inputs on the middle card(s).
 		await gotoHarness(page)
-		await initPatientCards(page, threeRadiosYaml)
+		await initCard(page, threeRadiosYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(500)
 
 		// Card 0: R1 = Yes (R1|1|1)
 		await clickOption(page, 'icure-form-radio-button', 'R1|1|1')
 		await page.waitForTimeout(400)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(400)
 		// Card 1: R2 = No (R2|2|1)
 		await clickOption(page, 'icure-form-radio-button', 'R2|2|1')
 		await page.waitForTimeout(400)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(400)
 		// Card 2: R3 = Yes (R3|1|1)
 		await clickOption(page, 'icure-form-radio-button', 'R3|1|1')
@@ -167,34 +167,34 @@ test.describe('Radio / checkbox back-restore', () => {
 		expect(await isOptionChecked(page, 'icure-form-radio-button', 'R3|1|1')).toBe(true)
 
 		// Back to card 1 (R2). It should still show R2|2|1 checked.
-		await clickByClass(page, 'patient-cards__back')
+		await clickByClass(page, 'card__back')
 		await page.waitForTimeout(800)
 		expect(await isOptionChecked(page, 'icure-form-radio-button', 'R2|2|1')).toBe(true)
 
 		// Back to card 0 (R1). It should still show R1|1|1 checked.
-		await clickByClass(page, 'patient-cards__back')
+		await clickByClass(page, 'card__back')
 		await page.waitForTimeout(800)
 		expect(await isOptionChecked(page, 'icure-form-radio-button', 'R1|1|1')).toBe(true)
 	})
 
 	test('radio selection survives review → edit-jump back to its card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, simpleYaml)
+		await initCard(page, simpleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(500)
 		await clickOption(page, 'icure-form-radio-button', 'GENDER|male|1')
 		await page.waitForTimeout(500)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		await page.waitForTimeout(500)
 		await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const row = internal?.shadowRoot?.querySelector('.patient-cards__review-row[data-card-index="0"]')
-			const btn = row?.querySelector('.patient-cards__review-edit') as HTMLElement | null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const row = internal?.shadowRoot?.querySelector('.card__review-row[data-card-index="0"]')
+			const btn = row?.querySelector('.card__review-edit') as HTMLElement | null
 			btn?.click()
 		})
 		await page.waitForTimeout(800)

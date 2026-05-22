@@ -10,15 +10,15 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCard(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -26,7 +26,7 @@ async function waitForInternal(page: Page) {
 
 async function clickByClass(page: Page, cls: string) {
 	const ok = await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		if (!btn || (btn as HTMLButtonElement).disabled) return false
 		btn.click()
@@ -54,12 +54,12 @@ sections:
 test.describe('Phase 8 / ARIA semantics', () => {
 	test('progress bar has role="progressbar" with aria attributes', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const attrs = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const pb = internal?.shadowRoot?.querySelector('.patient-cards__progress') as HTMLElement | null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const pb = internal?.shadowRoot?.querySelector('.card__progress') as HTMLElement | null
 			return {
 				role: pb?.getAttribute('role'),
 				min: pb?.getAttribute('aria-valuemin'),
@@ -77,12 +77,12 @@ test.describe('Phase 8 / ARIA semantics', () => {
 
 	test('progress text has aria-live="polite" for screen-reader announcements', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const live = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return internal?.shadowRoot?.querySelector('.patient-cards__progress-text')?.getAttribute('aria-live')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card__progress-text')?.getAttribute('aria-live')
 		})
 		expect(live).toBe('polite')
 	})
@@ -106,32 +106,32 @@ sections:
       - field: B
         type: text-field
 `
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.evaluate(() => {
 			const fvc = (window as any).__currentFvc
 			fvc.setValue('A', 'en', { content: { en: { type: 'string', value: 'one' } } })
 		})
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.evaluate(() => {
 			const fvc = (window as any).__currentFvc
 			fvc.setValue('B', 'en', { content: { en: { type: 'string', value: 'two' } } })
 		})
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		// Wait for async review validator evaluation to complete (banner appears).
 		await page.waitForFunction(
 			() => {
-				const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-				return !!internal?.shadowRoot?.querySelector('.patient-cards__review-errors')
+				const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+				return !!internal?.shadowRoot?.querySelector('.card__review-errors')
 			},
 			{ timeout: 5_000 },
 		)
 		const role = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return internal?.shadowRoot?.querySelector('.patient-cards__review-errors')?.getAttribute('role')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card__review-errors')?.getAttribute('role')
 		})
 		expect(role).toBe('alert')
 	})
@@ -143,7 +143,7 @@ sections:
 test.describe('Phase 8 / focus management', () => {
 	test('Start button receives focus on welcome stage', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		await page.waitForTimeout(200)
 		const focusedTag = await page.evaluate(() => {
@@ -154,14 +154,14 @@ test.describe('Phase 8 / focus management', () => {
 			}
 			return active?.className ?? null
 		})
-		expect(focusedTag).toContain('patient-cards__start')
+		expect(focusedTag).toContain('card__start')
 	})
 
 	test('Focus moves to Continue / interactive field on entering input stage', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		const focusInfo = await page.evaluate(() => {
 			let active: Element | null = document.activeElement
@@ -175,7 +175,7 @@ test.describe('Phase 8 / focus management', () => {
 			}
 		})
 		// Either an editable element inside the field, or the Continue button as fallback if no editable was found.
-		const looksGood = !!(focusInfo.editable || focusInfo.className?.includes('patient-cards__continue') || focusInfo.tagName === 'input' || focusInfo.tagName === 'textarea')
+		const looksGood = !!(focusInfo.editable || focusInfo.className?.includes('card__continue') || focusInfo.tagName === 'input' || focusInfo.tagName === 'textarea')
 		expect(looksGood).toBe(true)
 	})
 })
@@ -186,11 +186,11 @@ test.describe('Phase 8 / focus management', () => {
 test.describe('Phase 8 / touch targets', () => {
 	test('primary buttons render with min height/width ≥ 44px', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		const sizes = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const btn = internal?.shadowRoot?.querySelector('.patient-cards__start') as HTMLElement
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const btn = internal?.shadowRoot?.querySelector('.card__start') as HTMLElement
 			if (!btn) return null
 			const rect = btn.getBoundingClientRect()
 			return { width: rect.width, height: rect.height }
@@ -209,11 +209,11 @@ test.describe('Phase 8 / responsive at 360px', () => {
 
 	test('renderer is usable at 360px width without horizontal overflow', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		const overflow = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const card = internal?.shadowRoot?.querySelector('.patient-cards') as HTMLElement
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const card = internal?.shadowRoot?.querySelector('.card') as HTMLElement
 			if (!card) return null
 			const rect = card.getBoundingClientRect()
 			return { width: rect.width, viewportWidth: window.innerWidth }
@@ -224,11 +224,11 @@ test.describe('Phase 8 / responsive at 360px', () => {
 
 	test('Start button remains tap-target-sized at 360px', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		const sizes = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const btn = internal?.shadowRoot?.querySelector('.patient-cards__start') as HTMLElement
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const btn = internal?.shadowRoot?.querySelector('.card__start') as HTMLElement
 			const rect = btn?.getBoundingClientRect()
 			return rect ? { width: rect.width, height: rect.height } : null
 		})
@@ -243,24 +243,24 @@ test.describe('Phase 8 / responsive at 360px', () => {
 test.describe('Phase 8 / theming hooks', () => {
 	test('CSS custom properties are exposed on the internal element for host override', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		// Apply a host-side override and check the accent color propagates.
 		await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as HTMLElement | null
-			if (internal) internal.style.setProperty('--patient-cards-accent', 'rgb(255, 0, 128)')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as HTMLElement | null
+			if (internal) internal.style.setProperty('--icure-card-accent', 'rgb(255, 0, 128)')
 		})
 		await page.waitForTimeout(100)
 		const accent = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const bar = internal?.shadowRoot?.querySelector('.patient-cards__progress-bar') as HTMLElement
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const bar = internal?.shadowRoot?.querySelector('.card__progress-bar') as HTMLElement
 			return bar ? getComputedStyle(bar).backgroundColor : null
 		})
 		// Welcome stage doesn't render the progress bar — first navigate to input.
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const accentAfter = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const bar = internal?.shadowRoot?.querySelector('.patient-cards__progress-bar') as HTMLElement
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const bar = internal?.shadowRoot?.querySelector('.card__progress-bar') as HTMLElement
 			return bar ? getComputedStyle(bar).backgroundColor : null
 		})
 		expect(accentAfter).toBe('rgb(255, 0, 128)')
@@ -273,15 +273,15 @@ test.describe('Phase 8 / theming hooks', () => {
 test.describe('Phase 8 / keyboard navigation', () => {
 	test('Start button can be activated with Enter via keyboard', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		await page.waitForTimeout(200)
 		// Focus is already on Start from updated() lifecycle.
 		await page.keyboard.press('Enter')
 		await page.waitForTimeout(200)
 		const stage = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return internal?.shadowRoot?.querySelector('.patient-cards')?.getAttribute('data-stage') ?? null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card')?.getAttribute('data-stage') ?? null
 		})
 		expect(stage).toBe('input')
 	})
@@ -291,9 +291,9 @@ test.describe('Phase 8 / keyboard navigation', () => {
 // axe-core WCAG 2.1 AA scan
 // ============================================================
 test.describe('Phase 8 / axe-core a11y scan', () => {
-	// Helper: scan and filter violations originating in the patient-cards markup (not the harness page
+	// Helper: scan and filter violations originating in the card markup (not the harness page
 	// and not embedded field components like icure-form-text-field which we don't ship the styles for).
-	async function patientCardsViolations(page: Page) {
+	async function cardViolations(page: Page) {
 		// Let animations finish so opacity-tweening doesn't trip color-contrast checks.
 		await page.waitForTimeout(600)
 		const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
@@ -301,7 +301,7 @@ test.describe('Phase 8 / axe-core a11y scan', () => {
 			v.nodes.some((n) => {
 				const html = n.html ?? ''
 				const target = (n.target ?? []).join(' ')
-				const inPatient = html.includes('patient-cards') || target.includes('patient-cards')
+				const inPatient = html.includes('card') || target.includes('card')
 				const inFieldComponent =
 					html.startsWith('<icure-form-text-field') ||
 					html.startsWith('<icure-form-measure-field') ||
@@ -332,31 +332,31 @@ test.describe('Phase 8 / axe-core a11y scan', () => {
 
 	test('welcome stage has no WCAG 2.1 AA serious violations', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
-		const ours = await patientCardsViolations(page)
+		const ours = await cardViolations(page)
 		const critical = ours.filter((v) => v.impact === 'critical' || v.impact === 'serious')
 		expect(critical, JSON.stringify(critical.map((v) => ({ id: v.id, impact: v.impact, help: v.help })), null, 2)).toEqual([])
 	})
 
 	test('input stage has no WCAG 2.1 AA serious violations', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		const ours = await patientCardsViolations(page)
+		await clickByClass(page, 'card__start')
+		const ours = await cardViolations(page)
 		const critical = ours.filter((v) => v.impact === 'critical' || v.impact === 'serious')
 		expect(critical, JSON.stringify(critical.map((v) => ({ id: v.id, impact: v.impact, help: v.help })), null, 2)).toEqual([])
 	})
 
 	test('review stage has no WCAG 2.1 AA serious violations', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, sampleYaml)
+		await initCard(page, sampleYaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue--to-review')
-		const ours = await patientCardsViolations(page)
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue--to-review')
+		const ours = await cardViolations(page)
 		const critical = ours.filter((v) => v.impact === 'critical' || v.impact === 'serious')
 		expect(critical, JSON.stringify(critical.map((v) => ({ id: v.id, impact: v.impact, help: v.help })), null, 2)).toEqual([])
 	})

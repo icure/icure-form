@@ -4,7 +4,7 @@ import { property, state } from 'lit/decorators.js'
 
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form/form'
-import { render as renderAsPatientCards } from './renderer/patient-cards'
+import { render as renderAsCard } from './renderer/card'
 import { Field, FieldMetadata, FieldValue, Form } from '../model'
 import { FormValuesContainer, Suggestion, Version } from '../../generic'
 
@@ -52,8 +52,7 @@ export class IcureForm extends LitElement {
 			}
 
 			const variant = this.renderer?.split(':')
-			const renderer: Renderer | undefined =
-				variant[0] === 'form' ? renderAsForm : variant[0] === 'patient-cards' ? renderAsPatientCards : undefined
+			const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : variant[0] === 'card' ? renderAsCard : undefined
 
 			if (!renderer) {
 				return html`<p>unknown renderer</p>`

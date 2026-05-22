@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test'
 
 // ============================================================
-// Phase 2: welcome / review / confirmation / patient-form-submit
+// Phase 2: welcome / review / confirmation / card-form-submit
 // ============================================================
 
 async function gotoHarness(page: Page) {
@@ -9,15 +9,15 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCard(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -25,14 +25,14 @@ async function waitForInternal(page: Page) {
 
 async function getStage(page: Page): Promise<string | null> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		return internal?.shadowRoot?.querySelector('.patient-cards')?.getAttribute('data-stage') ?? null
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		return internal?.shadowRoot?.querySelector('.card')?.getAttribute('data-stage') ?? null
 	})
 }
 
 async function clickByClass(page: Page, cls: string) {
 	const ok = await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		if (!btn) return false
 		btn.click()
@@ -44,9 +44,9 @@ async function clickByClass(page: Page, cls: string) {
 
 async function clickEditForCardIndex(page: Page, cardIndex: number) {
 	const ok = await page.evaluate((idx: number) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const row = internal?.shadowRoot?.querySelector(`.patient-cards__review-row[data-card-index="${idx}"]`)
-		const btn = row?.querySelector('.patient-cards__review-edit') as HTMLElement | null
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const row = internal?.shadowRoot?.querySelector(`.card__review-row[data-card-index="${idx}"]`)
+		const btn = row?.querySelector('.card__review-edit') as HTMLElement | null
 		if (!btn) return false
 		btn.click()
 		return true
@@ -57,8 +57,8 @@ async function clickEditForCardIndex(page: Page, cardIndex: number) {
 
 async function getCurrentCardIndex(page: Page): Promise<number | null> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const root = internal?.shadowRoot?.querySelector('.patient-cards')
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const root = internal?.shadowRoot?.querySelector('.card')
 		const idx = root?.getAttribute('data-current-card-index')
 		return idx === null || idx === undefined ? null : parseInt(idx, 10)
 	})
@@ -94,22 +94,22 @@ sections:
 
 	test('initial stage is welcome', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		expect(await getStage(page)).toBe('welcome')
 	})
 
 	test('welcome shows form title and description', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		const content = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 			const r = internal?.shadowRoot
 			return {
-				title: r?.querySelector('.patient-cards__welcome-title')?.textContent?.trim() ?? null,
-				description: r?.querySelector('.patient-cards__welcome-description')?.textContent?.trim() ?? null,
-				hasStart: !!r?.querySelector('.patient-cards__start'),
+				title: r?.querySelector('.card__welcome-title')?.textContent?.trim() ?? null,
+				description: r?.querySelector('.card__welcome-description')?.textContent?.trim() ?? null,
+				hasStart: !!r?.querySelector('.card__start'),
 			}
 		})
 		expect(content.title).toBe('Patient intake')
@@ -119,37 +119,37 @@ sections:
 
 	test('Start button advances to first input card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		expect(await getStage(page)).toBe('input')
 		expect(await getCurrentCardIndex(page)).toBe(0)
 	})
 
 	test('welcome is not counted in progress (progress shows 1 / 2 on first input card)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const progressText = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return internal?.shadowRoot?.querySelector('.patient-cards__progress-text')?.textContent?.trim() ?? null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card__progress-text')?.textContent?.trim() ?? null
 		})
 		expect(progressText).toBe('1 / 2')
 	})
 
 	test('Back from first input card returns to welcome', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__back')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__back')
 		expect(await getStage(page)).toBe('welcome')
 	})
 
 	test('welcome renders even when description is absent', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(
+		await initCard(
 			page,
 			`
 form: Onlytitle
@@ -162,12 +162,12 @@ sections:
 		)
 		await waitForInternal(page)
 		const result = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 			const r = internal?.shadowRoot
 			return {
-				title: r?.querySelector('.patient-cards__welcome-title')?.textContent?.trim() ?? null,
-				hasDescription: !!r?.querySelector('.patient-cards__welcome-description'),
-				hasStart: !!r?.querySelector('.patient-cards__start'),
+				title: r?.querySelector('.card__welcome-title')?.textContent?.trim() ?? null,
+				hasDescription: !!r?.querySelector('.card__welcome-description'),
+				hasStart: !!r?.querySelector('.card__start'),
 			}
 		})
 		expect(result.title).toBe('Onlytitle')
@@ -198,31 +198,31 @@ sections:
 
 	test('Continue on last input card goes to review', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		// 1 -> 2
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		// 2 -> 3 (last)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		expect(await getStage(page)).toBe('input')
 		expect(await getCurrentCardIndex(page)).toBe(2)
 		// 3 -> review
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		expect(await getStage(page)).toBe('review')
 	})
 
 	test('review is not counted in progress (no progress chrome on review stage)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue--to-review')
 		const hasProgress = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards__progress')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card__progress')
 		})
 		expect(hasProgress).toBe(false)
 	})
@@ -250,21 +250,21 @@ sections:
 
 	async function navigateToReview(page: Page) {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue--to-review')
 	}
 
 	test('review lists all field labels grouped by section', async ({ page }) => {
 		await navigateToReview(page)
 		const dom = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 			const r = internal?.shadowRoot
-			const sections = Array.from(r?.querySelectorAll('.patient-cards__review-section-title') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
-			const labels = Array.from(r?.querySelectorAll('.patient-cards__review-label') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
+			const sections = Array.from(r?.querySelectorAll('.card__review-section-title') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
+			const labels = Array.from(r?.querySelectorAll('.card__review-label') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
 			return { sections, labels }
 		})
 		expect(dom.sections).toEqual(['A', 'B'])
@@ -273,20 +273,20 @@ sections:
 
 	test('review shows actual entered values', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		// Set values BEFORE entering the input stage (it doesn't matter when — they're on the container)
 		await setStringValue(page, 'First name', 'Alice')
 		await setStringValue(page, 'Last name', 'Smith')
 		await setStringValue(page, 'City', 'Brussels')
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue')
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue')
+		await clickByClass(page, 'card__continue--to-review')
 
 		const values = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return Array.from(internal?.shadowRoot?.querySelectorAll('.patient-cards__review-value') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return Array.from(internal?.shadowRoot?.querySelectorAll('.card__review-value') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
 		})
 		expect(values).toEqual(['Alice', 'Smith', 'Brussels'])
 	})
@@ -294,8 +294,8 @@ sections:
 	test('empty fields render an em-dash placeholder', async ({ page }) => {
 		await navigateToReview(page)
 		const placeholders = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return Array.from(internal?.shadowRoot?.querySelectorAll('.patient-cards__review-empty') ?? []).length
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return Array.from(internal?.shadowRoot?.querySelectorAll('.card__review-empty') ?? []).length
 		})
 		expect(placeholders).toBe(3)
 	})
@@ -307,8 +307,8 @@ sections:
 		expect(await getCurrentCardIndex(page)).toBe(1)
 		// The Continue button should be the "return to review" variant
 		const hasReturnToReview = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards__continue--return-to-review')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card__continue--return-to-review')
 		})
 		expect(hasReturnToReview).toBe(true)
 	})
@@ -316,13 +316,13 @@ sections:
 	test('Continue from edit-jumped card returns directly to review', async ({ page }) => {
 		await navigateToReview(page)
 		await clickEditForCardIndex(page, 0)
-		await clickByClass(page, 'patient-cards__continue--return-to-review')
+		await clickByClass(page, 'card__continue--return-to-review')
 		expect(await getStage(page)).toBe('review')
 	})
 
 	test('Back from review returns to the last input card', async ({ page }) => {
 		await navigateToReview(page)
-		await clickByClass(page, 'patient-cards__back')
+		await clickByClass(page, 'card__back')
 		expect(await getStage(page)).toBe('input')
 		expect(await getCurrentCardIndex(page)).toBe(2) // last card index
 	})
@@ -344,13 +344,13 @@ sections:
 
 	async function navigateToReview(page: Page) {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue--to-review')
 	}
 
-	test('Submit on review fires patient-form-submit with detail.submittedAt', async ({ page }) => {
+	test('Submit on review fires card-form-submit with detail.submittedAt', async ({ page }) => {
 		await navigateToReview(page)
 		// Hook the event before clicking.
 		await page.evaluate(() => {
@@ -358,12 +358,12 @@ sections:
 			w.__submitEventCount = 0
 			w.__submitEventDetail = null
 			const el = document.querySelector('icure-form')
-			el?.addEventListener('patient-form-submit', (e: Event) => {
+			el?.addEventListener('card-form-submit', (e: Event) => {
 				w.__submitEventCount++
 				w.__submitEventDetail = (e as CustomEvent).detail
 			})
 		})
-		await clickByClass(page, 'patient-cards__submit')
+		await clickByClass(page, 'card__submit')
 		const { count, detail } = await page.evaluate(() => ({ count: (window as any).__submitEventCount, detail: (window as any).__submitEventDetail }))
 		expect(count).toBe(1)
 		expect(detail).toBeTruthy()
@@ -375,31 +375,31 @@ sections:
 
 	test('After submit, confirmation stage is shown', async ({ page }) => {
 		await navigateToReview(page)
-		await clickByClass(page, 'patient-cards__submit')
+		await clickByClass(page, 'card__submit')
 		expect(await getStage(page)).toBe('confirmation')
 		const heading = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return internal?.shadowRoot?.querySelector('.patient-cards__confirmation-heading')?.textContent?.trim() ?? null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card__confirmation-heading')?.textContent?.trim() ?? null
 		})
 		expect(heading).toBe('Thank you')
 	})
 
 	test('No Back button is available on confirmation', async ({ page }) => {
 		await navigateToReview(page)
-		await clickByClass(page, 'patient-cards__submit')
+		await clickByClass(page, 'card__submit')
 		const hasBack = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards__back')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card__back')
 		})
 		expect(hasBack).toBe(false)
 	})
 
 	test('Confirmation is not counted in progress (no progress chrome)', async ({ page }) => {
 		await navigateToReview(page)
-		await clickByClass(page, 'patient-cards__submit')
+		await clickByClass(page, 'card__submit')
 		const hasProgress = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards__progress')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card__progress')
 		})
 		expect(hasProgress).toBe(false)
 	})

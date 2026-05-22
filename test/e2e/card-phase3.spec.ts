@@ -9,15 +9,15 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCard(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -25,7 +25,7 @@ async function waitForInternal(page: Page) {
 
 async function clickByClass(page: Page, cls: string) {
 	const ok = await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		if (!btn || (btn as HTMLButtonElement).disabled) return false
 		btn.click()
@@ -37,7 +37,7 @@ async function clickByClass(page: Page, cls: string) {
 
 async function clickByClassEvenIfDisabled(page: Page, cls: string) {
 	await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		btn?.click()
 	}, cls)
@@ -57,32 +57,32 @@ async function setStringValue(page: Page, label: string, value: string, language
 
 async function isContinueDisabled(page: Page): Promise<boolean> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const btn = internal?.shadowRoot?.querySelector('[class*="patient-cards__continue"]') as HTMLButtonElement | null
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const btn = internal?.shadowRoot?.querySelector('[class*="card__continue"]') as HTMLButtonElement | null
 		return !!btn && btn.disabled
 	})
 }
 
 async function isSubmitDisabled(page: Page): Promise<boolean> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const btn = internal?.shadowRoot?.querySelector('.patient-cards__submit') as HTMLButtonElement | null
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const btn = internal?.shadowRoot?.querySelector('.card__submit') as HTMLButtonElement | null
 		return !!btn && btn.disabled
 	})
 }
 
 async function getBlockingFailureCount(page: Page): Promise<number> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const wrapper = internal?.shadowRoot?.querySelector('.patient-cards')
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const wrapper = internal?.shadowRoot?.querySelector('.card')
 		return parseInt(wrapper?.getAttribute('data-blocking-failures') ?? '0', 10)
 	})
 }
 
 async function getReviewFailureCount(page: Page): Promise<number> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const wrapper = internal?.shadowRoot?.querySelector('.patient-cards')
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const wrapper = internal?.shadowRoot?.querySelector('.card')
 		return parseInt(wrapper?.getAttribute('data-review-failures') ?? '0', 10)
 	})
 }
@@ -114,9 +114,9 @@ sections:
 
 	test('Continue is disabled while a required self-validator on the current card fails', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await waitForValidation(page)
 		expect(await isContinueDisabled(page)).toBe(true)
 		expect(await getBlockingFailureCount(page)).toBe(1)
@@ -124,9 +124,9 @@ sections:
 
 	test('Continue becomes enabled after the required value is provided', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await waitForValidation(page)
 		expect(await isContinueDisabled(page)).toBe(true)
 		await setStringValue(page, 'Name', 'Alice')
@@ -137,15 +137,15 @@ sections:
 
 	test('Clicking a disabled Continue does NOT advance', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await waitForValidation(page)
 		// Try to click the (disabled) Continue.
-		await clickByClassEvenIfDisabled(page, 'patient-cards__continue')
+		await clickByClassEvenIfDisabled(page, 'card__continue')
 		const idx = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return parseInt(internal?.shadowRoot?.querySelector('.patient-cards')?.getAttribute('data-current-card-index') ?? '-1', 10)
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return parseInt(internal?.shadowRoot?.querySelector('.card')?.getAttribute('data-current-card-index') ?? '-1', 10)
 		})
 		expect(idx).toBe(0)
 	})
@@ -172,9 +172,9 @@ sections:
 
 	test('cross-card validator does NOT block Continue on the earlier card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await waitForValidation(page)
 		// Validator on A references B which is on a later card -> classified as cross-card,
 		// so Continue must NOT be disabled by it.
@@ -184,37 +184,37 @@ sections:
 
 	test('a failing cross-card validator surfaces on the review card and blocks Submit', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		// Enter different values on A and B so the cross-card validator fails at review.
 		await setStringValue(page, 'A', 'one')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await setStringValue(page, 'B', 'two')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		await waitForValidation(page)
 		expect(await getReviewFailureCount(page)).toBeGreaterThanOrEqual(1)
 		expect(await isSubmitDisabled(page)).toBe(true)
 		const errorTexts = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return Array.from(internal?.shadowRoot?.querySelectorAll('.patient-cards__review-errors-message') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return Array.from(internal?.shadowRoot?.querySelectorAll('.card__review-errors-message') ?? []).map((e) => (e as HTMLElement).textContent?.trim())
 		})
 		expect(errorTexts).toContain('A must equal B')
 	})
 
 	test('matching cross-card values clear the review failure and re-enable Submit', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await setStringValue(page, 'A', 'same')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await setStringValue(page, 'B', 'same')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		await waitForValidation(page)
 		expect(await getReviewFailureCount(page)).toBe(0)
 		expect(await isSubmitDisabled(page)).toBe(false)
@@ -222,26 +222,26 @@ sections:
 
 	test('review error item Edit button jumps to the source card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await setStringValue(page, 'A', 'one')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await setStringValue(page, 'B', 'two')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		await waitForValidation(page)
 		// Click the jump button on the first review error.
 		await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const btn = internal?.shadowRoot?.querySelector('.patient-cards__review-errors-jump') as HTMLElement | null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const btn = internal?.shadowRoot?.querySelector('.card__review-errors-jump') as HTMLElement | null
 			btn?.click()
 		})
 		await page.waitForTimeout(150)
 		const stage = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return internal?.shadowRoot?.querySelector('.patient-cards')?.getAttribute('data-stage') ?? null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card')?.getAttribute('data-stage') ?? null
 		})
 		expect(stage).toBe('input')
 	})
@@ -268,9 +268,9 @@ sections:
 
 	test('Self-validator on later card does NOT block Continue on the earlier card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await waitForValidation(page)
 		// We're on card 0 (A). B's validator is attached to B, not A, so blockingFailures = 0.
 		expect(await isContinueDisabled(page)).toBe(false)
@@ -278,10 +278,10 @@ sections:
 
 	test('Self-validator blocks Continue when patient reaches the validator-owning card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__start')
+		await clickByClass(page, 'card__continue')
 		await waitForValidation(page)
 		expect(await isContinueDisabled(page)).toBe(true)
 	})
@@ -306,12 +306,12 @@ sections:
 
 	test('Submit is enabled on review when all validators pass', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await setStringValue(page, 'A', 'value')
 		await waitForValidation(page)
-		await clickByClass(page, 'patient-cards__continue--to-review')
+		await clickByClass(page, 'card__continue--to-review')
 		await waitForValidation(page)
 		expect(await getReviewFailureCount(page)).toBe(0)
 		expect(await isSubmitDisabled(page)).toBe(false)

@@ -297,7 +297,10 @@ The renderer is instantiated by the icure-form component and is responsible for 
 The icure-form component accepts the following properties:
 
 - form: Form - the form object that represents the form to be rendered
-- renderer: string - the name of the renderer to be used. Supported values: `"form"` (standard layout) and `"form:tab"` (renders each section as a tab).
+- renderer: string - the name of the renderer to be used. Supported values:
+  - `"form"` — standard 24-column grid layout
+  - `"form:tab"` — renders each section as a tab
+  - `"card"` — Typeform-style card sequence; defaults to one question per card. Equivalent to `"card:sparse"` (the only variant currently implemented). A `"card:dense"` variant that packs multiple questions per card will follow.
 - visible: boolean - a boolean indicating if the form should be visible or not. Defaults to true.
 - readonly: boolean - a boolean indicating if the form should be read-only or not. Defaults to false.
 - displayMetadata: boolean - a boolean indicating if metadata (owner, date, etc.) should be displayed on fields. Defaults to false.

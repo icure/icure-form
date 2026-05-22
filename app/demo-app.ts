@@ -125,7 +125,7 @@ class DemoApp extends LitElement {
 	]
 
 	@state() private selectedForm: Form = this.samples[0].form
-	@state() private rendererMode: 'form:tab' | 'patient-cards' = 'form:tab'
+	@state() private rendererMode: 'form:tab' | 'card' = 'form:tab'
 	static get styles() {
 		return css`
 			.container {
@@ -237,14 +237,7 @@ class DemoApp extends LitElement {
 						<button type="button" class="${this.rendererMode === 'form:tab' ? 'active' : ''}" aria-pressed="${this.rendererMode === 'form:tab'}" @click="${() => (this.rendererMode = 'form:tab')}">
 							Clinician
 						</button>
-						<button
-							type="button"
-							class="${this.rendererMode === 'patient-cards' ? 'active' : ''}"
-							aria-pressed="${this.rendererMode === 'patient-cards'}"
-							@click="${() => (this.rendererMode = 'patient-cards')}"
-						>
-							Patient cards
-						</button>
+						<button type="button" class="${this.rendererMode === 'card' ? 'active' : ''}" aria-pressed="${this.rendererMode === 'card'}" @click="${() => (this.rendererMode = 'card')}">Card</button>
 					</div>
 					<ul>
 						${this.samples.map((s) => {

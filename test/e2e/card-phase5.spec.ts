@@ -9,23 +9,23 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCardsWithPrefill(page: Page, yaml: string, prefill: Array<{ label: string; value: string }>) {
+async function initCardWithPrefill(page: Page, yaml: string, prefill: Array<{ label: string; value: string }>) {
 	return await page.evaluate(
 		async ({ yaml, prefill }: { yaml: string; prefill: any[] }) =>
-			(window as any).initForm({ yaml, language: 'en', renderer: 'patient-cards', prefill }),
+			(window as any).initForm({ yaml, language: 'en', renderer: 'card', prefill }),
 		{ yaml, prefill },
 	)
 }
 
-async function initPatientCardsEmpty(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCardEmpty(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -33,8 +33,8 @@ async function waitForInternal(page: Page) {
 
 async function getStageAndIndex(page: Page) {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const wrapper = internal?.shadowRoot?.querySelector('.patient-cards')
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const wrapper = internal?.shadowRoot?.querySelector('.card')
 		return {
 			stage: wrapper?.getAttribute('data-stage') ?? null,
 			currentCardIndex: parseInt(wrapper?.getAttribute('data-current-card-index') ?? '-1', 10),
@@ -65,7 +65,7 @@ sections:
 
 	test('first-time use: stage remains "welcome"', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsEmpty(page, yaml)
+		await initCardEmpty(page, yaml)
 		await waitForInternal(page)
 		await waitForFastForward(page)
 		expect((await getStageAndIndex(page)).stage).toBe('welcome')
@@ -91,7 +91,7 @@ sections:
 
 	test('with only Q1 filled, fast-forward lands on Q2 (idx 1)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsWithPrefill(page, yaml, [{ label: 'Q1', value: 'one' }])
+		await initCardWithPrefill(page, yaml, [{ label: 'Q1', value: 'one' }])
 		await waitForInternal(page)
 		await waitForFastForward(page)
 		const s = await getStageAndIndex(page)
@@ -101,7 +101,7 @@ sections:
 
 	test('with Q1 and Q2 filled, fast-forward lands on Q3 (idx 2)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsWithPrefill(page, yaml, [
+		await initCardWithPrefill(page, yaml, [
 			{ label: 'Q1', value: 'one' },
 			{ label: 'Q2', value: 'two' },
 		])
@@ -115,7 +115,7 @@ sections:
 	test('with Q1 filled but Q2 missing in the middle, fast-forward stops at Q2 (idx 1) — order preserved', async ({ page }) => {
 		await gotoHarness(page)
 		// Q1 and Q3 filled; Q2 missing.
-		await initPatientCardsWithPrefill(page, yaml, [
+		await initCardWithPrefill(page, yaml, [
 			{ label: 'Q1', value: 'one' },
 			{ label: 'Q3', value: 'three' },
 		])
@@ -144,7 +144,7 @@ sections:
 
 	test('with all fields filled, fast-forward lands at the review stage', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsWithPrefill(page, yaml, [
+		await initCardWithPrefill(page, yaml, [
 			{ label: 'Q1', value: 'one' },
 			{ label: 'Q2', value: 'two' },
 		])
@@ -176,7 +176,7 @@ sections:
 	test('a previously-answered field whose validator now fails halts fast-forward at that card', async ({ page }) => {
 		await gotoHarness(page)
 		// Q1 was filled with a short value that fails the >=3 chars validator. Q2 has a value too.
-		await initPatientCardsWithPrefill(page, yaml, [
+		await initCardWithPrefill(page, yaml, [
 			{ label: 'Q1', value: 'ab' },
 			{ label: 'Q2', value: 'two' },
 		])
@@ -189,7 +189,7 @@ sections:
 
 	test('validators that pass do not halt fast-forward', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsWithPrefill(page, yaml, [
+		await initCardWithPrefill(page, yaml, [
 			{ label: 'Q1', value: 'longenough' },
 			{ label: 'Q2', value: 'two' },
 		])
@@ -221,7 +221,7 @@ sections:
 
 	test('with Mode=hide and Tail filled but Conditional empty, fast-forward sees 2 cards and lands at review', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsWithPrefill(page, yaml, [
+		await initCardWithPrefill(page, yaml, [
 			{ label: 'Mode', value: 'hide' },
 			{ label: 'Tail', value: 'tail-value' },
 		])
@@ -251,23 +251,23 @@ sections:
 
 	test('navigating back to welcome does NOT re-trigger fast-forward', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCardsWithPrefill(page, yaml, [{ label: 'Q1', value: 'one' }])
+		await initCardWithPrefill(page, yaml, [{ label: 'Q1', value: 'one' }])
 		await waitForInternal(page)
 		await waitForFastForward(page)
 		// Initially fast-forwarded to Q2 (idx 1).
 		expect((await getStageAndIndex(page)).currentCardIndex).toBe(1)
 		// Press Back to go back to Q1.
 		await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const btn = internal?.shadowRoot?.querySelector('.patient-cards__back') as HTMLElement | null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const btn = internal?.shadowRoot?.querySelector('.card__back') as HTMLElement | null
 			btn?.click()
 		})
 		await page.waitForTimeout(200)
 		expect((await getStageAndIndex(page)).currentCardIndex).toBe(0)
 		// Press Back again to go to welcome.
 		await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const btn = internal?.shadowRoot?.querySelector('.patient-cards__back') as HTMLElement | null
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const btn = internal?.shadowRoot?.querySelector('.card__back') as HTMLElement | null
 			btn?.click()
 		})
 		await page.waitForTimeout(300)

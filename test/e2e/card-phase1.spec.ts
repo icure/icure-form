@@ -11,8 +11,8 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCard(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function initClinicianRenderer(page: Page, yaml: string) {
@@ -23,15 +23,15 @@ async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
 			const root = document.querySelector('icure-form')?.shadowRoot
-			return !!root?.querySelector('icure-patient-cards-internal')
+			return !!root?.querySelector('icure-card-internal')
 		},
 		{ timeout: 15_000 },
 	)
 	// Allow Lit to render the internal element's shadow DOM.
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal')
-			return !!(internal as any)?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal')
+			return !!(internal as any)?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -39,28 +39,28 @@ async function waitForInternal(page: Page) {
 
 async function getCardState(page: Page) {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const root = internal?.shadowRoot
 		if (!root) return null
-		const wrapper = root.querySelector('.patient-cards')
-		const card = root.querySelector('.patient-cards__card')
+		const wrapper = root.querySelector('.card')
+		const card = root.querySelector('.card__card')
 		return {
 			currentCardIndex: parseInt(wrapper?.getAttribute('data-current-card-index') ?? '-1', 10),
 			totalCards: parseInt(wrapper?.getAttribute('data-total-cards') ?? '-1', 10),
 			sectionTitle: card?.getAttribute('data-card-section') ?? null,
-			progressText: root.querySelector('.patient-cards__progress-text')?.textContent?.trim() ?? null,
-			hasBack: !!root.querySelector('.patient-cards__back'),
-			hasContinue: !!root.querySelector('.patient-cards__continue'),
-			hasSubmit: !!root.querySelector('.patient-cards__submit'),
-			progressBarWidth: (root.querySelector('.patient-cards__progress-bar') as HTMLElement | null)?.style.width ?? null,
+			progressText: root.querySelector('.card__progress-text')?.textContent?.trim() ?? null,
+			hasBack: !!root.querySelector('.card__back'),
+			hasContinue: !!root.querySelector('.card__continue'),
+			hasSubmit: !!root.querySelector('.card__submit'),
+			progressBarWidth: (root.querySelector('.card__progress-bar') as HTMLElement | null)?.style.width ?? null,
 		}
 	})
 }
 
 async function clickContinue(page: Page) {
 	await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const btn = internal?.shadowRoot?.querySelector('[class*="patient-cards__continue"]') as HTMLElement
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const btn = internal?.shadowRoot?.querySelector('[class*="card__continue"]') as HTMLElement
 		btn?.click()
 	})
 	await page.waitForTimeout(100)
@@ -68,7 +68,7 @@ async function clickContinue(page: Page) {
 
 async function clickBack(page: Page) {
 	await page.evaluate(() => {
-		const btn = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal')?.shadowRoot?.querySelector('.patient-cards__back') as HTMLElement
+		const btn = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal')?.shadowRoot?.querySelector('.card__back') as HTMLElement
 		btn?.click()
 	})
 	await page.waitForTimeout(100)
@@ -78,8 +78,8 @@ async function clickBack(page: Page) {
 // input stage, so they need to advance past welcome first.
 async function clickStartIfPresent(page: Page) {
 	await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const btn = internal?.shadowRoot?.querySelector('.patient-cards__start') as HTMLElement
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const btn = internal?.shadowRoot?.querySelector('.card__start') as HTMLElement
 		btn?.click()
 	})
 	await page.waitForTimeout(100)
@@ -98,15 +98,15 @@ sections:
         type: text-field
 `
 
-	test('renderer="patient-cards" mounts the patient internal element', async ({ page }) => {
+	test('renderer="card" mounts the patient internal element', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		const tag = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal')
 			return internal?.tagName.toLowerCase() ?? null
 		})
-		expect(tag).toBe('icure-patient-cards-internal')
+		expect(tag).toBe('icure-card-internal')
 	})
 
 	test('renderer="form" (default) does NOT mount the patient internal element', async ({ page }) => {
@@ -122,7 +122,7 @@ sections:
 			{ timeout: 15_000 },
 		)
 		const internalPresent = await page.evaluate(() => {
-			return !!document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal')
+			return !!document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal')
 		})
 		expect(internalPresent).toBe(false)
 	})
@@ -147,7 +147,7 @@ sections:
 
 	test('three text fields produce three cards, one field per card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, threeQuestionYaml)
+		await initCard(page, threeQuestionYaml)
 		await waitForInternal(page)
 		await clickStartIfPresent(page)
 		const s = await getCardState(page)
@@ -160,7 +160,7 @@ sections:
 
 	test('On the first input card, Continue is present and (with no validators) Back returns to welcome', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, threeQuestionYaml)
+		await initCard(page, threeQuestionYaml)
 		await waitForInternal(page)
 		await clickStartIfPresent(page)
 		const s = await getCardState(page)
@@ -171,7 +171,7 @@ sections:
 
 	test('Continue advances; Back returns; Submit replaces Continue on last card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, threeQuestionYaml)
+		await initCard(page, threeQuestionYaml)
 		await waitForInternal(page)
 		await clickStartIfPresent(page)
 
@@ -201,7 +201,7 @@ sections:
 
 	test('progress bar width tracks index', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, threeQuestionYaml)
+		await initCard(page, threeQuestionYaml)
 		await waitForInternal(page)
 		await clickStartIfPresent(page)
 		// 1/3 = 33.33%
@@ -237,7 +237,7 @@ sections:
 		await gotoHarness(page)
 		const flat = await page.evaluate(
 			(y) =>
-				(window as any).patientCardsFlatten({
+				(window as any).cardFlatten({
 					form: 'FieldHidden',
 					sections: [
 						{
@@ -258,7 +258,7 @@ sections:
 	test('Group-level hiddenForPatient cascades and excludes all nested fields', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).patientCardsFlatten({
+			(window as any).cardFlatten({
 				form: 'GroupHidden',
 				sections: [
 					{
@@ -285,7 +285,7 @@ sections:
 	test('Section-level hiddenForPatient cascades and excludes the whole section', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).patientCardsFlatten({
+			(window as any).cardFlatten({
 				form: 'SectionHidden',
 				sections: [
 					{ section: 'Visible', fields: [{ field: 'A', type: 'text-field' }] },
@@ -303,7 +303,7 @@ sections:
 	test('Subform-level hiddenForPatient cascades and excludes the embedded form', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).patientCardsFlatten({
+			(window as any).cardFlatten({
 				form: 'SubformHidden',
 				sections: [
 					{
@@ -335,7 +335,7 @@ sections:
 	test('cascade applies through nested Groups', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).patientCardsFlatten({
+			(window as any).cardFlatten({
 				form: 'NestedGroupHidden',
 				sections: [
 					{
@@ -403,7 +403,7 @@ test.describe('Phase 1 / Subform recursion', () => {
 	test('Subform fields appear inline in card sequence between sibling fields', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).patientCardsFlatten({
+			(window as any).cardFlatten({
 				form: 'WithSub',
 				sections: [
 					{
@@ -442,7 +442,7 @@ test.describe('Phase 1 / Subform recursion', () => {
 	test('Subform with multiple form templates contributes fields from every template', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).patientCardsFlatten({
+			(window as any).cardFlatten({
 				form: 'MultiTemplate',
 				sections: [
 					{
@@ -596,14 +596,14 @@ sections:
         type: number-field
 `
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		await clickStartIfPresent(page)
 
 		// First card: text-field
 		let typeOnCard = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const body = internal?.shadowRoot?.querySelector('.patient-cards__card-body')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const body = internal?.shadowRoot?.querySelector('.card__card-body')
 			const fieldEl = body?.querySelector('icure-form-text-field, icure-form-number-field')
 			return fieldEl?.tagName.toLowerCase() ?? null
 		})
@@ -612,8 +612,8 @@ sections:
 		await clickContinue(page)
 
 		typeOnCard = await page.evaluate(() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			const body = internal?.shadowRoot?.querySelector('.patient-cards__card-body')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			const body = internal?.shadowRoot?.querySelector('.card__card-body')
 			const fieldEl = body?.querySelector('icure-form-text-field, icure-form-number-field')
 			return fieldEl?.tagName.toLowerCase() ?? null
 		})

@@ -15,10 +15,10 @@ import { resolveChrome } from './translation-keys'
 
 type Stage = 'welcome' | 'input' | 'review' | 'confirmation'
 
-const PATIENT_CARDS_DIGIT_HINTS: ReadonlyArray<number> = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const CARD_DIGIT_HINTS: ReadonlyArray<number> = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 // @ts-ignore
-import baseCss from './patient-cards.scss'
+import baseCss from './card.scss'
 
 type TranslationProvider = (language: string, text: string) => string
 type RevisionsFilter = (field: Field, id: string, history: Version<FieldMetadata>[]) => string[]
@@ -27,13 +27,13 @@ type OptionsProvider = (language: string, codifications: string[], terms?: strin
 type ActionListener = (event: string, payload: unknown) => void
 
 /**
- * Phase 1 stateful patient-cards element. Owns the current-card index and Continue/Back navigation.
+ * Phase 1 stateful card element. Owns the current-card index and Continue/Back navigation.
  *
  * Re-renders when the form, the container, or the language change (Lit @property reactivity).
  * `currentCardIndex` survives container updates because the parent <icure-form> reuses the same
  * element instance across asyncTask re-runs.
  */
-export class IcurePatientCardsInternal extends LitElement {
+export class IcureCardInternal extends LitElement {
 	@property({ attribute: false }) form?: Form
 	@property({ attribute: false }) formValuesContainer?: FormValuesContainer<FieldValue, FieldMetadata>
 	@property({ attribute: false }) translationProvider?: TranslationProvider
@@ -101,7 +101,7 @@ export class IcurePatientCardsInternal extends LitElement {
 			const cardsV = ++this.cardsVersion
 			this.reflatten(cardsV)
 		}
-		const watching: Array<keyof IcurePatientCardsInternal> = ['formValuesContainer', 'form', 'currentCardIndex', 'stage', 'language', 'cards' as any]
+		const watching: Array<keyof IcureCardInternal> = ['formValuesContainer', 'form', 'currentCardIndex', 'stage', 'language', 'cards' as any]
 		if (watching.some((k) => changedProps.has(k as string))) {
 			const myVersion = ++this.validationVersion
 			if (this.stage === 'input') {
@@ -127,7 +127,7 @@ export class IcurePatientCardsInternal extends LitElement {
 		try {
 			next = await flattenWithVisibility(this.form, this.formValuesContainer, { questionsPerCard: this.questionsPerCard })
 		} catch (e) {
-			console.warn('[patient-cards] flattenWithVisibility threw; falling back to sync flatten', e)
+			console.warn('[card] flattenWithVisibility threw; falling back to sync flatten', e)
 			next = flatten(this.form, { questionsPerCard: this.questionsPerCard })
 		}
 		if (version !== this.cardsVersion) return
@@ -226,7 +226,7 @@ export class IcurePatientCardsInternal extends LitElement {
 		}
 		const cards = this.cards
 		if (!cards.length) {
-			return html`<div class="patient-cards patient-cards--empty">
+			return html`<div class="card card--empty">
 				<p>This form has no patient-facing questions.</p>
 			</div>`
 		}
@@ -253,18 +253,18 @@ export class IcurePatientCardsInternal extends LitElement {
 		const translatedDescription = tp && this.language && description ? tp(this.language, description) : description
 		const startLabel = resolveChrome(tp, this.language, 'start')
 		return html`
-			<div class="patient-cards patient-cards--stage-welcome" data-stage="welcome" data-total-cards="${totalCards}">
-				<div class="patient-cards__card">
-					<div class="patient-cards__card-body">
-						<h1 class="patient-cards__welcome-title">${translatedTitle}</h1>
-						${translatedDescription ? html`<p class="patient-cards__welcome-description">${translatedDescription}</p>` : nothing}
+			<div class="card card--stage-welcome" data-stage="welcome" data-total-cards="${totalCards}">
+				<div class="card__card">
+					<div class="card__card-body">
+						<h1 class="card__welcome-title">${translatedTitle}</h1>
+						${translatedDescription ? html`<p class="card__welcome-description">${translatedDescription}</p>` : nothing}
 					</div>
 				</div>
-				<div class="patient-cards__nav">
-					<span class="patient-cards__back-placeholder"></span>
-					<button class="patient-cards__start" type="button" @click="${this.onStart}">
-						<span class="patient-cards__action-label">${startLabel}</span>
-						<span class="patient-cards__key-hint" aria-hidden="true">↵</span>
+				<div class="card__nav">
+					<span class="card__back-placeholder"></span>
+					<button class="card__start" type="button" @click="${this.onStart}">
+						<span class="card__action-label">${startLabel}</span>
+						<span class="card__key-hint" aria-hidden="true">↵</span>
 					</button>
 				</div>
 			</div>
@@ -283,33 +283,33 @@ export class IcurePatientCardsInternal extends LitElement {
 		const localisedSectionTitle = this.localiseChromeText(card.sectionTitle)
 		const localisedGroupTitle = card.groupTitle ? this.localiseGroupTitle(card.groupTitle) : undefined
 		return html`
-			<div class="patient-cards patient-cards--stage-input" data-stage="input" data-current-card-index="${idx}" data-total-cards="${total}" data-blocking-failures="${this.blockingFailures.length}">
-				<div class="patient-cards__progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${idx + 1}" aria-label="${progressLabel}">
-					<div class="patient-cards__progress-bar" style="width: ${((idx + 1) / total) * 100}%"></div>
-					<div class="patient-cards__progress-text" aria-live="polite">${progressLabel}</div>
+			<div class="card card--stage-input" data-stage="input" data-current-card-index="${idx}" data-total-cards="${total}" data-blocking-failures="${this.blockingFailures.length}">
+				<div class="card__progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${idx + 1}" aria-label="${progressLabel}">
+					<div class="card__progress-bar" style="width: ${((idx + 1) / total) * 100}%"></div>
+					<div class="card__progress-text" aria-live="polite">${progressLabel}</div>
 				</div>
-				<div class="patient-cards__card" data-card-section="${card.sectionTitle}">
-					<div class="patient-cards__card-header">
-						<div class="patient-cards__section-title">${localisedSectionTitle}</div>
-						${localisedGroupTitle ? html`<div class="patient-cards__group-title">${localisedGroupTitle}</div>` : nothing}
+				<div class="card__card" data-card-section="${card.sectionTitle}">
+					<div class="card__card-header">
+						<div class="card__section-title">${localisedSectionTitle}</div>
+						${localisedGroupTitle ? html`<div class="card__group-title">${localisedGroupTitle}</div>` : nothing}
 					</div>
-					<div class="patient-cards__card-body">${card.fields.map((f) => this.renderField(f))}</div>
+					<div class="card__card-body">${card.fields.map((f) => this.renderField(f))}</div>
 				</div>
-				<div class="patient-cards__nav">
-					<button class="patient-cards__back" type="button" @click="${this.onBack}">${backLabel}</button>
+				<div class="card__nav">
+					<button class="card__back" type="button" @click="${this.onBack}">${backLabel}</button>
 					${this.cameFromReview
-						? html`<button class="patient-cards__continue patient-cards__continue--return-to-review" type="button" ?disabled="${blocked}" @click="${this.onContinueReturnToReview}">
-								<span class="patient-cards__action-label">${continueLabel}</span>
-								<span class="patient-cards__key-hint" aria-hidden="true">↵</span>
+						? html`<button class="card__continue card__continue--return-to-review" type="button" ?disabled="${blocked}" @click="${this.onContinueReturnToReview}">
+								<span class="card__action-label">${continueLabel}</span>
+								<span class="card__key-hint" aria-hidden="true">↵</span>
 						  </button>`
 						: isLast
-						? html`<button class="patient-cards__continue patient-cards__continue--to-review" type="button" ?disabled="${blocked}" @click="${this.onContinueToReview}">
-								<span class="patient-cards__action-label">${continueLabel}</span>
-								<span class="patient-cards__key-hint" aria-hidden="true">↵</span>
+						? html`<button class="card__continue card__continue--to-review" type="button" ?disabled="${blocked}" @click="${this.onContinueToReview}">
+								<span class="card__action-label">${continueLabel}</span>
+								<span class="card__key-hint" aria-hidden="true">↵</span>
 						  </button>`
-						: html`<button class="patient-cards__continue" type="button" ?disabled="${blocked}" @click="${this.onContinue}">
-								<span class="patient-cards__action-label">${continueLabel}</span>
-								<span class="patient-cards__key-hint" aria-hidden="true">↵</span>
+						: html`<button class="card__continue" type="button" ?disabled="${blocked}" @click="${this.onContinue}">
+								<span class="card__action-label">${continueLabel}</span>
+								<span class="card__key-hint" aria-hidden="true">↵</span>
 						  </button>`}
 				</div>
 			</div>
@@ -338,20 +338,20 @@ export class IcurePatientCardsInternal extends LitElement {
 		const reviewErrorsTitle = resolveChrome(tp, this.language, 'reviewErrorsTitle')
 		const reviewEmpty = resolveChrome(tp, this.language, 'reviewEmpty')
 		return html`
-			<div class="patient-cards patient-cards--stage-review" data-stage="review" data-total-cards="${cards.length}" data-review-failures="${this.reviewFailures.length}">
-				<div class="patient-cards__card">
-					<div class="patient-cards__card-body">
-						<h2 class="patient-cards__review-heading">${reviewHeading}</h2>
+			<div class="card card--stage-review" data-stage="review" data-total-cards="${cards.length}" data-review-failures="${this.reviewFailures.length}">
+				<div class="card__card">
+					<div class="card__card-body">
+						<h2 class="card__review-heading">${reviewHeading}</h2>
 						${this.reviewFailures.length
 							? html`
-									<div class="patient-cards__review-errors" role="alert">
-										<h3 class="patient-cards__review-errors-title">${reviewErrorsTitle}</h3>
-										<ul class="patient-cards__review-errors-list">
+									<div class="card__review-errors" role="alert">
+										<h3 class="card__review-errors-title">${reviewErrorsTitle}</h3>
+										<ul class="card__review-errors-list">
 											${this.reviewFailures.map(
 												(f) => html`
-													<li class="patient-cards__review-errors-item" data-error-field-label="${f.fieldLabel}" data-error-card-index="${f.cardIndex}">
-														<span class="patient-cards__review-errors-message">${f.message}</span>
-														<button class="patient-cards__review-errors-jump" type="button" @click="${() => this.onEditJump(f.cardIndex)}">${editLabel}</button>
+													<li class="card__review-errors-item" data-error-field-label="${f.fieldLabel}" data-error-card-index="${f.cardIndex}">
+														<span class="card__review-errors-message">${f.message}</span>
+														<button class="card__review-errors-jump" type="button" @click="${() => this.onEditJump(f.cardIndex)}">${editLabel}</button>
 													</li>
 												`,
 											)}
@@ -361,9 +361,9 @@ export class IcurePatientCardsInternal extends LitElement {
 							: nothing}
 						${groupedBySection.map(
 							(g) => html`
-								<div class="patient-cards__review-section">
-									<h3 class="patient-cards__review-section-title">${this.localiseChromeText(g.sectionTitle)}</h3>
-									<ul class="patient-cards__review-list" role="list">
+								<div class="card__review-section">
+									<h3 class="card__review-section-title">${this.localiseChromeText(g.sectionTitle)}</h3>
+									<ul class="card__review-list" role="list">
 										${g.entries.map(
 											(e) =>
 												html`${e.card.fields.map((field) => {
@@ -371,10 +371,10 @@ export class IcurePatientCardsInternal extends LitElement {
 													const labelText = field.shortLabel ?? field.field
 													const localisedLabel = field.translate && tp && this.language ? tp(this.language, labelText) : labelText
 													return html`
-														<li class="patient-cards__review-row" data-field-label="${field.field}" data-card-index="${e.index}">
-															<span class="patient-cards__review-label" title="${localisedLabel}">${localisedLabel}</span>
-															<span class="patient-cards__review-value">${value || html`<span class="patient-cards__review-empty">${reviewEmpty}</span>`}</span>
-															<button class="patient-cards__review-edit" type="button" aria-label="${editLabel} ${localisedLabel}" @click="${() => this.onEditJump(e.index)}">${editLabel}</button>
+														<li class="card__review-row" data-field-label="${field.field}" data-card-index="${e.index}">
+															<span class="card__review-label" title="${localisedLabel}">${localisedLabel}</span>
+															<span class="card__review-value">${value || html`<span class="card__review-empty">${reviewEmpty}</span>`}</span>
+															<button class="card__review-edit" type="button" aria-label="${editLabel} ${localisedLabel}" @click="${() => this.onEditJump(e.index)}">${editLabel}</button>
 														</li>
 													`
 												})}`,
@@ -385,11 +385,11 @@ export class IcurePatientCardsInternal extends LitElement {
 						)}
 					</div>
 				</div>
-				<div class="patient-cards__nav">
-					<button class="patient-cards__back" type="button" @click="${this.onBackFromReview}">${backLabel}</button>
-					<button class="patient-cards__submit" type="button" ?disabled="${submitBlocked}" @click="${this.onSubmit}">
-						<span class="patient-cards__action-label">${submitLabel}</span>
-						<span class="patient-cards__key-hint" aria-hidden="true">↵</span>
+				<div class="card__nav">
+					<button class="card__back" type="button" @click="${this.onBackFromReview}">${backLabel}</button>
+					<button class="card__submit" type="button" ?disabled="${submitBlocked}" @click="${this.onSubmit}">
+						<span class="card__action-label">${submitLabel}</span>
+						<span class="card__key-hint" aria-hidden="true">↵</span>
 					</button>
 				</div>
 			</div>
@@ -401,12 +401,12 @@ export class IcurePatientCardsInternal extends LitElement {
 		const heading = resolveChrome(tp, this.language, 'confirmationHeading')
 		const body = resolveChrome(tp, this.language, 'confirmationBody')
 		return html`
-			<div class="patient-cards patient-cards--stage-confirmation" data-stage="confirmation">
-				<div class="patient-cards__card patient-cards__card--confirmation">
-					<div class="patient-cards__card-body">
-						<div class="patient-cards__confirmation-check" aria-hidden="true">✓</div>
-						<h2 class="patient-cards__confirmation-heading">${heading}</h2>
-						<p class="patient-cards__confirmation-body">${body}</p>
+			<div class="card card--stage-confirmation" data-stage="confirmation">
+				<div class="card__card card__card--confirmation">
+					<div class="card__card-body">
+						<div class="card__confirmation-check" aria-hidden="true">✓</div>
+						<h2 class="card__confirmation-heading">${heading}</h2>
+						<p class="card__confirmation-body">${body}</p>
 					</div>
 				</div>
 			</div>
@@ -457,7 +457,7 @@ export class IcurePatientCardsInternal extends LitElement {
 
 	private onSubmit = () => {
 		this.stage = 'confirmation'
-		this.dispatchEvent(new CustomEvent('patient-form-submit', { detail: { submittedAt: new Date() }, bubbles: true, composed: true }))
+		this.dispatchEvent(new CustomEvent('card-form-submit', { detail: { submittedAt: new Date() }, bubbles: true, composed: true }))
 	}
 
 	// ---- Keyboard navigation ----
@@ -488,7 +488,7 @@ export class IcurePatientCardsInternal extends LitElement {
 	}
 
 	/**
-	 * Are we the patient-cards instance that should respond to this keystroke? True if the event
+	 * Are we the card instance that should respond to this keystroke? True if the event
 	 * originates within our DOM subtree, or if focus has dropped to the document body (typical when
 	 * the patient clicks the form's background).
 	 */
@@ -579,10 +579,10 @@ export class IcurePatientCardsInternal extends LitElement {
 		// Preferred focus targets per stage. Input-stage focus aims at the first interactive form field;
 		// other stages focus their primary action button.
 		const selectorByStage: Record<Stage, string[]> = {
-			welcome: ['.patient-cards__start'],
-			input: ['.patient-cards__field input', '.patient-cards__field textarea', '.patient-cards__field select', '.patient-cards__field [contenteditable="true"]', '.patient-cards__continue'],
-			review: ['.patient-cards__submit'],
-			confirmation: ['.patient-cards__confirmation-heading'],
+			welcome: ['.card__start'],
+			input: ['.card__field input', '.card__field textarea', '.card__field select', '.card__field [contenteditable="true"]', '.card__continue'],
+			review: ['.card__submit'],
+			confirmation: ['.card__confirmation-heading'],
 		}
 		const candidates = selectorByStage[this.stage] ?? []
 		for (const sel of candidates) {
@@ -645,7 +645,7 @@ export class IcurePatientCardsInternal extends LitElement {
 					try {
 						result = await (this.formValuesContainer as any).compute?.(validator.validation)
 					} catch (e) {
-						console.warn('[patient-cards] validator threw', validator.validation, e)
+						console.warn('[card] validator threw', validator.validation, e)
 						continue
 					}
 					if (version !== this.validationVersion) return
@@ -682,7 +682,7 @@ export class IcurePatientCardsInternal extends LitElement {
 						try {
 							result = await (this.formValuesContainer as any).compute?.(validator.validation)
 						} catch (e) {
-							console.warn('[patient-cards] validator threw at review', validator.validation, e)
+							console.warn('[card] validator threw at review', validator.validation, e)
 							continue
 						}
 						if (version !== this.validationVersion) return
@@ -799,7 +799,7 @@ export class IcurePatientCardsInternal extends LitElement {
 				? (language: string, terms?: string[]) => composedOpts(language, fg.codifications ?? [], terms, fg.sortOptions)
 				: (language: string, terms?: string[]) => filterAndSortOptionsFromFieldDefinition(language, fg, this.translationProvider, terms)
 		const common = {
-			class: 'icure-form-field patient-cards__field',
+			class: 'icure-form-field card__field',
 			label: fg.field,
 			displayedLabels: getLabels(fg),
 			displayMetadata: this.displayMetadata,
@@ -1011,7 +1011,7 @@ export class IcurePatientCardsInternal extends LitElement {
 					.handleMetadataChanged=${common.handleMetadataChanged}
 					.styleOptions="${common.styleOptions}"
 					.readonly="${common.readonly}"
-					.keyboardHints=${PATIENT_CARDS_DIGIT_HINTS}
+					.keyboardHints=${CARD_DIGIT_HINTS}
 				></icure-form-radio-button>`
 			case 'checkbox':
 				return html`<icure-form-checkbox
@@ -1034,11 +1034,11 @@ export class IcurePatientCardsInternal extends LitElement {
 					.handleMetadataChanged="${common.handleMetadataChanged}"
 					.styleOptions="${common.styleOptions}"
 					.readonly="${common.readonly}"
-					.keyboardHints=${PATIENT_CARDS_DIGIT_HINTS}
+					.keyboardHints=${CARD_DIGIT_HINTS}
 				></icure-form-checkbox>`
 			case 'label':
 				return html`<icure-form-label
-					class="${common.class} patient-cards__label-field"
+					class="${common.class} card__label-field"
 					.defaultLanguage="${common.defaultLanguage}"
 					labelPosition=${this.labelPosition}
 					label="${fg.shortLabel ?? fg.field}"

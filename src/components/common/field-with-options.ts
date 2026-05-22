@@ -23,7 +23,7 @@ export const FieldWithOptionsMixin = <T extends Constructor<Field>>(superClass: 
 		public updated(changedProperties: PropertyValues) {
 			super.updated?.(changedProperties)
 			// Refresh `displayedOptions` whenever the inputs to optionsProvider change. Element reuse
-			// across cards in patient-cards mode means the same element can be reused for different
+			// across cards in card mode means the same element can be reused for different
 			// fields (different labels/options); loading once in firstUpdated would leave stale options
 			// for every field after the first.
 			if (changedProperties.has('optionsProvider') || changedProperties.has('defaultLanguage') || changedProperties.has('selectedLanguage')) {

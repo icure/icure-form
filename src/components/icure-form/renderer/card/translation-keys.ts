@@ -1,31 +1,31 @@
 /**
- * Translation keys emitted by the patient-cards renderer for its chrome strings.
+ * Translation keys emitted by the card renderer for its chrome strings.
  *
  * Host apps provide translations via the existing `translationProvider` on `<icure-form>`. When the
  * provider returns the key unchanged (no translation registered), the renderer falls back to the
  * English defaults below.
  *
- * The full key set is exported as `PatientRendererKeys`. The defaults map is exported as
- * `patientRendererDefaults`. Tests and integrators can rely on these constants.
+ * The full key set is exported as `CardRendererKeys`. The defaults map is exported as
+ * `cardRendererDefaults`. Tests and integrators can rely on these constants.
  */
 
-export const PatientRendererKeys = {
-	start: 'patient-renderer.start',
-	continue: 'patient-renderer.continue',
-	back: 'patient-renderer.back',
-	submit: 'patient-renderer.submit',
-	progress: 'patient-renderer.progress',
-	reviewHeading: 'patient-renderer.review-heading',
-	reviewEdit: 'patient-renderer.review-edit',
-	reviewEmpty: 'patient-renderer.review-empty',
-	reviewErrorsTitle: 'patient-renderer.review-errors-title',
-	confirmationHeading: 'patient-renderer.confirmation-heading',
-	confirmationBody: 'patient-renderer.confirmation-body',
+export const CardRendererKeys = {
+	start: 'card-renderer.start',
+	continue: 'card-renderer.continue',
+	back: 'card-renderer.back',
+	submit: 'card-renderer.submit',
+	progress: 'card-renderer.progress',
+	reviewHeading: 'card-renderer.review-heading',
+	reviewEdit: 'card-renderer.review-edit',
+	reviewEmpty: 'card-renderer.review-empty',
+	reviewErrorsTitle: 'card-renderer.review-errors-title',
+	confirmationHeading: 'card-renderer.confirmation-heading',
+	confirmationBody: 'card-renderer.confirmation-body',
 } as const
 
-export type PatientRendererKey = keyof typeof PatientRendererKeys
+export type CardRendererKey = keyof typeof CardRendererKeys
 
-export const patientRendererDefaults: Record<PatientRendererKey, string> = {
+export const cardRendererDefaults: Record<CardRendererKey, string> = {
 	start: 'Start',
 	continue: 'Continue',
 	back: 'Back',
@@ -53,11 +53,11 @@ export const patientRendererDefaults: Record<PatientRendererKey, string> = {
 export function resolveChrome(
 	provider: ((language: string, text: string) => string) | undefined,
 	language: string | undefined,
-	key: PatientRendererKey,
+	key: CardRendererKey,
 	substitutions?: Record<string, string | number>,
 ): string {
-	const fullKey = PatientRendererKeys[key]
-	const fallback = patientRendererDefaults[key]
+	const fullKey = CardRendererKeys[key]
+	const fallback = cardRendererDefaults[key]
 	let value = fallback
 	if (provider && language) {
 		const translated = provider(language, fullKey)

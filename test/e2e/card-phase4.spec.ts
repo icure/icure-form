@@ -9,15 +9,15 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string) {
-	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'patient-cards' }), yaml)
+async function initCard(page: Page, yaml: string) {
+	return await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card' }), yaml)
 }
 
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -25,7 +25,7 @@ async function waitForInternal(page: Page) {
 
 async function clickByClass(page: Page, cls: string) {
 	const ok = await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		if (!btn || (btn as HTMLButtonElement).disabled) return false
 		btn.click()
@@ -48,9 +48,9 @@ async function setStringValue(page: Page, label: string, value: string, language
 
 async function getCards(page: Page): Promise<{ total: number; currentIdx: number; sectionTitle: string | null }> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		const root = internal?.shadowRoot?.querySelector('.patient-cards')
-		const card = internal?.shadowRoot?.querySelector('.patient-cards__card')
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const root = internal?.shadowRoot?.querySelector('.card')
+		const card = internal?.shadowRoot?.querySelector('.card__card')
 		return {
 			total: parseInt(root?.getAttribute('data-total-cards') ?? '-1', 10),
 			currentIdx: parseInt(root?.getAttribute('data-current-card-index') ?? '-1', 10),
@@ -61,8 +61,8 @@ async function getCards(page: Page): Promise<{ total: number; currentIdx: number
 
 async function getProgressText(page: Page): Promise<string | null> {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-		return internal?.shadowRoot?.querySelector('.patient-cards__progress-text')?.textContent?.trim() ?? null
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		return internal?.shadowRoot?.querySelector('.card__progress-text')?.textContent?.trim() ?? null
 	})
 }
 
@@ -86,9 +86,9 @@ sections:
 
 	test('initially conditional is hidden — only Trigger card visible', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		const s = await getCards(page)
 		expect(s.total).toBe(1)
@@ -96,9 +96,9 @@ sections:
 
 	test('setting Trigger = show reveals Conditional, total cards becomes 2', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		expect((await getCards(page)).total).toBe(1)
 		await setStringValue(page, 'Trigger', 'show')
@@ -109,9 +109,9 @@ sections:
 
 	test('changing Trigger value back hides Conditional again', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await setStringValue(page, 'Trigger', 'show')
 		await page.waitForTimeout(400)
 		expect((await getCards(page)).total).toBe(2)
@@ -122,9 +122,9 @@ sections:
 
 	test('progress fraction recomputes after re-flatten', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		expect(await getProgressText(page)).toBe('1 / 1')
 		await setStringValue(page, 'Trigger', 'show')
@@ -157,18 +157,18 @@ sections:
 
 	test('Group-level hidden cascades to its fields (Trigger only initially)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		expect((await getCards(page)).total).toBe(1)
 	})
 
 	test('Group becomes visible when Trigger = show — both fields appear (total 3)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await setStringValue(page, 'Trigger', 'show')
 		await page.waitForTimeout(400)
 		expect((await getCards(page)).total).toBe(3)
@@ -197,14 +197,14 @@ sections:
 
 	test('Hiding a previously-visible card preserves its and downstream container values', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		// Set all values: Mode=show, Conditional=conditional-value, AlwaysVisible=tail-value.
 		await setStringValue(page, 'Mode', 'show')
 		await setStringValue(page, 'Conditional', 'conditional-value')
 		await setStringValue(page, 'AlwaysVisible', 'tail-value')
 		await page.waitForTimeout(400)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		expect((await getCards(page)).total).toBe(3)
 
@@ -238,14 +238,14 @@ sections:
 
 	test('After back-edit reduces visibility, the patient is positioned on a sensible adjacent card', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
 		await setStringValue(page, 'Mode', 'show')
 		await page.waitForTimeout(300)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
 		// Advance to the Conditional card (idx 1).
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		await page.waitForTimeout(200)
 		expect((await getCards(page)).currentIdx).toBe(1)
 		// Now hide Conditional by changing Mode. Conditional disappears from the sequence.
@@ -282,9 +282,9 @@ sections:
 
 	test('Both static hiddenForPatient and computed hidden are honored together (only AlwaysVisible remains)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(400)
 		const cards = await getCards(page)
 		expect(cards.total).toBe(1)
@@ -293,7 +293,7 @@ sections:
 })
 
 // ============================================================
-// Clinician renderer is unaffected by patient-cards computed-hidden behaviour
+// Clinician renderer is unaffected by card computed-hidden behaviour
 // ============================================================
 test.describe('Phase 4 / clinician renderer unchanged', () => {
 	const yaml = `

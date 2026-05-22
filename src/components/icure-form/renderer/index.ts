@@ -6,7 +6,7 @@ export interface RendererProps {
 	language?: string
 	labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
 	defaultOwner?: string
-	/** Patient-cards renderer only: max interactive fields per card (1 or 2, default 1). */
+	/** Card renderer only: max interactive fields per card (1 or 2, default 1). */
 	questionsPerCard?: number
 }
 

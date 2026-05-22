@@ -1,11 +1,11 @@
 // Import the default theme and register all custom elements
 import { registerTheme } from '../../../src/components/themes/default/index'
 registerTheme()
-// Side-effect import: register the patient-cards internal element.
-import '../../../src/components/icure-form/renderer/patient-cards/register'
+// Side-effect import: register the card internal element.
+import '../../../src/components/icure-form/renderer/card/register'
 
 import { Form, Field, Group, Subform, FieldMetadata, Validator } from '../../../src/components/model'
-import { flatten as patientCardsFlatten } from '../../../src/components/icure-form/renderer/patient-cards/flatten'
+import { flatten as cardFlatten } from '../../../src/components/icure-form/renderer/card/flatten'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
 import { Version } from '../../../src/generic'
 import { makeInterpreter } from '../../../src/utils/interpreter'
@@ -29,7 +29,7 @@ interface InitFormOptions {
 	yaml: string
 	language?: string
 	renderer?: string
-	/** Patient-cards renderer only: max interactive fields per card (1 or 2). */
+	/** Card renderer only: max interactive fields per card (1 or 2). */
 	questionsPerCard?: number
 	/**
 	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted.
@@ -279,10 +279,10 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	return values
 }
 
-// Patient-cards helpers exposed for Playwright tests:
-;(window as any).patientCardsFlatten = (formJson: any) => {
+// Card helpers exposed for Playwright tests:
+;(window as any).cardFlatten = (formJson: any) => {
 	const f = Form.parse(formJson)
-	return patientCardsFlatten(f).map((c) => ({
+	return cardFlatten(f).map((c) => ({
 		sectionTitle: c.sectionTitle,
 		groupTitle: c.groupTitle,
 		fieldLabels: c.fields.map((field) => field.field),
@@ -308,7 +308,7 @@ import { Section as ModelSection } from '../../../src/components/model'
 		const subformBToA = new Subform('SubA', { a: formA }, { id: 'subA' })
 		formA.sections = [new ModelSection('SecA', [subformAToB])]
 		formB.sections = [new ModelSection('SecB', [subformBToA])]
-		const cards = patientCardsFlatten(formA)
+		const cards = cardFlatten(formA)
 		return { cardCount: cards.length, warnings }
 	} finally {
 		console.warn = origWarn

@@ -149,7 +149,7 @@ export abstract class Field {
 	payload?: unknown
 	hiddenForPatient?: boolean
 	/**
-	 * Patient-cards renderer only: when `true`, this Field is rendered on its own card regardless
+	 * Card renderer only: when `true`, this Field is rendered on its own card regardless
 	 * of `questionsPerCard`. Adjacent fields are pushed to subsequent cards. Has no effect on the
 	 * clinician renderer.
 	 */

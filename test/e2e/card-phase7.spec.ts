@@ -9,9 +9,9 @@ async function gotoHarness(page: Page) {
 	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
 }
 
-async function initPatientCards(page: Page, yaml: string, questionsPerCard?: number) {
+async function initCard(page: Page, yaml: string, questionsPerCard?: number) {
 	return await page.evaluate(
-		async ({ yaml, k }: { yaml: string; k?: number }) => (window as any).initForm({ yaml, language: 'en', renderer: 'patient-cards', questionsPerCard: k }),
+		async ({ yaml, k }: { yaml: string; k?: number }) => (window as any).initForm({ yaml, language: 'en', renderer: 'card', questionsPerCard: k }),
 		{ yaml, k: questionsPerCard },
 	)
 }
@@ -19,8 +19,8 @@ async function initPatientCards(page: Page, yaml: string, questionsPerCard?: num
 async function waitForInternal(page: Page) {
 	await page.waitForFunction(
 		() => {
-			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
-			return !!internal?.shadowRoot?.querySelector('.patient-cards')
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return !!internal?.shadowRoot?.querySelector('.card')
 		},
 		{ timeout: 15_000 },
 	)
@@ -28,7 +28,7 @@ async function waitForInternal(page: Page) {
 
 async function clickByClass(page: Page, cls: string) {
 	const ok = await page.evaluate((c: string) => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const btn = internal?.shadowRoot?.querySelector(`.${c}`) as HTMLElement | null
 		if (!btn || (btn as HTMLButtonElement).disabled) return false
 		btn.click()
@@ -40,10 +40,10 @@ async function clickByClass(page: Page, cls: string) {
 
 async function getCardInfo(page: Page) {
 	return await page.evaluate(() => {
-		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-patient-cards-internal') as any
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const root = internal?.shadowRoot
-		const wrapper = root?.querySelector('.patient-cards')
-		const body = root?.querySelector('.patient-cards__card-body')
+		const wrapper = root?.querySelector('.card')
+		const body = root?.querySelector('.card__card-body')
 		const interactiveTags = ['icure-form-text-field', 'icure-form-number-field', 'icure-form-measure-field', 'icure-form-token-field', 'icure-form-items-list-field', 'icure-form-date-picker', 'icure-form-time-picker', 'icure-form-date-time-picker', 'icure-form-dropdown-field', 'icure-form-radio-button', 'icure-form-checkbox']
 		const interactiveCount = interactiveTags.reduce((acc, tag) => acc + (body?.querySelectorAll(tag).length ?? 0), 0)
 		const labels = body?.querySelectorAll('icure-form-label').length ?? 0
@@ -93,9 +93,9 @@ sections:
 
 	test('all standard interactive types render against fixture form', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const expected = [
 			'icure-form-text-field',
 			'icure-form-measure-field',
@@ -115,7 +115,7 @@ sections:
 			const info = await getCardInfo(page)
 			seen.push(info.fieldTagsInOrder[0])
 			if (i < expected.length - 1) {
-				await clickByClass(page, 'patient-cards__continue')
+				await clickByClass(page, 'card__continue')
 			}
 		}
 		expect(seen).toEqual(expected)
@@ -145,34 +145,34 @@ sections:
 
 	test('k=1 (default) yields one card per field', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		expect((await getCardInfo(page)).total).toBe(5)
 	})
 
 	test('k=2 produces ceil(5/2)=3 cards with up to 2 interactive fields each', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const c1 = await getCardInfo(page)
 		expect(c1.total).toBe(3)
 		expect(c1.interactiveCount).toBeLessThanOrEqual(2)
 		expect(c1.interactiveCount).toBe(2)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		const c2 = await getCardInfo(page)
 		expect(c2.interactiveCount).toBe(2)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		const c3 = await getCardInfo(page)
 		expect(c3.interactiveCount).toBe(1)
 	})
 
 	test('k values out of range clamp to 1..2 (k=5 -> 2, k=0 -> 1)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 5)
+		await initCard(page, yaml, 5)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		expect((await getCardInfo(page)).total).toBe(3) // same as k=2
 	})
 })
@@ -196,9 +196,9 @@ sections:
 
 	test('Label is rendered inside the same card as the next interactive field; total cards = 2', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const info = await getCardInfo(page)
 		expect(info.total).toBe(2)
 		expect(info.interactiveCount).toBe(1)
@@ -209,9 +209,9 @@ sections:
 
 	test('Label does not consume the questionsPerCard=2 slot — card carries both interactive fields', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const info = await getCardInfo(page)
 		expect(info.total).toBe(1)
 		expect(info.interactiveCount).toBe(2)
@@ -241,9 +241,9 @@ sections:
 		page.on('console', (msg) => {
 			if (msg.type() === 'warning' || msg.type() === 'warn') warnings.push(msg.text())
 		})
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const info = await getCardInfo(page)
 		expect(info.total).toBe(1)
 		expect(info.fieldTagsInOrder).toEqual(['icure-form-text-field'])
@@ -274,9 +274,9 @@ sections:
 
 	test('readonly Field does not count toward questionsPerCard (k=2 fits ro + a + b)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		const info = await getCardInfo(page)
 		// ro=zero-count, a + b = 2 interactive -> 1 card.
 		expect(info.total).toBe(1)
@@ -284,9 +284,9 @@ sections:
 
 	test('readonly Field still renders in the card body (visible content)', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml)
+		await initCard(page, yaml)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		// k=1: card 0 carries the readonly attached to the next interactive (a).
 		const info = await getCardInfo(page)
 		expect(info.fieldTagsInOrder.length).toBeGreaterThanOrEqual(2)
@@ -316,17 +316,17 @@ sections:
         type: text-field
 `
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		// Expect: [a] then [b alone] then [c, d] = 3 cards
 		const c1 = await getCardInfo(page)
 		expect(c1.total).toBe(3)
 		expect(c1.interactiveCount).toBe(1)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		const c2 = await getCardInfo(page)
 		expect(c2.interactiveCount).toBe(1)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		const c3 = await getCardInfo(page)
 		expect(c3.interactiveCount).toBe(2)
 	})
@@ -346,15 +346,15 @@ sections:
         type: text-field
 `
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		// Card 1: [label] alone, Card 2: [a, b]
 		const c1 = await getCardInfo(page)
 		expect(c1.total).toBe(2)
 		expect(c1.interactiveCount).toBe(0)
 		expect(c1.labelCount).toBe(1)
-		await clickByClass(page, 'patient-cards__continue')
+		await clickByClass(page, 'card__continue')
 		const c2 = await getCardInfo(page)
 		expect(c2.interactiveCount).toBe(2)
 		expect(c2.labelCount).toBe(0)
@@ -377,9 +377,9 @@ sections:
         standalone: true
 `
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		expect((await getCardInfo(page)).total).toBe(3)
 	})
 
@@ -421,9 +421,9 @@ sections:
 
 	test('with k=2, S1 ends after 1 field even though there was room; S2 produces its own cards', async ({ page }) => {
 		await gotoHarness(page)
-		await initPatientCards(page, yaml, 2)
+		await initCard(page, yaml, 2)
 		await waitForInternal(page)
-		await clickByClass(page, 'patient-cards__start')
+		await clickByClass(page, 'card__start')
 		// k=2 but section boundary forces: card1=[a], card2=[b,c]
 		expect((await getCardInfo(page)).total).toBe(2)
 	})

@@ -2,7 +2,7 @@ import { Field, FieldMetadata, FieldValue, Form, Group, Subform } from '../../..
 import { FormValuesContainer } from '../../../../generic'
 
 /**
- * A single card in the patient-cards renderer's flat sequence.
+ * A single card in the card renderer's flat sequence.
  *
  * `fields` may contain a mix of interactive Fields, Labels, and read-only display Fields. Only
  * interactive Fields count toward `questionsPerCard`; Labels and read-only displays are visual
@@ -98,7 +98,7 @@ function addFieldToCurrent(ctx: FlattenCtx, field: Field, sectionTitle: string, 
 
 function walkForm(form: Form, ctx: FlattenCtx, visited: Set<Form>): void {
 	if (visited.has(form)) {
-		console.warn('[patient-cards] Cycle detected while recursing through Subform; skipping form', form.form)
+		console.warn('[card] Cycle detected while recursing through Subform; skipping form', form.form)
 		return
 	}
 	visited.add(form)
@@ -134,7 +134,7 @@ function walkChild(child: Field | Group | Subform, sectionTitle: string, groupTi
 	// It's a Field.
 	const field = child
 	if (field.type === 'action') {
-		console.warn('[patient-cards] Button (action) field is not supported in patient renderer — skipping', field.field)
+		console.warn('[card] Button (action) field is not supported in card renderer — skipping', field.field)
 		return
 	}
 	addFieldToCurrent(ctx, field, sectionTitle, groupTitle)
@@ -150,7 +150,7 @@ function isSubform(c: Field | Group | Subform): c is Subform {
 
 /**
  * Interactive = "counts toward questionsPerCard". Labels are visual content; readonly Fields are
- * display-only. Buttons never appear in patient renderer (filtered earlier).
+ * display-only. Buttons never appear in card renderer (filtered earlier).
  */
 export function isInteractive(f: Field): boolean {
 	if (f.type === 'label') return false
@@ -174,7 +174,7 @@ export async function flattenWithVisibility(form: Form, container?: FormValuesCo
 
 async function walkFormAsync(form: Form, ctx: FlattenCtx, visited: Set<Form>, container?: FormValuesContainer<FieldValue, FieldMetadata>): Promise<void> {
 	if (visited.has(form)) {
-		console.warn('[patient-cards] Cycle detected while recursing through Subform; skipping form', form.form)
+		console.warn('[card] Cycle detected while recursing through Subform; skipping form', form.form)
 		return
 	}
 	visited.add(form)
@@ -217,7 +217,7 @@ async function walkChildAsync(
 	}
 	const field = child
 	if (field.type === 'action') {
-		console.warn('[patient-cards] Button (action) field is not supported in patient renderer — skipping', field.field)
+		console.warn('[card] Button (action) field is not supported in card renderer — skipping', field.field)
 		return
 	}
 	addFieldToCurrent(ctx, field, sectionTitle, groupTitle)

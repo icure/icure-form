@@ -260,9 +260,9 @@ sections:
 })
 
 // ============================================================
-// Composition: hiddenForPatient AND computed hidden
+// Composition: role-based visibility AND computed hidden
 // ============================================================
-test.describe('Phase 4 / composition with hiddenForPatient', () => {
+test.describe('Phase 4 / composition with role-based visibility', () => {
 	const yaml = `
 form: F
 sections:
@@ -270,9 +270,9 @@ sections:
     fields:
       - field: AlwaysVisible
         type: text-field
-      - field: PatientHidden
+      - field: DoctorOnly
         type: text-field
-        hiddenForPatient: true
+        roles: ['doctor']
       - field: ConditionallyHidden
         type: text-field
         computedProperties:
@@ -280,9 +280,9 @@ sections:
             return true
 `
 
-	test('Both static hiddenForPatient and computed hidden are honored together (only AlwaysVisible remains)', async ({ page }) => {
+	test('Both static roles and computed hidden are honored together (only AlwaysVisible remains)', async ({ page }) => {
 		await gotoHarness(page)
-		await initCard(page, yaml)
+		await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'card', role: 'patient' }), yaml)
 		await waitForInternal(page)
 		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(400)

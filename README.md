@@ -80,6 +80,7 @@ The Section class represents a section within a form. A section groups related f
 - fields: (Field | Group | Subform)[] - An array of fields, sub-forms and groups contained within the section.
 - description: string - An optional description of the section.
 - keywords: string[] - Optional keywords associated with the section.
+- roles: string[] - Optional list of viewer roles that may see this section. When omitted, the section is visible to every role. When set, the section is hidden unless the form's `role` matches one of the listed values. An empty array hides the section for everyone. See [Role-based visibility](#role-based-visibility).
 
 ### Field
 
@@ -112,6 +113,7 @@ The Field class represents a generic field within a form. It is designed to be e
 - payload: unknown - Optional payload for action/button fields.
 - width: number - Optional fixed width of the field in pixels.
 - styleOptions: { width: number, direction: string, span: number, rows: number, alignItems: string } - Optional style options for the field.
+- roles: string[] - Optional list of viewer roles that may see this field. Same semantics as `Section.roles`. Also available on `Group` and `Subform`. See [Role-based visibility](#role-based-visibility).
 
 #### Implementations
 
@@ -304,6 +306,7 @@ The icure-form component accepts the following properties:
 - visible: boolean - a boolean indicating if the form should be visible or not. Defaults to true.
 - readonly: boolean - a boolean indicating if the form should be read-only or not. Defaults to false.
 - displayMetadata: boolean - a boolean indicating if metadata (owner, date, etc.) should be displayed on fields. Defaults to false.
+- role: string - the active viewer role. Sections, groups, fields and subforms whose `roles` does not include this value are hidden by both renderers. When unset (or `null`), no role filter is applied — items with `roles` are still rendered. See [Role-based visibility](#role-based-visibility).
 - labelPosition: string - the favoured position of the labels in the form. Valid values: `'top'`, `'left'`, `'right'`, `'bottom'`, `'float'`. This option can or cannot be honoured by the renderer.
 - formValuesContainer: FormValuesContainer<FieldValue, FieldMetadata> - the form values container that contains the values of the form
 - language: string - the language in which the form should be displayed
@@ -347,6 +350,49 @@ registerTheme({
 ```
 
 The supported keys are every tag the theme registers (e.g. `icure-form`, `icure-text-field`, `icure-button-group`, `icure-date-picker-field`, `icure-dropdown-field`, `icure-label`, `icure-button`, `icure-form-label`, `icure-form-button`, etc.). Call `registerTheme()` exactly once per page — calling it twice will throw because the custom elements are already defined.
+
+### Role-based visibility
+
+Sections, groups, fields and subforms can carry an optional `roles: string[]`. Combined with the `role` property on `<icure-form>`, this drives visibility in both renderers (`form` and `card`).
+
+Semantics:
+
+| Item state | `<icure-form role>` state | Behaviour |
+|---|---|---|
+| `roles` missing | any | visible |
+| `roles: []` | any | hidden (explicit "no role can see this") |
+| `roles: ['doctor', …]` | not set | visible (no filter active) |
+| `roles: ['doctor', …]` | set, matches one of the values | visible |
+| `roles: ['doctor', …]` | set, doesn't match | hidden |
+
+Role applies recursively: hiding a section drops all its descendants, hiding a group drops its children, hiding a subform drops the embedded forms.
+
+Example — a section, group and field reserved for clinicians:
+
+```yaml
+form: BMI
+sections:
+  - section: Patient input
+    fields:
+      - field: weight
+        type: measure-field
+      - field: height
+        type: measure-field
+  - section: Clinician notes
+    roles: ['doctor']
+    fields:
+      - field: assessment
+        type: text-field
+        multiline: true
+```
+
+```html
+<icure-form .form="${this.form}" role="patient" renderer="card"></icure-form>
+<!-- The "Clinician notes" section is hidden. Switch to role="doctor"
+     (or omit role) to make it visible again. -->
+```
+
+There is no built-in migration for the legacy `hiddenForPatient` flag; any `hiddenForPatient: true` in saved YAML/JSON is silently dropped on parse. Update existing form definitions to use `roles` directly.
 
 ### Listeners and notifications
 

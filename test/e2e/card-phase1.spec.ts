@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test'
 
 // ============================================================
-// Phase 1: dispatch + linear nav + hiddenForPatient cascade + Subform recursion
+// Phase 1: dispatch + linear nav + role-based visibility cascade + Subform recursion
 // ============================================================
 
 // Helpers ---------------------------------------------------------
@@ -217,82 +217,76 @@ sections:
 })
 
 // ============================================================
-// Group 3: hiddenForPatient cascade
+// Group 3: role-based visibility cascade
 // ============================================================
-test.describe('Phase 1 / hiddenForPatient cascade', () => {
-	test('Field-level hiddenForPatient excludes only that field', async ({ page }) => {
-		const yaml = `
-form: FieldHidden
-sections:
-  - section: S
-    fields:
-      - field: Visible1
-        type: text-field
-      - field: Hidden1
-        type: text-field
-        hiddenForPatient: true
-      - field: Visible2
-        type: text-field
-`
+test.describe('Phase 1 / role-based visibility cascade', () => {
+	test('Field-level roles excludes only that field when the form role does not match', async ({ page }) => {
 		await gotoHarness(page)
-		const flat = await page.evaluate(
-			(y) =>
-				(window as any).cardFlatten({
+		const flat = await page.evaluate(() =>
+			(window as any).cardFlatten(
+				{
 					form: 'FieldHidden',
 					sections: [
 						{
 							section: 'S',
 							fields: [
 								{ field: 'Visible1', type: 'text-field' },
-								{ field: 'Hidden1', type: 'text-field', hiddenForPatient: true },
+								{ field: 'Hidden1', type: 'text-field', roles: ['doctor'] },
 								{ field: 'Visible2', type: 'text-field' },
 							],
 						},
 					],
-				}),
-			yaml,
+				},
+				'patient',
+			),
 		)
 		expect(flat.map((c: any) => c.fieldLabels[0])).toEqual(['Visible1', 'Visible2'])
 	})
 
-	test('Group-level hiddenForPatient cascades and excludes all nested fields', async ({ page }) => {
+	test('Group-level roles cascades and excludes all nested fields', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).cardFlatten({
-				form: 'GroupHidden',
-				sections: [
-					{
-						section: 'S',
-						fields: [
-							{ field: 'TopVisible', type: 'text-field' },
-							{
-								group: 'HiddenGroup',
-								hiddenForPatient: true,
-								fields: [
-									{ field: 'Inner1', type: 'text-field' },
-									{ field: 'Inner2', type: 'text-field' },
-								],
-							},
-							{ field: 'TailVisible', type: 'text-field' },
-						],
-					},
-				],
-			}),
+			(window as any).cardFlatten(
+				{
+					form: 'GroupHidden',
+					sections: [
+						{
+							section: 'S',
+							fields: [
+								{ field: 'TopVisible', type: 'text-field' },
+								{
+									group: 'HiddenGroup',
+									roles: ['doctor'],
+									fields: [
+										{ field: 'Inner1', type: 'text-field' },
+										{ field: 'Inner2', type: 'text-field' },
+									],
+								},
+								{ field: 'TailVisible', type: 'text-field' },
+							],
+						},
+					],
+				},
+				'patient',
+			),
 		)
 		expect(flat.map((c: any) => c.fieldLabels[0])).toEqual(['TopVisible', 'TailVisible'])
 	})
 
-	test('Section-level hiddenForPatient cascades and excludes the whole section', async ({ page }) => {
+	test('Section-level roles cascades and excludes the whole section', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).cardFlatten({
-				form: 'SectionHidden',
-				sections: [
-					{ section: 'Visible', fields: [{ field: 'A', type: 'text-field' }] },
-					{ section: 'Hidden', hiddenForPatient: true, fields: [{ field: 'B', type: 'text-field' }] },
-					{ section: 'Visible2', fields: [{ field: 'C', type: 'text-field' }] },
-				],
-			}),
+			(window as any).cardFlatten(
+				{
+					form: 'SectionHidden',
+					sections: [
+						{ section: 'Visible', fields: [{ field: 'A', type: 'text-field' }] },
+						{ section: 'Hidden', roles: ['doctor'], fields: [{ field: 'B', type: 'text-field' }] },
+						{ section: 'Visible2', fields: [{ field: 'C', type: 'text-field' }] },
+					],
+				},
+				'patient',
+			),
 		)
 		const sections = flat.map((c: any) => c.sectionTitle)
 		const labels = flat.map((c: any) => c.fieldLabels[0])
@@ -300,34 +294,35 @@ sections:
 		expect(labels).toEqual(['A', 'C'])
 	})
 
-	test('Subform-level hiddenForPatient cascades and excludes the embedded form', async ({ page }) => {
+	test('Subform-level roles cascades and excludes the embedded form', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).cardFlatten({
-				form: 'SubformHidden',
-				sections: [
-					{
-						section: 'Main',
-						fields: [
-							{ field: 'Before', type: 'text-field' },
-							{
-								subform: 'Sub',
-								id: 'sub',
-								hiddenForPatient: true,
-								forms: {
-									'sub-template': {
-										form: 'SubInner',
-										sections: [
-											{ section: 'Inner', fields: [{ field: 'InnerField', type: 'text-field' }] },
-										],
+			(window as any).cardFlatten(
+				{
+					form: 'SubformHidden',
+					sections: [
+						{
+							section: 'Main',
+							fields: [
+								{ field: 'Before', type: 'text-field' },
+								{
+									subform: 'Sub',
+									id: 'sub',
+									roles: ['doctor'],
+									forms: {
+										'sub-template': {
+											form: 'SubInner',
+											sections: [{ section: 'Inner', fields: [{ field: 'InnerField', type: 'text-field' }] }],
+										},
 									},
 								},
-							},
-							{ field: 'After', type: 'text-field' },
-						],
-					},
-				],
-			}),
+								{ field: 'After', type: 'text-field' },
+							],
+						},
+					],
+				},
+				'patient',
+			),
 		)
 		expect(flat.map((c: any) => c.fieldLabels[0])).toEqual(['Before', 'After'])
 	})
@@ -335,42 +330,45 @@ sections:
 	test('cascade applies through nested Groups', async ({ page }) => {
 		await gotoHarness(page)
 		const flat = await page.evaluate(() =>
-			(window as any).cardFlatten({
-				form: 'NestedGroupHidden',
-				sections: [
-					{
-						section: 'S',
-						fields: [
-							{
-								group: 'OuterGroup',
-								fields: [
-									{ field: 'OuterVisible', type: 'text-field' },
-									{
-										group: 'InnerHidden',
-										hiddenForPatient: true,
-										fields: [{ field: 'DeepHidden', type: 'text-field' }],
-									},
-								],
-							},
-						],
-					},
-				],
-			}),
+			(window as any).cardFlatten(
+				{
+					form: 'NestedGroupHidden',
+					sections: [
+						{
+							section: 'S',
+							fields: [
+								{
+									group: 'OuterGroup',
+									fields: [
+										{ field: 'OuterVisible', type: 'text-field' },
+										{
+											group: 'InnerHidden',
+											roles: ['doctor'],
+											fields: [{ field: 'DeepHidden', type: 'text-field' }],
+										},
+									],
+								},
+							],
+						},
+					],
+				},
+				'patient',
+			),
 		)
 		expect(flat.map((c: any) => c.fieldLabels[0])).toEqual(['OuterVisible'])
 	})
 
-	test('hiddenForPatient has NO effect on the clinician renderer', async ({ page }) => {
+	test('when the form has no role set, items with roles are still visible (no filter active)', async ({ page }) => {
 		const yaml = `
-form: HiddenNoEffect
+form: NoRoleNoFilter
 sections:
   - section: S
     fields:
       - field: Visible
         type: text-field
-      - field: HiddenInPatient
+      - field: DoctorOnly
         type: text-field
-        hiddenForPatient: true
+        roles: ['doctor']
 `
 		await gotoHarness(page)
 		await initClinicianRenderer(page, yaml)
@@ -392,7 +390,42 @@ sections:
 			return out
 		})
 		expect(visibleLabels).toContain('Visible')
-		expect(visibleLabels).toContain('HiddenInPatient')
+		expect(visibleLabels).toContain('DoctorOnly')
+	})
+
+	test('form renderer with role=patient hides items whose roles=[doctor]', async ({ page }) => {
+		const yaml = `
+form: FormRoleFilter
+sections:
+  - section: S
+    fields:
+      - field: Visible
+        type: text-field
+      - field: DoctorOnly
+        type: text-field
+        roles: ['doctor']
+`
+		await gotoHarness(page)
+		await page.evaluate(async (y: string) => (window as any).initForm({ yaml: y, language: 'en', renderer: 'form', role: 'patient' }), yaml)
+		await page.waitForFunction(
+			() => {
+				const root = document.querySelector('icure-form')?.shadowRoot
+				return !!root?.querySelector('.icure-form')
+			},
+			{ timeout: 15_000 },
+		)
+		await page.waitForTimeout(500)
+		const visibleLabels = await page.evaluate(() => {
+			const root = document.querySelector('icure-form')?.shadowRoot
+			if (!root) return []
+			const out: string[] = []
+			root.querySelectorAll('.icure-form-field').forEach((el) => {
+				out.push((el as any).label)
+			})
+			return out
+		})
+		expect(visibleLabels).toContain('Visible')
+		expect(visibleLabels).not.toContain('DoctorOnly')
 	})
 })
 
@@ -480,7 +513,7 @@ test.describe('Phase 1 / Subform recursion', () => {
 // Group 5: parse/toJson round-trip
 // ============================================================
 test.describe('Phase 1 / parse and toJson round-trip', () => {
-	test('hiddenForPatient round-trips at Field level', async ({ page }) => {
+	test('roles round-trips at Field level', async ({ page }) => {
 		await gotoHarness(page)
 		const out = await page.evaluate(() =>
 			(window as any).formToJson({
@@ -488,15 +521,15 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 				sections: [
 					{
 						section: 'S',
-						fields: [{ field: 'A', type: 'text-field', hiddenForPatient: true }],
+						fields: [{ field: 'A', type: 'text-field', roles: ['doctor'] }],
 					},
 				],
 			}),
 		)
-		expect(out.sections[0].fields[0].hiddenForPatient).toBe(true)
+		expect(out.sections[0].fields[0].roles).toEqual(['doctor'])
 	})
 
-	test('hiddenForPatient round-trips at Section level', async ({ page }) => {
+	test('roles round-trips at Section level', async ({ page }) => {
 		await gotoHarness(page)
 		const out = await page.evaluate(() =>
 			(window as any).formToJson({
@@ -504,16 +537,16 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 				sections: [
 					{
 						section: 'S',
-						hiddenForPatient: true,
+						roles: ['doctor'],
 						fields: [{ field: 'A', type: 'text-field' }],
 					},
 				],
 			}),
 		)
-		expect(out.sections[0].hiddenForPatient).toBe(true)
+		expect(out.sections[0].roles).toEqual(['doctor'])
 	})
 
-	test('hiddenForPatient round-trips at Group level', async ({ page }) => {
+	test('roles round-trips at Group level', async ({ page }) => {
 		await gotoHarness(page)
 		const out = await page.evaluate(() =>
 			(window as any).formToJson({
@@ -524,7 +557,7 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 						fields: [
 							{
 								group: 'G',
-								hiddenForPatient: true,
+								roles: ['doctor'],
 								fields: [{ field: 'A', type: 'text-field' }],
 							},
 						],
@@ -533,10 +566,10 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 			}),
 		)
 		const grp = out.sections[0].fields.find((f: any) => f.group === 'G')
-		expect(grp.hiddenForPatient).toBe(true)
+		expect(grp.roles).toEqual(['doctor'])
 	})
 
-	test('hiddenForPatient round-trips at Subform level', async ({ page }) => {
+	test('roles round-trips at Subform level', async ({ page }) => {
 		await gotoHarness(page)
 		const out = await page.evaluate(() =>
 			(window as any).formToJson({
@@ -548,7 +581,7 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 							{
 								subform: 'Sub',
 								id: 'sub',
-								hiddenForPatient: true,
+								roles: ['doctor'],
 								forms: {
 									t: { form: 'T', sections: [{ section: 'I', fields: [{ field: 'X', type: 'text-field' }] }] },
 								},
@@ -559,10 +592,10 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 			}),
 		)
 		const sub = out.sections[0].fields.find((f: any) => f.subform === 'sub')
-		expect(sub.hiddenForPatient).toBe(true)
+		expect(sub.roles).toEqual(['doctor'])
 	})
 
-	test('absent hiddenForPatient remains undefined / falsy after round-trip', async ({ page }) => {
+	test('absent roles remains undefined after round-trip', async ({ page }) => {
 		await gotoHarness(page)
 		const out = await page.evaluate(() =>
 			(window as any).formToJson({
@@ -575,8 +608,28 @@ test.describe('Phase 1 / parse and toJson round-trip', () => {
 				],
 			}),
 		)
-		expect(!!out.sections[0].fields[0].hiddenForPatient).toBe(false)
-		expect(!!out.sections[0].hiddenForPatient).toBe(false)
+		expect(out.sections[0].fields[0].roles).toBeUndefined()
+		expect(out.sections[0].roles).toBeUndefined()
+	})
+
+	test('legacy hiddenForPatient key is silently dropped on parse (no compat shim)', async ({ page }) => {
+		await gotoHarness(page)
+		const out = await page.evaluate(() =>
+			(window as any).formToJson({
+				form: 'Legacy',
+				sections: [
+					{
+						section: 'S',
+						hiddenForPatient: true,
+						fields: [{ field: 'A', type: 'text-field', hiddenForPatient: true }],
+					},
+				],
+			}),
+		)
+		expect(out.sections[0].hiddenForPatient).toBeUndefined()
+		expect(out.sections[0].roles).toBeUndefined()
+		expect(out.sections[0].fields[0].hiddenForPatient).toBeUndefined()
+		expect(out.sections[0].fields[0].roles).toBeUndefined()
 	})
 })
 

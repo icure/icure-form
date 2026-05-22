@@ -31,6 +31,8 @@ interface InitFormOptions {
 	renderer?: string
 	/** Card renderer only: max interactive fields per card (1 or 2). */
 	questionsPerCard?: number
+	/** Active viewer role. Sections/groups/fields/subforms whose `roles` does not include it are hidden. */
+	role?: string
 	/**
 	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted.
 	 * Used by Phase 5 tests to simulate "resume" scenarios where the patient is returning to a
@@ -99,7 +101,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role } = options
 
 	// Parse the form
 	let parsed: any
@@ -251,6 +253,9 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	if (questionsPerCard !== undefined) {
 		icureFormEl.questionsPerCard = questionsPerCard
 	}
+	if (role !== undefined) {
+		icureFormEl.role = role
+	}
 
 	const translationTables = form.translations
 	if (translationTables) {
@@ -280,9 +285,9 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 }
 
 // Card helpers exposed for Playwright tests:
-;(window as any).cardFlatten = (formJson: any) => {
+;(window as any).cardFlatten = (formJson: any, role?: string) => {
 	const f = Form.parse(formJson)
-	return cardFlatten(f).map((c) => ({
+	return cardFlatten(f, { role }).map((c) => ({
 		sectionTitle: c.sectionTitle,
 		groupTitle: c.groupTitle,
 		fieldLabels: c.fields.map((field) => field.field),

@@ -36,6 +36,7 @@ export const render: Renderer = async (
 		.language=${props.language}
 		.labelPosition=${props.labelPosition}
 		.questionsPerCard=${props.questionsPerCard ?? 1}
+		.role=${props.role}
 		?readonly=${!!readonly}
 		?displayMetadata=${!!displayMetadata}
 	></icure-card-internal>`

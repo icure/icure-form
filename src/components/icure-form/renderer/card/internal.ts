@@ -47,6 +47,8 @@ export class IcureCardInternal extends LitElement {
 	@property({ type: Boolean }) displayMetadata = false
 	@property() labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
 	@property({ type: Number }) questionsPerCard = 1
+	// Mirror HTMLElement's ARIA `role` typing (string | null) to allow the attribute form.
+	@property() override role: string | null = null
 
 	@state() private currentCardIndex = 0
 	@state() private stage: Stage = 'welcome'
@@ -93,11 +95,11 @@ export class IcureCardInternal extends LitElement {
 			this.scheduleFocus()
 		}
 		// Phase 4 / 7: seed cards synchronously when the form or chunking changes.
-		if (changedProps.has('form') || changedProps.has('questionsPerCard')) {
-			this.cards = this.form ? flatten(this.form, { questionsPerCard: this.questionsPerCard }) : []
+		if (changedProps.has('form') || changedProps.has('questionsPerCard') || changedProps.has('role')) {
+			this.cards = this.form ? flatten(this.form, { questionsPerCard: this.questionsPerCard, role: this.role ?? undefined }) : []
 		}
 		// Phase 4: re-flatten asynchronously (computed `hidden`) on form/container/chunking changes.
-		if (changedProps.has('formValuesContainer') || changedProps.has('form') || changedProps.has('questionsPerCard')) {
+		if (changedProps.has('formValuesContainer') || changedProps.has('form') || changedProps.has('questionsPerCard') || changedProps.has('role')) {
 			const cardsV = ++this.cardsVersion
 			this.reflatten(cardsV)
 		}
@@ -125,10 +127,10 @@ export class IcureCardInternal extends LitElement {
 		const prevFieldLabel = prev[prevIdx]?.fields[0]?.field
 		let next: Card[]
 		try {
-			next = await flattenWithVisibility(this.form, this.formValuesContainer, { questionsPerCard: this.questionsPerCard })
+			next = await flattenWithVisibility(this.form, this.formValuesContainer, { questionsPerCard: this.questionsPerCard, role: this.role ?? undefined })
 		} catch (e) {
 			console.warn('[card] flattenWithVisibility threw; falling back to sync flatten', e)
-			next = flatten(this.form, { questionsPerCard: this.questionsPerCard })
+			next = flatten(this.form, { questionsPerCard: this.questionsPerCard, role: this.role ?? undefined })
 		}
 		if (version !== this.cardsVersion) return
 		this.cards = next

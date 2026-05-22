@@ -1,6 +1,5 @@
 import { registerTheme } from '../src/components/themes/icure-blue'
-//import { registerTheme } from '../src/components/themes/kendo'
-registerTheme()
+
 import { css, html, LitElement } from 'lit'
 import { BridgedFormValuesContainer } from '../src/icure'
 import { property, state } from 'lit/decorators.js'
@@ -16,6 +15,8 @@ import { v4 as uuid } from 'uuid'
 import { normalizeCode } from '../src/utils/code-utils'
 import { defaultTranslationProvider } from '../src/utils/languages'
 import { getAge, getAgeDescription } from './date'
+
+registerTheme()
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
@@ -131,6 +132,17 @@ export class DecoratedForm extends LitElement {
 	@property() renderer = 'form'
 	@property() form: Form
 	@property() language?: string = 'fr'
+
+	// Viewer role passed to <icure-form>: derived from the renderer string so swapping renderers
+	// also swaps the role filter. Returns `null` (no filter) for any renderer that doesn't match.
+	override get role(): string | null {
+		if (this.renderer?.startsWith('card')) return 'patient'
+		if (this.renderer?.startsWith('form')) return 'doctor'
+		return null
+	}
+	override set role(_value: string | null) {
+		// derived from `renderer`; explicit sets are intentionally ignored.
+	}
 
 	private undoStack: BridgedFormValuesContainer[] = []
 	private redoStack: BridgedFormValuesContainer[] = []
@@ -271,13 +283,11 @@ export class DecoratedForm extends LitElement {
 			undefined,
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
-				const foundInitialValuesFormulas = form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['defaultValue']) : []
-				return foundInitialValuesFormulas
+				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['defaultValue']) : []
 			},
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
-				const fondDependentValuesFormulas = form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['value']) : []
-				return fondDependentValuesFormulas
+				return form ? extractFormulas(form.sections?.flatMap((f) => f.fields) ?? [], (fg) => fg.computedProperties?.['value']) : []
 			},
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
@@ -477,6 +487,7 @@ export class DecoratedForm extends LitElement {
 				.form="${this.form}"
 				labelPosition="above"
 				renderer="${this.renderer}"
+				.role="${this.role}"
 				.readOnly="${false}"
 				.displayMetadata="${false}"
 				.language="${this.language}"

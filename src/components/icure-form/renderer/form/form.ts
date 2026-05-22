@@ -1,7 +1,7 @@
 import { html, nothing, TemplateResult } from 'lit'
 import { Renderer, RendererProps } from '../index'
 import { fieldValuesProvider, getValidationErrorProvider, handleMetadataChangedProvider, handleValueChangedProvider } from '../../../../utils/fields-values-provider'
-import { FieldMetadata, FieldValue, Form, Field, Group, Subform, SortOptions } from '../../../model'
+import { FieldMetadata, FieldValue, Form, Field, Group, Subform, SortOptions, isVisibleForRole } from '../../../model'
 import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 
 import { defaultTranslationProvider } from '../../../../utils/languages'
@@ -405,6 +405,9 @@ export const render: Renderer = async (
 		if (!fg) {
 			return nothing
 		}
+		if (!isVisibleForRole((fg as any).roles, props.role)) {
+			return nothing
+		}
 		const computedProperties = (await Object.keys(fg.computedProperties ?? {})
 			.filter((k) => k !== 'value' && k !== 'defaultValue')
 			.reduce(async (acc, k) => ({ ...(await acc), [k]: fg.computedProperties?.[k] && (await formsValueContainer?.compute(fg.computedProperties[k]))?.value }), Promise.resolve({}))) as {
@@ -462,6 +465,9 @@ export const render: Renderer = async (
 	const renderForm = async (form: Form, sectionWrapper: (index: number, section: () => TemplateResult) => TemplateResult) => {
 		return await Promise.all(
 			form.sections.map(async (s, idx) => {
+				if (!isVisibleForRole(s.roles, props.role)) {
+					return nothing
+				}
 				const section = await Promise.all(s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3)))
 				return sectionWrapper(idx, () => html` <div class="icure-form">${section}</div>`)
 			}),

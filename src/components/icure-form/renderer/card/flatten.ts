@@ -1,4 +1,4 @@
-import { Field, FieldMetadata, FieldValue, Form, Group, Subform } from '../../../model'
+import { Field, FieldMetadata, FieldValue, Form, Group, Subform, isVisibleForRole } from '../../../model'
 import { FormValuesContainer } from '../../../../generic'
 
 /**
@@ -20,6 +20,8 @@ export interface Card {
 export interface FlattenOptions {
 	/** Maximum interactive Fields per card. Default 1. Capped at 2 by the renderer prop. */
 	questionsPerCard?: number
+	/** Active viewer role. Sections/groups/fields/subforms whose `roles` does not include this value are skipped. */
+	role?: string
 }
 
 /**
@@ -30,7 +32,7 @@ function countInteractive(fields: Field[]): number {
 }
 
 /**
- * Sync flatten — hiddenForPatient only, no computed-hidden evaluation. Used by tests and unit
+ * Sync flatten — role-based visibility only, no computed-hidden evaluation. Used by tests and unit
  * helpers where no FormValuesContainer is available.
  *
  * Honours `questionsPerCard` chunking and Label / readonly attachment semantics.
@@ -47,11 +49,12 @@ interface FlattenCtx {
 	out: Card[]
 	current: Card | null
 	k: number
+	role?: string
 }
 
 function newCtx(options: FlattenOptions): FlattenCtx {
 	const k = clampK(options.questionsPerCard ?? 1)
-	return { out: [], current: null, k }
+	return { out: [], current: null, k, role: options.role }
 }
 
 function clampK(n: number): number {
@@ -103,7 +106,7 @@ function walkForm(form: Form, ctx: FlattenCtx, visited: Set<Form>): void {
 	}
 	visited.add(form)
 	for (const section of form.sections ?? []) {
-		if (section.hiddenForPatient) continue
+		if (!isVisibleForRole(section.roles, ctx.role)) continue
 		commitCard(ctx) // Section boundary — new section starts a new card context.
 		for (const child of section.fields ?? []) {
 			walkChild(child, section.section, undefined, ctx, visited)
@@ -114,7 +117,7 @@ function walkForm(form: Form, ctx: FlattenCtx, visited: Set<Form>): void {
 }
 
 function walkChild(child: Field | Group | Subform, sectionTitle: string, groupTitle: string | undefined, ctx: FlattenCtx, visited: Set<Form>): void {
-	if ((child as any).hiddenForPatient) return
+	if (!isVisibleForRole((child as any).roles, ctx.role)) return
 	if (isGroup(child)) {
 		const nextGroupTitle = groupTitle ? `${groupTitle} / ${child.group}` : child.group
 		commitCard(ctx) // Group boundary — start fresh group context.
@@ -162,7 +165,7 @@ export function isInteractive(f: Field): boolean {
 /**
  * Async flatten with computed-`hidden` evaluation. The primary entry point used by the renderer.
  *
- * Composition rule: a Field is shown iff `!hiddenForPatient && !computedHidden`.
+ * Composition rule: a Field is shown iff `isVisibleForRole(roles, role) && !computedHidden`.
  */
 export async function flattenWithVisibility(form: Form, container?: FormValuesContainer<FieldValue, FieldMetadata>, options: FlattenOptions = {}): Promise<Card[]> {
 	const ctx = newCtx(options)
@@ -179,7 +182,7 @@ async function walkFormAsync(form: Form, ctx: FlattenCtx, visited: Set<Form>, co
 	}
 	visited.add(form)
 	for (const section of form.sections ?? []) {
-		if (section.hiddenForPatient) continue
+		if (!isVisibleForRole(section.roles, ctx.role)) continue
 		commitCard(ctx)
 		for (const child of section.fields ?? []) {
 			await walkChildAsync(child, section.section, undefined, ctx, visited, container)
@@ -197,7 +200,7 @@ async function walkChildAsync(
 	visited: Set<Form>,
 	container?: FormValuesContainer<FieldValue, FieldMetadata>,
 ): Promise<void> {
-	if ((child as any).hiddenForPatient) return
+	if (!isVisibleForRole((child as any).roles, ctx.role)) return
 	if (await isComputedHidden(child, container)) return
 	if (isGroup(child)) {
 		const nextGroupTitle = groupTitle ? `${groupTitle} / ${child.group}` : child.group

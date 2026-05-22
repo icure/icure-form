@@ -8,6 +8,8 @@ export interface RendererProps {
 	defaultOwner?: string
 	/** Card renderer only: max interactive fields per card (1 or 2, default 1). */
 	questionsPerCard?: number
+	/** Active viewer role. When set, sections/groups/fields/subforms whose `roles` does not include this value are hidden. */
+	role?: string
 }
 
 export type Renderer = (

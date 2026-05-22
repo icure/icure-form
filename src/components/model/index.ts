@@ -69,6 +69,21 @@ function hasChanges<T>(target: T, properties: Partial<T>): boolean {
 	return keys.length > 0 && keys.some((k) => target[k] !== properties[k])
 }
 
+/**
+ * Role-based visibility predicate.
+ *
+ * - `role` unset on the form: no filter applied; everything is visible.
+ * - `roles` undefined on the item: visible to every role.
+ * - `roles: []`: explicit "hidden for everyone".
+ * - `roles: [...]`: visible only when the active `role` is in the list.
+ */
+export function isVisibleForRole(roles: string[] | undefined, role: string | undefined): boolean {
+	if (!role) return true
+	if (roles === undefined) return true
+	if (roles.length === 0) return false
+	return roles.includes(role)
+}
+
 export type Position = 'top' | 'left' | 'right' | 'bottom' | 'float' | 'add' | 'remove'
 
 export type Labels = Partial<Record<Position, string>>
@@ -147,7 +162,12 @@ export abstract class Field {
 	hasOther?: boolean
 	event?: string
 	payload?: unknown
-	hiddenForPatient?: boolean
+	/**
+	 * Role-based visibility. When omitted, the field is visible to every role. When set, the field is
+	 * only shown when `<icure-form>.role` is one of the listed values. An empty array hides the field
+	 * for everyone. See `isVisibleForRole`.
+	 */
+	roles?: string[]
 	/**
 	 * Card renderer only: when `true`, this Field is rendered on its own card regardless
 	 * of `questionsPerCard`. Adjacent fields are pushed to subsequent cards. Has no effect on the
@@ -257,8 +277,8 @@ export abstract class Field {
 					action: () => new Button(json.field, { ...json }),
 				} as { [key: string]: () => Field }
 			)[json.type as string]?.() ?? new TextField(json.field, { ...json })
-		if ((json as any).hiddenForPatient !== undefined) {
-			result.hiddenForPatient = !!(json as any).hiddenForPatient
+		if (Array.isArray((json as any).roles)) {
+			result.roles = ((json as any).roles as unknown[]).filter((r) => typeof r === 'string') as string[]
 		}
 		if ((json as any).standalone !== undefined) {
 			result.standalone = !!(json as any).standalone
@@ -301,7 +321,7 @@ export abstract class Field {
 		shortLabel: string | undefined
 		computedProperties: { [key: string]: string } | undefined
 		value: string | undefined
-		hiddenForPatient: boolean | undefined
+		roles: string[] | undefined
 		standalone: boolean | undefined
 	} {
 		return {
@@ -324,7 +344,7 @@ export abstract class Field {
 			sortOptions: this.sortOptions,
 			width: this.width,
 			styleOptions: this.styleOptions,
-			hiddenForPatient: this.hiddenForPatient,
+			roles: this.roles,
 			standalone: this.standalone,
 		}
 	}
@@ -1045,7 +1065,7 @@ export class Group {
 	computedProperties?: { [_key: string]: string }
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
-	hiddenForPatient?: boolean
+	roles?: string[]
 
 	constructor(
 		title: string,
@@ -1058,7 +1078,7 @@ export class Group {
 			computedProperties,
 			width,
 			styleOptions,
-			hiddenForPatient,
+			roles,
 		}: {
 			borderless?: boolean
 			translate?: boolean
@@ -1067,7 +1087,7 @@ export class Group {
 			computedProperties?: { [_key: string]: string }
 			width?: number
 			styleOptions?: { [_key: string]: unknown }
-			hiddenForPatient?: boolean
+			roles?: string[]
 		},
 	) {
 		this.group = title
@@ -1080,7 +1100,7 @@ export class Group {
 		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
-		this.hiddenForPatient = hiddenForPatient
+		this.roles = roles
 	}
 
 	copyIfNeeded(properties: Partial<Group>): Group {
@@ -1095,7 +1115,7 @@ export class Group {
 		group,
 		translate,
 		width,
-		hiddenForPatient,
+		roles,
 	}: {
 		group: string
 		fields?: Array<Field | Group | Subform>
@@ -1105,7 +1125,7 @@ export class Group {
 		rowSpan?: number
 		computedProperties?: { [_key: string]: string }
 		width?: number
-		hiddenForPatient?: boolean
+		roles?: string[]
 	}): Group {
 		return new Group(
 			group,
@@ -1122,7 +1142,7 @@ export class Group {
 				translate: translate,
 				computedProperties: computedProperties,
 				width: width,
-				hiddenForPatient: hiddenForPatient,
+				roles: Array.isArray(roles) ? roles : undefined,
 			},
 		)
 	}
@@ -1136,7 +1156,7 @@ export class Group {
 			translatable: this.translate,
 			span: this.span,
 			width: this.width,
-			hiddenForPatient: this.hiddenForPatient,
+			roles: this.roles,
 		}
 	}
 }
@@ -1153,7 +1173,7 @@ export class Subform {
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
 	labels: Labels
-	hiddenForPatient?: boolean
+	roles?: string[]
 
 	constructor(
 		title: string,
@@ -1168,7 +1188,7 @@ export class Subform {
 			styleOptions,
 			refs,
 			labels,
-			hiddenForPatient,
+			roles,
 		}: {
 			id?: string
 			shortLabel?: string
@@ -1179,7 +1199,7 @@ export class Subform {
 			styleOptions?: { [_key: string]: unknown }
 			refs?: string[]
 			labels?: Labels
-			hiddenForPatient?: boolean
+			roles?: string[]
 		},
 	) {
 		this.id = id || title
@@ -1192,7 +1212,7 @@ export class Subform {
 		this.styleOptions = styleOptions
 		this.refs = refs
 		this.labels = labels ?? {}
-		this.hiddenForPatient = hiddenForPatient
+		this.roles = roles
 	}
 
 	copyIfNeeded(properties: Partial<Subform>): Subform {
@@ -1211,7 +1231,7 @@ export class Subform {
 		styleOptions?: { [_key: string]: unknown }
 		labels?: Labels
 		id: string
-		hiddenForPatient?: boolean
+		roles?: string[]
 	}): Subform {
 		return new Subform(json.subform, json.forms ?? {}, {
 			id: json.id,
@@ -1222,7 +1242,7 @@ export class Subform {
 			styleOptions: json.styleOptions,
 			refs: json.refs,
 			labels: json.labels,
-			hiddenForPatient: json.hiddenForPatient,
+			roles: Array.isArray(json.roles) ? json.roles : undefined,
 		})
 	}
 
@@ -1235,7 +1255,7 @@ export class Subform {
 			computedProperties: this.computedProperties,
 			width: this.width,
 			styleOptions: this.styleOptions,
-			hiddenForPatient: this.hiddenForPatient,
+			roles: this.roles,
 		}
 	}
 }
@@ -1244,14 +1264,14 @@ export class Section {
 	fields: Array<Field | Group | Subform>
 	description?: string
 	keywords?: string[]
-	hiddenForPatient?: boolean
+	roles?: string[]
 
-	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], hiddenForPatient?: boolean) {
+	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[]) {
 		this.section = title
 		this.fields = fields
 		this.description = description
 		this.keywords = keywords
-		this.hiddenForPatient = hiddenForPatient
+		this.roles = roles
 	}
 
 	static parse(json: {
@@ -1261,7 +1281,7 @@ export class Section {
 		sections?: Array<Field | Group | Subform>
 		description?: string
 		keywords?: string[]
-		hiddenForPatient?: boolean
+		roles?: string[]
 	}): Section {
 		return new Section(
 			json.section,
@@ -1274,7 +1294,7 @@ export class Section {
 			),
 			json.description,
 			json.keywords,
-			json.hiddenForPatient,
+			Array.isArray(json.roles) ? json.roles : undefined,
 		)
 	}
 
@@ -1283,14 +1303,14 @@ export class Section {
 		keywords?: string[]
 		description?: string
 		fields: (Field | Group | Subform)[]
-		hiddenForPatient?: boolean
+		roles?: string[]
 	} {
 		return {
 			section: this.section,
 			fields: this.fields.map((f: Field | Group | Subform) => (f && f.toJson ? f.toJson() : JSON.stringify(f))),
 			description: this.description,
 			keywords: this.keywords,
-			hiddenForPatient: this.hiddenForPatient,
+			roles: this.roles,
 		}
 	}
 }

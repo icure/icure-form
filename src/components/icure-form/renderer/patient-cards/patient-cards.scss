@@ -71,7 +71,7 @@
 	border-radius: var(--patient-cards-card-radius);
 	padding: var(--patient-cards-card-padding);
 	height: var(--patient-cards-card-height);
-	max-height: calc(100vh - 210px);
+	max-height: calc(100% - 210px);
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;

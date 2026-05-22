@@ -11,79 +11,30 @@ import ehrLiteCss from './ehr-lite.scss'
 import { MetadataButtonBar } from '../../common/metadata-buttons-bar'
 import { IcureButton } from '../../icure-button'
 import { FormSelectionButton } from '../../icure-form/renderer/form/form-selection-button'
+import { buildThemeRegistrar } from '../shared'
 
-class EhrLiteIcureButtonGroup extends IcureButtonGroup {
-	static get styles() {
-		return [...IcureButtonGroup.styles, ehrLiteCss]
-	}
-}
-class EhrLiteIcureDatePickerField extends IcureDatePickerField {
-	static get styles() {
-		return [...IcureDatePickerField.styles, ehrLiteCss]
-	}
-}
-class EhrLiteIcureDropdownField extends IcureDropdownField {
-	static get styles() {
-		return [...IcureDropdownField.styles, ehrLiteCss]
-	}
-}
-class EhrLiteIcureForm extends IcureForm {
-	static get styles() {
-		return [...IcureForm.styles, ehrLiteCss]
-	}
-}
-class EhrLiteIcureLabel extends IcureLabel {
-	static get styles() {
-		return [...IcureLabel.styles, ehrLiteCss]
-	}
-}
-class EhrLiteIcureButton extends IcureButton {
-	static get styles() {
-		return [...IcureButton.styles, ehrLiteCss]
-	}
-}
-class EhrLiteIcureTextField extends IcureTextField {
-	static get styles() {
-		return [...IcureTextField.styles, ehrLiteCss]
-	}
-}
-class EhrLiteLabel extends Label {
-	static get styles() {
-		return [...Label.styles, ehrLiteCss]
-	}
-}
-class EhrLiteMetadataButtonBar extends MetadataButtonBar {
-	static get styles() {
-		return [...MetadataButtonBar.styles, ehrLiteCss]
-	}
-}
-class EhrLiteButton extends Button {
-	static get styles() {
-		return [...Button.styles, ehrLiteCss]
-	}
-}
-
-customElements.define('icure-metadata-buttons-bar', EhrLiteMetadataButtonBar)
-customElements.define('icure-metadata-buttons-bar-wrapper', MetadataButtonBarWrapper)
-
-customElements.define('icure-form-checkbox', CheckBox)
-customElements.define('icure-form-date-picker', DatePicker)
-customElements.define('icure-form-date-time-picker', DateTimePicker)
-customElements.define('icure-form-dropdown-field', DropdownField)
-customElements.define('icure-button-group', EhrLiteIcureButtonGroup)
-customElements.define('icure-date-picker-field', EhrLiteIcureDatePickerField)
-customElements.define('icure-dropdown-field', EhrLiteIcureDropdownField)
-customElements.define('icure-form', EhrLiteIcureForm)
-customElements.define('icure-label', EhrLiteIcureLabel)
-customElements.define('icure-button', EhrLiteIcureButton)
-customElements.define('icure-text-field', EhrLiteIcureTextField)
-customElements.define('icure-form-items-list-field', ItemsListField)
-customElements.define('icure-form-label', EhrLiteLabel)
-customElements.define('icure-form-button', EhrLiteButton)
-customElements.define('icure-form-measure-field', MeasureField)
-customElements.define('icure-form-number-field', NumberField)
-customElements.define('icure-form-radio-button', RadioButton)
-customElements.define('icure-form-text-field', TextField)
-customElements.define('icure-form-time-picker', TimePicker)
-customElements.define('icure-form-token-field', TokenField)
-customElements.define('form-selection-button', FormSelectionButton)
+export const registerTheme = buildThemeRegistrar([
+	{ tag: 'icure-metadata-buttons-bar', baseClass: MetadataButtonBar, themeCss: ehrLiteCss },
+	{ tag: 'icure-metadata-buttons-bar-wrapper', baseClass: MetadataButtonBarWrapper },
+	{ tag: 'icure-form-checkbox', baseClass: CheckBox },
+	{ tag: 'icure-form-date-picker', baseClass: DatePicker },
+	{ tag: 'icure-form-date-time-picker', baseClass: DateTimePicker },
+	{ tag: 'icure-form-dropdown-field', baseClass: DropdownField },
+	{ tag: 'icure-button-group', baseClass: IcureButtonGroup, themeCss: ehrLiteCss },
+	{ tag: 'icure-date-picker-field', baseClass: IcureDatePickerField, themeCss: ehrLiteCss },
+	{ tag: 'icure-dropdown-field', baseClass: IcureDropdownField, themeCss: ehrLiteCss },
+	{ tag: 'icure-form', baseClass: IcureForm, themeCss: ehrLiteCss },
+	{ tag: 'icure-label', baseClass: IcureLabel, themeCss: ehrLiteCss },
+	{ tag: 'icure-button', baseClass: IcureButton, themeCss: ehrLiteCss },
+	{ tag: 'icure-text-field', baseClass: IcureTextField, themeCss: ehrLiteCss },
+	{ tag: 'icure-form-items-list-field', baseClass: ItemsListField },
+	{ tag: 'icure-form-label', baseClass: Label, themeCss: ehrLiteCss },
+	{ tag: 'icure-form-button', baseClass: Button, themeCss: ehrLiteCss },
+	{ tag: 'icure-form-measure-field', baseClass: MeasureField },
+	{ tag: 'icure-form-number-field', baseClass: NumberField },
+	{ tag: 'icure-form-radio-button', baseClass: RadioButton },
+	{ tag: 'icure-form-text-field', baseClass: TextField },
+	{ tag: 'icure-form-time-picker', baseClass: TimePicker },
+	{ tag: 'icure-form-token-field', baseClass: TokenField },
+	{ tag: 'form-selection-button', baseClass: FormSelectionButton },
+])

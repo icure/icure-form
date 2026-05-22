@@ -313,7 +313,8 @@ The icure-form component accepts the following properties:
 
 ### Themes
 
-Themes can be applied to renderers by importing one theme before importing/instantiating the icure-form component.
+Themes are applied by importing a theme module and calling its `registerTheme()` function before instantiating the `icure-form` component. The function registers all themed custom elements; importing the module no longer has side effects.
+
 The available themes are:
 
 - `default` - Minimal base theme
@@ -321,8 +322,28 @@ The available themes are:
 - `kendo` - Kendo UI-inspired theme
 
 ```javascript
-import '@icure/form/themes/icure-blue'
+import { registerTheme } from '@icure/form/themes/icure-blue'
+
+registerTheme()
 ```
+
+#### Per-component style overrides
+
+`registerTheme()` accepts an `overrides` map keyed by element tag name. Each value is a Lit `CSSResult` (or a raw CSS string, or an array of either) and is **appended after the theme CSS** on that component's `static styles`, so the cascade lets the override win without losing the theme baseline:
+
+```javascript
+import { css } from 'lit'
+import { registerTheme } from '@icure/form/themes/icure-blue'
+
+registerTheme({
+  overrides: {
+    'icure-button-group': css`.icure-button-group { outline: 2px solid magenta; }`,
+    'icure-text-field': '.icure-text-field .input { border: 0; }',
+  },
+})
+```
+
+The supported keys are every tag the theme registers (e.g. `icure-form`, `icure-text-field`, `icure-button-group`, `icure-date-picker-field`, `icure-dropdown-field`, `icure-label`, `icure-button`, `icure-form-label`, `icure-form-button`, etc.). Call `registerTheme()` exactly once per page — calling it twice will throw because the custom elements are already defined.
 
 ### Listeners and notifications
 

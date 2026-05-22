@@ -1,18 +1,4 @@
-import {
-	CheckBox,
-	DatePicker,
-	DateTimePicker,
-	DropdownField,
-	ItemsListField,
-	Label,
-	Button,
-	MeasureField,
-	NumberField,
-	RadioButton,
-	TextField,
-	TimePicker,
-	TokenField,
-} from '../../icure-form/fields'
+import { CheckBox, DatePicker, DateTimePicker, DropdownField, ItemsListField, Label, Button, MeasureField, NumberField, RadioButton, TextField, TimePicker, TokenField } from '../../icure-form/fields'
 import { IcureButtonGroup } from '../../icure-button-group'
 import { IcureDatePickerField } from '../../icure-date-picker'
 import { IcureDropdownField } from '../../icure-dropdown-field'
@@ -25,79 +11,30 @@ import kendoCss from './kendo.scss'
 import { MetadataButtonBar } from '../../common/metadata-buttons-bar'
 import { IcureButton } from '../../icure-button'
 import { FormSelectionButton } from '../../icure-form/renderer/form/form-selection-button'
+import { buildThemeRegistrar } from '../shared'
 
-class KendoIcureButtonGroup extends IcureButtonGroup {
-	static get styles() {
-		return [...IcureButtonGroup.styles, kendoCss]
-	}
-}
-class KendoIcureDatePickerField extends IcureDatePickerField {
-	static get styles() {
-		return [...IcureDatePickerField.styles, kendoCss]
-	}
-}
-class KendoIcureDropdownField extends IcureDropdownField {
-	static get styles() {
-		return [...IcureDropdownField.styles, kendoCss]
-	}
-}
-class KendoIcureForm extends IcureForm {
-	static get styles() {
-		return [...IcureForm.styles, kendoCss]
-	}
-}
-class KendoIcureLabel extends IcureLabel {
-	static get styles() {
-		return [...IcureLabel.styles, kendoCss]
-	}
-}
-class KendoIcureButton extends IcureButton {
-	static get styles() {
-		return [...IcureButton.styles, kendoCss]
-	}
-}
-class KendoIcureTextField extends IcureTextField {
-	static get styles() {
-		return [...IcureTextField.styles, kendoCss]
-	}
-}
-class KendoLabel extends Label {
-	static get styles() {
-		return [...Label.styles, kendoCss]
-	}
-}
-class KendoMetadataButtonBar extends MetadataButtonBar {
-	static get styles() {
-		return [...MetadataButtonBar.styles, kendoCss]
-	}
-}
-class KendoButton extends Button {
-	static get styles() {
-		return [...Button.styles, kendoCss]
-	}
-}
-
-customElements.define('icure-metadata-buttons-bar', KendoMetadataButtonBar)
-customElements.define('icure-metadata-buttons-bar-wrapper', MetadataButtonBarWrapper)
-
-customElements.define('icure-form-checkbox', CheckBox)
-customElements.define('icure-form-date-picker', DatePicker)
-customElements.define('icure-form-date-time-picker', DateTimePicker)
-customElements.define('icure-form-dropdown-field', DropdownField)
-customElements.define('icure-button-group', KendoIcureButtonGroup)
-customElements.define('icure-date-picker-field', KendoIcureDatePickerField)
-customElements.define('icure-dropdown-field', KendoIcureDropdownField)
-customElements.define('icure-form', KendoIcureForm)
-customElements.define('icure-label', KendoIcureLabel)
-customElements.define('icure-button', KendoIcureButton)
-customElements.define('icure-text-field', KendoIcureTextField)
-customElements.define('icure-form-items-list-field', ItemsListField)
-customElements.define('icure-form-label', KendoLabel)
-customElements.define('icure-form-button', KendoButton)
-customElements.define('icure-form-measure-field', MeasureField)
-customElements.define('icure-form-number-field', NumberField)
-customElements.define('icure-form-radio-button', RadioButton)
-customElements.define('icure-form-text-field', TextField)
-customElements.define('icure-form-time-picker', TimePicker)
-customElements.define('icure-form-token-field', TokenField)
-customElements.define('form-selection-button', FormSelectionButton)
+export const registerTheme = buildThemeRegistrar([
+	{ tag: 'icure-metadata-buttons-bar', baseClass: MetadataButtonBar, themeCss: kendoCss },
+	{ tag: 'icure-metadata-buttons-bar-wrapper', baseClass: MetadataButtonBarWrapper },
+	{ tag: 'icure-form-checkbox', baseClass: CheckBox },
+	{ tag: 'icure-form-date-picker', baseClass: DatePicker },
+	{ tag: 'icure-form-date-time-picker', baseClass: DateTimePicker },
+	{ tag: 'icure-form-dropdown-field', baseClass: DropdownField },
+	{ tag: 'icure-button-group', baseClass: IcureButtonGroup, themeCss: kendoCss },
+	{ tag: 'icure-date-picker-field', baseClass: IcureDatePickerField, themeCss: kendoCss },
+	{ tag: 'icure-dropdown-field', baseClass: IcureDropdownField, themeCss: kendoCss },
+	{ tag: 'icure-form', baseClass: IcureForm, themeCss: kendoCss },
+	{ tag: 'icure-label', baseClass: IcureLabel, themeCss: kendoCss },
+	{ tag: 'icure-button', baseClass: IcureButton, themeCss: kendoCss },
+	{ tag: 'icure-text-field', baseClass: IcureTextField, themeCss: kendoCss },
+	{ tag: 'icure-form-items-list-field', baseClass: ItemsListField },
+	{ tag: 'icure-form-label', baseClass: Label, themeCss: kendoCss },
+	{ tag: 'icure-form-button', baseClass: Button, themeCss: kendoCss },
+	{ tag: 'icure-form-measure-field', baseClass: MeasureField },
+	{ tag: 'icure-form-number-field', baseClass: NumberField },
+	{ tag: 'icure-form-radio-button', baseClass: RadioButton },
+	{ tag: 'icure-form-text-field', baseClass: TextField },
+	{ tag: 'icure-form-time-picker', baseClass: TimePicker },
+	{ tag: 'icure-form-token-field', baseClass: TokenField },
+	{ tag: 'form-selection-button', baseClass: FormSelectionButton },
+])

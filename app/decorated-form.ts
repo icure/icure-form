@@ -1,5 +1,6 @@
-import '../src/components/themes/icure-blue'
-//import '../src/components/themes/kendo'
+import { registerTheme } from '../src/components/themes/icure-blue'
+//import { registerTheme } from '../src/components/themes/kendo'
+registerTheme()
 import { css, html, LitElement } from 'lit'
 import { BridgedFormValuesContainer } from '../src/icure'
 import { property, state } from 'lit/decorators.js'

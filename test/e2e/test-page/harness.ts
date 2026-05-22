@@ -1,5 +1,6 @@
-// Import the default theme to register all custom elements
-import '../../../src/components/themes/default/index'
+// Import the default theme and register all custom elements
+import { registerTheme } from '../../../src/components/themes/default/index'
+registerTheme()
 // Side-effect import: register the patient-cards internal element.
 import '../../../src/components/icure-form/renderer/patient-cards/register'
 

@@ -174,6 +174,13 @@ export abstract class Field {
 	 * clinician renderer.
 	 */
 	standalone?: boolean
+	/**
+	 * Card renderer only: when `true`, this Field is rendered on the same card as the previous
+	 * Field, overriding `questionsPerCard` and section/group boundaries that would normally force
+	 * a new card. If no previous card exists, a fresh card is started. Has no effect on the
+	 * clinician renderer.
+	 */
+	samePage?: boolean
 
 	label(): string {
 		return this.field
@@ -283,6 +290,9 @@ export abstract class Field {
 		if ((json as any).standalone !== undefined) {
 			result.standalone = !!(json as any).standalone
 		}
+		if ((json as any).samePage !== undefined) {
+			result.samePage = !!(json as any).samePage
+		}
 		return result
 	}
 
@@ -323,6 +333,7 @@ export abstract class Field {
 		value: string | undefined
 		roles: string[] | undefined
 		standalone: boolean | undefined
+		samePage: boolean | undefined
 	} {
 		return {
 			field: this.field,
@@ -346,6 +357,7 @@ export abstract class Field {
 			styleOptions: this.styleOptions,
 			roles: this.roles,
 			standalone: this.standalone,
+			samePage: this.samePage,
 		}
 	}
 }
@@ -1066,6 +1078,13 @@ export class Group {
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
 	roles?: string[]
+	/**
+	 * Card renderer only: when `true`, the entire group's content is rendered on the same card
+	 * as the previous Field, overriding `questionsPerCard` and section/group boundaries. Internal
+	 * card boundaries (questionsPerCard, standalone) are suppressed for the duration of the group.
+	 * Has no effect on the clinician renderer.
+	 */
+	samePage?: boolean
 
 	constructor(
 		title: string,
@@ -1079,6 +1098,7 @@ export class Group {
 			width,
 			styleOptions,
 			roles,
+			samePage,
 		}: {
 			borderless?: boolean
 			translate?: boolean
@@ -1088,6 +1108,7 @@ export class Group {
 			width?: number
 			styleOptions?: { [_key: string]: unknown }
 			roles?: string[]
+			samePage?: boolean
 		},
 	) {
 		this.group = title
@@ -1101,6 +1122,7 @@ export class Group {
 		this.width = width
 		this.styleOptions = styleOptions
 		this.roles = roles
+		this.samePage = samePage
 	}
 
 	copyIfNeeded(properties: Partial<Group>): Group {
@@ -1116,6 +1138,7 @@ export class Group {
 		translate,
 		width,
 		roles,
+		samePage,
 	}: {
 		group: string
 		fields?: Array<Field | Group | Subform>
@@ -1126,6 +1149,7 @@ export class Group {
 		computedProperties?: { [_key: string]: string }
 		width?: number
 		roles?: string[]
+		samePage?: boolean
 	}): Group {
 		return new Group(
 			group,
@@ -1143,6 +1167,7 @@ export class Group {
 				computedProperties: computedProperties,
 				width: width,
 				roles: Array.isArray(roles) ? roles : undefined,
+				samePage: samePage !== undefined ? !!samePage : undefined,
 			},
 		)
 	}
@@ -1157,6 +1182,7 @@ export class Group {
 			span: this.span,
 			width: this.width,
 			roles: this.roles,
+			samePage: this.samePage,
 		}
 	}
 }

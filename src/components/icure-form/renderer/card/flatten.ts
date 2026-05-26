@@ -50,11 +50,16 @@ interface FlattenCtx {
 	current: Card | null
 	k: number
 	role?: string
+	/**
+	 * Counter of currently-active `samePage` Group walks. While > 0, all `commitCard` calls are
+	 * suppressed so the group's content accumulates onto the previous card.
+	 */
+	samePageDepth: number
 }
 
 function newCtx(options: FlattenOptions): FlattenCtx {
 	const k = clampK(options.questionsPerCard ?? 1)
-	return { out: [], current: null, k, role: options.role }
+	return { out: [], current: null, k, role: options.role, samePageDepth: 0 }
 }
 
 function clampK(n: number): number {
@@ -65,6 +70,7 @@ function clampK(n: number): number {
 }
 
 function commitCard(ctx: FlattenCtx): void {
+	if (ctx.samePageDepth > 0) return
 	if (ctx.current && ctx.current.fields.length > 0) {
 		ctx.out.push(ctx.current)
 	}
@@ -79,18 +85,30 @@ function shouldStartNewCardForContext(ctx: FlattenCtx, sectionTitle: string, gro
 function addFieldToCurrent(ctx: FlattenCtx, field: Field, sectionTitle: string, groupTitle: string | undefined): void {
 	const interactive = isInteractive(field)
 	const isStandalone = !!field.standalone
-	if (shouldStartNewCardForContext(ctx, sectionTitle, groupTitle)) {
-		commitCard(ctx)
-	}
-	// Standalone fields force a fresh card boundary BEFORE themselves so they never share with a sibling.
-	if (isStandalone && ctx.current && ctx.current.fields.length > 0) {
-		commitCard(ctx)
-	}
-	if (interactive && ctx.current && countInteractive(ctx.current.fields) >= ctx.k) {
-		commitCard(ctx)
+	const isSamePage = !!field.samePage
+	// `samePage` suppresses the pre-add boundaries (section/group change, standalone-before, questionsPerCard)
+	// so the field joins whatever card is currently open. Boundaries AFTER the field (e.g., standalone) still run.
+	if (!isSamePage) {
+		if (shouldStartNewCardForContext(ctx, sectionTitle, groupTitle)) {
+			commitCard(ctx)
+		}
+		// Standalone fields force a fresh card boundary BEFORE themselves so they never share with a sibling.
+		if (isStandalone && ctx.current && ctx.current.fields.length > 0) {
+			commitCard(ctx)
+		}
+		if (interactive && ctx.current && countInteractive(ctx.current.fields) >= ctx.k) {
+			commitCard(ctx)
+		}
 	}
 	if (!ctx.current) {
-		ctx.current = { sectionTitle, groupTitle, fields: [] }
+		// `samePage` may arrive after the previous card was already committed (e.g., the field sits
+		// inside a fresh Group, whose entry commit closed the previous card). Reopen it so we land
+		// on the same card as the previous Field, matching the documented intent.
+		if (isSamePage && ctx.out.length > 0) {
+			ctx.current = ctx.out.pop() as Card
+		} else {
+			ctx.current = { sectionTitle, groupTitle, fields: [] }
+		}
 	}
 	ctx.current.fields.push(field)
 	// And another fresh card boundary AFTER, so the next field (sibling or not) starts on a new card.
@@ -120,11 +138,20 @@ function walkChild(child: Field | Group | Subform, sectionTitle: string, groupTi
 	if (!isVisibleForRole((child as any).roles, ctx.role)) return
 	if (isGroup(child)) {
 		const nextGroupTitle = groupTitle ? `${groupTitle} / ${child.group}` : child.group
-		commitCard(ctx) // Group boundary — start fresh group context.
+		const groupSamePage = !!child.samePage
+		// When `samePage`, do NOT commit before entering — the group's content joins the previous card.
+		if (!groupSamePage) commitCard(ctx)
+		if (groupSamePage) {
+			ctx.samePageDepth++
+			// Previous card may already be committed by a section/parent boundary — reopen it.
+			if (!ctx.current && ctx.out.length > 0) ctx.current = ctx.out.pop() as Card
+		}
 		for (const inner of child.fields ?? []) {
 			walkChild(inner, sectionTitle, nextGroupTitle, ctx, visited)
 		}
-		commitCard(ctx)
+		if (groupSamePage) ctx.samePageDepth--
+		// Likewise, defer the post-group commit when samePage — the next sibling decides.
+		if (!groupSamePage) commitCard(ctx)
 		return
 	}
 	if (isSubform(child)) {
@@ -204,11 +231,17 @@ async function walkChildAsync(
 	if (await isComputedHidden(child, container)) return
 	if (isGroup(child)) {
 		const nextGroupTitle = groupTitle ? `${groupTitle} / ${child.group}` : child.group
-		commitCard(ctx)
+		const groupSamePage = !!child.samePage
+		if (!groupSamePage) commitCard(ctx)
+		if (groupSamePage) {
+			ctx.samePageDepth++
+			if (!ctx.current && ctx.out.length > 0) ctx.current = ctx.out.pop() as Card
+		}
 		for (const inner of child.fields ?? []) {
 			await walkChildAsync(inner, sectionTitle, nextGroupTitle, ctx, visited, container)
 		}
-		commitCard(ctx)
+		if (groupSamePage) ctx.samePageDepth--
+		if (!groupSamePage) commitCard(ctx)
 		return
 	}
 	if (isSubform(child)) {

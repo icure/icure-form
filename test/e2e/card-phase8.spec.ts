@@ -285,6 +285,36 @@ test.describe('Phase 8 / keyboard navigation', () => {
 		})
 		expect(stage).toBe('input')
 	})
+
+	test('Enter works when focus is on an ancestor wrapper (e.g. modal content div)', async ({ page }) => {
+		// Repro of host-app scenario: card is rendered inside a focus-trapping wrapper (Antd Modal,
+		// rc-dialog, headlessui Dialog…) that focuses its own content div on open. composedPath()
+		// then never includes `icure-card-internal`, so the keyboard handler used to bail.
+		await gotoHarness(page)
+		await initCard(page, sampleYaml)
+		await waitForInternal(page)
+		await page.waitForTimeout(200)
+		// Wrap the form container in a focusable ancestor and move focus there, mimicking
+		// rc-dialog's modal-content div.
+		await page.evaluate(() => {
+			const container = document.getElementById('form-container')!
+			const wrapper = document.createElement('div')
+			wrapper.id = 'fake-modal-content'
+			wrapper.tabIndex = -1
+			container.parentNode!.insertBefore(wrapper, container)
+			wrapper.appendChild(container)
+			;(document.activeElement as HTMLElement | null)?.blur()
+			wrapper.focus()
+		})
+		expect(await page.evaluate(() => document.activeElement?.id)).toBe('fake-modal-content')
+		await page.keyboard.press('Enter')
+		await page.waitForTimeout(200)
+		const stage = await page.evaluate(() => {
+			const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+			return internal?.shadowRoot?.querySelector('.card')?.getAttribute('data-stage') ?? null
+		})
+		expect(stage).toBe('input')
+	})
 })
 
 // ============================================================

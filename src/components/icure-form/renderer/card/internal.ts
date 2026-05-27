@@ -490,14 +490,27 @@ export class IcureCardInternal extends LitElement {
 	}
 
 	/**
-	 * Are we the card instance that should respond to this keystroke? True if the event
-	 * originates within our DOM subtree, or if focus has dropped to the document body (typical when
-	 * the patient clicks the form's background).
+	 * Are we the card instance that should respond to this keystroke? True when:
+	 *   1. The event originates within our DOM subtree (`path` contains `this`), or
+	 *   2. The event originates from an ancestor that CONTAINS the card — e.g. a
+	 *      modal/dialog wrapper that captured focus on its own content element
+	 *      while the card is rendered inside it. `composedPath()` walks UP from
+	 *      the focused element through shadow hosts, so it never includes `this`
+	 *      when focus is on an ancestor; we have to walk our own ancestor chain
+	 *      (piercing shadow boundaries via `ShadowRoot.host`) and look for any
+	 *      member of `path`.
+	 *
+	 * Case 2 also subsumes the previous "focus dropped to body/documentElement"
+	 * fallback — walking up from `this` always reaches body/html before document.
 	 */
 	private isOurKeyboardContext(path: EventTarget[]): boolean {
 		if (path.includes(this)) return true
-		const active = document.activeElement
-		return !active || active === document.body || active === document.documentElement
+		let node: Node | null = this.parentNode
+		while (node) {
+			if (path.includes(node)) return true
+			node = node instanceof ShadowRoot ? node.host : node.parentNode
+		}
+		return false
 	}
 
 	private classifyEditingTarget(path: EventTarget[]): { anyText: boolean; multiline: boolean; isButton: boolean } {

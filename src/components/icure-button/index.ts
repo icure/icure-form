@@ -10,7 +10,7 @@ export class IcureButton extends LitElement {
 	@property() visible = true
 	@property() defaultLanguage = 'en'
 	@property() translationProvider?: (language: string, text: string) => string = (language, text) => text
-	@property() actionListener: (event: string, payload: unknown) => void = () => undefined
+	@property() actionListener: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 	@property() event: string
 	@property() payload: unknown
 
@@ -25,7 +25,7 @@ export class IcureButton extends LitElement {
 		if (icureFormLogging) {
 			console.log(`Rendering button ${this.label}`)
 		}
-		return html`<div class="icure-button" style="button" @click="${() => this.actionListener(this.event, this.payload)}">
+		return html`<div class="icure-button" style="button" @click="${(e: MouseEvent) => this.actionListener(this.event, this.payload, e)}">
 			${this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : this.label ?? ''}
 		</div>`
 	}

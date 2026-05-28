@@ -13,7 +13,8 @@ export interface EditRequestContext {
 	language: string
 	schema: IcureTextFieldSchema
 	readonly: boolean
-	actionListener?: (event: string, payload: unknown) => void
+	actionListener?: (event: string, payload: unknown, domEvent?: Event) => void
+	domEvent?: Event
 }
 
 export interface SchemaSpec {

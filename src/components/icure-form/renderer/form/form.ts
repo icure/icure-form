@@ -165,6 +165,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.tokenDeleteButton="${!!fg.tokenDeleteButton}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
 		></icure-form-token-field>`
 	}

@@ -53,6 +53,7 @@ export class IcureTextField extends Field {
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
+	@property({ type: Boolean }) tokenDeleteButton = false
 
 	private schemaSpec?: SchemaSpec
 	private editRequestPending = false
@@ -266,7 +267,7 @@ export class IcureTextField extends Field {
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
-						<div id="editor" class="${this.schema}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
+						<div id="editor" class="${this.schema}${this.tokenDeleteButton ? ' with-token-delete' : ''}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
 						${!this.displayMetadata && this.defaultValueProvider ? html`<div id="reset" class="reset-button" @click="${async () => await this.reset(renderHash)}">${resetPicto}</div` : nothing}
 					</div>
 						${
@@ -512,29 +513,28 @@ export class IcureTextField extends Field {
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
 							const el = event.target as HTMLElement
-							if (el?.classList.contains('token')) {
-								const isDeleteHit = Math.abs(el.getBoundingClientRect().right - 10 - event.x) < 6 && Math.abs(el.getBoundingClientRect().bottom - 9 - event.y) < 6
-								if (isDeleteHit) {
-									const pos = view.posAtCoords({ left: event.x, top: event.y })
-									if (pos?.pos) {
-										const rp = view.state.tr.doc.resolve(pos?.pos)
-										this.view?.dispatch(view.state.tr.deleteRange(rp.before(), rp.after()))
-									}
-								} else if (this.schemaSpec?.onEditRequest) {
-									const pos = view.posAtCoords({ left: event.x, top: event.y })
-									const node = pos?.pos !== undefined ? view.state.doc.nodeAt(pos.pos) : undefined
-									void this.schemaSpec.onEditRequest({
-										trigger: 'token-click',
-										tokenId: node?.attrs?.id,
-										tokenContent: node?.textContent,
-										label: this.label,
-										language: this.language(),
-										schema: this.schema,
-										readonly: this.readonly,
-										actionListener: this.actionListener,
-										domEvent: event,
-									})
+							if (this.tokenDeleteButton && el?.closest?.('.token-delete')) {
+								const pos = view.posAtCoords({ left: event.x, top: event.y })
+								if (pos?.pos !== undefined) {
+									const rp = view.state.tr.doc.resolve(pos.pos)
+									this.view?.dispatch(view.state.tr.deleteRange(rp.before(), rp.after()))
 								}
+								return
+							}
+							if (el?.classList.contains('token') && this.schemaSpec?.onEditRequest) {
+								const pos = view.posAtCoords({ left: event.x, top: event.y })
+								const node = pos?.pos !== undefined ? view.state.doc.nodeAt(pos.pos) : undefined
+								void this.schemaSpec.onEditRequest({
+									trigger: 'token-click',
+									tokenId: node?.attrs?.id,
+									tokenContent: node?.textContent,
+									label: this.label,
+									language: this.language(),
+									schema: this.schema,
+									readonly: this.readonly,
+									actionListener: this.actionListener,
+									domEvent: event,
+								})
 							}
 						}
 					},

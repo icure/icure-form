@@ -24,6 +24,7 @@ sections:
         type: token-field
         shortLabel: Tokens
         multiline: true
+        tokenDeleteButton: true
         rowSpan: 3
         span: 24
       - field: items

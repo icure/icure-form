@@ -29,7 +29,7 @@ export class IcureForm extends LitElement {
 	@property() revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[]
 	@property() ownersProvider?: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>
 	@property() optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>
-	@property() actionListener?: (event: string, payload: unknown) => void = () => undefined
+	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 
 	@state() selectedTab = 0
 

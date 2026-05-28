@@ -354,12 +354,6 @@ input[type='radio'] {
 			.ProseMirror {
 				li {
 					background-color: $token-color;
-
-					span {
-						&:after {
-							background: transparent url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxu cz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGlkPSJPdXRsaW5lIiB2aWV3 Qm94PSIwIDAgMjQgMjQiIHN0cm9rZT0iIzg4ODg4OCIgZmlsbD0iIzg4ODg4OCIg d2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiPjxwYXRoIGQ9Ik0xNiw4YTEsMSwwLDAs MC0xLjQxNCwwTDEyLDEwLjU4Niw5LjQxNCw4QTEsMSwwLDAsMCw4LDkuNDE0TDEw LjU4NiwxMiw4LDE0LjU4NkExLDEsMCwwLDAsOS40MTQsMTZMMTIsMTMuNDE0LDE0 LjU4NiwxNkExLDEsMCwwLDAsMTYsMTQuNTg2TDEzLjQxNCwxMiwxNiw5LjQxNEEx LDEsMCwwLDAsMTYsOFoiLz48cGF0aCBkPSJNMTIsMEExMiwxMiwwLDEsMCwyNCwx MiwxMi4wMTMsMTIuMDEzLDAsMCwwLDEyLDBabTAsMjJBMTAsMTAsMCwxLDEsMjIs MTIsMTAuMDExLDEwLjAxMSwwLDAsMSwxMiwyMloiLz48L3N2Zz4K') no-repeat center/16px;
-						}
-					}
 				}
 			}
 		}

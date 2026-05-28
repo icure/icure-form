@@ -7,6 +7,7 @@ export class TokenField extends Field {
 	@property() multiline: boolean | string = false
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
 	@property() lines = 1
+	@property({ type: Boolean }) tokenDeleteButton = false
 	override renderSync(): TemplateResult {
 		return html`<icure-text-field
 			.readonly="${this.readonly}"
@@ -15,6 +16,7 @@ export class TokenField extends Field {
 			.lines="${this.lines}"
 			.displayedLabels="${this.displayedLabels}"
 			.defaultLanguage="${this.defaultLanguage}"
+			.tokenDeleteButton="${this.tokenDeleteButton}"
 			schema="tokens-list"
 			.handleMetadataChanged=${this.handleMetadataChanged}
 			.handleValueChanged=${this.handleValueChanged}

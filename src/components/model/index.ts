@@ -152,6 +152,7 @@ export abstract class Field {
 	value?: string
 	unit?: string
 	multiline?: boolean
+	tokenDeleteButton?: boolean
 	computedProperties?: { [_key: string]: string }
 	validators?: Validator[]
 	now?: boolean
@@ -203,6 +204,7 @@ export abstract class Field {
 			value,
 			unit,
 			multiline,
+			tokenDeleteButton,
 			computedProperties,
 			validators,
 			now,
@@ -226,6 +228,7 @@ export abstract class Field {
 			value?: string
 			unit?: string
 			multiline?: boolean
+			tokenDeleteButton?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			now?: boolean
@@ -252,6 +255,7 @@ export abstract class Field {
 		this.value = value
 		this.unit = unit
 		this.multiline = multiline || false
+		this.tokenDeleteButton = tokenDeleteButton
 		this.computedProperties = computedProperties
 		this.validators = validators
 		this.now = now
@@ -325,6 +329,7 @@ export abstract class Field {
 		styleOptions: { width: number; direction: string; span: number; rows: number; alignItems: string } | undefined
 		sortOptions: SortOptions | undefined
 		multiline: boolean | undefined
+		tokenDeleteButton?: boolean
 		now: boolean | undefined
 		options: { [_key: string]: unknown } | undefined
 		width: number | undefined
@@ -349,6 +354,7 @@ export abstract class Field {
 			value: this.value,
 			unit: this.unit,
 			multiline: this.multiline,
+			...(this.tokenDeleteButton ? { tokenDeleteButton: true } : {}),
 			computedProperties: this.computedProperties,
 			now: this.now,
 			translate: this.translate,
@@ -573,6 +579,7 @@ export class TokenField extends Field {
 			labels,
 			value,
 			unit,
+			tokenDeleteButton,
 			computedProperties,
 			validators,
 			translate,
@@ -590,6 +597,7 @@ export class TokenField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
+			tokenDeleteButton?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			translate?: boolean
@@ -609,6 +617,7 @@ export class TokenField extends Field {
 			labels,
 			value,
 			unit,
+			tokenDeleteButton,
 			computedProperties,
 			validators,
 			translate,

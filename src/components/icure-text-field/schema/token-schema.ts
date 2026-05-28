@@ -30,7 +30,7 @@ export function getTokensSpec(
 				attrs: { id: { default: undefined } },
 				parseDOM: [{ tag: 'li' }],
 				toDOM(node) {
-					return ['li', {}, ['span', { class: 'token' }, 0], ['icure-metadata-buttons-bar-wrapper', { id: node.attrs.id }]]
+					return ['li', {}, ['span', { class: 'token' }, 0], ['span', { class: 'token-delete', 'aria-label': 'Remove' }], ['icure-metadata-buttons-bar-wrapper', { id: node.attrs.id }]]
 				},
 			},
 

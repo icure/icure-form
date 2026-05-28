@@ -16,7 +16,7 @@ export class TextField extends Field {
 	@property() codeColorProvider: (type: string, code: string) => string = () => 'XI'
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
-	@property() actionListener?: (event: string, payload: unknown) => void = undefined
+	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
 
 	override renderSync(): TemplateResult[] {
 		const versionedValues = this.valueProvider?.()

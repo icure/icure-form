@@ -19,7 +19,7 @@ export const render: Renderer = async (
 	revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[],
 	ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> = async () => [],
 	optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>,
-	actionListener: (event: string, payload: unknown) => void = () => undefined,
+	actionListener: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined,
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,

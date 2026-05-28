@@ -18,7 +18,7 @@ export class Button extends LitElement {
 	@property() visible = true
 	@property() defaultLanguage = 'en'
 	@property() translationProvider: (language: string, text: string) => string = (language, text) => text
-	@property() actionListener: (event: string, payload: unknown) => void = () => undefined
+	@property() actionListener: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 	@property() event: string
 	@property() payload: unknown
 

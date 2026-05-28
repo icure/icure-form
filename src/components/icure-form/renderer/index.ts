@@ -20,7 +20,7 @@ export type Renderer = (
 	revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[],
 	ownersProvider?: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>,
 	optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>,
-	actionListener?: (event: string, payload: unknown) => void,
+	actionListener?: (event: string, payload: unknown, domEvent?: Event) => void,
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,

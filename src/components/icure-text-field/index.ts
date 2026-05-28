@@ -52,7 +52,7 @@ export class IcureTextField extends Field {
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
-	@property() actionListener?: (event: string, payload: unknown) => void = undefined
+	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
 
 	private schemaSpec?: SchemaSpec
 	private editRequestPending = false
@@ -505,9 +505,9 @@ export class IcureTextField extends Field {
 						this.trToSave = undefined
 						this.updateValue(view.state.tr)
 					},
-					focus: (view) => {
+					focus: (view, event) => {
 						this.schema === 'measure' && measureOnFocusHandler(view)
-						this.invokeFieldEditRequest(view)
+						this.invokeFieldEditRequest(view, event)
 					},
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
@@ -532,6 +532,7 @@ export class IcureTextField extends Field {
 										schema: this.schema,
 										readonly: this.readonly,
 										actionListener: this.actionListener,
+										domEvent: event,
 									})
 								}
 							}
@@ -787,7 +788,7 @@ export class IcureTextField extends Field {
 			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: this.serializer.serialize(doc) } : undefined)
 	}
 
-	private invokeFieldEditRequest(view: EditorView) {
+	private invokeFieldEditRequest(view: EditorView, domEvent?: FocusEvent) {
 		const onReq = this.schemaSpec?.onEditRequest
 		if (!onReq || this.editRequestPending) return
 		this.editRequestPending = true
@@ -798,6 +799,7 @@ export class IcureTextField extends Field {
 			schema: this.schema,
 			readonly: this.readonly,
 			actionListener: this.actionListener,
+			domEvent,
 		}).then((handled) => {
 			this.editRequestPending = false
 			if (handled) (view.dom as HTMLElement).blur()

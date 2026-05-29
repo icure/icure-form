@@ -7,6 +7,9 @@ import { MeasureSchema } from '../icure-text-field/schema/measure-schema'
 
 export interface Code {
 	id: string
+	type?: string
+	code?: string
+	version?: string
 	label?: { [key: string]: string }
 }
 
@@ -148,6 +151,11 @@ export abstract class Field {
 	hasOther?: boolean
 	event?: string
 	payload?: unknown
+	// When true, clicking the field fires the host actionListener with this
+	// field's `event` name (fire-and-forget) instead of opening the inline
+	// editor. The action handler is then responsible for mutating the form
+	// values and triggering a re-render. Currently honoured by token-field.
+	delegatedEdition?: boolean
 
 	label(): string {
 		return this.field
@@ -180,6 +188,7 @@ export abstract class Field {
 			hasOther,
 			event,
 			payload,
+			delegatedEdition,
 		}: {
 			shortLabel?: string
 			grows?: boolean
@@ -204,6 +213,7 @@ export abstract class Field {
 			hasOther?: boolean
 			event?: string
 			payload?: unknown
+			delegatedEdition?: boolean
 		},
 	) {
 		this.field = label
@@ -231,6 +241,7 @@ export abstract class Field {
 		this.hasOther = hasOther
 		this.event = event
 		this.payload = payload
+		this.delegatedEdition = delegatedEdition
 	}
 
 	abstract copyIfNeeded(properties: Partial<Field>): Field
@@ -536,6 +547,8 @@ export class TokenField extends Field {
 			translate,
 			width,
 			styleOptions,
+			event,
+			delegatedEdition,
 		}: {
 			shortLabel?: string
 			grows?: boolean
@@ -554,6 +567,8 @@ export class TokenField extends Field {
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
+			event?: string
+			delegatedEdition?: boolean
 		},
 	) {
 		super('token-field', label, {
@@ -574,6 +589,8 @@ export class TokenField extends Field {
 			translate,
 			width,
 			styleOptions,
+			event,
+			delegatedEdition,
 		})
 	}
 	override copyIfNeeded(properties: Partial<TokenField>): TokenField {

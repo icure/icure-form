@@ -158,26 +158,43 @@ export class IcureTextField extends Field {
 				}
 			})
 
-			newAndModifiedValues.forEach(([tid, value]) => {
-				const id = tid.length > 0 && !unchangedIds.includes(tid) ? tid : undefined
+			// Build the full list of operations (additions/modifications + deletions
+			// for items no longer present) and run them one-by-one with a yield
+			// between each. The host's `handleValueChanged` is rebound to the
+			// freshly-mutated form-values-container on every re-render, so by
+			// yielding we ensure each operation acts on the latest state instead
+			// of all of them stomping the same snapshot — the previous synchronous
+			// loop dropped every item except the last when several items were
+			// added at once.
+			type Op = { value: PrimitiveType | undefined; id: string | undefined }
+			const operations: Op[] = newAndModifiedValues.map(([tid, value]) => ({
+				value,
+				id: tid.length > 0 && !unchangedIds.includes(tid) ? tid : undefined,
+			}))
+			values.filter(([vid]) => !valuesFromField.some(([vvid]) => vvid === vid)).forEach(([id]) => operations.push({ value: undefined, id }))
+
+			const applyNext = (i: number) => {
+				if (i >= operations.length) return
+				const op = operations[i]
 				this.handleValueChanged?.(
 					this.label,
 					this.language(),
-					value
+					op.value
 						? {
-								content: { [this.language()]: value },
+								content: { [this.language()]: op.value },
 								codes: [],
 						  }
 						: undefined,
-					id,
+					op.id,
 				)
-			})
-
-			values
-				.filter(([vid]) => !valuesFromField.some(([vvid]) => vvid === vid))
-				.forEach(([id]) => {
-					this.handleValueChanged?.(this.label, this.language(), undefined, id)
-				})
+				if (i + 1 < operations.length) {
+					// Yield to the host so its Lit reactivity rebinds
+					// `this.handleValueChanged` against the new bridge before the
+					// next operation runs.
+					setTimeout(() => applyNext(i + 1), 0)
+				}
+			}
+			applyNext(0)
 		} else {
 			const [valueId] = extractSingleValue(this.valueProvider?.())
 			const value = this.primitiveTypeExtractor?.(tr.doc)
@@ -295,7 +312,7 @@ export class IcureTextField extends Field {
 						}
 					</div>
 					${this.pasteWarning ? html`<div class="paste-warning">⚠️ Invalid paste content. The pasted content could not be inserted into this field.</div>` : nothing}
-					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 				</div>
 			</div>
 		`
@@ -496,6 +513,15 @@ export class IcureTextField extends Field {
 								},
 							},
 						}),
+						// Constrained schemas have a fixed paragraph child structure
+						// (`date time`, `decimal unit?`, `date`, `time`, `decimal`).
+						// The base keymap's Enter binding goes through `splitBlock`,
+						// which would duplicate the current child node (e.g. produce
+						// `<date, time, time>` or `<decimal, unit, unit>`) and the
+						// next transaction throws "Invalid content for node
+						// paragraph". Enter has no useful meaning in a single-line
+						// typed primitive, so swallow it before baseKeymap runs.
+						['date', 'time', 'date-time', 'decimal', 'measure'].includes(this.schema) ? keymap({ Enter: () => true }) : null,
 						keymap(baseKeymap),
 					]
 						.filter((x) => !!x)

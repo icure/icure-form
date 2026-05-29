@@ -1,0 +1,136 @@
+form: demo.components-gallery
+id: 10000001-0000-0000-0000-000000000001
+description: Every field type once, on a 24-column grid.
+sections:
+  - section: Text & numbers
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Single-line text
+            type: text-field
+            shortLabel: text
+            span: 24
+            schema: styled-text-with-codes
+          - field: Multi-line text
+            type: text-field
+            shortLabel: textMultiline
+            span: 24
+            multiline: true
+            rowSpan: 3
+            schema: text-document
+          - field: Number
+            type: number-field
+            shortLabel: number
+            span: 4
+          - field: Measure (kg)
+            type: measure-field
+            shortLabel: measure
+            span: 4
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'kg' } }, codes: [] }
+      - field: "Basic input types. text-field is single-line by default; set multiline:true + rowSpan:N for a paragraph editor. number-field accepts numeric input only. measure-field stores a value plus a unit, where the unit is seeded by a defaultValue computed property. Test: type into each field and switch tabs — the values persist."
+        type: label
+        span: 24
+  - section: Dates & times
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Date
+            type: date-picker
+            shortLabel: date
+            span: 24
+          - field: Time
+            type: time-picker
+            shortLabel: time
+            span: 24
+          - field: Date & time
+            type: date-time-picker
+            shortLabel: dateTime
+            span: 24
+      - field: "Three popup-driven pickers — date, time and date+time. Each stores a numeric timestamp (yyyyMMdd000000 for date-only, HHmmss for time, yyyyMMddHHmmss for date+time). Test: click the field to open the picker, pick a value, then click outside — the chosen value is captured by the form."
+        type: label
+        span: 24
+  - section: Choices
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Dropdown
+            type: dropdown
+            shortLabel: dropdown
+            span: 24
+            options:
+              red: Red
+              green: Green
+              blue: Blue
+          - field: Radio
+            type: radio-button
+            shortLabel: radio
+            span: 24
+            styleOptions:
+              direction: row
+            options:
+              s: Small
+              m: Medium
+              l: Large
+          - field: Checkbox
+            type: checkbox
+            shortLabel: checkbox
+            span: 24
+            styleOptions:
+              direction: column
+            options:
+              a: Apples
+              b: Bread
+              c: Cheese
+      - field: "Three selection widgets. dropdown for a long list of options, radio-button for a small single-choice set, checkbox for multi-choice. Inline keys (red, m, b…) are auto-qualified to <field>|<key>|1 by the bridge, or you can point at a top-level codifications block instead. Test: click any option — the choice is stored as a Code on the field."
+        type: label
+        span: 24
+  - section: Tokens & lists
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Tokens
+            type: token-field
+            shortLabel: tokens
+            span: 12
+            multiline: true
+            tokenDeleteButton: true
+            rowSpan: 2
+          - field: Items list
+            type: items-list-field
+            shortLabel: items
+            span: 12
+            multiline: true
+            rowSpan: 2
+      - field: "token-field stores a list of tagged tokens, with tokenDeleteButton:true adding an × on each token. items-list-field stores free-text items as a bullet list. Test: type some text and press Enter — each token / item is added separately and persists across tab switches."
+        type: label
+        span: 24
+  - section: Label & action
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: This is a static label rendered in the form.
+            type: label
+            span: 16
+          - field: Save
+            type: action
+            shortLabel: save
+            span: 24
+            event: save
+            computedProperties:
+              payload: |
+                return { savedAt: new Date().toISOString() }
+      - field: "label renders static prose (this very text is itself a label). action renders a clickable button — clicking fires the host actionListener(event, payload, domEvent) callback with the field's event and its computed payload. The demo's actionListener is wired to alert(event). Test: click Save and confirm an alert pops up with 'save'."
+        type: label
+        span: 24

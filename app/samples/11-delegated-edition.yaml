@@ -1,0 +1,51 @@
+form: demo.delegated-edition
+id: 10000011-0000-0000-0000-000000000011
+description: Token field whose edition is delegated to a host action.
+translations:
+  - language: fr
+    translations:
+      Allergies (click to add): Allergies (cliquez pour ajouter)
+      Token count: Nombre de tokens
+      Reset allergies: Réinitialiser les allergies
+  - language: nl
+    translations:
+      Allergies (click to add): Allergieën (klik om toe te voegen)
+      Token count: Aantal tokens
+      Reset allergies: Allergieën wissen
+sections:
+  - section: Delegated edition
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: allergies
+            type: token-field
+            shortLabel: Allergies (click to add)
+            span: 18
+            multiline: true
+            rowSpan: 3
+            delegatedEdition: true
+            event: edit-allergies
+          - field: allergyCount
+            type: number-field
+            shortLabel: Token count
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                // Tokens-list stores one FieldValue per token, so the count is just
+                // the length of self['allergies']. parseContent only handles the first.
+                return { content: { '*': { type: 'number', value: (self['allergies'] ?? []).length } }, codes: [] }
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Reset allergies
+            type: action
+            shortLabel: reset-allergies
+            span: 8
+            event: reset-allergies
+      - field: "Demonstrates the delegatedEdition flag. When set on a token-field, clicks no longer open the inline editor — they fire the host actionListener with the field's `event` name in a fire-and-forget manner. The host (decorated-form.ts) handles the edit-allergies event by appending a synthetic token and refreshing the form via setValue. Test: click the Allergies field — a new token is added; the Token count goes up; click the Reset button — the list clears."
+        type: label
+        span: 24

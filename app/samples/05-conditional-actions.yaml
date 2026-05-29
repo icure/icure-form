@@ -1,0 +1,160 @@
+form: demo.conditional-actions
+id: 10000005-0000-0000-0000-000000000005
+description: Show/hide and readonly via computedProperties; action button with payload.
+translations:
+  - language: fr
+    translations:
+      Preferred channel: Canal préféré
+      Phone number: Numéro de téléphone
+      Email address: Adresse email
+      Postal address: Adresse postale
+      Lock notes: Verrouiller les notes
+      Clinician notes: Notes cliniques
+      Selected channel: Canal sélectionné
+      Channel value: Valeur du canal
+      submit: soumettre
+  - language: nl
+    translations:
+      Preferred channel: Voorkeurskanaal
+      Phone number: Telefoonnummer
+      Email address: Emailadres
+      Postal address: Postadres
+      Lock notes: Notities vergrendelen
+      Clinician notes: Klinische notities
+      Selected channel: Gekozen kanaal
+      Channel value: Kanaalwaarde
+      submit: verzenden
+codifications:
+  - type: DEMO-CONTACT-PREF
+    codes:
+      - id: phone
+        label:
+          en: Phone
+          fr: Téléphone
+          nl: Telefoon
+      - id: email
+        label:
+          en: Email
+          fr: Email
+          nl: Email
+      - id: post
+        label:
+          en: Postal mail
+          fr: Courrier
+          nl: Post
+sections:
+  - section: Patient contact
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: preferredChannel
+            type: radio-button
+            shortLabel: Preferred channel
+            span: 12
+            styleOptions:
+              direction: row
+            codifications:
+              - DEMO-CONTACT-PREF
+          - field: phoneNumber
+            type: text-field
+            shortLabel: Phone number
+            span: 12
+            schema: styled-text-with-codes
+            computedProperties:
+              hidden: |
+                return !self['preferredChannel']?.some((v) => v?.codes?.some((c) => c.id === 'DEMO-CONTACT-PREF|phone|1'))
+          - field: emailAddress
+            type: text-field
+            shortLabel: Email address
+            span: 12
+            schema: styled-text-with-codes
+            computedProperties:
+              hidden: |
+                return !self['preferredChannel']?.some((v) => v?.codes?.some((c) => c.id === 'DEMO-CONTACT-PREF|email|1'))
+          - field: postalAddress
+            type: text-field
+            shortLabel: Postal address
+            span: 12
+            multiline: true
+            rowSpan: 3
+            schema: text-document
+            computedProperties:
+              hidden: |
+                return !self['preferredChannel']?.some((v) => v?.codes?.some((c) => c.id === 'DEMO-CONTACT-PREF|post|1'))
+      - field: "Three fields whose computedProperties.hidden reads the chosen preferredChannel code. The renderer re-runs every hidden formula on every value change. Test: pick Phone — only Phone number appears. Switch to Email — it swaps to Email address. Pick Postal mail — only the multi-line address appears."
+        type: label
+        span: 24
+  - section: Conditional readonly
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: lockNotes
+            type: checkbox
+            shortLabel: Lock notes
+            span: 8
+            options:
+              locked: Yes, lock the notes
+          - field: notes
+            type: text-field
+            shortLabel: Clinician notes
+            span: 16
+            multiline: true
+            rowSpan: 3
+            schema: text-document
+            computedProperties:
+              readonly: |
+                return !!self['lockNotes']?.some((v) => v?.codes?.some((c) => c.code === 'locked'))
+      - field: "computedProperties.readonly drives field.readonly dynamically. Here we check whether the lockNotes checkbox carries the 'locked' code (auto-qualified to lockNotes|locked|1) and lock the notes editor. Test: type something in Clinician notes — tick Lock notes — further typing in Clinician notes is discarded. Untick Lock notes — typing works again."
+        type: label
+        span: 24
+  - section: Action
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: selectedChannel
+            type: text-field
+            shortLabel: Selected channel
+            span: 8
+            readonly: true
+            computedProperties:
+              value: |
+                const c = self['preferredChannel']?.[0]?.codes?.[0]?.code
+                return c ? c : '(none picked yet — go to Patient contact)'
+          - field: channelValue
+            type: text-field
+            shortLabel: Channel value
+            span: 16
+            readonly: true
+            computedProperties:
+              value: |
+                const code = self['preferredChannel']?.[0]?.codes?.[0]?.code
+                if (code === 'phone') { return parseContent(self['phoneNumber']?.[0]?.content) ?? '(empty)' }
+                if (code === 'email') { return parseContent(self['emailAddress']?.[0]?.content) ?? '(empty)' }
+                if (code === 'post')  { return parseContent(self['postalAddress']?.[0]?.content) ?? '(empty)' }
+                return ''
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Submit for review
+            type: action
+            shortLabel: submit
+            span: 8
+            event: submit
+            computedProperties:
+              payload: |
+                return {
+                  channel: self['preferredChannel']?.[0]?.codes?.[0]?.id,
+                  phone: parseContent(self['phoneNumber']?.[0]?.content),
+                  email: parseContent(self['emailAddress']?.[0]?.content),
+                  notes: parseContent(self['notes']?.[0]?.content),
+                }
+      - field: "Buttons fire the host actionListener(event, payload, domEvent) callback. The payload is re-evaluated each click from computedProperties.payload, so it always reflects the current form state. The two read-only fields above mirror your choice from the Patient contact tab via cross-tab computed values. Test: pick a channel and fill it in (in Patient contact), come back here — the summary updates, click Submit — an alert pops up with 'submit' (the demo's actionListener calls alert(event))."
+        type: label
+        span: 24

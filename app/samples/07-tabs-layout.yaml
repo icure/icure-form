@@ -1,0 +1,178 @@
+form: demo.tabs-layout
+id: 10000007-0000-0000-0000-000000000007
+description: Tab renderer + 24-column grid spans.
+translations:
+  - language: fr
+    translations:
+      Identity: Identité
+      Address: Adresse
+      Lifestyle: Mode de vie
+      Free-text notes: Notes libres
+      First name: Prénom
+      Last name: Nom
+      Date of birth: Date de naissance
+      Gender: Sexe
+      Nationality: Nationalité
+      Street + nº: Rue + nº
+      Box: Boîte
+      Postal code: Code postal
+      City: Ville
+      Country: Pays
+      Smoker: Fumeur
+      Alcohol: Alcool
+      Exercise: Exercice
+      Notes: Notes
+  - language: nl
+    translations:
+      Identity: Identiteit
+      Address: Adres
+      Lifestyle: Levensstijl
+      Free-text notes: Vrije tekst
+      First name: Voornaam
+      Last name: Achternaam
+      Date of birth: Geboortedatum
+      Gender: Geslacht
+      Nationality: Nationaliteit
+      Street + nº: Straat + nr
+      Box: Bus
+      Postal code: Postcode
+      City: Stad
+      Country: Land
+      Smoker: Roker
+      Alcohol: Alcohol
+      Exercise: Beweging
+      Notes: Notities
+sections:
+  - section: Identity
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: firstName
+            type: text-field
+            shortLabel: First name
+            span: 12
+            schema: styled-text-with-codes
+          - field: lastName
+            type: text-field
+            shortLabel: Last name
+            span: 12
+            schema: styled-text-with-codes
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: dateOfBirth
+            type: date-picker
+            shortLabel: Date of birth
+            span: 8
+          - field: gender
+            type: dropdown
+            shortLabel: Gender
+            span: 8
+            options:
+              f: Female
+              m: Male
+              x: Other
+          - field: nationality
+            type: text-field
+            shortLabel: Nationality
+            span: 8
+            schema: styled-text-with-codes
+      - field: "Fields lay out on a 24-column grid via their `span:` property. First name + Last name share a row at span:12 each. DOB / Gender / Nationality split the next row at span:8. Tabs come from the renderer 'form:tab' which turns each `- section:` into a clickable tab. Test: resize the window — the columns stay proportional; click tabs to see the layout change per section."
+        type: label
+        span: 24
+  - section: Address
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: street
+            type: text-field
+            shortLabel: Street + nº
+            span: 18
+            schema: styled-text-with-codes
+          - field: box
+            type: text-field
+            shortLabel: Box
+            span: 6
+            schema: styled-text-with-codes
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: postalCode
+            type: text-field
+            shortLabel: Postal code
+            span: 6
+            schema: styled-text-with-codes
+          - field: city
+            type: text-field
+            shortLabel: City
+            span: 12
+            schema: styled-text-with-codes
+          - field: country
+            type: text-field
+            shortLabel: Country
+            span: 6
+            schema: styled-text-with-codes
+      - field: "Spans mix freely as long as they sum to 24 per row. Street takes span:18 and Box span:6 — they share one row. The next row splits 24 into 6+12+6 (postal code / city / country). Test: shrink the window — each row keeps its proportions; expand it — fields widen but the column ratios are preserved."
+        type: label
+        span: 24
+  - section: Lifestyle
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: smoker
+            type: radio-button
+            shortLabel: Smoker
+            span: 8
+            styleOptions:
+              direction: row
+            options:
+              never: Never
+              former: Former
+              current: Current
+          - field: alcohol
+            type: radio-button
+            shortLabel: Alcohol
+            span: 8
+            styleOptions:
+              direction: row
+            options:
+              none: None
+              occasional: Occasional
+              daily: Daily
+          - field: exercise
+            type: radio-button
+            shortLabel: Exercise
+            span: 8
+            styleOptions:
+              direction: row
+            options:
+              low: Low
+              moderate: Moderate
+              high: High
+      - field: "Three radio-button groups at span:8 each — together they fill 24. The styleOptions.direction:'row' setting lays out each group's options horizontally inside the group rather than stacked. Test: pick one option in each group — only one option per group can be selected (radio behaviour)."
+        type: label
+        span: 24
+  - section: Free-text notes
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: notes
+            type: text-field
+            shortLabel: Notes
+            span: 24
+            multiline: true
+            rowSpan: 8
+            schema: text-document
+      - field: "A single span:24 + rowSpan:8 text-document field fills the whole tab. rowSpan controls the vertical extent of the editor — bump it to make room for longer notes. Test: type several paragraphs — the field stays one row tall on the grid but its editor scrolls/expands inside."
+        type: label
+        span: 24

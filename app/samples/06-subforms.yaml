@@ -1,0 +1,175 @@
+form: demo.subforms
+id: 10000006-0000-0000-0000-000000000006
+description: Parent form with a list of repeatable encounter subforms.
+translations:
+  - language: en
+    translations:
+      demo.subforms.add: New encounter
+      demo.subforms.remove: Remove encounter
+  - language: fr
+    translations:
+      demo.subforms.add: Nouvelle consultation
+      demo.subforms.remove: Supprimer la consultation
+      Patient name: Nom du patient
+      Known condition: Pathologie connue
+      Date: Date
+      Clinician: Soignant
+      Duration (min): Durée (min)
+      Reason: Motif
+      Systolic: Systolique
+      Diastolic: Diastolique
+      Pulse: Pouls
+      Temperature: Température
+      Drug: Médicament
+      Dose: Dose
+      Frequency: Fréquence
+  - language: nl
+    translations:
+      demo.subforms.add: Nieuwe consultatie
+      demo.subforms.remove: Consultatie verwijderen
+      Patient name: Naam patiënt
+      Known condition: Bekende aandoening
+      Date: Datum
+      Clinician: Behandelaar
+      Duration (min): Duur (min)
+      Reason: Reden
+      Systolic: Systolisch
+      Diastolic: Diastolisch
+      Pulse: Hartslag
+      Temperature: Temperatuur
+      Drug: Geneesmiddel
+      Dose: Dosis
+      Frequency: Frequentie
+sections:
+  - section: Patient
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: patientName
+            type: text-field
+            shortLabel: Patient name
+            span: 12
+            schema: styled-text-with-codes
+          - field: chronicCondition
+            type: text-field
+            shortLabel: Known condition
+            span: 12
+            schema: styled-text-with-codes
+      - subform:
+        labels:
+          add: demo.subforms.add
+          remove: demo.subforms.remove
+        id: 10000006-0001-0000-0000-000000000001
+        shortLabel: Encounters
+        span: 24
+        borderless: true
+        refs:
+          - 10000006-aaaa-0000-0000-000000000001
+          - 10000006-aaaa-0000-0000-000000000002
+          - 10000006-aaaa-0000-0000-000000000003
+      - field: "Parent form with a repeatable subform that can hold any of three child templates: Consultation, Vital signs, Prescription. The subform's `refs:` list points at entries in the top-level `subForms:` block; the same template can be added multiple times. Each instance has its own Remove button. Test: click 'New encounter' → pick a template — the child form appears inline. Add another of a different type. Click 'Remove encounter' on one — only that instance disappears."
+        type: label
+        span: 24
+subForms:
+  10000006-aaaa-0000-0000-000000000001:
+    form: Consultation
+    description: A single consultation entry.
+    sections:
+      - section: Encounter
+        fields:
+          - group: line
+            borderless: true
+            span: 24
+            fields:
+              - field: encounterDate
+                type: date-picker
+                shortLabel: Date
+                span: 8
+                computedProperties:
+                  defaultValue: |
+                    return { content: { '*': { type: 'datetime', value: 1000000 * parseInt((new Date()).toISOString().replace(/(....)-(..)-(..)T.+/, '$1$2$3')) } }, codes: [] }
+              - field: clinician
+                type: text-field
+                shortLabel: Clinician
+                span: 8
+                schema: styled-text-with-codes
+              - field: durationMin
+                type: number-field
+                shortLabel: Duration (min)
+                span: 8
+              - field: reason
+                type: text-field
+                shortLabel: Reason
+                span: 24
+                multiline: true
+                rowSpan: 2
+                schema: text-document
+  10000006-aaaa-0000-0000-000000000002:
+    form: Vital signs
+    description: Vitals captured during a visit.
+    sections:
+      - section: Vitals
+        fields:
+          - group: line
+            borderless: true
+            span: 24
+            fields:
+              - field: systolic
+                type: measure-field
+                shortLabel: Systolic
+                span: 6
+                computedProperties:
+                  defaultValue: |
+                    return { content: { '*': { type: 'measure', unit: 'mmHg' } }, codes: [] }
+              - field: diastolic
+                type: measure-field
+                shortLabel: Diastolic
+                span: 6
+                computedProperties:
+                  defaultValue: |
+                    return { content: { '*': { type: 'measure', unit: 'mmHg' } }, codes: [] }
+              - field: pulse
+                type: measure-field
+                shortLabel: Pulse
+                span: 6
+                computedProperties:
+                  defaultValue: |
+                    return { content: { '*': { type: 'measure', unit: 'bpm' } }, codes: [] }
+              - field: temperature
+                type: measure-field
+                shortLabel: Temperature
+                span: 6
+                computedProperties:
+                  defaultValue: |
+                    return { content: { '*': { type: 'measure', unit: '°C' } }, codes: [] }
+  10000006-aaaa-0000-0000-000000000003:
+    form: Prescription
+    description: Medication prescribed during the encounter.
+    sections:
+      - section: Prescription
+        fields:
+          - group: line
+            borderless: true
+            span: 24
+            fields:
+              - field: drug
+                type: text-field
+                shortLabel: Drug
+                span: 12
+                schema: styled-text-with-codes
+              - field: dose
+                type: text-field
+                shortLabel: Dose
+                span: 6
+                schema: styled-text-with-codes
+              - field: frequency
+                type: dropdown
+                shortLabel: Frequency
+                span: 6
+                options:
+                  once-daily: Once daily
+                  twice-daily: Twice daily
+                  thrice-daily: Three times daily
+                  prn: As needed

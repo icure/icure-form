@@ -1,6 +1,7 @@
-import { registerTheme } from '../src/components/themes/icure-blue'
-
+// Theme is dynamically imported and registered by `./bootstrap.ts` based on
+// localStorage, so it is intentionally NOT imported here.
 import { css, html, LitElement } from 'lit'
+import { getStoredLanguage } from './bootstrap'
 import { BridgedFormValuesContainer } from '../src/icure'
 import { property, state } from 'lit/decorators.js'
 import { makeFormValuesContainer } from './form-values-container'
@@ -15,8 +16,6 @@ import { v4 as uuid } from 'uuid'
 import { normalizeCode } from '../src/utils/code-utils'
 import { defaultTranslationProvider } from '../src/utils/languages'
 import { getAge, getAgeDescription } from './date'
-
-registerTheme()
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
@@ -131,7 +130,7 @@ async function getForms(formTemplateId: string | undefined, parentId: string | u
 export class DecoratedForm extends LitElement {
 	@property() renderer = 'form'
 	@property() form: Form
-	@property() language?: string = 'fr'
+	@property() language?: string = getStoredLanguage()
 
 	// Viewer role passed to <icure-form>: derived from the renderer string so swapping renderers
 	// also swaps the role filter. Returns `null` (no filter) for any renderer that doesn't match.
@@ -481,6 +480,37 @@ export class DecoratedForm extends LitElement {
 			.map((x) => ({ id: x.id, text: x.name, terms: terms, label: {} }))
 	}
 
+	// Default action listener: alert() for every event, plus dedicated handlers
+	// for the delegated-edition demo (sample 11). The bridge's change listener
+	// (already registered in firstUpdated) is what triggers the re-render.
+	//
+	// Multivalue schemas like tokens-list store ONE service per token (each
+	// service has a string content). To add a token, setValue with id=undefined
+	// — that creates a new service. To delete, setValue with value=undefined
+	// and the existing service id.
+	private handleAction = (event: string): void => {
+		const fvc = this.formValuesContainer
+		if (event === 'edit-allergies' && fvc) {
+			const versioned = fvc.getValues((_id, history) => (history[0]?.value?.label === 'allergies' ? [history[0].revision] : []))
+			const nextIndex = Object.keys(versioned).length + 1
+			fvc.setValue('allergies', 'en', {
+				content: { en: { type: 'string', value: `Allergy #${nextIndex}` } },
+				codes: [],
+			})
+			return
+		}
+		if (event === 'reset-allergies' && fvc) {
+			const versioned = fvc.getValues((_id, history) => (history[0]?.value?.label === 'allergies' ? [history[0].revision] : []))
+			// Each `delete` swaps `this.formValuesContainer` for a fresh bridge via
+			// the change-listener chain. The `fvc` reference captured at handler
+			// entry points at the original bridge, so we re-fetch the latest one
+			// on each iteration to keep deletes accumulating instead of stomping.
+			Object.keys(versioned).forEach((id) => this.formValuesContainer?.delete(id))
+			return
+		}
+		alert(event)
+	}
+
 	render() {
 		return html`
 			<icure-form
@@ -494,10 +524,7 @@ export class DecoratedForm extends LitElement {
 				.formValuesContainer="${this.formValuesContainer}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"
 				.optionsProvider="${this.optionsProvider.bind(this)}"
-				.actionListener="${(event: string) => {
-					alert(event)
-				}}"
-				)
+				.actionListener="${this.handleAction}"
 			></icure-form>
 		`
 	}

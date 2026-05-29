@@ -139,5 +139,8 @@ export const contentToPrimitiveType = (language: string, content: DecryptedConte
 }
 export const codeStubToCode = (c: CodeStub) => ({
 	id: c.id ?? `${c.type}|${c.code}|${c.version}`,
+	type: c.type,
+	code: c.code,
+	version: c.version,
 	label: c.label ?? {},
 })

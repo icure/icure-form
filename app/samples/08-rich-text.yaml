@@ -1,0 +1,92 @@
+form: demo.rich-text
+id: 10000008-0000-0000-0000-000000000008
+description: One text-field per ProseMirror schema variant.
+sections:
+  - section: Markdown family
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Plain text
+            type: text-field
+            shortLabel: text
+            span: 12
+            schema: text
+          - field: Styled text (bold/italic)
+            type: text-field
+            shortLabel: styled
+            span: 12
+            schema: styled-text
+          - field: Styled text with codes
+            type: text-field
+            shortLabel: styledWithCodes
+            span: 12
+            schema: styled-text-with-codes
+          - field: Multi-paragraph document
+            type: text-field
+            shortLabel: document
+            span: 12
+            multiline: true
+            rowSpan: 4
+            schema: text-document
+      - field: "Four progressively richer text schemas. text is plain (no marks). styled-text accepts inline bold/italic. styled-text-with-codes adds inline code highlights. text-document is multi-paragraph and supports headings. Test: type into each, then use Cmd/Ctrl+B and Cmd/Ctrl+I in the 'styled' editor to see how each schema treats marks differently."
+        type: label
+        span: 24
+  - section: Structured schemas
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Items list
+            type: text-field
+            shortLabel: items
+            span: 12
+            multiline: true
+            rowSpan: 4
+            schema: items-list
+          - field: Tokens list with codes
+            type: text-field
+            shortLabel: tokens
+            span: 12
+            multiline: true
+            rowSpan: 4
+            schema: tokens-list-with-codes
+      - field: "Two specialised schemas. items-list renders a bullet-list editor — press Enter to add a new item. tokens-list-with-codes renders a tag editor where each token can carry a code reference. Test: type into items-list and press Enter — each line becomes its own bullet item; type space-separated words in tokens to create tag chips."
+        type: label
+        span: 24
+  - section: Typed primitives
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Date in text
+            type: text-field
+            shortLabel: dateInText
+            span: 8
+            schema: date
+          - field: Time in text
+            type: text-field
+            shortLabel: timeInText
+            span: 8
+            schema: time
+          - field: Date & time in text
+            type: text-field
+            shortLabel: dateTimeInText
+            span: 8
+            schema: date-time
+          - field: Decimal in text
+            type: text-field
+            shortLabel: decimalInText
+            span: 12
+            schema: decimal
+          - field: Measure in text
+            type: text-field
+            shortLabel: measureInText
+            span: 12
+            schema: measure
+      - field: "Five schemas that constrain the editor to a typed primitive: date, time, date-time, decimal, measure. The editor parses what you type and stores it as the matching FieldValue type. Test: type a date like '01/01/1990' in dateInText, '14:30' in timeInText, '3.14' in decimalInText or '70 kg' in measureInText — on blur each value is normalised to its typed form."
+        type: label
+        span: 24

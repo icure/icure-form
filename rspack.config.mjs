@@ -18,7 +18,7 @@ if (env.parsed) {
 export default {
 	mode: 'development',
 	entry: {
-		app: { import: './app/demo-app.ts', dependOn: ['codes'] },
+		app: { import: './app/bootstrap.ts', dependOn: ['codes'] },
 		codes: { import: './app/codes.ts' },
 		icure: { import: '@icure/cardinal-sdk', dependOn: ['dateFns'] },
 		dateFns: 'date-fns',

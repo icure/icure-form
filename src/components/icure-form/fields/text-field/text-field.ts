@@ -2,6 +2,7 @@ import { html, TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { Field } from '../../../common'
 import { Suggestion } from '../../../../generic'
+import { IcureTextFieldSchema } from '../../../model'
 
 export class TextField extends Field {
 	//Boolean value is parsed as text, so we also need to use string type
@@ -17,8 +18,55 @@ export class TextField extends Field {
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
+	// When set, takes precedence over the multiline→text-document / single-line→
+	// styled-text-with-codes fallback. Lets a YAML `schema: items-list` (or any
+	// other IcureTextFieldSchema) reach the inner <icure-text-field>.
+	@property() schema?: IcureTextFieldSchema
+
+	private isMultivalueSchema(): boolean {
+		const s = this.schema ?? (this.multiline ? 'text-document' : 'styled-text-with-codes')
+		return s === 'items-list' || s === 'tokens-list' || s === 'styled-tokens-list' || s === 'tokens-list-with-codes' || s === 'styled-tokens-list-with-codes'
+	}
 
 	override renderSync(): TemplateResult[] {
+		// Multivalue schemas (items-list, tokens-list*) keep many primitives under
+		// ONE field — splitting the wrapper per existing service id breaks new-token
+		// creation because each child editor would bake an existing service id and
+		// every subsequent setValue would overwrite that same service. Render one
+		// editor that owns the full valueProvider and a non-id-baked handler.
+		if (this.isMultivalueSchema()) {
+			return [
+				html`<icure-text-field
+					.readonly="${this.readonly}"
+					.displayMetadata="${this.displayMetadata}"
+					label="${this.label}"
+					.multiline="${this.multiline}"
+					.lines="${this.lines}"
+					.displayedLabels="${this.displayedLabels}"
+					.defaultLanguage="${this.defaultLanguage}"
+					.languages="${this.languages}"
+					schema="${this.schema ?? (this.multiline ? 'text-document' : 'styled-text-with-codes')}"
+					?suggestions=${!!this.suggestionProvider}
+					?links=${!!this.linksProvider}
+					.linksProvider=${this.linksProvider}
+					.suggestionProvider=${this.suggestionProvider}
+					.ownersProvider=${this.ownersProvider}
+					.translationProvider=${this.translationProvider}
+					.codeColorProvider=${this.codeColorProvider}
+					.linkColorProvider=${this.linkColorProvider}
+					.codeContentProvider=${this.codeContentProvider}
+					.defaultValueProvider=${this.defaultValueProvider}
+					.valueProvider=${this.valueProvider}
+					.validationErrorsProvider=${this.validationErrorsProvider}
+					.metadataProvider=${this.metadataProvider}
+					.handleValueChanged=${this.handleValueChanged}
+					.handleMetadataChanged=${this.handleMetadataChanged}
+					.styleOptions=${this.styleOptions}
+					.actionListener=${this.actionListener}
+				></icure-text-field>`,
+			]
+		}
+
 		const versionedValues = this.valueProvider?.()
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field
@@ -30,7 +78,7 @@ export class TextField extends Field {
 				.displayedLabels="${this.displayedLabels}"
 				.defaultLanguage="${this.defaultLanguage}"
 				.languages="${this.languages}"
-				schema="${this.multiline ? 'text-document' : 'styled-text-with-codes'}"
+				schema="${this.schema ?? (this.multiline ? 'text-document' : 'styled-text-with-codes')}"
 				?suggestions=${!!this.suggestionProvider}
 				?links=${!!this.linksProvider}
 				.linksProvider=${this.linksProvider}

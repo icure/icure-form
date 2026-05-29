@@ -2,7 +2,6 @@ import { property, state } from 'lit/decorators.js'
 import { LitElement, TemplateResult } from 'lit'
 import { FieldMetadata, FieldValue, Labels, pteq } from '../model'
 import { Suggestion, Version, VersionedData } from '../../generic'
-import { Task } from '@lit/task'
 import { PropertyValues } from '@lit/reactive-element'
 
 /**
@@ -58,18 +57,26 @@ export abstract class Field extends LitElement {
 
 	@state() selectedLanguage?: string = undefined
 	@state() selectedRevision?: string
+	@state() private validationErrors: [FieldMetadata, string][] = []
 
 	private latestValues?: VersionedData<FieldValue>
 	private latestMetadata?: { [id: string]: Version<FieldMetadata>[] }
+	private validationRunId = 0
 
-	_asyncTask = new Task(this, {
-		task: async () => {
-			if (!this.validationErrorsProvider) return []
-			const results = await Promise.all(this.validationErrorsProvider())
-			return results.filter((r): r is [FieldMetadata, string] => r != null)
-		},
-		args: () => [],
-	})
+	private async refreshValidationErrors() {
+		if (!this.validationErrorsProvider) {
+			if (this.validationErrors.length) this.validationErrors = []
+			return
+		}
+		const runId = ++this.validationRunId
+		const results = await Promise.all(this.validationErrorsProvider())
+		// Discard stale results — a later edit may have started a fresher run.
+		if (runId !== this.validationRunId) return
+		const next = results.filter((r): r is [FieldMetadata, string] => r != null)
+		if (next.length !== this.validationErrors.length || next.some((e, i) => e[1] !== this.validationErrors[i]?.[1])) {
+			this.validationErrors = next
+		}
+	}
 
 	language(): string {
 		return (this.translate ? this.selectedLanguage ?? this.defaultLanguage : this.defaultLanguage) ?? 'en'
@@ -159,19 +166,23 @@ export abstract class Field extends LitElement {
 
 	protected singleValueProvider = (id?: string) => (this.valueProvider && id ? () => ({ [id]: this.valueProvider?.()?.[id] }) : () => ({}))
 
+	updated(changedProperties: PropertyValues) {
+		super.updated(changedProperties)
+		// Re-run validators whenever the value or provider changes. We can't rely
+		// on @lit/task here because its arg-equality interacts badly with the
+		// fresh-object-per-render valueProvider — see the previous `_asyncTask`
+		// attempts in git history.
+		if (changedProperties.has('valueProvider') || changedProperties.has('validationErrorsProvider')) {
+			void this.refreshValidationErrors()
+		}
+	}
+
 	render() {
 		this.latestValues = this.valueProvider?.()
 		if (this.latestValues && this.metadataProvider) {
 			this.latestMetadata = this.collectMetadata(this.latestValues, this.metadataProvider)
 		}
-
-		return this.validationErrorsProvider?.length
-			? this._asyncTask.render({
-					pending: () => this.renderSync({ validationErrors: [] }),
-					complete: (validationErrors: [FieldMetadata, string][]) => this.renderSync({ validationErrors }),
-					error: () => this.renderSync({ validationErrors: [] }),
-			  })
-			: this.renderSync({ validationErrors: [] })
+		return this.renderSync({ validationErrors: this.validationErrors })
 	}
 
 	abstract renderSync({}: { validationErrors: [FieldMetadata, string][] }): TemplateResult | TemplateResult[] | undefined

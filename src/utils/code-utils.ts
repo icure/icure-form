@@ -13,8 +13,13 @@ import { CodeStub } from '@icure/cardinal-sdk'
 export const optionMapper = (language: string, field: Field, translationProvider?: (language: string, text: string) => string): Code[] =>
 	Object.keys(field?.options ?? []).map((optionKey) => {
 		const text: string = (field?.options?.[optionKey] as string) ?? ''
+		// `normalizeCode` only accepts ids shaped as `type|code|version`. Bare keys
+		// like `yes` or `locked` would otherwise crash deep inside the bridge when
+		// the user clicks the option. Auto-qualify them, scoped per field, so
+		// authoring `options: { locked: 'Yes' }` simply works.
+		const qualifiedId = optionKey.includes('|') ? optionKey : `${field.field}|${optionKey}|1`
 		return {
-			id: optionKey,
+			id: qualifiedId,
 			label: { [language]: translationProvider ? translationProvider(language, text) : text },
 		}
 	})

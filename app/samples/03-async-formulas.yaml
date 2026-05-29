@@ -1,0 +1,140 @@
+form: demo.async-formulas
+id: 10000003-0000-0000-0000-000000000003
+description: Async resolvers returning Promises from computedProperties.
+translations:
+  - language: fr
+    translations:
+      Postal code: Code postal
+      City: Ville
+      Weight: Poids
+      Height: Taille
+      BMI: IMC
+      Category: Catégorie
+      Chief complaint: Motif principal
+      History notes: Antécédents
+      Auto-summary: Résumé auto
+  - language: nl
+    translations:
+      Postal code: Postcode
+      City: Stad
+      Weight: Gewicht
+      Height: Lengte
+      BMI: BMI
+      Category: Categorie
+      Chief complaint: Belangrijkste klacht
+      History notes: Voorgeschiedenis
+      Auto-summary: Auto-samenvatting
+sections:
+  - section: Postal code → city
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: postalCode
+            type: text-field
+            shortLabel: Postal code
+            span: 6
+            schema: styled-text-with-codes
+          - field: city
+            type: text-field
+            shortLabel: City
+            span: 18
+            readonly: true
+            computedProperties:
+              value: |
+                return new Promise(async (resolve) => {
+                  const code = parseContent(postalCode[0]?.content)
+                  if (!code) { resolve(undefined); return }
+                  await delay(500)
+                  const directory = { '1000': 'Brussels', '3000': 'Leuven', '4000': 'Liège', '8500': 'Kortrijk', '9000': 'Ghent' }
+                  resolve(directory[String(code).trim()] ?? 'Unknown postal code')
+                })
+      - field: "computedProperties.value may return a Promise — the bridge awaits it. This City formula awaits delay(500) (a host helper) then looks up the code in an in-memory dictionary. Test: type 1000 in Postal code — after about half a second City shows 'Brussels'. Type 9999 — City shows 'Unknown postal code'."
+        type: label
+        span: 24
+  - section: BMI category (delayed)
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: weight
+            type: measure-field
+            shortLabel: Weight
+            span: 6
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'kg' } }, codes: [] }
+          - field: height
+            type: measure-field
+            shortLabel: Height
+            span: 6
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'cm' } }, codes: [] }
+          - field: bmi
+            type: measure-field
+            shortLabel: BMI
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                const w = parseContent(weight[0]?.content)
+                let h = parseContent(height[0]?.content)
+                if (!w || !h) { return undefined }
+                if (h > 3) { h = h / 100 }
+                return { content: { '*': { type: 'measure', value: w / (h * h), unit: 'kg/m²' } }, codes: [] }
+          - field: bmiCategory
+            type: text-field
+            shortLabel: Category
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                return new Promise(async (resolve) => {
+                  await delay(800)
+                  const b = parseContent(bmi[0]?.content)
+                  if (!b) { resolve('N/A'); return }
+                  resolve(b < 18.5 ? 'underweight' : b < 25 ? 'healthy' : b < 30 ? 'overweight' : 'obese')
+                })
+      - field: "Chains a sync formula (BMI from weight + height) into an async formula (Category from BMI). When BMI changes the bridge re-runs every dependent formula. Test: type 70 and 170 — BMI updates immediately, then after about 800 ms Category resolves to 'healthy'. Increase weight to 95 — Category becomes 'obese'."
+        type: label
+        span: 24
+  - section: AI-style summary
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: chiefComplaint
+            type: text-field
+            shortLabel: Chief complaint
+            span: 12
+            multiline: true
+            rowSpan: 3
+          - field: historyNotes
+            type: text-field
+            shortLabel: History notes
+            span: 12
+            multiline: true
+            rowSpan: 3
+          - field: summary
+            type: text-field
+            shortLabel: Auto-summary
+            span: 24
+            multiline: true
+            rowSpan: 3
+            readonly: true
+            computedProperties:
+              value: |
+                const cc = parseContent(chiefComplaint[0]?.content) ?? ''
+                const hn = parseContent(historyNotes[0]?.content) ?? ''
+                if (!cc && !hn) { return undefined }
+                return summarize({
+                  domain: 'clinical-summary',
+                  questions: [['Complaint', cc], ['History', hn]],
+                })
+      - field: "summarize is a host-provided async helper (a stub for a real LLM call). The summary field passes both inputs as a [label, value] array. Test: type a Chief complaint and History notes — after about a second Auto-summary populates with their joined text. Clear both inputs — Auto-summary clears too."
+        type: label
+        span: 24

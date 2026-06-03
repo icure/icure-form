@@ -473,9 +473,17 @@ export class DecoratedForm extends LitElement {
 	// service has a string content). To add a token, setValue with id=undefined
 	// — that creates a new service. To delete, setValue with value=undefined
 	// and the existing service id.
-	private handleAction = (event: string): void => {
+	private handleAction = (event: string, payload?: unknown): void => {
 		const fvc = this.formValuesContainer
 		if (event === 'edit-allergies' && fvc) {
+			// A token click delivers `{ valueId, content }`; an empty-area click
+			// delivers no payload. With a valueId we edit that token in place
+			// (setValue targeting the existing service id), otherwise we append.
+			const clicked = payload as { valueId?: string; content?: string } | undefined
+			if (clicked?.valueId) {
+				fvc.setValue('allergies', 'en', { content: { en: { type: 'string', value: `Edited ${clicked.content ?? ''}` } }, codes: [] }, clicked.valueId)
+				return
+			}
 			const versioned = fvc.getValues((_id, history) => (history[0]?.value?.label === 'allergies' ? [history[0].revision] : []))
 			const nextIndex = Object.keys(versioned).length + 1
 			fvc.setValue('allergies', 'en', {

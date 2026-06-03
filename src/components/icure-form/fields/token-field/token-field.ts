@@ -8,26 +8,24 @@ export class TokenField extends Field {
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
 	@property() lines = 1
 	@property({ type: Boolean }) tokenDeleteButton = false
-	// When true, a click anywhere on the field fires the host actionListener
-	// (fire-and-forget) with the field's `event` name instead of opening the
-	// inner ProseMirror editor. The handler is then responsible for updating
-	// the values and triggering a re-render.
+	// When true, clicks no longer open the inner ProseMirror editor. Clicking an
+	// existing token fires the host actionListener with `{ valueId, content }`
+	// (valueId = the token's VersionedData key, i.e. the service id in the iCure
+	// bridge); clicking an empty area fires it with `undefined`. The handler is
+	// then responsible for mutating the values and triggering a re-render.
+	// Delegated click handling lives in the inner <icure-text-field>.
 	@property({ type: Boolean }) delegatedEdition = false
 	@property() event?: string
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
 
-	private fireDelegatedAction(e: MouseEvent) {
-		if (!this.delegatedEdition || !this.actionListener) return
-		e.preventDefault()
-		e.stopPropagation()
-		// Fire-and-forget: we do not await the callback. The host is expected
-		// to mutate the form values and trigger its own re-render afterwards.
-		this.actionListener(this.event ?? 'edit', undefined, e)
-	}
-
 	override renderSync(): TemplateResult {
-		const inner = html`<icure-text-field
+		return html`<icure-text-field
+			class="${this.delegatedEdition ? 'delegated-edition' : ''}"
+			style="${this.delegatedEdition ? 'cursor: pointer;' : ''}"
 			.readonly="${this.readonly || this.delegatedEdition}"
+			.delegatedEdition="${this.delegatedEdition}"
+			.event="${this.event}"
+			.actionListener=${this.actionListener}
 			label="${this.label}"
 			.multiline="${this.multiline}"
 			.lines="${this.lines}"
@@ -44,14 +42,5 @@ export class TokenField extends Field {
 			.validationErrorsProvider=${this.validationErrorsProvider}
 			.valueProvider=${this.valueProvider}
 		></icure-text-field>`
-
-		// In delegated-edition mode we wrap the (now readonly) editor in a
-		// click-capturing div. The wrapper blocks pointer events from reaching
-		// ProseMirror and instead fires the host actionListener.
-		return this.delegatedEdition
-			? html`<div class="delegated-edition" style="cursor: pointer; position: relative;" @click="${(e: MouseEvent) => this.fireDelegatedAction(e)}">
-					<div style="pointer-events: none;">${inner}</div>
-			  </div>`
-			: inner
 	}
 }

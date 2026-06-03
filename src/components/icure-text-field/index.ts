@@ -54,6 +54,13 @@ export class IcureTextField extends Field {
 	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
 	@property({ type: Boolean }) tokenDeleteButton = false
+	// When true, clicks no longer interact with the editor: clicking an existing
+	// token fires the host actionListener with `{ valueId, content }` (valueId is
+	// the VersionedData key for that token, i.e. the service id in the iCure
+	// bridge); clicking an empty area fires it with `undefined`. The host is then
+	// responsible for mutating the form values and triggering a re-render.
+	@property({ type: Boolean }) delegatedEdition = false
+	@property() event?: string
 
 	private schemaSpec?: SchemaSpec
 	private editRequestPending = false
@@ -536,9 +543,27 @@ export class IcureTextField extends Field {
 						this.schema === 'measure' && measureOnFocusHandler(view)
 						this.invokeFieldEditRequest(view, event)
 					},
+					mousedown: (_view, event) => {
+						// In delegated-edition mode the readonly editor must stay inert:
+						// swallow mousedown so it never gains focus or a text selection.
+						// The accompanying click handler fires the host actionListener.
+						if (this.delegatedEdition && this.actionListener) {
+							event.preventDefault()
+							return true
+						}
+						return false
+					},
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
 							const el = event.target as HTMLElement
+							// Delegated edition takes precedence: a click on an existing
+							// token fires the host actionListener with that token's
+							// identity, a click anywhere else fires it with no payload.
+							if (this.delegatedEdition && this.actionListener) {
+								const node = el?.closest?.('.token') ? this.resolveTokenNodeAt(view, event) : undefined
+								this.actionListener(this.event ?? 'edit', node ? { valueId: node.attrs?.id, content: node.textContent } : undefined, event)
+								return
+							}
 							if (this.tokenDeleteButton && el?.closest?.('.token-delete')) {
 								const pos = view.posAtCoords({ left: event.x, top: event.y })
 								if (pos?.pos !== undefined) {
@@ -548,8 +573,7 @@ export class IcureTextField extends Field {
 								return
 							}
 							if (el?.classList.contains('token') && this.schemaSpec?.onEditRequest) {
-								const pos = view.posAtCoords({ left: event.x, top: event.y })
-								const node = pos?.pos !== undefined ? view.state.doc.nodeAt(pos.pos) : undefined
+								const node = this.resolveTokenNodeAt(view, event)
 								void this.schemaSpec.onEditRequest({
 									trigger: 'token-click',
 									tokenId: node?.attrs?.id,
@@ -812,6 +836,17 @@ export class IcureTextField extends Field {
 						  }
 						: undefined
 			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: this.serializer.serialize(doc) } : undefined)
+	}
+
+	// Resolve the top-level `token` node under the click coordinates. We use
+	// resolve(pos).node(1) rather than doc.nodeAt(pos): for a position inside the
+	// token's text, nodeAt returns the text node (no `id` attr), whereas node(1)
+	// returns the token child of `doc` that carries the VersionedData key.
+	private resolveTokenNodeAt(view: EditorView, event: MouseEvent): ProsemirrorNode | undefined {
+		const pos = view.posAtCoords({ left: event.x, top: event.y })
+		if (pos?.pos === undefined) return undefined
+		const rp = view.state.doc.resolve(pos.pos)
+		return rp.depth >= 1 ? rp.node(1) : undefined
 	}
 
 	private invokeFieldEditRequest(view: EditorView, domEvent?: FocusEvent) {

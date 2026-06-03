@@ -152,9 +152,12 @@ export abstract class Field {
 	event?: string
 	payload?: unknown
 	// When true, clicking the field fires the host actionListener with this
-	// field's `event` name (fire-and-forget) instead of opening the inline
-	// editor. The action handler is then responsible for mutating the form
-	// values and triggering a re-render. Currently honoured by token-field.
+	// field's `event` name instead of opening the inline editor. For a
+	// token-field, clicking an existing token passes `{ valueId, content }` as
+	// the payload (valueId = the token's VersionedData key, i.e. the service id
+	// in the iCure bridge) and clicking an empty area passes `undefined`. The
+	// action handler is then responsible for mutating the form values and
+	// triggering a re-render. Currently honoured by token-field.
 	delegatedEdition?: boolean
 
 	label(): string {

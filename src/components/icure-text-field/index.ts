@@ -556,10 +556,12 @@ export class IcureTextField extends Field {
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
 							const el = event.target as HTMLElement
-							// Delegated edition takes precedence: a click on an existing
-							// token fires the host actionListener with that token's
-							// identity, a click anywhere else fires it with no payload.
-							if (this.delegatedEdition && this.actionListener) {
+							// Delegated edition: a click on an existing token fires the host
+							// actionListener with that token's identity, a click anywhere
+							// else fires it with no payload. A click on the delete cross is
+							// excluded here so it falls through to the delete branch below —
+							// this lets delete and delegated edition coexist on one field.
+							if (this.delegatedEdition && this.actionListener && !(this.tokenDeleteButton && el?.closest?.('.token-delete'))) {
 								const node = el?.closest?.('.token') ? this.resolveTokenNodeAt(view, event) : undefined
 								this.actionListener(this.event ?? 'edit', node ? { valueId: node.attrs?.id, content: node.textContent } : undefined, event)
 								return
@@ -569,6 +571,15 @@ export class IcureTextField extends Field {
 								if (pos?.pos !== undefined) {
 									const rp = view.state.tr.doc.resolve(pos.pos)
 									this.view?.dispatch(view.state.tr.deleteRange(rp.before(), rp.after()))
+									// Persist the removal immediately. dispatchTransaction only
+									// flushes after a 10s debounce (or on blur); a readonly /
+									// delegated-edition editor never blurs, so without this the
+									// deletion would not reach the form values. Clearing trToSave
+									// stops the scheduled timeout from firing a redundant update.
+									if (this.view) {
+										this.trToSave = undefined
+										this.updateValue(this.view.state.tr)
+									}
 								}
 								return
 							}

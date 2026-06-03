@@ -13,7 +13,9 @@ export class TokenField extends Field {
 	// (valueId = the token's VersionedData key, i.e. the service id in the iCure
 	// bridge); clicking an empty area fires it with `undefined`. The handler is
 	// then responsible for mutating the values and triggering a re-render.
-	// Delegated click handling lives in the inner <icure-text-field>.
+	// Delegated click handling lives in the inner <icure-text-field>. This can be
+	// combined with `tokenDeleteButton`: the delete cross still removes its token
+	// directly, while clicking the token body delegates the edition.
 	@property({ type: Boolean }) delegatedEdition = false
 	@property() event?: string
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
@@ -31,7 +33,7 @@ export class TokenField extends Field {
 			.lines="${this.lines}"
 			.displayedLabels="${this.displayedLabels}"
 			.defaultLanguage="${this.defaultLanguage}"
-			.tokenDeleteButton="${this.tokenDeleteButton && !this.delegatedEdition}"
+			.tokenDeleteButton="${this.tokenDeleteButton}"
 			schema="tokens-list"
 			.handleMetadataChanged=${this.handleMetadataChanged}
 			.handleValueChanged=${this.handleValueChanged}

@@ -46,6 +46,6 @@ sections:
             shortLabel: reset-allergies
             span: 8
             event: reset-allergies
-      - field: "Demonstrates the delegatedEdition flag. When set on a token-field, clicks no longer open the inline editor — they fire the host actionListener with the field's `event` name in a fire-and-forget manner. The host (decorated-form.ts) handles the edit-allergies event by appending a synthetic token and refreshing the form via setValue. Test: click the Allergies field — a new token is added; the Token count goes up; click the Reset button — the list clears."
+      - field: "Demonstrates the delegatedEdition flag. When set on a token-field, clicks no longer open the inline editor — they fire the host actionListener with the field's `event` name. Clicking an EXISTING token passes `{ valueId, content }` (valueId = the token's service id); clicking an EMPTY area passes no payload. The host (decorated-form.ts) appends a new token on an empty-area click and edits the clicked token in place (prefixing 'Edited ') when a valueId is present. Test: click an empty part of the Allergies field — a new token is added and the Token count goes up; click an existing token — its text changes in place and the count stays the same; click Reset — the list clears."
         type: label
         span: 24

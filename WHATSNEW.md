@@ -54,6 +54,8 @@ Tokens in a `tokens-list` field can now show an individual delete cross. Set `to
   tokenDeleteButton: true
 ```
 
+This combines with `delegatedEdition`: the delete cross removes its token directly, while clicking the token body still delegates the edition to the host.
+
 ### Originating DOM event forwarded to `actionListener`
 
 The `actionListener` signature gained an optional third argument:

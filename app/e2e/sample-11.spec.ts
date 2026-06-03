@@ -21,7 +21,9 @@ async function getRenderedTokens(page: Page): Promise<string[]> {
 // page.mouse click lands on the right coordinates and reaches ProseMirror's
 // own click handler (programmatic .click() would arrive with x/y = 0 and break
 // per-token resolution).
-async function allergiesGeometry(page: Page): Promise<{ editor: { left: number; top: number; right: number; bottom: number }; tokens: { cx: number; cy: number }[] }> {
+async function allergiesGeometry(
+	page: Page,
+): Promise<{ editor: { left: number; top: number; right: number; bottom: number }; tokens: { cx: number; cy: number; del: { cx: number; cy: number } | null }[] }> {
 	return page.evaluate(() => {
 		const demo = document.querySelector('demo-app')
 		const visible = Array.from(demo?.shadowRoot?.querySelectorAll('decorated-form') ?? []).find((df) => (df.parentElement as HTMLElement | null)?.style.display !== 'none') as HTMLElement | undefined
@@ -33,7 +35,9 @@ async function allergiesGeometry(page: Page): Promise<{ editor: { left: number; 
 		const er = editor.getBoundingClientRect()
 		const tokens = Array.from(editor.querySelectorAll('li')).map((li) => {
 			const r = ((li.querySelector('.token') as HTMLElement | null) ?? li).getBoundingClientRect()
-			return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 }
+			const delEl = li.querySelector('.token-delete') as HTMLElement | null
+			const dr = delEl?.getBoundingClientRect()
+			return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, del: dr ? { cx: dr.left + dr.width / 2, cy: dr.top + dr.height / 2 } : null }
 		})
 		return { editor: { left: er.left, top: er.top, right: er.right, bottom: er.bottom }, tokens }
 	})
@@ -53,6 +57,15 @@ async function clickToken(page: Page, index: number): Promise<void> {
 	const { tokens } = await allergiesGeometry(page)
 	if (!tokens[index]) throw new Error(`No token at index ${index} (have ${tokens.length})`)
 	await page.mouse.click(tokens[index].cx, tokens[index].cy)
+	await page.waitForTimeout(600)
+}
+
+// Click the delete cross of the token at the given index — removes that token.
+async function clickTokenDelete(page: Page, index: number): Promise<void> {
+	const { tokens } = await allergiesGeometry(page)
+	const del = tokens[index]?.del
+	if (!del) throw new Error(`No delete cross for token at index ${index} (have ${tokens.length})`)
+	await page.mouse.click(del.cx, del.cy)
 	await page.waitForTimeout(600)
 }
 
@@ -114,7 +127,9 @@ test.describe('11-delegated-edition', () => {
 		// the assertion below would pass vacuously in English.
 		const activeLanguage = await page.evaluate(() => {
 			const demo = document.querySelector('demo-app')
-			const visible = Array.from(demo?.shadowRoot?.querySelectorAll('decorated-form') ?? []).find((df) => (df.parentElement as HTMLElement | null)?.style.display !== 'none') as (HTMLElement & { language?: string }) | undefined
+			const visible = Array.from(demo?.shadowRoot?.querySelectorAll('decorated-form') ?? []).find((df) => (df.parentElement as HTMLElement | null)?.style.display !== 'none') as
+				| (HTMLElement & { language?: string })
+				| undefined
 			return visible?.language
 		})
 		expect(activeLanguage).toBe('fr')
@@ -132,6 +147,29 @@ test.describe('11-delegated-edition', () => {
 		// same service in place — the text changes, the count does NOT grow.
 		await clickToken(page, 0)
 		expect(await getRenderedTokens(page)).toEqual(['Edited Allergy #1', 'Allergy #2'])
+		expect(await getTokenCount(page)).toBe(2)
+	})
+
+	test('delete cross and delegated edition coexist on the same field', async ({ page }) => {
+		await clickEmptyArea(page)
+		await clickEmptyArea(page)
+		await clickEmptyArea(page)
+		expect(await getRenderedTokens(page)).toEqual(['Allergy #1', 'Allergy #2', 'Allergy #3'])
+		expect(await getTokenCount(page)).toBe(3)
+
+		// Each token shows a delete cross (tokenDeleteButton + delegatedEdition).
+		const { tokens } = await allergiesGeometry(page)
+		expect(tokens.every((t) => t.del !== null)).toBe(true)
+
+		// Delete cross removes just that token (count drops, others intact) —
+		// delegated edition does NOT swallow the delete click.
+		await clickTokenDelete(page, 1)
+		expect(await getRenderedTokens(page)).toEqual(['Allergy #1', 'Allergy #3'])
+		expect(await getTokenCount(page)).toBe(2)
+
+		// Clicking a token's body still delegates the edit (in place, no growth).
+		await clickToken(page, 0)
+		expect(await getRenderedTokens(page)).toEqual(['Edited Allergy #1', 'Allergy #3'])
 		expect(await getTokenCount(page)).toBe(2)
 	})
 

@@ -99,6 +99,29 @@ test.describe('11-delegated-edition', () => {
 		expect(await getRenderedTokens(page)).toEqual(['Allergy #1', 'Allergy #2'])
 	})
 
+	test('tokens added while the form is in French render their text (regression)', async ({ page }) => {
+		// Regression guard: the host must write the token under the language the
+		// form is currently rendered in. When it hardcoded 'en' but the form was
+		// in French, the token was stored under a language the editor never
+		// displayed and rendered empty.
+		//
+		// openSample registers an init script that clears localStorage on every
+		// navigation; register ours AFTER it so the language survives the reload.
+		await page.addInitScript(() => localStorage.setItem('com.icure.demo.language', 'fr'))
+		await page.reload({ waitUntil: 'domcontentloaded' })
+		await page.waitForTimeout(1200)
+		// Fail loudly if the form did not actually switch to French — otherwise
+		// the assertion below would pass vacuously in English.
+		const activeLanguage = await page.evaluate(() => {
+			const demo = document.querySelector('demo-app')
+			const visible = Array.from(demo?.shadowRoot?.querySelectorAll('decorated-form') ?? []).find((df) => (df.parentElement as HTMLElement | null)?.style.display !== 'none') as (HTMLElement & { language?: string }) | undefined
+			return visible?.language
+		})
+		expect(activeLanguage).toBe('fr')
+		await clickEmptyArea(page)
+		expect(await getRenderedTokens(page)).toEqual(['Allergy #1'])
+	})
+
 	test('clicking an existing token edits it in place (valueId payload)', async ({ page }) => {
 		await clickEmptyArea(page)
 		await clickEmptyArea(page)

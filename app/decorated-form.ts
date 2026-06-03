@@ -476,18 +476,23 @@ export class DecoratedForm extends LitElement {
 	private handleAction = (event: string, payload?: unknown): void => {
 		const fvc = this.formValuesContainer
 		if (event === 'edit-allergies' && fvc) {
+			// Write under the language the form is currently rendered in (same
+			// fallback as the renderer's `language()`), otherwise the token text
+			// is stored under a language the editor never displays and renders as
+			// an empty token.
+			const lang = this.language ?? 'fr'
 			// A token click delivers `{ valueId, content }`; an empty-area click
 			// delivers no payload. With a valueId we edit that token in place
 			// (setValue targeting the existing service id), otherwise we append.
 			const clicked = payload as { valueId?: string; content?: string } | undefined
 			if (clicked?.valueId) {
-				fvc.setValue('allergies', 'en', { content: { en: { type: 'string', value: `Edited ${clicked.content ?? ''}` } }, codes: [] }, clicked.valueId)
+				fvc.setValue('allergies', lang, { content: { [lang]: { type: 'string', value: `Edited ${clicked.content ?? ''}` } }, codes: [] }, clicked.valueId)
 				return
 			}
 			const versioned = fvc.getValues((_id, history) => (history[0]?.value?.label === 'allergies' ? [history[0].revision] : []))
 			const nextIndex = Object.keys(versioned).length + 1
-			fvc.setValue('allergies', 'en', {
-				content: { en: { type: 'string', value: `Allergy #${nextIndex}` } },
+			fvc.setValue('allergies', lang, {
+				content: { [lang]: { type: 'string', value: `Allergy #${nextIndex}` } },
 				codes: [],
 			})
 			return

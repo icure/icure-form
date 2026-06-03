@@ -638,11 +638,16 @@ export class IcureTextField extends Field {
 			? {
 					parse: (value: PrimitiveType) => {
 						if (value?.type === 'datetime') {
-							const dateString = anyDateToDate(value.value)?.toISOString().replace(/T.*/, '')
-							return pms.node('paragraph', {}, [pms.node('date', {}, value ? [pms.text(dateString ?? '')] : [])])
+							// The `date` mask is `dd/MM/yyyy`, so we must format the
+							// stored fuzzy date in local time and in that display order.
+							// Using `toISOString()` (UTC, `yyyy-MM-dd`) both shifts the
+							// day across timezones and scrambles digits through the mask.
+							const d = anyDateToDate(value.value)
+							const dateString = d ? format(d, 'dd/MM/yyyy') : ''
+							return pms.node('paragraph', {}, [pms.node('date', {}, value ? [pms.text(dateString)] : [])])
 						} else if (value?.type === 'timestamp') {
-							const dateString = new Date(value.value)?.toISOString().replace(/T.*/, '')
-							return pms.node('paragraph', {}, [pms.node('date', {}, value ? [pms.text(dateString ?? '')] : [])])
+							const dateString = format(new Date(value.value), 'dd/MM/yyyy')
+							return pms.node('paragraph', {}, [pms.node('date', {}, value ? [pms.text(dateString)] : [])])
 						}
 						return undefined
 					},
@@ -714,10 +719,13 @@ export class IcureTextField extends Field {
 						if (value.type !== 'datetime') {
 							return undefined
 						}
-						const date = anyDateToDate(value.value)?.toISOString().replace(/T.*/, '')
-						const time = anyDateToDate(value.value)
-							?.toISOString()
-							.replace(/.+?T(..):(..).*/, '$1:$2')
+						// Mirror the extractor: format the stored fuzzy datetime in
+						// local time with the field masks (`dd/MM/yyyy`, `HH:mm:ss`).
+						// `toISOString()` would emit UTC `yyyy-MM-ddTHH:mm` — wrong order
+						// for the date mask and shifted by the timezone offset.
+						const d = anyDateToDate(value.value)
+						const date = d ? format(d, 'dd/MM/yyyy') : ''
+						const time = d ? format(d, 'HH:mm:ss') : ''
 
 						return pms.node('paragraph', {}, [
 							pms.node('date', {}, date && date.length ? [pms.text(date)] : [pms.text(' ')]),

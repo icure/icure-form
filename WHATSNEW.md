@@ -78,10 +78,6 @@ A `text-field` can now declare any text schema directly via its `schema` propert
 
 For fully custom editors, each schema's `SchemaSpec` exposes an optional `onEditRequest(ctx) => Promise<boolean>` hook. It fires on a token click or when a field gains edit focus, receiving an `EditRequestContext` (trigger, token id/content, label, language, schema, the `actionListener`, and the originating `domEvent`). Resolve `true` to signal the host handled the edition (the inline editor is suppressed), `false` to fall through to default inline editing. `delegatedEdition` is the declarative shortcut for the common token-field case; `onEditRequest` is the lower-level escape hatch. See [README ▸ Custom field editors](./README.md#custom-field-editors-the-edit-request-hook).
 
-### Internal: per-schema `SchemaSpec` refactor
-
-The ProseMirror schemas (`markdown`/`styled`, `tokens-list`, `items-list`, `date-time`, `decimal`, `measure`) were refactored so each defines its own `SchemaSpec` bundling its ProseMirror schema, multivalue flag, primitive extractor, and the optional `onEditRequest` hook. This is an internal change but it is what enables the edit-request hook above.
-
 ### Tooling: reorganised demo app & e2e suite
 
 The demo application (`app/`) was reorganised into numbered, feature-focused samples (`app/samples/NN-*.yaml`) and gained a Playwright end-to-end suite (`app/e2e/`), runnable with `yarn test:e2e:app`. Several form rendering bugs surfaced by the suite were fixed along the way.

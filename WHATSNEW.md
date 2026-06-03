@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## Unreleased (`feature/configurable-edit-by-actions`)
+## 2.2.0 (2026-06-03)
 
 This release makes form editing *configurable*: token fields can delegate their edition to the host, individual tokens can be deleted, and the originating DOM event is forwarded to handlers. Under the hood, each text schema now owns a self-contained `SchemaSpec`.
 

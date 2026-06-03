@@ -140,7 +140,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 							: ''}
 					</div>
 				</div>
-				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 			</div>
 		`
 	}

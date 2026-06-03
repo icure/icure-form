@@ -7,6 +7,9 @@ import { MeasureSchema } from '../icure-text-field/schema/measure-schema'
 
 export interface Code {
 	id: string
+	type?: string
+	code?: string
+	version?: string
 	label?: { [key: string]: string }
 }
 
@@ -137,6 +140,7 @@ export abstract class Field {
 	value?: string
 	unit?: string
 	multiline?: boolean
+	tokenDeleteButton?: boolean
 	computedProperties?: { [_key: string]: string }
 	validators?: Validator[]
 	now?: boolean
@@ -147,6 +151,14 @@ export abstract class Field {
 	hasOther?: boolean
 	event?: string
 	payload?: unknown
+	// When true, clicking the field fires the host actionListener with this
+	// field's `event` name instead of opening the inline editor. For a
+	// token-field, clicking an existing token passes `{ valueId, content }` as
+	// the payload (valueId = the token's VersionedData key, i.e. the service id
+	// in the iCure bridge) and clicking an empty area passes `undefined`. The
+	// action handler is then responsible for mutating the form values and
+	// triggering a re-render. Currently honoured by token-field.
+	delegatedEdition?: boolean
 
 	label(): string {
 		return this.field
@@ -169,6 +181,7 @@ export abstract class Field {
 			value,
 			unit,
 			multiline,
+			tokenDeleteButton,
 			computedProperties,
 			validators,
 			now,
@@ -178,6 +191,7 @@ export abstract class Field {
 			hasOther,
 			event,
 			payload,
+			delegatedEdition,
 		}: {
 			shortLabel?: string
 			grows?: boolean
@@ -192,6 +206,7 @@ export abstract class Field {
 			value?: string
 			unit?: string
 			multiline?: boolean
+			tokenDeleteButton?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			now?: boolean
@@ -201,6 +216,7 @@ export abstract class Field {
 			hasOther?: boolean
 			event?: string
 			payload?: unknown
+			delegatedEdition?: boolean
 		},
 	) {
 		this.field = label
@@ -218,6 +234,7 @@ export abstract class Field {
 		this.value = value
 		this.unit = unit
 		this.multiline = multiline || false
+		this.tokenDeleteButton = tokenDeleteButton
 		this.computedProperties = computedProperties
 		this.validators = validators
 		this.now = now
@@ -227,6 +244,7 @@ export abstract class Field {
 		this.hasOther = hasOther
 		this.event = event
 		this.payload = payload
+		this.delegatedEdition = delegatedEdition
 	}
 
 	abstract copyIfNeeded(properties: Partial<Field>): Field
@@ -282,6 +300,7 @@ export abstract class Field {
 		styleOptions: { width: number; direction: string; span: number; rows: number; alignItems: string } | undefined
 		sortOptions: SortOptions | undefined
 		multiline: boolean | undefined
+		tokenDeleteButton?: boolean
 		now: boolean | undefined
 		options: { [_key: string]: unknown } | undefined
 		width: number | undefined
@@ -303,6 +322,7 @@ export abstract class Field {
 			value: this.value,
 			unit: this.unit,
 			multiline: this.multiline,
+			...(this.tokenDeleteButton ? { tokenDeleteButton: true } : {}),
 			computedProperties: this.computedProperties,
 			now: this.now,
 			translate: this.translate,
@@ -524,11 +544,14 @@ export class TokenField extends Field {
 			labels,
 			value,
 			unit,
+			tokenDeleteButton,
 			computedProperties,
 			validators,
 			translate,
 			width,
 			styleOptions,
+			event,
+			delegatedEdition,
 		}: {
 			shortLabel?: string
 			grows?: boolean
@@ -541,11 +564,14 @@ export class TokenField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
+			tokenDeleteButton?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
+			event?: string
+			delegatedEdition?: boolean
 		},
 	) {
 		super('token-field', label, {
@@ -560,11 +586,14 @@ export class TokenField extends Field {
 			labels,
 			value,
 			unit,
+			tokenDeleteButton,
 			computedProperties,
 			validators,
 			translate,
 			width,
 			styleOptions,
+			event,
+			delegatedEdition,
 		})
 	}
 	override copyIfNeeded(properties: Partial<TokenField>): TokenField {

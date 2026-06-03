@@ -1,0 +1,115 @@
+form: demo.formulas
+id: 10000002-0000-0000-0000-000000000002
+description: Synchronous cross-field formulas via computedProperties.
+translations:
+  - language: fr
+    translations:
+      Weight: Poids
+      Height: Taille
+      BMI: IMC
+      Date of birth: Date de naissance
+      Age: Âge
+      Unit price (€): Prix unitaire (€)
+      Quantity: Quantité
+      Total (€): Total (€)
+  - language: nl
+    translations:
+      Weight: Gewicht
+      Height: Lengte
+      BMI: BMI
+      Date of birth: Geboortedatum
+      Age: Leeftijd
+      Unit price (€): Eenheidsprijs (€)
+      Quantity: Aantal
+      Total (€): Totaal (€)
+sections:
+  - section: BMI
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: weight
+            type: measure-field
+            shortLabel: Weight
+            span: 8
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'kg' } }, codes: [] }
+          - field: height
+            type: measure-field
+            shortLabel: Height
+            span: 8
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'cm' } }, codes: [] }
+          - field: bmi
+            type: measure-field
+            shortLabel: BMI
+            span: 8
+            readonly: true
+            computedProperties:
+              value: |
+                const w = parseContent(weight[0]?.content)
+                let h = parseContent(height[0]?.content)
+                if (!w || !h) { return undefined }
+                if (h > 3) { h = h / 100 }
+                return { content: { '*': { type: 'measure', value: w / (h * h), unit: 'kg/m²' } }, codes: [] }
+      - field: "Sync cross-field formula. BMI's computedProperties.value reads weight and height from `self`, normalises height to metres if greater than 3, then returns a measure with unit kg/m². Test: type 70 in Weight and 170 in Height — BMI updates to ≈24.22 kg/m². Change either input and BMI recomputes instantly."
+        type: label
+        span: 24
+  - section: Age from date of birth
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: dateOfBirth
+            type: date-picker
+            shortLabel: Date of birth
+            span: 12
+          - field: age
+            type: text-field
+            shortLabel: Age
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                const dob = parseContent(dateOfBirth[0]?.content)
+                if (!dob) { return undefined }
+                // The date-picker stores yyyyMMddHHmmss but ageText() expects yyyyMMdd
+                return ageText(dob >= 100000000 ? Math.floor(dob / 1000000) : dob)
+      - field: "Computed value derived from a date. Age calls ageText(dob) — a host-provided helper exposed via the interpreter context. The date-picker stores yyyyMMddHHmmss so the formula divides by 1_000_000 first. Test: pick a date in the past (e.g. 01/01/1990) — Age fills in with the corresponding number of years."
+        type: label
+        span: 24
+  - section: Invoice line
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: unitPrice
+            type: number-field
+            shortLabel: Unit price (€)
+            span: 8
+          - field: quantity
+            type: number-field
+            shortLabel: Quantity
+            span: 8
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'number', value: 1 } }, codes: [] }
+          - field: total
+            type: number-field
+            shortLabel: Total (€)
+            span: 8
+            readonly: true
+            computedProperties:
+              value: |
+                const p = parseContent(unitPrice[0]?.content)
+                const q = parseContent(quantity[0]?.content)
+                if (p == null || q == null) { return undefined }
+                return { content: { '*': { type: 'number', value: p * q } }, codes: [] }
+      - field: "Number cross-field formula. Total = Unit price × Quantity, with Quantity seeded to 1 via computedProperties.defaultValue. Test: type 12.50 in Unit price — Total becomes 12.50 (Quantity defaulted to 1). Change Quantity to 4 — Total updates to 50."
+        type: label
+        span: 24

@@ -117,15 +117,19 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 							</div>`
 						}
 						return html` <div>
-							<input class="icure-checkbox" type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" .checked="${inputValues?.includes(x.id)}" @change="${this.checkboxChange}" /><label
-								class="icure-button-group-label"
-								for="${x.id}"
-								><span>${text}</span></label
-							>
+							<input
+								class="icure-checkbox"
+								type="${this.type}"
+								id="${x.id}"
+								name="${this.label}"
+								value="${text}"
+								.checked="${inputValues?.includes(x.id)}"
+								@change="${() => this.checkboxChange()}"
+							/><label class="icure-button-group-label" for="${x.id}"><span>${text}</span></label>
 						</div>`
 					})}
 				</div>
-				<div class="error">${validationErrors.map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 			</div>
 		`
 	}

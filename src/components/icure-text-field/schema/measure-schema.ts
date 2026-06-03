@@ -1,10 +1,11 @@
-import { Node, SchemaSpec } from 'prosemirror-model'
+import { Node, SchemaSpec as ProseMirrorSchemaSpec } from 'prosemirror-model'
 import { TextSelection, Transaction } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
+import { SchemaSpec } from './schema-spec'
 
 export type MeasureSchema = 'measure'
 
-export function getMeasureSpec(): SchemaSpec {
+export function getMeasureSpec(): ProseMirrorSchemaSpec {
 	return {
 		topNode: 'paragraph',
 		nodes: {
@@ -38,6 +39,11 @@ export function getMeasureSpec(): SchemaSpec {
 		},
 		marks: {},
 	}
+}
+
+export const measureSchemaSpec: SchemaSpec = {
+	proseMirror: getMeasureSpec(),
+	multivalue: false,
 }
 
 export const measureTransactionMapper = (tr: Transaction) => {

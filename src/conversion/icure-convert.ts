@@ -204,20 +204,25 @@ export function convertLegacy(form: FormLayout, formsLibrary: FormLayout[]): For
 							.map((formData: FormLayoutData, index) => {
 								const width = expandedCols[index] - idx
 								idx += width
-								return (
-									{
-										StringEditor: makeTextField,
-										CheckBoxEditor: makeCheckBox,
-										MeasureEditor: makeMeasureField,
-										NumberEditor: makeNumberField,
-										PopupMenuEditor: makeDropdownField,
-										DateTimeEditor: makeDateTimeField,
-										StringTableEditor: makeItemsListField,
-										TokenFieldEditor: makeTokenField,
-										SubFormEditor: makeSubForm,
-										ActionButton: makeActionButton,
-									} as { [key: string]: (fd: FormLayoutData, w: number, h: number) => Field | Subform }
-								)[formData.editor?.key ?? '']?.(formData, width, Math.max(1, Math.floor((formData.editor?.height ?? 0) / meanHeight)))
+								const editors: { [key: string]: (fd: FormLayoutData, w: number, h: number) => Field | Subform } = {
+									StringEditor: makeTextField,
+									CheckBoxEditor: makeCheckBox,
+									MeasureEditor: makeMeasureField,
+									NumberEditor: makeNumberField,
+									PopupMenuEditor: makeDropdownField,
+									DateTimeEditor: makeDateTimeField,
+									StringTableEditor: makeItemsListField,
+									TokenFieldEditor: makeTokenField,
+									SubFormEditor: makeSubForm,
+									ActionButton: makeActionButton,
+								}
+								const key = formData.editor?.key ?? ''
+								const factory = editors[key]
+								if (!factory) {
+									console.warn(`[icure-convert] no editor for key='${key}' (field name='${formData.name ?? ''}') — falling back to text-field`)
+									return makeTextField(formData, width, Math.max(1, Math.floor((formData.editor?.height ?? 0) / meanHeight)))
+								}
+								return factory(formData, width, Math.max(1, Math.floor((formData.editor?.height ?? 0) / meanHeight)))
 							})
 					})
 				}),

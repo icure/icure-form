@@ -1,0 +1,272 @@
+form: demo.clinical-workflow
+id: 10000010-0000-0000-0000-000000000010
+description: End-to-end consultation form combining tabs, formulas, codes and validation.
+translations:
+  - language: en
+    translations:
+      demo.clinical.tab.patient: Patient
+      demo.clinical.tab.vitals: Vitals
+      demo.clinical.tab.assessment: Assessment
+      demo.clinical.tab.plan: Plan
+  - language: fr
+    translations:
+      demo.clinical.tab.patient: Patiente
+      demo.clinical.tab.vitals: Constantes
+      demo.clinical.tab.assessment: Évaluation
+      demo.clinical.tab.plan: Plan de soins
+      Full name: Nom complet
+      Date of birth: Date de naissance
+      Age: Âge
+      Pregnancy status: Statut grossesse
+      Gestational age (weeks): Âge gestationnel (sem.)
+      Weight: Poids
+      Height: Taille
+      BMI: IMC
+      Category: Catégorie
+      Systolic: Systolique
+      Diastolic: Diastolique
+      Pulse: Pouls
+      Risk level: Niveau de risque
+      Assessment notes: Notes d'évaluation
+      Follow-up in (days): Suivi dans (jours)
+      Plan notes: Notes de plan
+      sign: signer
+  - language: nl
+    translations:
+      demo.clinical.tab.patient: Patiënt
+      demo.clinical.tab.vitals: Vitale parameters
+      demo.clinical.tab.assessment: Beoordeling
+      demo.clinical.tab.plan: Behandelplan
+      Full name: Volledige naam
+      Date of birth: Geboortedatum
+      Age: Leeftijd
+      Pregnancy status: Zwangerschapsstatus
+      Gestational age (weeks): Zwangerschapsduur (wk)
+      Weight: Gewicht
+      Height: Lengte
+      BMI: BMI
+      Category: Categorie
+      Systolic: Systolisch
+      Diastolic: Diastolisch
+      Pulse: Hartslag
+      Risk level: Risiconiveau
+      Assessment notes: Beoordelingsnotities
+      Follow-up in (days): Opvolging binnen (dagen)
+      Plan notes: Planningsnotities
+      sign: ondertekenen
+codifications:
+  - type: DEMO-PREGNANCY-STATUS
+    codes:
+      - id: not-pregnant
+        label: { en: Not pregnant, fr: Non enceinte, nl: Niet zwanger }
+      - id: pregnant
+        label: { en: Pregnant, fr: Enceinte, nl: Zwanger }
+      - id: post-partum
+        label: { en: Post-partum, fr: Post-partum, nl: Post-partum }
+      - id: unknown
+        label: { en: Unknown, fr: Inconnu, nl: Onbekend }
+  - type: DEMO-RISK-LEVEL
+    codes:
+      - id: low
+        label: { en: Low, fr: Faible, nl: Laag }
+      - id: medium
+        label: { en: Medium, fr: Modéré, nl: Gemiddeld }
+      - id: high
+        label: { en: High, fr: Élevé, nl: Hoog }
+sections:
+  - section: demo.clinical.tab.patient
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: fullName
+            type: text-field
+            shortLabel: Full name
+            span: 12
+            schema: styled-text-with-codes
+            validators:
+              - validation: |
+                  return validate.notBlank(self, 'fullName')
+                message: Patient name is required.
+          - field: dateOfBirth
+            type: date-picker
+            shortLabel: Date of birth
+            span: 6
+          - field: age
+            type: text-field
+            shortLabel: Age
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                const dob = parseContent(dateOfBirth[0]?.content)
+                if (!dob) { return undefined }
+                return ageText(dob >= 100000000 ? Math.floor(dob / 1000000) : dob)
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: pregnancyStatus
+            type: dropdown
+            shortLabel: Pregnancy status
+            span: 12
+            codifications:
+              - DEMO-PREGNANCY-STATUS
+          - field: gestationalAgeWeeks
+            type: number-field
+            shortLabel: Gestational age (weeks)
+            span: 12
+            computedProperties:
+              hidden: |
+                return !self['pregnancyStatus']?.some((v) => v?.codes?.some((c) => c.id === 'DEMO-PREGNANCY-STATUS|pregnant|1'))
+            validators:
+              - validation: |
+                  if (self['pregnancyStatus']?.some((v) => v?.codes?.some((c) => c.id === 'DEMO-PREGNANCY-STATUS|pregnant|1'))) {
+                    const w = parseContent(self['gestationalAgeWeeks']?.[0]?.content)
+                    return w != null && w >= 0 && w <= 42
+                  }
+                  return true
+                message: Gestational age must be between 0 and 42 weeks.
+      - field: "Combines three features at once: a required validator on Full name, a sync age formula from Date of birth (handling the date-picker's yyyyMMddHHmmss format), and a conditional reveal where Gestational age only shows when Pregnancy status is 'Pregnant'. Test: leave Full name empty → required error. Pick a 1990 DOB → Age fills in. Pick Pregnancy = Pregnant → Gestational age field appears; type 50 → range validator fires."
+        type: label
+        span: 24
+  - section: demo.clinical.tab.vitals
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: weight
+            type: measure-field
+            shortLabel: Weight
+            span: 6
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'kg' } }, codes: [] }
+          - field: height
+            type: measure-field
+            shortLabel: Height
+            span: 6
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'cm' } }, codes: [] }
+          - field: bmi
+            type: measure-field
+            shortLabel: BMI
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                const w = parseContent(weight[0]?.content)
+                let h = parseContent(height[0]?.content)
+                if (!w || !h) { return undefined }
+                if (h > 3) { h = h / 100 }
+                return { content: { '*': { type: 'measure', value: w / (h * h), unit: 'kg/m²' } }, codes: [] }
+          - field: bmiCategory
+            type: text-field
+            shortLabel: Category
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                const b = parseContent(bmi[0]?.content)
+                if (!b) { return undefined }
+                return b < 18.5 ? 'underweight' : b < 25 ? 'healthy' : b < 30 ? 'overweight' : 'obese'
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: systolic
+            type: measure-field
+            shortLabel: Systolic
+            span: 8
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'mmHg' } }, codes: [] }
+          - field: diastolic
+            type: measure-field
+            shortLabel: Diastolic
+            span: 8
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'mmHg' } }, codes: [] }
+          - field: pulse
+            type: measure-field
+            shortLabel: Pulse
+            span: 8
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'measure', unit: 'bpm' } }, codes: [] }
+      - field: "Cascading formulas: BMI is derived from Weight + Height, then Category is derived from BMI. The default-value formulas seed each measure with its unit (kg, cm, mmHg, bpm). Test: type 70 in Weight and 170 in Height → BMI shows ≈24.22, Category becomes 'healthy'. Bump weight to 95 → Category becomes 'obese'."
+        type: label
+        span: 24
+  - section: demo.clinical.tab.assessment
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: riskLevel
+            type: radio-button
+            shortLabel: Risk level
+            span: 24
+            styleOptions:
+              direction: row
+            codifications:
+              - DEMO-RISK-LEVEL
+          - field: assessmentNotes
+            type: text-field
+            shortLabel: Assessment notes
+            span: 24
+            multiline: true
+            rowSpan: 5
+            schema: text-document
+      - field: "Risk level uses a codifications-backed radio-button group (DEMO-RISK-LEVEL is declared at the top of this YAML). Assessment notes is a multi-paragraph text-document. No formulas in this tab — just data capture with codes and free text."
+        type: label
+        span: 24
+  - section: demo.clinical.tab.plan
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: followUpDays
+            type: number-field
+            shortLabel: Follow-up in (days)
+            span: 12
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'number', value: 30 } }, codes: [] }
+            validators:
+              - validation: |
+                  const d = parseContent(self['followUpDays']?.[0]?.content) ?? 0
+                  return d >= 1 && d <= 365
+                message: Follow-up must be between 1 and 365 days.
+          - field: planNotes
+            type: text-field
+            shortLabel: Plan notes
+            span: 12
+            multiline: true
+            rowSpan: 3
+            schema: text-document
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Sign & save
+            type: action
+            shortLabel: sign
+            span: 8
+            event: sign-and-save
+            computedProperties:
+              payload: |
+                return {
+                  patient: parseContent(self['fullName']?.[0]?.content),
+                  riskLevel: self['riskLevel']?.[0]?.codes?.[0]?.id,
+                  bmi: parseContent(self['bmi']?.[0]?.content),
+                  followUpDays: parseContent(self['followUpDays']?.[0]?.content),
+                }
+      - field: "Follow-up days has a default of 30 and a 1..365 range validator. The Sign & save action's payload aggregates the patient name, risk level, BMI and follow-up days at click time — touch any of them in earlier tabs and the payload reflects the new state. Test: type 500 in Follow-up → range error appears. Click Sign & save → an alert pops up with 'sign-and-save'."
+        type: label
+        span: 24

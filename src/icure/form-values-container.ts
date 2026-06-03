@@ -561,7 +561,11 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 			return this.validatorsProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).flatMap(({ metadata, validators }) =>
 				validators.map(async ({ validation, message }): Promise<[FieldMetadata, string] | null> => {
 					try {
-						if (!(await this.compute(validation))) {
+						// `compute` returns `{ value, dependencies }`. Negating the wrapper
+						// is always false, which silently disabled every validator — we
+						// need the unwrapped boolean from `.value`.
+						const result = await this.compute<boolean>(validation)
+						if (!result?.value) {
 							return [metadata, message]
 						}
 					} catch (e) {

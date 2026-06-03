@@ -1,0 +1,114 @@
+form: demo.validation
+id: 10000004-0000-0000-0000-000000000004
+description: Required, range, regex, and custom validators.
+translations:
+  - language: fr
+    translations:
+      Full name: Nom complet
+      Follow-up (min): Suivi (min)
+      National ID (NN): N° national
+      Email: Email
+      Start: Début
+      End: Fin
+      Please enter the patient's full name.: Veuillez saisir le nom complet du patient.
+      Follow-up must be between 15 and 240 minutes.: Le suivi doit être compris entre 15 et 240 minutes.
+      National ID must contain 11 digits.: Le n° national doit contenir 11 chiffres.
+      Please enter a valid email address.: Veuillez saisir une adresse email valide.
+      End date must be on or after the start date.: La date de fin doit être postérieure ou égale à la date de début.
+  - language: nl
+    translations:
+      Full name: Volledige naam
+      Follow-up (min): Opvolging (min)
+      National ID (NN): Rijksregisternummer
+      Email: Email
+      Start: Begin
+      End: Einde
+      Please enter the patient's full name.: Voer de volledige naam van de patiënt in.
+      Follow-up must be between 15 and 240 minutes.: Opvolging moet tussen 15 en 240 minuten liggen.
+      National ID must contain 11 digits.: Het rijksregisternummer moet 11 cijfers bevatten.
+      Please enter a valid email address.: Voer een geldig e-mailadres in.
+      End date must be on or after the start date.: De einddatum moet op of na de begindatum liggen.
+sections:
+  - section: Required & range
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: fullName
+            type: text-field
+            shortLabel: Full name
+            span: 12
+            schema: styled-text-with-codes
+            validators:
+              - validation: |
+                  return validate.notBlank(self, 'fullName')
+                message: Please enter the patient's full name.
+          - field: followUpMinutes
+            type: number-field
+            shortLabel: Follow-up (min)
+            span: 12
+            computedProperties:
+              defaultValue: |
+                return { content: { '*': { type: 'number', value: 30 } }, codes: [] }
+            validators:
+              - validation: |
+                  const m = parseContent(self['followUpMinutes']?.[0]?.content) ?? 0
+                  return m >= 15 && m <= 240
+                message: Follow-up must be between 15 and 240 minutes.
+      - field: "Each validator returns true when valid, false when invalid. Required uses the validate.notBlank(self, label) helper. Range checks 15 ≤ followUpMinutes ≤ 240. Failed validators render their message under the field. Test: type 'X' into Full name then delete it — the required error appears. Type 5 in Follow-up — the range error appears; type 60 — it clears."
+        type: label
+        span: 24
+  - section: Pattern
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: nationalId
+            type: text-field
+            shortLabel: National ID (NN)
+            span: 12
+            schema: styled-text-with-codes
+            validators:
+              - validation: |
+                  const v = parseContent(self['nationalId']?.[0]?.content) ?? ''
+                  return /^\d{11}$/.test(String(v).replace(/[ .-]/g, ''))
+                message: National ID must contain 11 digits.
+          - field: email
+            type: text-field
+            shortLabel: Email
+            span: 12
+            schema: styled-text-with-codes
+            validators:
+              - validation: |
+                  const v = parseContent(self['email']?.[0]?.content) ?? ''
+                  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v))
+                message: Please enter a valid email address.
+      - field: "Regex validators on the input text. National ID requires 11 digits (spaces and punctuation are stripped before checking). Email requires a basic local@domain.tld shape. Test: type '123' in National ID — '11 digits' error appears; type 'foo' in Email — 'valid email' error appears; typing a valid value clears the error."
+        type: label
+        span: 24
+  - section: Custom cross-field
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: startDate
+            type: date-picker
+            shortLabel: Start
+            span: 12
+          - field: endDate
+            type: date-picker
+            shortLabel: End
+            span: 12
+            validators:
+              - validation: |
+                  const s = parseContent(self['startDate']?.[0]?.content)
+                  const e = parseContent(self['endDate']?.[0]?.content)
+                  if (!s || !e) { return true }
+                  return e >= s
+                message: End date must be on or after the start date.
+      - field: "Validators can read multiple fields. endDate's validator pulls both startDate and endDate from `self` and asserts end ≥ start; it tolerates blanks by returning true. Test: set Start to 2024-06-01 and End to 2024-05-01 — 'End date must be on or after the start date' appears under End. Swap the dates — the error clears."
+        type: label
+        span: 24

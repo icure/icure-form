@@ -1,132 +1,157 @@
 // @ts-ignore
-import validators from './samples/000-validators.yaml'
+import componentsGallery from './samples/01-components-gallery.yaml'
 // @ts-ignore
-import tokenFields from './samples/01-token-fields.yaml'
+import formulas from './samples/02-formulas.yaml'
 // @ts-ignore
-import bmi from './samples/1-BMI.yaml'
+import asyncFormulas from './samples/03-async-formulas.yaml'
 // @ts-ignore
-import time_of_appointment from './samples/1-time-of-appointment.yaml'
+import validation from './samples/04-validation.yaml'
 // @ts-ignore
-import preliminary_psycho_social_interview from './samples/2-preliminary-psycho-social-interview.yaml'
+import conditionalActions from './samples/05-conditional-actions.yaml'
 // @ts-ignore
-import preliminary_medical_interview from './samples/3-preliminary-medical-interview.yaml'
+import subforms from './samples/06-subforms.yaml'
 // @ts-ignore
-import termination_of_pregnancy_curetage from './samples/4-termination-of-pregnancy-curetage.yaml'
+import tabsLayout from './samples/07-tabs-layout.yaml'
 // @ts-ignore
-import interruption_of_pregnancy_medical_part_1 from './samples/5-interruption-of-pregnancy-medical-part-1.yaml'
+import richText from './samples/08-rich-text.yaml'
+import legacyPrescription from './samples/09-legacy-prescription.json'
 // @ts-ignore
-import interruption_of_pregnancy_medical_part_2 from './samples/6-interruption-of-pregnancy-medical-part-2.yaml'
+import clinicalWorkflow from './samples/10-clinical-workflow.yaml'
 // @ts-ignore
-import tabs from './samples/10-tabs.yaml'
-// @ts-ignore
-import note from './samples/9-note.yaml'
-// @ts-ignore
-import extra from './samples/8-extra.yaml'
-// @ts-ignore
-import control from './samples/7-control.yaml'
-import obstetrics from './samples/obstetrics.json'
-import prescription from './samples/prescription.json'
-import obstetrics_followup_long from './samples/obstetrics-followup-long.json'
-import obstetrics_followup_short from './samples/obstetrics-followup-short.json'
-import obstetrics_followup_midwife from './samples/obstetrics-followup-midwife.json'
-import incapacity from './samples/incapacity.json'
+import delegatedEdition from './samples/11-delegated-edition.yaml'
 
 import { FormLayout } from '@icure/api'
 import { css, html, LitElement } from 'lit'
 // @ts-ignore
 import { convertLegacy } from '../src/conversion/icure-convert'
-// @ts-ignore
-const legacyForms = [obstetrics, incapacity, prescription, obstetrics_followup_short, obstetrics_followup_long, obstetrics_followup_midwife] as FormLayout[]
 
-// @ts-ignore
-import okido from './samples/okido.yaml'
-// @ts-ignore
-import okido_treatment from './samples/okido_treatment.yaml'
-// @ts-ignore
-import okido_anamnesis from './samples/okido_anamnesis.yaml'
-// @ts-ignore
-import okido_search from './samples/okido_search.yaml'
-// @ts-ignore
-import okido_measure from './samples/okido_measure.yaml'
-// @ts-ignore
-import okido_evaluation from './samples/okido_evaluation.yaml'
-// @ts-ignore
-import okido_planification from './samples/okido_planification.yaml'
-// @ts-ignore
-import okido_diagnostic from './samples/okido_diagnostic.yaml'
-// @ts-ignore
-import okido_closure from './samples/okido_closure.yaml'
-// @ts-ignore
-import okido_functional_disorder from './samples/okido_functional_disorder.yaml'
-// @ts-ignore
-import okido_complementary_exam from './samples/oki_complementary_exam.yaml'
-// @ts-ignore
-import okido_external_factor from './samples/okido_external_factor.yaml'
-// @ts-ignore
-import okido_individual_factor from './samples/okido_individual_factor.yaml'
-// @ts-ignore
-import okido_medical_data from './samples/okido_medical_data.yaml'
-// @ts-ignore
-import okido_severity_disorder from './samples/okido_severity_disorder.yaml'
-// @ts-ignore
-import okido_surgical_data from './samples/okido_surgical_data.yaml'
-// @ts-ignore
-import okido_medical_care from './samples/okido_medical_care.yaml'
-// @ts-ignore
-import okido_physiotherapy_care from './samples/okido_physiotherapy_care.yaml'
-// @ts-ignore
-import okido_paramedical_care from './samples/okido_paramedical_care.yaml'
-// @ts-ignore
-import preventi from './samples/preventi.yaml'
-
-import { Form } from '../src/components/model'
+import { Form, Label as LabelField } from '../src/components/model'
 import { state } from 'lit/decorators.js'
 import YAML from 'yaml'
 
 import './decorated-form'
+import './theme-language-picker'
 
 import { DecoratedForm } from './decorated-form'
 
+type Sample = {
+	slug: string
+	title: string
+	description: string
+	form: Form
+}
+
 class DemoApp extends LitElement {
-	private samples = [
-		...[
-			/*{ title: 'OKIDO', form: Form.parse(YAML.parse(okido)) },
-			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
-			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_search)) },
-			{ title: '000 - Validators', form: Form.parse(YAML.parse(validators)) },
-			{ title: '01 - Token fields', form: Form.parse(YAML.parse(tokenFields)) },
-			{ title: '1 - BMI', form: Form.parse(YAML.parse(bmi)) },
-			{ title: '1 - Time of appointment', form: Form.parse(YAML.parse(time_of_appointment)) },
-			{ title: '2 - Preliminary psycho-social interview', form: Form.parse(YAML.parse(preliminary_psycho_social_interview)) },
-			{ title: '3 - Preliminary medical interview', form: Form.parse(YAML.parse(preliminary_medical_interview)) },
-			{ title: '4 - Termination of pregnancy curetage', form: Form.parse(YAML.parse(termination_of_pregnancy_curetage)) },
-			{ title: '5 - Interuption of pregnancy medical part 1', form: Form.parse(YAML.parse(interruption_of_pregnancy_medical_part_1)) },
-			{ title: '6 - Interuption of pregnancy medical part 2', form: Form.parse(YAML.parse(interruption_of_pregnancy_medical_part_2)) },
-			{ title: '7 - Control', form: Form.parse(YAML.parse(control)) },
-			{ title: '8 - Extra', form: Form.parse(YAML.parse(extra)) },
-			{ title: '9 - Note', form: Form.parse(YAML.parse(note)) },
-			{ title: '10 - Tabs', form: Form.parse(YAML.parse(tabs)) },*/
-			{ title: '11 - Preventi', form: Form.parse(YAML.parse(preventi)) },
-			/*{ title: 'OKIDO - Anamnèse', form: Form.parse(YAML.parse(okido_anamnesis)) },
-			{ title: 'OKIDO - Recherche', form: Form.parse(YAML.parse(okido_measure)) },
-			{ title: 'OKIDO - Evaluation', form: Form.parse(YAML.parse(okido_evaluation)) },
-			{ title: 'OKIDO - Planification', form: Form.parse(YAML.parse(okido_planification)) },
-			{ title: 'OKIDO - Traitement', form: Form.parse(YAML.parse(okido_treatment)) },
-			{ title: 'OKIDO - Diagnostique', form: Form.parse(YAML.parse(okido_diagnostic)) },
-			{ title: 'OKIDO - Clôture', form: Form.parse(YAML.parse(okido_closure)) },
-			{ title: 'OKIDO - Anamnèse - Trouble fonctionnel', form: Form.parse(YAML.parse(okido_functional_disorder)) },
-			{ title: 'OKIDO - Anamnèse - Répercution / Sévérité', form: Form.parse(YAML.parse(okido_severity_disorder)) },
-			{ title: 'OKIDO - Anamnèse - Facteur externe', form: Form.parse(YAML.parse(okido_external_factor)) },
-			{ title: 'OKIDO - Anamnèse - Facteur individuel / personnel', form: Form.parse(YAML.parse(okido_individual_factor)) },
-			{ title: 'OKIDO - Anamnèse - Donnée médicale', form: Form.parse(YAML.parse(okido_medical_data)) },
-			{ title: 'OKIDO - Anamnèse - Donnée chirurgicale', form: Form.parse(YAML.parse(okido_surgical_data)) },
-			{ title: 'OKIDO - Anamnèse - Soin médical', form: Form.parse(YAML.parse(okido_medical_care)) },
-			{ title: 'OKIDO - Anamnèse - Soin paramédical', form: Form.parse(YAML.parse(okido_paramedical_care)) },
-			{ title: 'OKIDO - Anamnèse - Soin kinésithérapeutique', form: Form.parse(YAML.parse(okido_physiotherapy_care)) },*/
-		], //.filter((x, idx) => idx === 0),
+	private samples: Sample[] = [
+		{
+			slug: '01-components-gallery',
+			title: '01 — Components gallery',
+			description: 'Every field type once.',
+			form: Form.parse(YAML.parse(componentsGallery)),
+		},
+		{
+			slug: '02-formulas',
+			title: '02 — Formulas',
+			description: 'Sync cross-field computed properties (BMI, age, totals).',
+			form: Form.parse(YAML.parse(formulas)),
+		},
+		{
+			slug: '03-async-formulas',
+			title: '03 — Async formulas',
+			description: 'Computed properties that return Promises.',
+			form: Form.parse(YAML.parse(asyncFormulas)),
+		},
+		{
+			slug: '04-validation',
+			title: '04 — Validation',
+			description: 'Required, range, regex and cross-field validators.',
+			form: Form.parse(YAML.parse(validation)),
+		},
+		{
+			slug: '05-conditional-actions',
+			title: '05 — Conditional logic & actions',
+			description: 'Show/hide, readonly, action button + payload.',
+			form: Form.parse(YAML.parse(conditionalActions)),
+		},
+		{
+			slug: '06-subforms',
+			title: '06 — Subforms',
+			description: 'Parent form with repeatable child encounters.',
+			form: Form.parse(YAML.parse(subforms)),
+		},
+		{
+			slug: '07-tabs-layout',
+			title: '07 — Tabs & layout',
+			description: 'Multi-tab form on the 24-column grid.',
+			form: Form.parse(YAML.parse(tabsLayout)),
+		},
+		{
+			slug: '08-rich-text',
+			title: '08 — Rich text schemas',
+			description: 'One text-field per ProseMirror schema.',
+			form: Form.parse(YAML.parse(richText)),
+		},
+		{
+			slug: '09-legacy-json',
+			title: '09 — Legacy JSON form',
+			description: 'Converted from the pre-YAML iCure format.',
+			form: ((): Form => {
+				const f = convertLegacy(legacyPrescription as unknown as FormLayout, []) as Form
+				// The source is JSON, not YAML — append the explainer here instead.
+				const last = f.sections[f.sections.length - 1]
+				last?.fields.push(
+					new LabelField(
+						'Demonstrates convertLegacy(): the legacy Mac iCure JSON format (TKMedicationTable, StringEditor, …) is mapped into the modern Form model. Unknown editor keys log a [icure-convert] warning and fall back to a text-field, so unsupported widgets never crash the converter. Test: open the browser DevTools console — you should see one icure-convert warning for the unmapped MedicationTableEditor.',
+						{ span: 24 },
+					),
+				)
+				return f
+			})(),
+		},
+		{
+			slug: '10-clinical-workflow',
+			title: '10 — Clinical workflow',
+			description: 'End-to-end consultation form using every feature.',
+			form: Form.parse(YAML.parse(clinicalWorkflow)),
+		},
+		{
+			slug: '11-delegated-edition',
+			title: '11 — Delegated edition',
+			description: 'Token field that delegates clicks to a host action.',
+			form: Form.parse(YAML.parse(delegatedEdition)),
+		},
 	]
 
-	@state() private selectedForm: Form = this.samples[0].form
+	@state() private selectedSlug: string = this.initialSlug()
+
+	private initialSlug(): string {
+		const fromHash = location.hash.replace(/^#/, '')
+		if (this.samples?.find((s) => s.slug === fromHash)) {
+			return fromHash
+		}
+		// `samples` isn't initialised yet when this runs from the field initialiser;
+		// fall back to the first sample's slug, then sync to the hash after mount.
+		return fromHash || '01-components-gallery'
+	}
+
+	private get selected(): Sample {
+		return this.samples.find((s) => s.slug === this.selectedSlug) ?? this.samples[0]
+	}
+
+	private selectSample(slug: string) {
+		this.selectedSlug = slug
+		if (location.hash.replace(/^#/, '') !== slug) {
+			history.replaceState(null, '', `#${slug}`)
+		}
+	}
+
+	private onHashChange = () => {
+		const slug = location.hash.replace(/^#/, '')
+		if (slug && this.samples.find((s) => s.slug === slug)) {
+			this.selectedSlug = slug
+		}
+	}
+
 	static get styles() {
 		return css`
 			.container {
@@ -157,15 +182,23 @@ class DemoApp extends LitElement {
 				border: 1px solid #dde3e7;
 				cursor: pointer;
 				border-radius: 2px;
-
-				&.selected {
-					background-color: #dce7f2;
-					border-color: #dce7f2;
-				}
 			}
 
+			.master ul li.selected,
 			.master ul li:hover {
 				background-color: #dce7f2;
+				border-color: #dce7f2;
+			}
+
+			.master ul li .title {
+				font-weight: 600;
+				display: block;
+			}
+
+			.master ul li .description {
+				display: block;
+				color: #586069;
+				margin-top: 2px;
 			}
 
 			.detail {
@@ -178,45 +211,56 @@ class DemoApp extends LitElement {
 
 	connectedCallback() {
 		super.connectedCallback()
+		// Sync once after construction in case the hash matched a slug only known after `samples` was assigned.
+		this.onHashChange()
+		window.addEventListener('hashchange', this.onHashChange)
 		window.onkeydown = (event) => {
 			if ((event.key === 'Z' || event.key === 'z') && event.metaKey) {
-				console.log(event.key)
-				const target = this.shadowRoot?.getElementById(this.selectedForm.id ?? this.selectedForm.form)
+				const target = this.shadowRoot?.getElementById(this.selected.form.id ?? this.selected.form.form)
 				if (!target) {
 					return
 				}
 				if (event.key === 'Z') {
-					console.log('redo')
 					event.preventDefault()
 					;(target as DecoratedForm).redo()
 				} else if (event.key === 'z') {
-					console.log('undo')
 					event.preventDefault()
 					;(target as DecoratedForm).undo()
 				}
 			}
 		}
 	}
-	async ownersProvider(terms: string[], ids?: string[], specialties?: string[]) {
-		return []
+
+	disconnectedCallback() {
+		window.removeEventListener('hashchange', this.onHashChange)
+		super.disconnectedCallback()
 	}
 
 	render() {
+		const selected = this.selected
 		return html`
 			<div class="container">
 				<div class="master">
+					<theme-language-picker></theme-language-picker>
 					<ul>
-						${this.samples.map((s) => {
-							return html`<li class="${s.form === this.selectedForm ? 'selected' : ''}" @click="${() => (this.selectedForm = s.form)}">${s.title}</li>`
-						})}
+						${this.samples.map(
+							(s) => html`
+								<li class="${s.slug === selected.slug ? 'selected' : ''}" @click="${() => this.selectSample(s.slug)}">
+									<span class="title">${s.title}</span>
+									<span class="description">${s.description}</span>
+								</li>
+							`,
+						)}
 					</ul>
 				</div>
 				<div class="detail">
-					${this.samples.map((s) => {
-						return html`<div style="${s.form === this.selectedForm ? '' : 'display: none;'}">
-							<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}" renderer="form:tab"></decorated-form>
-						</div>`
-					})}
+					${this.samples.map(
+						(s) => html`
+							<div style="${s.slug === selected.slug ? '' : 'display: none;'}">
+								<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}" renderer="form:tab"></decorated-form>
+							</div>
+						`,
+					)}
 				</div>
 			</div>
 		`

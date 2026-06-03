@@ -108,8 +108,10 @@ The Field class represents a generic field within a form. It is designed to be e
 - now: boolean - Optional property for date/time picker fields. When true, the field defaults to the current date/time.
 - sortOptions: SortOptions - Optional sorting configuration for choice fields (dropdown, radio-button, checkbox). See [SortOptions](#sortoptions).
 - hasOther: boolean - Optional property for radio button fields. When true, an "other" free-text option is shown.
-- event: string - Optional event name for action/button fields.
+- event: string - Optional event name for action/button fields, and for token fields with `delegatedEdition` enabled. See [Action events and delegated edition](#action-events-and-delegated-edition).
 - payload: unknown - Optional payload for action/button fields.
+- tokenDeleteButton: boolean - Optional property for token fields (`tokens-list` schemas). When `true`, each token shows a small delete cross that removes it on click. See [Token fields](#token-fields).
+- delegatedEdition: boolean - Optional property for token fields. When `true`, clicks no longer open the inline editor — they fire the host `actionListener` with this field's `event` name, delegating the edition to the host. See [Action events and delegated edition](#action-events-and-delegated-edition).
 - width: number - Optional fixed width of the field in pixels.
 - styleOptions: { width: number, direction: string, span: number, rows: number, alignItems: string } - Optional style options for the field.
 
@@ -177,47 +179,6 @@ sortOptions:
   sort: natural
   promotions: "none, *, empty, other"
 ```
-
-### Computed Properties
-
-Computed properties allow you to dynamically calculate the value of a field property or the value of the field itself based on other values in the form. The `computedProperties` field is a map where the key is the name of the property to compute and the value is a JavaScript formula (as a string) that returns the value for that property.
-
-#### Field Properties
-
-You can compute standard properties of a field (e.g., `readonly`, `hidden`, `label`, `span`, `styleOptions`). The formula is evaluated, and the result is directly assigned to the property.
-
-Example:
-```yaml
-computedProperties:
-  readonly: "return age > 18"
-  hidden: "return !self['show-details']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
-  label: "return age > 18 ? 'Adult comment' : 'Child comment'"
-```
-
-The `hidden` computed property is particularly useful: when it evaluates to `true`, the field (or group, or subform) is not rendered at all.
-
-#### Field Value (`value` and `defaultValue`)
-
-Two special keys control the content of the field:
-
-- **`defaultValue`**: Calculates the initial value of the field. This formula is evaluated when the form is initialized, and only if the field is empty.
-- **`value`**: continuously calculates the value of the field. This overrides any manual input.
-
-#### Return Value Format
-
-When computing the value of a field (via `defaultValue` or `value`), the return value of the formula is automatically converted to the internal `FieldValue` format (`{ content: ..., codes: ... }`). The conversion rules are:
-
-- **`FieldValue` object**: Used as is.
-- **`number`**: Converted to `{ content: { '*': { type: 'number', value: ... } } }`.
-- **`string`**: Converted to `{ content: { '*': { type: 'string', value: ... } } }`.
-- **`boolean`**: Converted to `{ content: { '*': { type: 'boolean', value: ... } } }`.
-- **`Date`**: Converted to a timestamp content (formatted as YYYYMMDDHHmmss).
-- **`{ value: number, unit: string }`**: Converted to `{ content: { '*': { type: 'measure', value: ..., unit: ... } } }`.
-- **Array**: Converted to a compound content.
-
-#### Available functions
-
-Formulas can use the [built-in functions](#built-in-functions) defined in the Form Values Container, such as `hasOption`, `score`, `text`, `parseContent`, etc.
 
 ### Computed Properties
 
@@ -351,7 +312,7 @@ The icure-form component accepts the following properties:
 - translationProvider: (language: string, text: string) => string - an optional provider that provides translations for the form
 - ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> - an optional provider that provides owner suggestions
 - revisionsFilter: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[] - an optional callback to customize which revisions of a field value are visible. By default, revisions are filtered by matching field tags or label (see `getRevisionsFilter` in `src/utils/fields-values-provider.ts`). When provided, this callback replaces the default logic, receiving the field definition, the value id, and its full version history, and must return the list of revision strings to display.
-- actionListener: (event: string, payload: unknown) => void - an optional listener for action/button events
+- actionListener: (event: string, payload: unknown, domEvent?: Event) => void - an optional listener for action/button events. The third argument is the originating DOM event (e.g. the `MouseEvent` of the click that triggered it), forwarded so the handler can read modifier keys, cursor position, or call `preventDefault()`. See [Action events and delegated edition](#action-events-and-delegated-edition).
 
 ### Themes
 
@@ -415,6 +376,95 @@ sequenceDiagram
 
     end
 ```
+
+### Token fields
+
+A token field (`type: token-field`, or any `text-field` using a `tokens-list` schema) renders its value as a list of discrete tokens. Each token is stored as an independent value (one `FieldValue` per token), so adding, editing, or deleting a single token never disturbs the others.
+
+The available token schemas are `tokens-list`, `styled-tokens-list`, `tokens-list-with-codes`, and `styled-tokens-list-with-codes`.
+
+#### Deletable tokens
+
+Set `tokenDeleteButton: true` to show a small delete cross on each token. Clicking the cross removes that token (and only that token):
+
+```yaml
+- field: allergies
+  type: token-field
+  multiline: true
+  tokenDeleteButton: true
+```
+
+### Action events and delegated edition
+
+Action buttons (`type: action`) and—when opted in—token fields can fire events to the host application instead of mutating the form directly. The host receives them through the `actionListener` callback passed to `<icure-form>`:
+
+```typescript
+const actionListener = (event: string, payload: unknown, domEvent?: Event) => { /* ... */ }
+```
+
+- **`event`** — the field's `event` string.
+- **`payload`** — the field's static `payload` (for action buttons) or a contextual payload (for delegated token edition, see below).
+- **`domEvent`** — the originating DOM event (typically the `MouseEvent` of the click). It is forwarded so the handler can inspect modifier keys / coordinates or call `preventDefault()`.
+
+#### Delegated edition on token fields
+
+By default, clicking a token field opens its inline editor. Setting `delegatedEdition: true` flips this: clicks no longer edit inline — they fire the `actionListener` with the field's `event` name, handing control to the host. This is useful when tokens must be added or edited through a custom dialog, a picker, or a backend lookup rather than free text.
+
+The payload tells the host **what** was clicked:
+
+- Clicking an **existing token** passes `{ valueId, content }`, where `valueId` is the value's id (the underlying service id in the iCure bridge) and `content` is the token's current text. Use it to edit that specific value in place.
+- Clicking an **empty area** of the field passes `undefined` — treat it as "add a new token".
+
+```yaml
+- field: allergies
+  type: token-field
+  multiline: true
+  delegatedEdition: true
+  event: edit-allergies
+```
+
+```typescript
+const actionListener = (event: string, payload: unknown) => {
+  if (event !== 'edit-allergies') return
+  const clicked = payload as { valueId?: string; content?: string } | undefined
+  if (clicked?.valueId) {
+    // Edit the clicked token in place — target its existing value id.
+    fvc.setValue('allergies', language, { content: { [language]: { type: 'string', value: pickReplacement(clicked.content) } }, codes: [] }, clicked.valueId)
+  } else {
+    // Empty-area click — append a new token (id omitted ⇒ new value).
+    fvc.setValue('allergies', language, { content: { [language]: { type: 'string', value: pickNewAllergy() } }, codes: [] })
+  }
+}
+```
+
+> Note: write the token content under the same `language` the form is rendered in. Writing it under a different language stores text the editor never displays, producing a visually empty token.
+
+### Custom field editors (the edit-request hook)
+
+Each ProseMirror text schema is described by a `SchemaSpec` (`src/components/icure-text-field/schema/schema-spec.ts`) that bundles its ProseMirror schema, whether it is multivalue, how primitives are extracted, and an optional `onEditRequest` hook. The hook lets a host intercept an edit attempt and provide its own editing experience:
+
+```typescript
+interface EditRequestContext {
+  trigger: 'token-click' | 'field-edit'   // a token was clicked, or the field gained edit focus
+  tokenId?: string                          // id of the clicked token (token-click only)
+  tokenContent?: string                     // text of the clicked token
+  label: string
+  language: string
+  schema: IcureTextFieldSchema
+  readonly: boolean
+  actionListener?: (event: string, payload: unknown, domEvent?: Event) => void
+  domEvent?: Event
+}
+
+interface SchemaSpec {
+  proseMirror: ProseMirrorSchemaSpec
+  multivalue: boolean
+  primitiveTypesExtractor?: (doc, ctx) => [string, PrimitiveType][]
+  onEditRequest?: (ctx: EditRequestContext) => Promise<boolean>  // resolve true if the host handled it
+}
+```
+
+Returning `true` from `onEditRequest` tells the field the host has taken over the edition (the inline editor is suppressed); returning `false` lets the default inline editing proceed. The `delegatedEdition` flag described above is the built-in, declarative path for the common token-field case; `onEditRequest` is the lower-level programmatic hook for fully custom editors.
 
 ### JSON/YAML representation
 
@@ -580,3 +630,17 @@ sections:
         refs:
           - c789794e-d0f4-8988-1234-e758a782473b
 ```
+
+## Development
+
+| Task | Command |
+|---|---|
+| Run the demo app | `yarn start` |
+| Build the library (`lib/`) | `yarn build` |
+| Unit tests (Jest) | `yarn test` |
+| Demo end-to-end tests (Playwright) | `yarn test:e2e:app` |
+| Lint | `eslint . --ext .ts` |
+
+The demo application lives under `app/` and showcases each feature as a numbered sample (`app/samples/NN-*.yaml`). Its Playwright suite under `app/e2e/` drives those samples through the real rendered components and is the closest thing to living documentation of runtime behaviour.
+
+See [WHATSNEW.md](./WHATSNEW.md) for a per-version summary of new features and how to use them.

@@ -10,7 +10,7 @@ import { keymap } from 'prosemirror-keymap'
 import { baseKeymap, chainCommands, exitCode, joinDown, joinUp, setBlockType, toggleMark } from 'prosemirror-commands'
 import { liftListItem, sinkListItem, splitListItem, wrapInList } from 'prosemirror-schema-list'
 
-import { createSchema } from './schema'
+import { createSchemaSpec, SchemaSpec } from './schema'
 import MarkdownIt from 'markdown-it'
 import { defaultMarkdownSerializer, MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown'
 import { unwrapFrom, wrapInIfNeeded } from './prosemirror-commands'
@@ -52,7 +52,18 @@ export class IcureTextField extends Field {
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
+	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
+	@property({ type: Boolean }) tokenDeleteButton = false
+	// When true, clicks no longer interact with the editor: clicking an existing
+	// token fires the host actionListener with `{ valueId, content }` (valueId is
+	// the VersionedData key for that token, i.e. the service id in the iCure
+	// bridge); clicking an empty area fires it with `undefined`. The host is then
+	// responsible for mutating the form values and triggering a re-render.
+	@property({ type: Boolean }) delegatedEdition = false
+	@property() event?: string
 
+	private schemaSpec?: SchemaSpec
+	private editRequestPending = false
 	private proseMirrorSchema?: Schema
 	private parser?: SpacePreservingMarkdownParser | { parse: (value: PrimitiveType, id?: string, renderHash?: number) => ProsemirrorNode | undefined }
 	private serializer: MarkdownSerializer | { serialize: (content: ProsemirrorNode) => string } = {
@@ -136,12 +147,8 @@ export class IcureTextField extends Field {
 		]
 	}
 
-	private isMultivalued() {
-		return this.schema.includes('tokens-list') || this.schema.includes('items-list')
-	}
-
 	private updateValue(tr: Transaction) {
-		if (this.isMultivalued()) {
+		if (this.schemaSpec?.multivalue) {
 			const values = extractValues(this.valueProvider?.(), this.metadataProvider ?? (() => ({})))
 			const valuesFromField = this.primitiveTypesExtractor?.(tr.doc) ?? []
 
@@ -158,26 +165,43 @@ export class IcureTextField extends Field {
 				}
 			})
 
-			newAndModifiedValues.forEach(([tid, value]) => {
-				const id = tid.length > 0 && !unchangedIds.includes(tid) ? tid : undefined
+			// Build the full list of operations (additions/modifications + deletions
+			// for items no longer present) and run them one-by-one with a yield
+			// between each. The host's `handleValueChanged` is rebound to the
+			// freshly-mutated form-values-container on every re-render, so by
+			// yielding we ensure each operation acts on the latest state instead
+			// of all of them stomping the same snapshot — the previous synchronous
+			// loop dropped every item except the last when several items were
+			// added at once.
+			type Op = { value: PrimitiveType | undefined; id: string | undefined }
+			const operations: Op[] = newAndModifiedValues.map(([tid, value]) => ({
+				value,
+				id: tid.length > 0 && !unchangedIds.includes(tid) ? tid : undefined,
+			}))
+			values.filter(([vid]) => !valuesFromField.some(([vvid]) => vvid === vid)).forEach(([id]) => operations.push({ value: undefined, id }))
+
+			const applyNext = (i: number) => {
+				if (i >= operations.length) return
+				const op = operations[i]
 				this.handleValueChanged?.(
 					this.label,
 					this.language(),
-					value
+					op.value
 						? {
-								content: { [this.language()]: value },
+								content: { [this.language()]: op.value },
 								codes: [],
 						  }
 						: undefined,
-					id,
+					op.id,
 				)
-			})
-
-			values
-				.filter(([vid]) => !valuesFromField.some(([vvid]) => vvid === vid))
-				.forEach(([id]) => {
-					this.handleValueChanged?.(this.label, this.language(), undefined, id)
-				})
+				if (i + 1 < operations.length) {
+					// Yield to the host so its Lit reactivity rebinds
+					// `this.handleValueChanged` against the new bridge before the
+					// next operation runs.
+					setTimeout(() => applyNext(i + 1), 0)
+				}
+			}
+			applyNext(0)
 		} else {
 			const [valueId] = extractSingleValue(this.valueProvider?.())
 			const value = this.primitiveTypeExtractor?.(tr.doc)
@@ -215,7 +239,7 @@ export class IcureTextField extends Field {
 				console.log(`Data for ${this.label} is ${JSON.stringify(data)}`)
 			}
 
-			if (this.isMultivalued()) {
+			if (this.schemaSpec?.multivalue) {
 				const values = extractValues(data, this.metadataProvider ?? (() => ({})))
 				parsedDoc =
 					this.proseMirrorSchema?.topNodeType.createAndFill(
@@ -267,7 +291,7 @@ export class IcureTextField extends Field {
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
-						<div id="editor" class="${this.schema}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
+						<div id="editor" class="${this.schema}${this.tokenDeleteButton ? ' with-token-delete' : ''}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
 						${!this.displayMetadata && this.defaultValueProvider ? html`<div id="reset" class="reset-button" @click="${async () => await this.reset(renderHash)}">${resetPicto}</div` : nothing}
 					</div>
 						${
@@ -295,7 +319,7 @@ export class IcureTextField extends Field {
 						}
 					</div>
 					${this.pasteWarning ? html`<div class="paste-warning">⚠️ Invalid paste content. The pasted content could not be inserted into this field.</div>` : nothing}
-					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error)}</div>`)}</div>
+					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 				</div>
 			</div>
 		`
@@ -355,14 +379,15 @@ export class IcureTextField extends Field {
 	firstUpdated() {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const cmp = this
-		const pms: Schema = (this.proseMirrorSchema = createSchema(this.schema, (t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)), this.codeContentProvider))
+		const spec = (this.schemaSpec = createSchemaSpec(this.schema, (t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)), this.codeContentProvider))
+		const pms: Schema = (this.proseMirrorSchema = new Schema(spec.proseMirror))
 
 		const parser = this.makeParser(this.schema, pms)
 		this.parser = parser
 		const serializer = this.makeSerializer(this.schema, pms)
 		this.serializer = serializer
 		this.primitiveTypeExtractor = this.makePrimitiveExtractor(this.schema)
-		this.primitiveTypesExtractor = this.makePrimitivesExtractor(this.schema)
+		this.primitiveTypesExtractor = (doc?: ProsemirrorNode) => spec.primitiveTypesExtractor?.(doc, { serialize: (n) => this.serializer.serialize(n) }) ?? []
 		this.codesExtractor = this.makeCodesExtractor(this.schema)
 
 		this.container = this.shadowRoot?.getElementById('editor') || undefined
@@ -495,6 +520,15 @@ export class IcureTextField extends Field {
 								},
 							},
 						}),
+						// Constrained schemas have a fixed paragraph child structure
+						// (`date time`, `decimal unit?`, `date`, `time`, `decimal`).
+						// The base keymap's Enter binding goes through `splitBlock`,
+						// which would duplicate the current child node (e.g. produce
+						// `<date, time, time>` or `<decimal, unit, unit>`) and the
+						// next transaction throws "Invalid content for node
+						// paragraph". Enter has no useful meaning in a single-line
+						// typed primitive, so swallow it before baseKeymap runs.
+						['date', 'time', 'date-time', 'decimal', 'measure'].includes(this.schema) ? keymap({ Enter: () => true }) : null,
 						keymap(baseKeymap),
 					]
 						.filter((x) => !!x)
@@ -505,18 +539,52 @@ export class IcureTextField extends Field {
 						this.trToSave = undefined
 						this.updateValue(view.state.tr)
 					},
-					focus: (view) => {
+					focus: (view, event) => {
 						this.schema === 'measure' && measureOnFocusHandler(view)
+						this.invokeFieldEditRequest(view, event)
+					},
+					mousedown: (_view, event) => {
+						// In delegated-edition mode the readonly editor must stay inert:
+						// swallow mousedown so it never gains focus or a text selection.
+						// The accompanying click handler fires the host actionListener.
+						if (this.delegatedEdition && this.actionListener) {
+							event.preventDefault()
+							return true
+						}
+						return false
 					},
 					click: (view, event) => {
 						if (this.schema.includes('tokens-list')) {
 							const el = event.target as HTMLElement
-							if (el?.classList.contains('token') && Math.abs(el.getBoundingClientRect().right - 10 - event.x) < 6 && Math.abs(el.getBoundingClientRect().bottom - 9 - event.y) < 6) {
+							// Delegated edition takes precedence: a click on an existing
+							// token fires the host actionListener with that token's
+							// identity, a click anywhere else fires it with no payload.
+							if (this.delegatedEdition && this.actionListener) {
+								const node = el?.closest?.('.token') ? this.resolveTokenNodeAt(view, event) : undefined
+								this.actionListener(this.event ?? 'edit', node ? { valueId: node.attrs?.id, content: node.textContent } : undefined, event)
+								return
+							}
+							if (this.tokenDeleteButton && el?.closest?.('.token-delete')) {
 								const pos = view.posAtCoords({ left: event.x, top: event.y })
-								if (pos?.pos) {
-									const rp = view.state.tr.doc.resolve(pos?.pos)
+								if (pos?.pos !== undefined) {
+									const rp = view.state.tr.doc.resolve(pos.pos)
 									this.view?.dispatch(view.state.tr.deleteRange(rp.before(), rp.after()))
 								}
+								return
+							}
+							if (el?.classList.contains('token') && this.schemaSpec?.onEditRequest) {
+								const node = this.resolveTokenNodeAt(view, event)
+								void this.schemaSpec.onEditRequest({
+									trigger: 'token-click',
+									tokenId: node?.attrs?.id,
+									tokenContent: node?.textContent,
+									label: this.label,
+									language: this.language(),
+									schema: this.schema,
+									readonly: this.readonly,
+									actionListener: this.actionListener,
+									domEvent: event,
+								})
 							}
 						}
 					},
@@ -770,17 +838,33 @@ export class IcureTextField extends Field {
 			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: this.serializer.serialize(doc) } : undefined)
 	}
 
-	private makePrimitivesExtractor(schemaName: string): (doc?: ProsemirrorNode) => [string, PrimitiveType][] {
-		return schemaName.includes('tokens-list') || schemaName.includes('items-list')
-			? (doc?: ProsemirrorNode) =>
-					doc?.childCount
-						? [...Array(doc.childCount).keys()].map((idx) => {
-								const child = doc.child(idx)
-								const id = child.attrs.id ?? ''
-								return [id, { type: 'string', value: this.serializer.serialize(child) }]
-						  })
-						: []
-			: () => []
+	// Resolve the top-level `token` node under the click coordinates. We use
+	// resolve(pos).node(1) rather than doc.nodeAt(pos): for a position inside the
+	// token's text, nodeAt returns the text node (no `id` attr), whereas node(1)
+	// returns the token child of `doc` that carries the VersionedData key.
+	private resolveTokenNodeAt(view: EditorView, event: MouseEvent): ProsemirrorNode | undefined {
+		const pos = view.posAtCoords({ left: event.x, top: event.y })
+		if (pos?.pos === undefined) return undefined
+		const rp = view.state.doc.resolve(pos.pos)
+		return rp.depth >= 1 ? rp.node(1) : undefined
+	}
+
+	private invokeFieldEditRequest(view: EditorView, domEvent?: FocusEvent) {
+		const onReq = this.schemaSpec?.onEditRequest
+		if (!onReq || this.editRequestPending) return
+		this.editRequestPending = true
+		void onReq({
+			trigger: 'field-edit',
+			label: this.label,
+			language: this.language(),
+			schema: this.schema,
+			readonly: this.readonly,
+			actionListener: this.actionListener,
+			domEvent,
+		}).then((handled) => {
+			this.editRequestPending = false
+			if (handled) (view.dom as HTMLElement).blur()
+		})
 	}
 }
 

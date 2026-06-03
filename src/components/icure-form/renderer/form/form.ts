@@ -19,7 +19,7 @@ export const render: Renderer = async (
 	revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[],
 	ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> = async () => [],
 	optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>,
-	actionListener: (event: string, payload: unknown) => void = () => undefined,
+	actionListener: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined,
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,
@@ -120,6 +120,7 @@ export const render: Renderer = async (
 			style="${calculateFieldOrGroupSize(fgSpan, fgRowSpan, fg.styleOptions?.width)}"
 			label="${fg.field}"
 			value="${fg.value}"
+			.schema="${fg.schema}"
 			.displayedLabels="${getLabels(fg)}"
 			.displayMetadata="${displayMetadata}"
 			.multiline="${fg.multiline || false}"
@@ -140,6 +141,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
 		></icure-form-text-field>`
 	}
@@ -164,6 +166,10 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.tokenDeleteButton="${!!fg.tokenDeleteButton}"
+			.delegatedEdition="${!!fg.delegatedEdition}"
+			.event="${fg.event}"
+			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
 		></icure-form-token-field>`
 	}
@@ -381,8 +387,8 @@ export const render: Renderer = async (
 			.translationProvider="${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}"
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
 			.actionListener="${actionListener}"
-			.event="${fg.event !== undefined ? fg.event : fg.computedProperties?.event ? !(await formsValueContainer?.compute(fg.computedProperties?.event)) : 'submit'}"
-			.payload="${fg.payload !== undefined ? fg.payload : fg.computedProperties?.payload ? !(await formsValueContainer?.compute(fg.computedProperties?.payload)) : undefined}"
+			.event="${fg.event !== undefined ? fg.event : fg.computedProperties?.event ? (await formsValueContainer?.compute(fg.computedProperties?.event))?.value : 'submit'}"
+			.payload="${fg.payload !== undefined ? fg.payload : fg.computedProperties?.payload ? (await formsValueContainer?.compute(fg.computedProperties?.payload))?.value : undefined}"
 			.styleOptions="${fg.styleOptions}"
 		></icure-form-button>`
 	}

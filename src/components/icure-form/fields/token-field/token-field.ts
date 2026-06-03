@@ -7,14 +7,31 @@ export class TokenField extends Field {
 	@property() multiline: boolean | string = false
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
 	@property() lines = 1
+	@property({ type: Boolean }) tokenDeleteButton = false
+	// When true, clicks no longer open the inner ProseMirror editor. Clicking an
+	// existing token fires the host actionListener with `{ valueId, content }`
+	// (valueId = the token's VersionedData key, i.e. the service id in the iCure
+	// bridge); clicking an empty area fires it with `undefined`. The handler is
+	// then responsible for mutating the values and triggering a re-render.
+	// Delegated click handling lives in the inner <icure-text-field>.
+	@property({ type: Boolean }) delegatedEdition = false
+	@property() event?: string
+	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
+
 	override renderSync(): TemplateResult {
 		return html`<icure-text-field
-			.readonly="${this.readonly}"
+			class="${this.delegatedEdition ? 'delegated-edition' : ''}"
+			style="${this.delegatedEdition ? 'cursor: pointer;' : ''}"
+			.readonly="${this.readonly || this.delegatedEdition}"
+			.delegatedEdition="${this.delegatedEdition}"
+			.event="${this.event}"
+			.actionListener=${this.actionListener}
 			label="${this.label}"
 			.multiline="${this.multiline}"
 			.lines="${this.lines}"
 			.displayedLabels="${this.displayedLabels}"
 			.defaultLanguage="${this.defaultLanguage}"
+			.tokenDeleteButton="${this.tokenDeleteButton && !this.delegatedEdition}"
 			schema="tokens-list"
 			.handleMetadataChanged=${this.handleMetadataChanged}
 			.handleValueChanged=${this.handleValueChanged}

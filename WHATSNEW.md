@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## 2.2.1 (2026-06-15)
+## 2.2.2 (2026-06-15)
 
 ### `computedProperties` and `readonly` on action buttons
 

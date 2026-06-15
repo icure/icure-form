@@ -32,6 +32,7 @@ export class TokenField extends Field {
 			.multiline="${this.multiline}"
 			.lines="${this.lines}"
 			.displayedLabels="${this.displayedLabels}"
+			.displayMetadata="${this.displayMetadata}"
 			.defaultLanguage="${this.defaultLanguage}"
 			.tokenDeleteButton="${this.tokenDeleteButton}"
 			schema="tokens-list"

@@ -1038,8 +1038,35 @@ export class Label extends Field {
 }
 
 export class Button extends Field {
-	constructor(label: string, { shortLabel, grows, span, event, payload }: { shortLabel?: string; grows?: boolean; span?: number; rowSpan?: number; event?: string; payload?: unknown }) {
-		super('action', label, { shortLabel, grows, span, event, payload })
+	constructor(
+		label: string,
+		{
+			shortLabel,
+			grows,
+			span,
+			rowSpan,
+			readonly,
+			computedProperties,
+			styleOptions,
+			validators,
+			translate,
+			event,
+			payload,
+		}: {
+			shortLabel?: string
+			grows?: boolean
+			span?: number
+			rowSpan?: number
+			readonly?: boolean
+			computedProperties?: { [_key: string]: string }
+			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
+			validators?: Validator[]
+			translate?: boolean
+			event?: string
+			payload?: unknown
+		},
+	) {
+		super('action', label, { shortLabel, grows, span, rowSpan, readonly, computedProperties, styleOptions, validators, translate, event, payload })
 	}
 	override copyIfNeeded(properties: Partial<Button>): Button {
 		return hasChanges(this, properties) ? new Button(this.field, { ...this, ...properties }) : this

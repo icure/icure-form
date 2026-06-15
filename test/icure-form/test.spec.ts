@@ -1,6 +1,6 @@
-import { strictEqual } from 'assert'
+import { strictEqual, deepStrictEqual } from 'assert'
 import YAML from 'yaml'
-import { Form, Section, Group, TextField, NumberField, DatePicker, TimePicker, DateTimePicker, MeasureField } from '../../src/components/model'
+import { Form, Section, Group, TextField, NumberField, DatePicker, TimePicker, DateTimePicker, MeasureField, Button, Field } from '../../src/components/model'
 
 describe('Form parsing tests', () => {
 	it('should Render simple form', () => {
@@ -705,5 +705,27 @@ sections:
 }`)
 		const form = Form.parse(toParse)
 		strictEqual(form.sections[0].fields[0].clazz, 'field')
+	})
+
+	it('should retain computedProperties and readonly on an action button after parse', () => {
+		const button = Field.parse({
+			clazz: 'field',
+			field: 'Pay',
+			type: 'action',
+			shortLabel: 'pay',
+			readonly: true,
+			event: 'pay',
+			computedProperties: { hidden: 'return amount <= 0' },
+		} as any) as Button
+
+		strictEqual(button instanceof Button, true)
+		strictEqual(button.readonly, true)
+		strictEqual(button.event, 'pay')
+		deepStrictEqual(button.computedProperties, { hidden: 'return amount <= 0' })
+
+		// computedProperties and readonly must survive serialization round-trip too
+		const roundTripped = Field.parse(JSON.parse(JSON.stringify(button)) as any) as Button
+		strictEqual(roundTripped.readonly, true)
+		deepStrictEqual(roundTripped.computedProperties, { hidden: 'return amount <= 0' })
 	})
 })

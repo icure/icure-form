@@ -131,6 +131,12 @@ sections:
             computedProperties:
               payload: |
                 return { savedAt: new Date().toISOString() }
-      - field: "label renders static prose (this very text is itself a label). action renders a clickable button — clicking fires the host actionListener(event, payload, domEvent) callback with the field's event and its computed payload. The demo's actionListener is wired to alert(event). Test: click Save and confirm an alert pops up with 'save'."
+          - field: Disabled
+            type: action
+            shortLabel: disabled
+            span: 24
+            event: noop
+            readonly: true
+      - field: "label renders static prose (this very text is itself a label). action renders a clickable button — clicking fires the host actionListener(event, payload, domEvent) callback with the field's event and its computed payload. The demo's actionListener is wired to alert(event). Test: click Save and confirm an alert pops up with 'save'; the Disabled button is readonly, so clicking it does nothing."
         type: label
         span: 24

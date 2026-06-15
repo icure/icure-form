@@ -4,6 +4,48 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 2.2.1 (2026-06-15)
+
+### `computedProperties` and `readonly` on action buttons
+
+Action buttons (`type: action`) now honour `computedProperties` and `readonly`, just like regular fields. Previously these were dropped when the form was parsed.
+
+- `computedProperties.hidden` can show/hide a button reactively from a formula.
+- `readonly: true` (or `computedProperties.readonly`) renders the button **disabled**: it is greyed out and clicking it no longer fires the host `actionListener`.
+
+```yaml
+- field: Pay
+  type: action
+  event: pay
+  computedProperties:
+    hidden: |
+      const a = parseContent(amount[0]?.content)
+      return a == null || a <= 0   # hidden until Amount is positive
+
+- field: Check
+  type: action
+  event: check
+  computedProperties:
+    readonly: |
+      const a = parseContent(amount[0]?.content)
+      return a == null || a < 100  # disabled until Amount reaches 100
+
+- field: Disabled
+  type: action
+  event: noop
+  readonly: true                   # rendered disabled (non-clickable)
+```
+
+The formula returns `true` when the property should apply (truthy ⇒ hidden / readonly).
+
+See the live `01-components-gallery` (disabled button) and `02-formulas` (hidable + conditionally-disabled buttons) samples in the demo app (`yarn start`).
+
+### Fixed: `computedProperties.readonly` now actually applies
+
+`computedProperties.readonly` was silently ignored on **every** field — the renderer negated the `compute()` result wrapper (always truthy) instead of its `.value`, so the formula never took effect. It now unwraps `.value`, so a formula returning `true` correctly makes the field (or button) readonly.
+
+---
+
 ## 2.2.0 (2026-06-03)
 
 This release makes form editing *configurable*: token fields can delegate their edition to the host, individual tokens can be deleted, and the originating DOM event is forwarded to handlers. Under the hood, each text schema now owns a self-contained `SchemaSpec`.
@@ -55,6 +97,8 @@ Tokens in a `tokens-list` field can now show an individual delete cross. Set `to
 ```
 
 This combines with `delegatedEdition`: the delete cross removes its token directly, while clicking the token body still delegates the edition to the host.
+
+The delete cross is hidden when the field is `readonly`, so tokens cannot be removed in read-only forms. (It still shows under `delegatedEdition`, which keeps the inner editor read-only by design.)
 
 ### Originating DOM event forwarded to `actionListener`
 

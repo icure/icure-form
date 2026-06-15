@@ -21,6 +21,7 @@ export class Button extends LitElement {
 	@property() actionListener: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 	@property() event: string
 	@property() payload: unknown
+	@property({ type: Boolean }) readonly = false
 
 	render(): TemplateResult {
 		return html`<icure-button
@@ -31,6 +32,7 @@ export class Button extends LitElement {
 			.actionListener="${this.actionListener}"
 			.event="${this.event}"
 			.payload="${this.payload}"
+			.readonly="${this.readonly}"
 		></icure-button>`
 	}
 }

@@ -13,6 +13,7 @@ export class IcureButton extends LitElement {
 	@property() actionListener: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 	@property() event: string
 	@property() payload: unknown
+	@property({ type: Boolean }) readonly = false
 
 	static get styles() {
 		return [baseCss]
@@ -25,7 +26,11 @@ export class IcureButton extends LitElement {
 		if (icureFormLogging) {
 			console.log(`Rendering button ${this.label}`)
 		}
-		return html`<div class="icure-button" style="button" @click="${(e: MouseEvent) => this.actionListener(this.event, this.payload, e)}">
+		return html`<div
+			class="icure-button${this.readonly ? ' icure-button__disabled' : ''}"
+			style="button"
+			@click="${(e: MouseEvent) => !this.readonly && this.actionListener(this.event, this.payload, e)}"
+		>
 			${this.label ? this.translationProvider?.(this.defaultLanguage, this.label) ?? this.label : this.label ?? ''}
 		</div>`
 	}

@@ -291,7 +291,7 @@ export class IcureTextField extends Field {
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
-						<div id="editor" class="${this.schema}${this.tokenDeleteButton ? ' with-token-delete' : ''}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
+						<div id="editor" class="${this.schema}${this.tokenDeleteButton && (!this.readonly || this.delegatedEdition) ? ' with-token-delete' : ''}" style="min-height: calc( ${this.lines}rem + 5px )"></div>
 						${!this.displayMetadata && this.defaultValueProvider ? html`<div id="reset" class="reset-button" @click="${async () => await this.reset(renderHash)}">${resetPicto}</div` : nothing}
 					</div>
 						${
@@ -895,7 +895,7 @@ export class MetadataButtonBarWrapper extends LitElement {
 
 	render() {
 		const parent = (this.shadowRoot?.host?.closest('div#root')?.parentNode as ShadowRoot)?.host as IcureTextField
-		if (!parent || !this.id) {
+		if (!parent || !this.id || !parent.displayMetadata) {
 			return
 		}
 

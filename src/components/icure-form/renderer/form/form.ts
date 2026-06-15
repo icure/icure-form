@@ -142,7 +142,7 @@ export const render: Renderer = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.actionListener="${actionListener}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-text-field>`
 	}
 
@@ -170,7 +170,7 @@ export const render: Renderer = async (
 			.delegatedEdition="${!!fg.delegatedEdition}"
 			.event="${fg.event}"
 			.actionListener="${actionListener}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-token-field>`
 	}
 
@@ -194,7 +194,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-items-list-field>`
 	}
 
@@ -215,7 +215,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-measure-field>`
 	}
 
@@ -235,7 +235,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-number-field>`
 	}
 
@@ -255,7 +255,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-date-picker>`
 	}
 
@@ -275,7 +275,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-time-picker>`
 	}
 
@@ -295,7 +295,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-date-time-picker>`
 	}
 
@@ -321,7 +321,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-dropdown-field>`
 	}
 
@@ -347,7 +347,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-radio-button>`
 	}
 
@@ -374,7 +374,7 @@ export const render: Renderer = async (
 			.handleValueChanged="${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}"
 			.handleMetadataChanged="${handleMetadataChangedProvider(formsValueContainer)}"
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-checkbox>`
 	}
 
@@ -390,6 +390,7 @@ export const render: Renderer = async (
 			.event="${fg.event !== undefined ? fg.event : fg.computedProperties?.event ? (await formsValueContainer?.compute(fg.computedProperties?.event))?.value : 'submit'}"
 			.payload="${fg.payload !== undefined ? fg.payload : fg.computedProperties?.payload ? (await formsValueContainer?.compute(fg.computedProperties?.payload))?.value : undefined}"
 			.styleOptions="${fg.styleOptions}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-button>`
 	}
 
@@ -403,7 +404,7 @@ export const render: Renderer = async (
 			.translationProvider="${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}"
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
 			.styleOptions="${fg.styleOptions}"
-			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !(await formsValueContainer?.compute(fg.computedProperties?.readonly)) : false)}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-label>`
 	}
 

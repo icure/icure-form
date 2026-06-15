@@ -1280,6 +1280,12 @@ input[type='radio'] {
 	&:hover {
 		background-color: $label-color-hover;
 	}
+
+	&.icure-button__disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
 }
 
 .icure-button-group {

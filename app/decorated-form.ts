@@ -362,6 +362,17 @@ export class DecoratedForm extends LitElement {
 			const fvc = this.formValuesContainer
 			this.redoStack = []
 			fvc && this.undoStack.push(fvc)
+
+			const originalServices = this.formValuesContainer?.getContactFormValuesContainer()?.coordinatedContact()?.services ?? []
+			const updatedServicesIds =
+				newValue
+					?.getContactFormValuesContainer()
+					?.coordinatedContact()
+					?.services?.map((s) => s.id) ?? []
+
+			const deletedServices = originalServices.filter((s) => !updatedServicesIds.includes(s.id))
+			console.log('Deleted', deletedServices)
+
 			this.formValuesContainer = newValue
 
 			const toSave = this.formValuesContainer.getContactFormValuesContainer()

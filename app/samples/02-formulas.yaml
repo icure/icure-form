@@ -113,3 +113,34 @@ sections:
       - field: "Number cross-field formula. Total = Unit price × Quantity, with Quantity seeded to 1 via computedProperties.defaultValue. Test: type 12.50 in Unit price — Total becomes 12.50 (Quantity defaulted to 1). Change Quantity to 4 — Total updates to 50."
         type: label
         span: 24
+  - section: Hidable action
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: amount
+            type: number-field
+            shortLabel: Amount (€)
+            span: 8
+          - field: Pay
+            type: action
+            shortLabel: pay
+            span: 8
+            event: pay
+            computedProperties:
+              hidden: |
+                const a = parseContent(amount[0]?.content)
+                return a == null || a <= 0
+          - field: Check
+            type: action
+            shortLabel: check
+            span: 8
+            event: check
+            computedProperties:
+              readonly: |
+                const a = parseContent(amount[0]?.content)
+                return a == null || a < 100
+      - field: "computedProperties also drive action buttons. The Pay button's computedProperties.hidden returns true (hiding the button) until Amount is a positive number. The Check button's computedProperties.readonly returns true (disabling the button) while Amount is below 100. Test: the Pay button is hidden initially; type 20 in Amount — Pay appears but Check stays disabled (greyed out, non-clickable); raise Amount to 100 or more — Check becomes enabled and clicking it fires the 'check' event."
+        type: label
+        span: 24

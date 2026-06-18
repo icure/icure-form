@@ -430,7 +430,7 @@ export class TextField extends Field {
 			grows,
 			span,
 			rowSpan,
-			schema: schema || 'styled-text-with-codes',
+			schema: schema,
 			tags,
 			codifications,
 			readonly,

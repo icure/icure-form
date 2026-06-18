@@ -752,6 +752,7 @@ export class IcureTextField extends Field {
 							}),
 						},
 						hardbreak: { node: 'hard_break' },
+						hard_break: { node: 'hard_break' },
 
 						em: hasMark(pms.spec.marks, 'em') ? { mark: 'em' } : { ignore: true },
 						strong: hasMark(pms.spec.marks, 'strong') ? { mark: 'strong' } : { ignore: true },

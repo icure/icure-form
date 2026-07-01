@@ -928,6 +928,32 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 
 			let newCurrentContact: DecryptedContact
 			if (!Object.entries(newContents).filter(([, cnt]) => cnt !== undefined).length) {
+				// The `getServicesInHistory` lookup above reads `indexedServices`, which is built from
+				// `[currentContact, ...contactsHistory]` — so finding the service does NOT prove it lives in
+				// history: it may exist only in the current contact, in which case removing it is correct.
+				// We therefore scan the history contacts explicitly. If a history contact both holds the
+				// service and links it to this form via a subContact (the exact condition under which the
+				// constructor re-indexes it), then merely removing it from the current contact would make the
+				// old value reappear on reload. In that case we keep it with an `endOfLife` tombstone instead
+				// (same strategy as `removeChild`).
+				const now = Date.now()
+				const serviceInHistory = this.contactsHistory.some(
+					(ctc) =>
+						(ctc.services ?? []).some((s) => s.id === service.id) &&
+						(ctc.subContacts ?? []).some((sc) => sc.formId === this.rootForm.id && (sc.services ?? []).some((sr) => sr.serviceId === service.id)),
+				)
+				const currentServices = this.currentContact.services ?? []
+				const isPresentInCurrentContact = currentServices.some((s) => s.id === service.id)
+
+				let newServices: DecryptedService[]
+				if (serviceInHistory) {
+					// Keep a tombstone so the deletion overrides the value still present in history.
+					const eolService = new DecryptedService({ id: service.id, created: service.created, modified: now, endOfLife: now })
+					newServices = isPresentInCurrentContact ? currentServices.map((s) => (s.id === service.id ? eolService : s)) : [...currentServices, eolService]
+				} else {
+					// The service exists only in the current contact, so it is safe to drop entirely.
+					newServices = isPresentInCurrentContact ? currentServices.filter((s) => s.id !== service.id) : [...currentServices]
+				}
 				newCurrentContact = new DecryptedContact({
 					...this.currentContact,
 					subContacts: (this.currentContact.subContacts ?? []).some((sc) => sc.formId === this.rootForm.id)
@@ -947,9 +973,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 									services: [new ServiceLink({ serviceId: service.id })],
 								}),
 						  ),
-					services: (this.currentContact.services ?? []).some((s) => s.id === service.id)
-						? (this.currentContact.services ?? []).filter((s) => s.id !== service.id)
-						: [...(this.currentContact.services ?? [])],
+					services: newServices,
 				})
 			} else {
 				newService.content = newContents

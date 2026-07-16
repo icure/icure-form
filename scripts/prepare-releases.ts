@@ -238,13 +238,15 @@ for (const { version, publishedAt } of versions) {
   } else {
     const existingBody = (release.body ?? '').trim()
     const meaningful = existingBody.replace(/\s+/g, ' ').replace(new RegExp(`^v?${version.replace(/\./g, '\\.')}$`), '')
-    if (meaningful.length >= TERSE_THRESHOLD) {
+    const generated = whatsnewByVersion.get(version) ?? describe(prevSha, sha)
+    // A short body that matches what we'd generate is a backfilled release, not a terse one
+    if (meaningful.length >= TERSE_THRESHOLD || existingBody === generated) {
       status = 'OK'
       body = existingBody
       ok++
     } else {
       status = 'TERSE'
-      body = whatsnewByVersion.get(version) ?? describe(prevSha, sha)
+      body = generated
       if (existingBody) body += `\n\n<!-- original description: ${existingBody.replace(/-->/g, '')} -->`
       terse++
     }

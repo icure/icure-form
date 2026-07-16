@@ -25,47 +25,35 @@
 - Cleanup
 - Added dist
 
-## [TERSE] 1.0.1 (2021-02-02)
+## 1.0.1 (2021-02-02)
 <!-- tag: v1.0.1 | target: f483c4d0b72ba0ca49ee6a94e5abe87a60f81d81 | prerelease: false -->
 
 - Cleanup
 
-<!-- original description: - Cleanup -->
-
-## [TERSE] 1.0.2 (2021-02-02)
+## 1.0.2 (2021-02-02)
 <!-- tag: v1.0.2 | target: 6ef2c05709aa32c8b463c00e28ce4b72b0d2186c | prerelease: false -->
 
 - Cleanup
 
-<!-- original description: - Cleanup -->
-
-## [TERSE] 1.0.3 (2021-02-02)
+## 1.0.3 (2021-02-02)
 <!-- tag: v1.0.3 | target: dc9af0fe1c21756b5c0b17d62a33a293c4cb31bc | prerelease: false -->
 
 - Cleanup
 
-<!-- original description: - Cleanup -->
-
-## [TERSE] 1.0.4 (2021-02-02)
+## 1.0.4 (2021-02-02)
 <!-- tag: v1.0.4 | target: eae2894b0e15a1518de91ab4e5755927e1bde05d | prerelease: false -->
 
 - Cleanup
 
-<!-- original description: - Cleanup -->
-
-## [TERSE] 1.0.5 (2021-02-05)
+## 1.0.5 (2021-02-05)
 <!-- tag: v1.0.5 | target: 4f770480e8fef060b9e70ed6415b000e34859128 | prerelease: false -->
 
 - Inject css before compiling with tsc
 
-<!-- original description: - Inject css before compiling with tsc -->
-
-## [TERSE] 1.0.7 (2021-05-05)
+## 1.0.7 (2021-05-05)
 <!-- tag: v1.0.7 | target: bf9951414ac2b364d9106ad24c42bc98f6c7a7dc | prerelease: false -->
 
 - Cleanup
-
-<!-- original description: - Cleanup -->
 
 ## 1.0.6 (2021-05-05)
 <!-- tag: v1.0.6 | target: 795623cd51a6bfc50f96f77bfd15e14fb8c486e3 | prerelease: false -->
@@ -112,33 +100,26 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 1.0.15 (2022-05-19)
+## 1.0.15 (2022-05-19)
 <!-- tag: 1.0.15 | target: ea553e2fdb8a8404a4862b1d5fcc0d7298ec2731 | prerelease: false -->
 
 - Make empty fields reappear
 
-<!-- original description: - Make empty fields reappear -->
-
-## [TERSE] 1.0.16 (2022-05-19)
+## 1.0.16 (2022-05-19)
 <!-- tag: 1.0.16 | target: e101e2cab79a98a94b15b25534e9163e8c7e54f6 | prerelease: false -->
 
 - Inline source maps
-
-<!-- original description: - Inline source maps -->
 
 ## 1.0.17 (2022-05-19)
 <!-- tag: 1.0.17 | target: 9d8fca2bc0afbd5336e7857ac74ef425077b6e81 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [TERSE] 1.0.18 (2022-05-19)
+## 1.0.18 (2022-05-19)
 <!-- tag: 1.0.18 | target: f95f8bbcd9792f55720b490d096ebc53cfca45fb | prerelease: false -->
 
 - Make empty fields reappear
 - Add log
-
-<!-- original description: - Make empty fields reappear
-- Add log -->
 
 ## 1.0.19 (2022-05-19)
 <!-- tag: 1.0.19 | target: 4634e104e0e68c5332fc85d7f39b702359bee6f3 | prerelease: false -->
@@ -295,19 +276,15 @@ Maintenance release (version bump only).
 - Improve metadata support
 - Improve metadata support + empty search after selection in dropdowns
 
-## [TERSE] 1.1.18 (2024-07-26)
+## 1.1.18 (2024-07-26)
 <!-- tag: 1.1.18 | target: 49a2988cbd50286f0e2396509fece14bbce9efe9 | prerelease: false -->
 
 - Improve options sorting
 
-<!-- original description: - Improve options sorting -->
-
-## [TERSE] 1.1.19 (2024-07-26)
+## 1.1.19 (2024-07-26)
 <!-- tag: 1.1.19 | target: ba263b76cfa6d400ae839752f4e089c86d524151 | prerelease: false -->
 
 - Remove obsolete codesProvider
-
-<!-- original description: - Remove obsolete codesProvider -->
 
 ## 1.1.20 (2024-07-29)
 <!-- tag: 1.1.20 | target: e5c6b161da2b2d0c9d100ac3bebb1369966bb6ee | prerelease: false -->
@@ -383,12 +360,10 @@ Maintenance release (version bump only).
 
 - Fix default values when data already exists in the db. Make date pickers accept any language
 
-## [TERSE] 2.0.3 (2024-10-01)
+## 2.0.3 (2024-10-01)
 <!-- tag: 2.0.3 | target: 6ab1d7a0a166f978242fbc758ed3dee1b24c654d | prerelease: false -->
 
 - Fix example
-
-<!-- original description: - Fix example -->
 
 ## 2.0.4 (2024-10-02)
 <!-- tag: 2.0.4 | target: 201bcb57f84ad6dd0976704944e14bbc8b416ced | prerelease: false -->
@@ -427,14 +402,11 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 3.0.1 (2025-01-22)
+## 3.0.1 (2025-01-22)
 <!-- tag: 3.0.1 | target: 3e1ed8d99c3967e9c2411fd1d7b797a783ca5d62 | prerelease: false -->
 
 - Convert src
 - Commit packages
-
-<!-- original description: - Convert src
-- Commit packages -->
 
 ## 2.0.11 (2025-02-03)
 <!-- tag: 2.0.11 | target: 8fd2f6bb32ecc2d7a3572f1b5da434036f48bd7a | prerelease: false -->
@@ -451,19 +423,15 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 3.0.4 (2025-03-06)
+## 3.0.4 (2025-03-06)
 <!-- tag: 3.0.4 | target: 97208c6058b521268bc917f2f722e630d9f4c82a | prerelease: false -->
 
 - Switch to Esnext modules
 
-<!-- original description: - Switch to Esnext modules -->
-
-## [TERSE] 3.0.7 (2025-03-20)
+## 3.0.7 (2025-03-20)
 <!-- tag: 3.0.7 | target: e18e3f530ab6ee112765fa101486d7bda62d66c1 | prerelease: false -->
 
 - Add tabs
-
-<!-- original description: - Add tabs -->
 
 ## 3.0.8 (2025-03-21)
 <!-- tag: 3.0.8 | target: 9dcd1605a369b1c9a9f89f81a985ad2213c31c1a | prerelease: false -->
@@ -471,12 +439,10 @@ Maintenance release (version bump only).
 - Bumped dependencies
 - Bump dependencies
 
-## [TERSE] 3.0.9 (2025-03-21)
+## 3.0.9 (2025-03-21)
 <!-- tag: 3.0.9 | target: 132ab30e66908ea0b2a561227449adad8f729bda | prerelease: false -->
 
 - Small changes to labels
-
-<!-- original description: - Small changes to labels -->
 
 ## 3.0.10 (2025-03-21)
 <!-- tag: 3.0.10 | target: 132ab30e66908ea0b2a561227449adad8f729bda | prerelease: false -->
@@ -551,12 +517,10 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 3.0.24 (2025-05-16)
+## 3.0.24 (2025-05-16)
 <!-- tag: 3.0.24 | target: bb1d148b4069c7f13c5f061303e6c9ee6220cd6c | prerelease: false -->
 
 - Fix bug in score
-
-<!-- original description: - Fix bug in score -->
 
 ## 3.0.25 (2025-05-22)
 <!-- tag: 3.0.25 | target: 9d7524488e9d36badce7d6e7e9700f1d22a046f6 | prerelease: false -->
@@ -574,31 +538,25 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 3.0.29 (2025-05-23)
+## 3.0.29 (2025-05-23)
 <!-- tag: 3.0.29 | target: e4c0595fe73c251fd4eac14039e6bbd930562c61 | prerelease: false -->
 
 - Add text native function
 
-<!-- original description: - Add text native function -->
-
-## [TERSE] 3.0.30 (2025-05-26)
+## 3.0.30 (2025-05-26)
 <!-- tag: 3.0.30 | target: de8025267ff662a90705b4ca09c0b9cbc2f6ffd4 | prerelease: false -->
 
 - Improve focus
-
-<!-- original description: - Improve focus -->
 
 ## 3.0.31 (2025-05-26)
 <!-- tag: 3.0.31 | target: adde930bb41e5468205f6a3bc31acced69c421de | prerelease: false -->
 
 - Do not compute values and defaultValues twice
 
-## [TERSE] 3.0.32 (2025-05-27)
+## 3.0.32 (2025-05-27)
 <!-- tag: 3.0.32 | target: 43b3428eb8d7902539141084da7f932e9d1e40ca | prerelease: false -->
 
 - Add reset button support
-
-<!-- original description: - Add reset button support -->
 
 ## 3.0.33 (2025-05-27)
 <!-- tag: 3.0.33 | target: 43b3428eb8d7902539141084da7f932e9d1e40ca | prerelease: false -->
@@ -610,33 +568,25 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 3.0.35 (2025-06-16)
+## 3.0.35 (2025-06-16)
 <!-- tag: 3.0.35 | target: 1d71bda296e6791dd7211c6d642bbb974d82a218 | prerelease: false -->
 
 - Fix hardbreak in md
 
-<!-- original description: - Fix hardbreak in md -->
-
-## [TERSE] 3.0.36 (2025-06-17)
+## 3.0.36 (2025-06-17)
 <!-- tag: 3.0.36 | target: 3cd4fe23147b002ab95c8ff7a0e8b0fbd1b907a1 | prerelease: false -->
 
 - Fix markdown schema and copy-paste
 
-<!-- original description: - Fix markdown schema and copy-paste -->
-
-## [TERSE] 3.0.37 (2025-06-19)
+## 3.0.37 (2025-06-19)
 <!-- tag: 3.0.37 | target: 43d138b54137aa220165b73bad6e9741d23bc36a | prerelease: false -->
 
 - Fix reset of value for language
 
-<!-- original description: - Fix reset of value for language -->
-
-## [TERSE] 3.0.38 (2025-06-19)
+## 3.0.38 (2025-06-19)
 <!-- tag: 3.0.38 | target: 31e24114628fc2605a18f216d0a8597521b575df | prerelease: false -->
 
 - Fix reset of async default values
-
-<!-- original description: - Fix reset of async default values -->
 
 ## 3.0.39 (2025-07-09)
 <!-- tag: 3.0.39 | target: 31e24114628fc2605a18f216d0a8597521b575df | prerelease: false -->
@@ -687,12 +637,10 @@ _The commit this version was published from was never pushed to the repository. 
 
 - Improve imports compatibility
 
-## [TERSE] 3.0.40 (2025-12-10)
+## 3.0.40 (2025-12-10)
 <!-- tag: 3.0.40 | target: b64382cabf80eea254acf9794e4326840de28993 | prerelease: false -->
 
 - Improve imports compatibility
-
-<!-- original description: - Improve imports compatibility -->
 
 ## 3.0.42 (2025-12-10)
 <!-- tag: 3.0.42 | target: 1b553e7401ca9750f1a664f011336052b557d4e8 | prerelease: false -->
@@ -716,12 +664,10 @@ Maintenance release (version bump only).
 
 Maintenance release (version bump only).
 
-## [TERSE] 3.0.46 (2026-01-17)
+## 3.0.46 (2026-01-17)
 <!-- tag: 3.0.46 | target: 6be254e70cecb9c540b6e67e6e0fa438a08ce5c6 | prerelease: false -->
 
 - Add warning when paste fails
-
-<!-- original description: - Add warning when paste fails -->
 
 ## 2.1.2 (2026-01-20)
 <!-- tag: 2.1.2 | target: 7b65f9216a2d7bfa6397e413c4202bf9be8dfa56 | prerelease: false -->
@@ -804,12 +750,10 @@ Maintenance release (version bump only).
 - Add Rspack configuration, custom Lit CSS loader, and update package scripts
 - Fix shadow content check in icure-form element test
 
-## [TERSE] 3.1.2 (2026-02-27)
+## 3.1.2 (2026-02-27)
 <!-- tag: 3.1.2 | target: 7ddfb8a21d9db2fc6eec707ddcc2c0c8411bb6cc | prerelease: false -->
 
 - Allow codes without label
-
-<!-- original description: - Allow codes without label -->
 
 ## 3.1.3 (2026-03-02)
 <!-- tag: 3.1.3 | target: a1dbd0a6db5f1e961ba9292772ceacfa8e9485c0 | prerelease: false -->

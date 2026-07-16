@@ -165,6 +165,7 @@ export abstract class Field {
 	styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
 	hasOther?: boolean
 	event?: string
+	readOnlyEvent?: string
 	payload?: unknown
 	/**
 	 * Role-based visibility. When omitted, the field is visible to every role. When set, the field is
@@ -224,6 +225,7 @@ export abstract class Field {
 			styleOptions,
 			hasOther,
 			event,
+			readOnlyEvent,
 			payload,
 			delegatedEdition,
 		}: {
@@ -249,6 +251,7 @@ export abstract class Field {
 			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
 			hasOther?: boolean
 			event?: string
+			readOnlyEvent?: string
 			payload?: unknown
 			delegatedEdition?: boolean
 		},
@@ -277,6 +280,7 @@ export abstract class Field {
 		this.styleOptions = styleOptions
 		this.hasOther = hasOther
 		this.event = event
+		this.readOnlyEvent = readOnlyEvent
 		this.payload = payload
 		this.delegatedEdition = delegatedEdition
 	}
@@ -353,6 +357,10 @@ export abstract class Field {
 		roles: string[] | undefined
 		standalone: boolean | undefined
 		samePage: boolean | undefined
+		event?: string
+		readOnlyEvent?: string
+		payload?: unknown
+		delegatedEdition?: boolean
 	} {
 		return {
 			field: this.field,
@@ -369,6 +377,10 @@ export abstract class Field {
 			unit: this.unit,
 			multiline: this.multiline,
 			...(this.tokenDeleteButton ? { tokenDeleteButton: true } : {}),
+			...(this.event !== undefined ? { event: this.event } : {}),
+			...(this.readOnlyEvent !== undefined ? { readOnlyEvent: this.readOnlyEvent } : {}),
+			...(this.payload !== undefined ? { payload: this.payload } : {}),
+			...(this.delegatedEdition ? { delegatedEdition: true } : {}),
 			computedProperties: this.computedProperties,
 			now: this.now,
 			translate: this.translate,
@@ -404,6 +416,7 @@ export class TextField extends Field {
 			translate,
 			width,
 			styleOptions,
+			readOnlyEvent,
 		}: {
 			shortLabel?: string
 			grows?: boolean
@@ -423,6 +436,7 @@ export class TextField extends Field {
 			translate?: boolean
 			width?: number
 			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
+			readOnlyEvent?: string
 		},
 	) {
 		super('text-field', label, {
@@ -444,6 +458,7 @@ export class TextField extends Field {
 			translate,
 			width,
 			styleOptions,
+			readOnlyEvent,
 		})
 	}
 
@@ -600,6 +615,7 @@ export class TokenField extends Field {
 			width,
 			styleOptions,
 			event,
+			readOnlyEvent,
 			delegatedEdition,
 		}: {
 			shortLabel?: string
@@ -620,6 +636,7 @@ export class TokenField extends Field {
 			width?: number
 			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
 			event?: string
+			readOnlyEvent?: string
 			delegatedEdition?: boolean
 		},
 	) {
@@ -642,6 +659,7 @@ export class TokenField extends Field {
 			width,
 			styleOptions,
 			event,
+			readOnlyEvent,
 			delegatedEdition,
 		})
 	}

@@ -4,6 +4,28 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 2.2.6 (2026-07-16)
+
+### `readOnlyEvent`: clicks on readonly fields notify the host
+
+Text and token fields can now opt into click notifications while readonly: set the new `readOnlyEvent` property and clicking the readonly field fires the host `actionListener` with that name, letting the host open a viewer for values that cannot be edited in place. The mousedown of an opted-in field is swallowed, mirroring delegated edition, so it never gains focus or a selection. Readonly fields without `readOnlyEvent` keep the previous inert behavior (text remains selectable).
+
+The payload follows the delegated-edition convention: a click on an existing token passes `{ valueId, content }`, a click anywhere else passes `undefined`.
+
+A `delegatedEdition` token field that is also readonly fires `readOnlyEvent` instead of `event` (or nothing when `readOnlyEvent` is unset) — the host can distinguish "edit this value" from "just show it":
+
+```yaml
+- field: allergies
+  type: token-field
+  delegatedEdition: true
+  event: edit-allergies         # fired while the field is editable
+  readOnlyEvent: view-allergies # fired while the field is readonly
+```
+
+See [Read-only fields and `readOnlyEvent`](./README.md#read-only-fields-and-readonlyevent) in the README.
+
+---
+
 ## 2.2.2 (2026-06-15)
 
 ### `computedProperties` and `readonly` on action buttons

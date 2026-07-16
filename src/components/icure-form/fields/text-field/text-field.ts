@@ -18,6 +18,7 @@ export class TextField extends Field {
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
 	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
+	@property() readOnlyEvent?: string
 	// When set, takes precedence over the multiline→text-document / single-line→
 	// styled-text-with-codes fallback. Lets a YAML `schema: items-list` (or any
 	// other IcureTextFieldSchema) reach the inner <icure-text-field>.
@@ -62,6 +63,7 @@ export class TextField extends Field {
 					.handleValueChanged=${this.handleValueChanged}
 					.handleMetadataChanged=${this.handleMetadataChanged}
 					.styleOptions=${this.styleOptions}
+					.readOnlyEvent=${this.readOnlyEvent}
 					.actionListener=${this.actionListener}
 				></icure-text-field>`,
 			]
@@ -95,6 +97,7 @@ export class TextField extends Field {
 				.handleValueChanged=${this.handleSingleValueChanged(id)}
 				.handleMetadataChanged=${this.handleSingleMetadataChanged(id)}
 				.styleOptions=${this.styleOptions}
+				.readOnlyEvent=${this.readOnlyEvent}
 				.actionListener=${this.actionListener}
 			></icure-text-field>`
 		})

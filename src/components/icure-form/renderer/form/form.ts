@@ -141,6 +141,7 @@ export const render: Renderer = async (
 			.handleValueChanged=${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
+			.readOnlyEvent="${fg.readOnlyEvent}"
 			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-text-field>`
@@ -169,6 +170,7 @@ export const render: Renderer = async (
 			.tokenDeleteButton="${!!fg.tokenDeleteButton}"
 			.delegatedEdition="${!!fg.delegatedEdition}"
 			.event="${fg.event}"
+			.readOnlyEvent="${fg.readOnlyEvent}"
 			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
 		></icure-form-token-field>`

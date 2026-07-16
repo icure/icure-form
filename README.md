@@ -112,6 +112,7 @@ The Field class represents a generic field within a form. It is designed to be e
 - payload: unknown - Optional payload for action/button fields.
 - tokenDeleteButton: boolean - Optional property for token fields (`tokens-list` schemas). When `true`, each token shows a small delete cross that removes it on click. See [Token fields](#token-fields).
 - delegatedEdition: boolean - Optional property for token fields. When `true`, clicks no longer open the inline editor — they fire the host `actionListener` with this field's `event` name, delegating the edition to the host. See [Action events and delegated edition](#action-events-and-delegated-edition).
+- readOnlyEvent: string - Optional event name fired to the host `actionListener` when a **readonly** text or token field is clicked. When unset, readonly fields stay inert. See [Read-only fields and `readOnlyEvent`](#read-only-fields-and-readonlyevent).
 - width: number - Optional fixed width of the field in pixels.
 - styleOptions: { width: number, direction: string, span: number, rows: number, alignItems: string } - Optional style options for the field.
 
@@ -396,7 +397,7 @@ Set `tokenDeleteButton: true` to show a small delete cross on each token. Clicki
 
 ### Action events and delegated edition
 
-Action buttons (`type: action`) and—when opted in—token fields can fire events to the host application instead of mutating the form directly. The host receives them through the `actionListener` callback passed to `<icure-form>`:
+Action buttons (`type: action`), token fields with delegated edition, and readonly fields can fire events to the host application instead of mutating the form directly. The host receives them through the `actionListener` callback passed to `<icure-form>`:
 
 ```typescript
 const actionListener = (event: string, payload: unknown, domEvent?: Event) => { /* ... */ }
@@ -438,6 +439,33 @@ const actionListener = (event: string, payload: unknown) => {
 ```
 
 > Note: write the token content under the same `language` the form is rendered in. Writing it under a different language stores text the editor never displays, producing a visually empty token.
+
+#### Read-only fields and `readOnlyEvent`
+
+A **readonly** field is inert by default. Setting `readOnlyEvent` opts it in: clicking the readonly field then fires the `actionListener` with the `readOnlyEvent` name. This lets the host open a viewer (a details dialog, an audit panel, …) for values that cannot be edited in place. As with delegated edition, the mousedown of an opted-in field is swallowed so it never gains focus or a text selection; readonly fields without `readOnlyEvent` keep the normal browser behavior (their text can still be selected and copied).
+
+The payload follows the same convention as delegated edition: clicking an **existing token** passes `{ valueId, content }`, clicking anywhere else passes `undefined`.
+
+A `delegatedEdition` token field that is also readonly fires `readOnlyEvent` instead of `event` — the edition delegation is suspended while the field is readonly, so the host can distinguish "edit this value" from "just show it". If such a field has no `readOnlyEvent`, it is simply inert while readonly.
+
+```yaml
+- field: allergies
+  type: token-field
+  multiline: true
+  delegatedEdition: true
+  event: edit-allergies       # fired while the field is editable
+  readOnlyEvent: view-allergies # fired while the field is readonly
+  computedProperties:
+    readonly: return !!validated[0]?.content
+```
+
+```typescript
+const actionListener = (event: string, payload: unknown) => {
+  const clicked = payload as { valueId?: string; content?: string } | undefined
+  if (event === 'edit-allergies') openAllergyEditor(clicked)
+  else if (event === 'view-allergies') openAllergyViewer(clicked)
+}
+```
 
 ### Custom field editors (the edit-request hook)
 

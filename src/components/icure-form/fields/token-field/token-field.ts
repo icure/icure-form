@@ -18,15 +18,20 @@ export class TokenField extends Field {
 	// directly, while clicking the token body delegates the edition.
 	@property({ type: Boolean }) delegatedEdition = false
 	@property() event?: string
+	@property() readOnlyEvent?: string
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
 
 	override renderSync(): TemplateResult {
+		// Pointer affordance exactly when a click fires the actionListener:
+		// delegated edition while editable, readOnlyEvent while readonly.
+		const clickable = this.readonly ? this.readOnlyEvent != null : this.delegatedEdition
 		return html`<icure-text-field
-			class="${this.delegatedEdition ? 'delegated-edition' : ''}"
-			style="${this.delegatedEdition ? 'cursor: pointer;' : ''}"
+			class="${clickable ? 'delegated-edition' : ''}"
+			style="${clickable ? 'cursor: pointer;' : ''}"
 			.readonly="${this.readonly || this.delegatedEdition}"
-			.delegatedEdition="${this.delegatedEdition}"
+			.delegatedEdition="${!this.readonly && this.delegatedEdition}"
 			.event="${this.event}"
+			.readOnlyEvent="${this.readOnlyEvent}"
 			.actionListener=${this.actionListener}
 			label="${this.label}"
 			.multiline="${this.multiline}"

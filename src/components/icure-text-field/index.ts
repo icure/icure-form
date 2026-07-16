@@ -61,6 +61,7 @@ export class IcureTextField extends Field {
 	// responsible for mutating the form values and triggering a re-render.
 	@property({ type: Boolean }) delegatedEdition = false
 	@property() event?: string
+	@property() readOnlyEvent?: string
 
 	private schemaSpec?: SchemaSpec
 	private editRequestPending = false
@@ -544,10 +545,12 @@ export class IcureTextField extends Field {
 						this.invokeFieldEditRequest(view, event)
 					},
 					mousedown: (_view, event) => {
-						// In delegated-edition mode the readonly editor must stay inert:
-						// swallow mousedown so it never gains focus or a text selection.
-						// The accompanying click handler fires the host actionListener.
-						if (this.delegatedEdition && this.actionListener) {
+						// In delegated-edition mode — and on a readonly field that opted in
+						// with readOnlyEvent — the editor must stay inert: swallow mousedown
+						// so it never gains focus or a text selection. The accompanying
+						// click handler fires the host actionListener. Readonly fields
+						// without readOnlyEvent keep normal selection behavior.
+						if ((this.delegatedEdition || (this.readonly && this.readOnlyEvent != null)) && this.actionListener) {
 							event.preventDefault()
 							return true
 						}
@@ -561,9 +564,9 @@ export class IcureTextField extends Field {
 							// else fires it with no payload. A click on the delete cross is
 							// excluded here so it falls through to the delete branch below —
 							// this lets delete and delegated edition coexist on one field.
-							if (this.delegatedEdition && this.actionListener && !(this.tokenDeleteButton && el?.closest?.('.token-delete'))) {
+							if ((this.delegatedEdition || (this.readonly && this.readOnlyEvent != null)) && this.actionListener && !(this.tokenDeleteButton && el?.closest?.('.token-delete'))) {
 								const node = el?.closest?.('.token') ? this.resolveTokenNodeAt(view, event) : undefined
-								this.actionListener(this.event ?? 'edit', node ? { valueId: node.attrs?.id, content: node.textContent } : undefined, event)
+								this.actionListener(this.delegatedEdition ? this.event ?? 'edit' : this.readOnlyEvent ?? 'view', node ? { valueId: node.attrs?.id, content: node.textContent } : undefined, event)
 								return
 							}
 							if (this.tokenDeleteButton && el?.closest?.('.token-delete')) {

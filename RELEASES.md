@@ -5,7 +5,7 @@
 > Entries without a status marker are published GitHub releases (left untouched). **[TERSE]** = existing release
 > whose description will be replaced by the one below, **[MISSING]** = release to be created.
 
-## [MISSING] 1.0.0 (2021-02-02)
+## 1.0.0 (2021-02-02)
 <!-- tag: 1.0.0 | target: 8c43927b7fb08a226ec38115039f553f6960f317 | prerelease: false -->
 
 - Working suggestions
@@ -25,47 +25,59 @@
 - Cleanup
 - Added dist
 
-## [MISSING] 1.0.1 (2021-02-02)
+## [TERSE] 1.0.1 (2021-02-02)
 <!-- tag: v1.0.1 | target: f483c4d0b72ba0ca49ee6a94e5abe87a60f81d81 | prerelease: false -->
 
 - Cleanup
 
-## [MISSING] 1.0.2 (2021-02-02)
+<!-- original description: - Cleanup -->
+
+## [TERSE] 1.0.2 (2021-02-02)
 <!-- tag: v1.0.2 | target: 6ef2c05709aa32c8b463c00e28ce4b72b0d2186c | prerelease: false -->
 
 - Cleanup
 
-## [MISSING] 1.0.3 (2021-02-02)
+<!-- original description: - Cleanup -->
+
+## [TERSE] 1.0.3 (2021-02-02)
 <!-- tag: v1.0.3 | target: dc9af0fe1c21756b5c0b17d62a33a293c4cb31bc | prerelease: false -->
 
 - Cleanup
 
-## [MISSING] 1.0.4 (2021-02-02)
+<!-- original description: - Cleanup -->
+
+## [TERSE] 1.0.4 (2021-02-02)
 <!-- tag: v1.0.4 | target: eae2894b0e15a1518de91ab4e5755927e1bde05d | prerelease: false -->
 
 - Cleanup
 
-## [MISSING] 1.0.5 (2021-02-05)
+<!-- original description: - Cleanup -->
+
+## [TERSE] 1.0.5 (2021-02-05)
 <!-- tag: v1.0.5 | target: 4f770480e8fef060b9e70ed6415b000e34859128 | prerelease: false -->
 
 - Inject css before compiling with tsc
 
-## [MISSING] 1.0.7 (2021-05-05)
+<!-- original description: - Inject css before compiling with tsc -->
+
+## [TERSE] 1.0.7 (2021-05-05)
 <!-- tag: v1.0.7 | target: bf9951414ac2b364d9106ad24c42bc98f6c7a7dc | prerelease: false -->
 
 - Cleanup
 
-## [MISSING] 1.0.6 (2021-05-05)
+<!-- original description: - Cleanup -->
+
+## 1.0.6 (2021-05-05)
 <!-- tag: v1.0.6 | target: 795623cd51a6bfc50f96f77bfd15e14fb8c486e3 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 1.0.8 (2021-05-05)
+## 1.0.8 (2021-05-05)
 <!-- tag: v1.0.8 | target: c65c18d276f5ce5174070e2ee806e284d0107160 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 1.0.9 (2021-07-15)
+## 1.0.9 (2021-07-15)
 <!-- tag: 1.0.9 | target: d409f1c81a2aeef84219224fc6dee5e6ce49bac5 | prerelease: false -->
 
 - Improved style
@@ -83,56 +95,63 @@ Maintenance release (version bump only).
 - ICURE-29 #time 4h implement valueProviders for all other fields
 - ICURE-29 #time 4h implement meta, owners and valueDates
 
-## [MISSING] 1.0.12 (2022-05-19)
+## 1.0.12 (2022-05-19)
 <!-- tag: 1.0.12 | target: 25b154c7f164cb926c6292656f1a0bc48b9f4244 | prerelease: false -->
 
 - ICURE-29 #time 2h Fix suggestion providers and links display and improve suggestion-palette display behaviour
 - ICURE-29 #time 2h Add meta management
 - ICURE-29 #time 2h Add legacy
 
-## [MISSING] 1.0.13 (2022-05-19)
+## 1.0.13 (2022-05-19)
 <!-- tag: 1.0.13 | target: cfaf090104c90db4c4c6b59bc702395bf10c4b60 | prerelease: false -->
 
 - ICURE-29 #time 2h Fix transmission of content
 
-## [MISSING] 1.0.14 (2022-05-19)
+## 1.0.14 (2022-05-19)
 <!-- tag: 1.0.14 | target: 4785db694d24012d19fc8a884bb0c683a6994961 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 1.0.15 (2022-05-19)
+## [TERSE] 1.0.15 (2022-05-19)
 <!-- tag: 1.0.15 | target: ea553e2fdb8a8404a4862b1d5fcc0d7298ec2731 | prerelease: false -->
 
 - Make empty fields reappear
 
-## [MISSING] 1.0.16 (2022-05-19)
+<!-- original description: - Make empty fields reappear -->
+
+## [TERSE] 1.0.16 (2022-05-19)
 <!-- tag: 1.0.16 | target: e101e2cab79a98a94b15b25534e9163e8c7e54f6 | prerelease: false -->
 
 - Inline source maps
 
-## [MISSING] 1.0.17 (2022-05-19)
+<!-- original description: - Inline source maps -->
+
+## 1.0.17 (2022-05-19)
 <!-- tag: 1.0.17 | target: 9d8fca2bc0afbd5336e7857ac74ef425077b6e81 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 1.0.18 (2022-05-19)
+## [TERSE] 1.0.18 (2022-05-19)
 <!-- tag: 1.0.18 | target: f95f8bbcd9792f55720b490d096ebc53cfca45fb | prerelease: false -->
 
 - Make empty fields reappear
 - Add log
 
-## [MISSING] 1.0.19 (2022-05-19)
+<!-- original description: - Make empty fields reappear
+- Add log -->
+
+## 1.0.19 (2022-05-19)
 <!-- tag: 1.0.19 | target: 4634e104e0e68c5332fc85d7f39b702359bee6f3 | prerelease: false -->
 
 - Add callback to handle modification of value container
 
-## [MISSING] 1.1.0 (2022-05-19)
+## 1.1.0 (2022-05-19)
 <!-- tag: 1.1.0 | target: 3fe391a9f16cd454340ca6da46d3926d99996813 | prerelease: false -->
 
 - Bumped yarn version and switch to zero install
 - Reduce the frequency of update calls
 
-## [MISSING] 1.1.10 (2023-06-07)
+## 1.1.10 (2023-06-07)
 <!-- tag: 1.1.10 | target: 9dd3341151aabcd4c9384d518a61a93c4fc8bb90 | prerelease: false -->
 
 - Fix yarn version
@@ -197,7 +216,7 @@ Maintenance release (version bump only).
 - Abstract class => easier to read classes (tested on dropDown)
 - Radio button and check box abstracted => check box some issues with options
 
-## [MISSING] 1.1.14 (2024-02-14)
+## 1.1.14 (2024-02-14)
 <!-- tag: 1.1.14 | target: f2ff3a495dda51deacde58b81c96a67a4b893cb2 | prerelease: false -->
 
 - Use yarn for publishing
@@ -249,12 +268,12 @@ Maintenance release (version bump only).
 - Remove formatting
 - Remove space
 
-## [MISSING] 1.1.15 (2024-02-14)
+## 1.1.15 (2024-02-14)
 <!-- tag: 1.1.15 | target: f2ff3a495dda51deacde58b81c96a67a4b893cb2 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 1.1.16 (2024-07-26)
+## 1.1.16 (2024-07-26)
 <!-- tag: 1.1.16 | target: c5c4349661d3288bc2aa882c04b0a61cae27e2db | prerelease: false -->
 
 - Better dependencies management and build process
@@ -270,47 +289,51 @@ Maintenance release (version bump only).
 - More doc and little fix to themes
 - Improve owner support and made metadata optional
 
-## [MISSING] 1.1.17 (2024-07-26)
+## 1.1.17 (2024-07-26)
 <!-- tag: 1.1.17 | target: ac3ae3fc0cb77ec55f50deaf75537ca6f2c5afd6 | prerelease: false -->
 
 - Improve metadata support
 - Improve metadata support + empty search after selection in dropdowns
 
-## [MISSING] 1.1.18 (2024-07-26)
+## [TERSE] 1.1.18 (2024-07-26)
 <!-- tag: 1.1.18 | target: 49a2988cbd50286f0e2396509fece14bbce9efe9 | prerelease: false -->
 
 - Improve options sorting
 
-## [MISSING] 1.1.19 (2024-07-26)
+<!-- original description: - Improve options sorting -->
+
+## [TERSE] 1.1.19 (2024-07-26)
 <!-- tag: 1.1.19 | target: ba263b76cfa6d400ae839752f4e089c86d524151 | prerelease: false -->
 
 - Remove obsolete codesProvider
 
-## [MISSING] 1.1.20 (2024-07-29)
+<!-- original description: - Remove obsolete codesProvider -->
+
+## 1.1.20 (2024-07-29)
 <!-- tag: 1.1.20 | target: e5c6b161da2b2d0c9d100ac3bebb1369966bb6ee | prerelease: false -->
 
 - Support for highlighting discordant metadata
 - Added translations support
 
-## [MISSING] 1.1.21 (2024-07-29)
+## 1.1.21 (2024-07-29)
 <!-- tag: 1.1.21 | target: cc2a7ea0469e2a89861c6578d2ae1650d2d8b052 | prerelease: false -->
 
 - Improved documentation and version bump
 - Validators library
 
-## [MISSING] 1.1.22 (2024-07-30)
+## 1.1.22 (2024-07-30)
 <!-- tag: 1.1.22 | target: 7d7a8df3de0392fd15cae660c52fb308e0e725f8 | prerelease: false -->
 
 - Improvements to css and versions support
 
-## [MISSING] 1.1.23 (2024-09-06)
+## 1.1.23 (2024-09-06)
 <!-- tag: 1.1.23 | target: 90a89bb0966793a8e428e80436b7a9bb1451521b | prerelease: false -->
 
 - Generalise metadata mgmt to all fields
 - Promotion of codes when natural sort is applied
 - Feat/MS-11174_fix-forms-with-feedback
 
-## [MISSING] 1.1.24 (2024-09-10)
+## 1.1.24 (2024-09-10)
 <!-- tag: 1.1.24 | target: 6645e04ff3eed381d0abd9c2be43d89d8aa8a5c6 | prerelease: false -->
 
 - Add buttons on buttons group
@@ -327,7 +350,7 @@ Maintenance release (version bump only).
 - Feature/MS-11349_Fix-duplicate-properties
 - New version
 
-## [MISSING] 1.1.25 (2024-09-24)
+## 1.1.25 (2024-09-24)
 <!-- tag: 1.1.25 | target: 5c7e60df0644e580e1ab3e5f4d9c9dc84abc5de2 | prerelease: false -->
 
 - Add buttons
@@ -337,13 +360,13 @@ Maintenance release (version bump only).
 - Translations for labels
 - EL-9-icure-form-fix-kendo-style-modify-dropdown-style
 
-## [MISSING] 1.1.26 (2024-09-26)
+## 1.1.26 (2024-09-26)
 <!-- tag: 1.1.26 | target: b488a06dfbc5e04ab509554afba749809ea34767 | prerelease: false -->
 
 - Feature/MS-11374_fix-natural-sort-issue
 - Fix dropdown hiding when clicking on other dropdown
 
-## [MISSING] 2.0.1 (2024-10-01)
+## 2.0.1 (2024-10-01)
 <!-- tag: 2.0.1 | target: b1fbe5cb48288a80bcbef9aee84c23b39564307f | prerelease: false -->
 
 - Translations for labels
@@ -355,245 +378,272 @@ Maintenance release (version bump only).
 - Changed styles of subforms
 - Add doc
 
-## [MISSING] 2.0.2 (2024-10-01)
+## 2.0.2 (2024-10-01)
 <!-- tag: 2.0.2 | target: 6202e4548dfde620b5454c894b6662573ff70530 | prerelease: false -->
 
 - Fix default values when data already exists in the db. Make date pickers accept any language
 
-## [MISSING] 2.0.3 (2024-10-01)
+## [TERSE] 2.0.3 (2024-10-01)
 <!-- tag: 2.0.3 | target: 6ab1d7a0a166f978242fbc758ed3dee1b24c654d | prerelease: false -->
 
 - Fix example
 
-## [MISSING] 2.0.4 (2024-10-02)
+<!-- original description: - Fix example -->
+
+## 2.0.4 (2024-10-02)
 <!-- tag: 2.0.4 | target: 201bcb57f84ad6dd0976704944e14bbc8b416ced | prerelease: false -->
 
 - Fix example
 - Bugfix/MS-11443_fix-uncomplete-code-form-service
 - Add optional library of forms to parse
 
-## [MISSING] 2.0.5 (2024-10-03)
+## 2.0.5 (2024-10-03)
 <!-- tag: 2.0.5 | target: 1a4345237edd43187e1fe179a3ba4c75df0faa21 | prerelease: false -->
 
 - Fix various problems (readonly, hierarchical rfs in forms, translation of titles)
 
-## [MISSING] 2.0.6 (2024-10-08)
+## 2.0.6 (2024-10-08)
 <!-- tag: 2.0.6 | target: d79aab6739720e050f83bbee6fa852556ddb692d | prerelease: false -->
 
 - Cleanup
 - Make add subform menu grow
 - Add support for labels on subforms
 
-## [MISSING] 2.0.7 (2024-10-08)
+## 2.0.7 (2024-10-08)
 <!-- tag: 2.0.7 | target: 6c2f77c5328fb0ea2a98ceccd22b4f9d02b2cae7 | prerelease: false -->
 
 - Bugfix/MS-11458_fix-style-and-autocomplete
 - Add support for labels on subforms
 
-## [MISSING] 2.0.8 (2024-11-13)
+## 2.0.8 (2024-11-13)
 <!-- tag: 2.0.8 | target: 8fd2f6bb32ecc2d7a3572f1b5da434036f48bd7a | prerelease: false -->
 
 - Save contacts and forms
 - Fix forms deletion
 - Make hardbreak compatible with MD parser
 
-## [MISSING] 2.0.10 (2024-11-13)
+## 2.0.10 (2024-11-13)
 <!-- tag: 2.0.10 | target: 8fd2f6bb32ecc2d7a3572f1b5da434036f48bd7a | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.1 (2025-01-22)
+## [TERSE] 3.0.1 (2025-01-22)
 <!-- tag: 3.0.1 | target: 3e1ed8d99c3967e9c2411fd1d7b797a783ca5d62 | prerelease: false -->
 
 - Convert src
 - Commit packages
 
-## [MISSING] 2.0.11 (2025-02-03)
+<!-- original description: - Convert src
+- Commit packages -->
+
+## 2.0.11 (2025-02-03)
 <!-- tag: 2.0.11 | target: 8fd2f6bb32ecc2d7a3572f1b5da434036f48bd7a | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.2 (2025-03-03)
+## 3.0.2 (2025-03-03)
 <!-- tag: 3.0.2 | target: 2036b547071bed44a1f93cf7c05bdb0fe04e3b77 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.3 (2025-03-03)
+## 3.0.3 (2025-03-03)
 <!-- tag: 3.0.3 | target: 2036b547071bed44a1f93cf7c05bdb0fe04e3b77 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.4 (2025-03-06)
+## [TERSE] 3.0.4 (2025-03-06)
 <!-- tag: 3.0.4 | target: 97208c6058b521268bc917f2f722e630d9f4c82a | prerelease: false -->
 
 - Switch to Esnext modules
 
-## [MISSING] 3.0.7 (2025-03-20)
+<!-- original description: - Switch to Esnext modules -->
+
+## [TERSE] 3.0.7 (2025-03-20)
 <!-- tag: 3.0.7 | target: e18e3f530ab6ee112765fa101486d7bda62d66c1 | prerelease: false -->
 
 - Add tabs
 
-## [MISSING] 3.0.8 (2025-03-21)
+<!-- original description: - Add tabs -->
+
+## 3.0.8 (2025-03-21)
 <!-- tag: 3.0.8 | target: 9dcd1605a369b1c9a9f89f81a985ad2213c31c1a | prerelease: false -->
 
 - Bumped dependencies
 - Bump dependencies
 
-## [MISSING] 3.0.9 (2025-03-21)
+## [TERSE] 3.0.9 (2025-03-21)
 <!-- tag: 3.0.9 | target: 132ab30e66908ea0b2a561227449adad8f729bda | prerelease: false -->
 
 - Small changes to labels
 
-## [MISSING] 3.0.10 (2025-03-21)
+<!-- original description: - Small changes to labels -->
+
+## 3.0.10 (2025-03-21)
 <!-- tag: 3.0.10 | target: 132ab30e66908ea0b2a561227449adad8f729bda | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.11 (2025-03-21)
+## 3.0.11 (2025-03-21)
 <!-- tag: 3.0.11 | target: 8ba0afd25b2074c89d7f23dcbfd6372ba3c8527b | prerelease: false -->
 
 - Small changes to buttons
 - Add styling to the tabs
 
-## [MISSING] 3.0.12 (2025-05-10)
+## 3.0.12 (2025-05-10)
 <!-- tag: 3.0.12 | target: 177b68a39b26d1da5be351175c700dee0af2e2eb | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.13 (2025-05-10)
+## 3.0.13 (2025-05-10)
 <!-- tag: 3.0.13 | target: 177b68a39b26d1da5be351175c700dee0af2e2eb | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.14 (2025-05-10)
+## 3.0.14 (2025-05-10)
 <!-- tag: 3.0.14 | target: 177b68a39b26d1da5be351175c700dee0af2e2eb | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.15 (2025-05-12)
+## 3.0.15 (2025-05-12)
 <!-- tag: 3.0.15 | target: 935d10c999804890496d5907836911cb2d85afb4 | prerelease: false -->
 
 - Bump version, cache indexed services, add logging
 
-## [MISSING] 3.0.16 (2025-05-12)
+## 3.0.16 (2025-05-12)
 <!-- tag: 3.0.16 | target: 6ac971b9ab956cdde487f6937259d37c50b5ecd7 | prerelease: false -->
 
 - Center tab and allow for setting the decimal places in number and measure fields
 
-## [MISSING] 3.0.17 (2025-05-12)
+## 3.0.17 (2025-05-12)
 <!-- tag: 3.0.17 | target: 787a0879f3262eb774e71515b4a8ce55f1c8a893 | prerelease: false -->
 
 - Fix corner case when setting decimal places to 0
 
-## [MISSING] 3.0.18 (2025-05-12)
+## 3.0.18 (2025-05-12)
 <!-- tag: 3.0.18 | target: 787a0879f3262eb774e71515b4a8ce55f1c8a893 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.19 (2025-05-12)
+## 3.0.19 (2025-05-12)
 <!-- tag: 3.0.19 | target: 0ad15da55eddf4f8fa6fe8aecb3b921e49a89b28 | prerelease: false -->
 
 - Fix corner case when setting decimal places to 0
 
-## [MISSING] 3.0.20 (2025-05-12)
+## 3.0.20 (2025-05-12)
 <!-- tag: 3.0.20 | target: 47743f2d61df32bcb77ecffbcf88d1e135d603dd | prerelease: false -->
 
 - Add a way to expose extra data in the formulas
 - Add helper method to compute score of scales more easily
 - Add an hasOption shortcut
 
-## [MISSING] 3.0.21 (2025-05-12)
+## 3.0.21 (2025-05-12)
 <!-- tag: 3.0.21 | target: 5498e5619fb1b7b19ed15446cf338d60da82285f | prerelease: false -->
 
 - Do not lose interpreterContext after update
 
-## [MISSING] 3.0.22 (2025-05-12)
+## 3.0.22 (2025-05-12)
 <!-- tag: 3.0.22 | target: 8c148a98483b240ebac07395876140dcf5dc7f98 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.23 (2025-05-16)
+## 3.0.23 (2025-05-16)
 <!-- tag: 3.0.23 | target: 8c148a98483b240ebac07395876140dcf5dc7f98 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.24 (2025-05-16)
+## [TERSE] 3.0.24 (2025-05-16)
 <!-- tag: 3.0.24 | target: bb1d148b4069c7f13c5f061303e6c9ee6220cd6c | prerelease: false -->
 
 - Fix bug in score
 
-## [MISSING] 3.0.25 (2025-05-22)
+<!-- original description: - Fix bug in score -->
+
+## 3.0.25 (2025-05-22)
 <!-- tag: 3.0.25 | target: 9d7524488e9d36badce7d6e7e9700f1d22a046f6 | prerelease: false -->
 
 - Wrap formula output in content automatically
 
-## [MISSING] 3.0.27 (2025-05-22)
+## 3.0.27 (2025-05-22)
 <!-- tag: 3.0.27 | target: f390901a3582c6490cfbbd3d67456c1d2701ee84 | prerelease: false -->
 
 - Formulas are now asynchronous
 - More formulas are now asynchronous
 
-## [MISSING] 3.0.28 (2025-05-22)
+## 3.0.28 (2025-05-22)
 <!-- tag: 3.0.28 | target: f390901a3582c6490cfbbd3d67456c1d2701ee84 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.29 (2025-05-23)
+## [TERSE] 3.0.29 (2025-05-23)
 <!-- tag: 3.0.29 | target: e4c0595fe73c251fd4eac14039e6bbd930562c61 | prerelease: false -->
 
 - Add text native function
 
-## [MISSING] 3.0.30 (2025-05-26)
+<!-- original description: - Add text native function -->
+
+## [TERSE] 3.0.30 (2025-05-26)
 <!-- tag: 3.0.30 | target: de8025267ff662a90705b4ca09c0b9cbc2f6ffd4 | prerelease: false -->
 
 - Improve focus
 
-## [MISSING] 3.0.31 (2025-05-26)
+<!-- original description: - Improve focus -->
+
+## 3.0.31 (2025-05-26)
 <!-- tag: 3.0.31 | target: adde930bb41e5468205f6a3bc31acced69c421de | prerelease: false -->
 
 - Do not compute values and defaultValues twice
 
-## [MISSING] 3.0.32 (2025-05-27)
+## [TERSE] 3.0.32 (2025-05-27)
 <!-- tag: 3.0.32 | target: 43b3428eb8d7902539141084da7f932e9d1e40ca | prerelease: false -->
 
 - Add reset button support
 
-## [MISSING] 3.0.33 (2025-05-27)
+<!-- original description: - Add reset button support -->
+
+## 3.0.33 (2025-05-27)
 <!-- tag: 3.0.33 | target: 43b3428eb8d7902539141084da7f932e9d1e40ca | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.34 (2025-05-27)
+## 3.0.34 (2025-05-27)
 <!-- tag: 3.0.34 | target: 43b3428eb8d7902539141084da7f932e9d1e40ca | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.35 (2025-06-16)
+## [TERSE] 3.0.35 (2025-06-16)
 <!-- tag: 3.0.35 | target: 1d71bda296e6791dd7211c6d642bbb974d82a218 | prerelease: false -->
 
 - Fix hardbreak in md
 
-## [MISSING] 3.0.36 (2025-06-17)
+<!-- original description: - Fix hardbreak in md -->
+
+## [TERSE] 3.0.36 (2025-06-17)
 <!-- tag: 3.0.36 | target: 3cd4fe23147b002ab95c8ff7a0e8b0fbd1b907a1 | prerelease: false -->
 
 - Fix markdown schema and copy-paste
 
-## [MISSING] 3.0.37 (2025-06-19)
+<!-- original description: - Fix markdown schema and copy-paste -->
+
+## [TERSE] 3.0.37 (2025-06-19)
 <!-- tag: 3.0.37 | target: 43d138b54137aa220165b73bad6e9741d23bc36a | prerelease: false -->
 
 - Fix reset of value for language
 
-## [MISSING] 3.0.38 (2025-06-19)
+<!-- original description: - Fix reset of value for language -->
+
+## [TERSE] 3.0.38 (2025-06-19)
 <!-- tag: 3.0.38 | target: 31e24114628fc2605a18f216d0a8597521b575df | prerelease: false -->
 
 - Fix reset of async default values
 
-## [MISSING] 3.0.39 (2025-07-09)
+<!-- original description: - Fix reset of async default values -->
+
+## 3.0.39 (2025-07-09)
 <!-- tag: 3.0.39 | target: 31e24114628fc2605a18f216d0a8597521b575df | prerelease: false -->
 
 _The commit this version was published from was never pushed to the repository. The release tag points at the previous version; the changes of this version are listed in the next version’s release notes._
 
-## [MISSING] 2.1.0 (2025-10-08)
+## 2.1.0 (2025-10-08)
 <!-- tag: 2.1.0 | target: b22ea53b0311689380573ea310bf335000aac274 | prerelease: false -->
 
 - Convert src
@@ -637,39 +687,43 @@ _The commit this version was published from was never pushed to the repository. 
 
 - Improve imports compatibility
 
-## [MISSING] 3.0.40 (2025-12-10)
+## [TERSE] 3.0.40 (2025-12-10)
 <!-- tag: 3.0.40 | target: b64382cabf80eea254acf9794e4326840de28993 | prerelease: false -->
 
 - Improve imports compatibility
 
-## [MISSING] 3.0.42 (2025-12-10)
+<!-- original description: - Improve imports compatibility -->
+
+## 3.0.42 (2025-12-10)
 <!-- tag: 3.0.42 | target: 1b553e7401ca9750f1a664f011336052b557d4e8 | prerelease: false -->
 
 - Fix internal dependencies
 - Fix publish
 
-## [MISSING] 3.0.43 (2026-01-15)
+## 3.0.43 (2026-01-15)
 <!-- tag: 3.0.43 | target: 8dc1b1d1b492b16f8da3bcf2352638f443cf85dc | prerelease: false -->
 
 - Stylistic point
 - Make pasting more robust
 
-## [MISSING] 3.0.44 (2026-01-16)
+## 3.0.44 (2026-01-16)
 <!-- tag: 3.0.44 | target: 8dc1b1d1b492b16f8da3bcf2352638f443cf85dc | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.45 (2026-01-16)
+## 3.0.45 (2026-01-16)
 <!-- tag: 3.0.45 | target: 8dc1b1d1b492b16f8da3bcf2352638f443cf85dc | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 3.0.46 (2026-01-17)
+## [TERSE] 3.0.46 (2026-01-17)
 <!-- tag: 3.0.46 | target: 6be254e70cecb9c540b6e67e6e0fa438a08ce5c6 | prerelease: false -->
 
 - Add warning when paste fails
 
-## [MISSING] 2.1.2 (2026-01-20)
+<!-- original description: - Add warning when paste fails -->
+
+## 2.1.2 (2026-01-20)
 <!-- tag: 2.1.2 | target: 7b65f9216a2d7bfa6397e413c4202bf9be8dfa56 | prerelease: false -->
 
 - Convert src
@@ -710,7 +764,7 @@ Maintenance release (version bump only).
 - Make pasting more robust
 - Add warning when paste fails
 
-## [MISSING] 2.1.1 (2026-02-06)
+## 2.1.1 (2026-02-06)
 <!-- tag: 2.1.1 | target: 24f8a73870d3b083a86226c0aa6537316c55cba6 | prerelease: false -->
 
 - Fix publish
@@ -718,7 +772,7 @@ Maintenance release (version bump only).
 - Refactor getDefaultValue to lazy getDefaultValueProvider
 - Update README documentation for accuracy and completeness
 
-## [MISSING] 3.1.0 (2026-02-20)
+## 3.1.0 (2026-02-20)
 <!-- tag: 3.1.0 | target: 847fa393e797ee12fa5f0da9a5d9af7236e6c17d | prerelease: false -->
 
 - Fix publish
@@ -726,7 +780,7 @@ Maintenance release (version bump only).
 - Update README documentation for accuracy and completeness
 - Optimize rendering performance with dependency-tracked computed values
 
-## [MISSING] 2.1.3 (2026-02-26)
+## 2.1.3 (2026-02-26)
 <!-- tag: 2.1.3 | target: d4b910aeb7e75b4146a3844953875ea0afc75e98 | prerelease: false -->
 
 - Refactor getDefaultValue to lazy getDefaultValueProvider
@@ -739,7 +793,7 @@ Maintenance release (version bump only).
 - Add Rspack configuration, custom Lit CSS loader, and update package scripts
 - Fix cherry-picks
 
-## [MISSING] 3.1.1 (2026-02-26)
+## 3.1.1 (2026-02-26)
 <!-- tag: 3.1.1 | target: 187aba621084e3f27785ef393bfe27dd6c708960 | prerelease: false -->
 
 - Fix forms
@@ -750,23 +804,25 @@ Maintenance release (version bump only).
 - Add Rspack configuration, custom Lit CSS loader, and update package scripts
 - Fix shadow content check in icure-form element test
 
-## [MISSING] 3.1.2 (2026-02-27)
+## [TERSE] 3.1.2 (2026-02-27)
 <!-- tag: 3.1.2 | target: 7ddfb8a21d9db2fc6eec707ddcc2c0c8411bb6cc | prerelease: false -->
 
 - Allow codes without label
 
-## [MISSING] 3.1.3 (2026-03-02)
+<!-- original description: - Allow codes without label -->
+
+## 3.1.3 (2026-03-02)
 <!-- tag: 3.1.3 | target: a1dbd0a6db5f1e961ba9292772ceacfa8e9485c0 | prerelease: false -->
 
 - Fix demo app and merge defaultValue computation and value computation for better dependencies management
 
-## [MISSING] 3.1.4 (2026-03-04)
+## 3.1.4 (2026-03-04)
 <!-- tag: 3.1.4 | target: fb8587174b1b9737edb939031d3281dcc15ffe3f | prerelease: false -->
 
 - Fixed computedProperties computation
 - Code cleanup
 
-## [MISSING] 2.1.4 (2026-03-04)
+## 2.1.4 (2026-03-04)
 <!-- tag: 2.1.4 | target: 307b93d1136ca4ae4a3f475117c7fa0d6e1d00b7 | prerelease: false -->
 
 - Allow codes without label
@@ -774,23 +830,23 @@ Maintenance release (version bump only).
 - Fixed computedProperties computation
 - Code cleanup
 
-## [MISSING] 2.1.5 (2026-03-13)
+## 2.1.5 (2026-03-13)
 <!-- tag: 2.1.5 | target: f5850975482ecbfa388a17a3f32d0123dfd6c341 | prerelease: false -->
 
 - Better handling of form deletion with tests
 
-## [MISSING] 3.1.5 (2026-03-13)
+## 3.1.5 (2026-03-13)
 <!-- tag: 3.1.5 | target: 83b0b1a65696422d7653fc3c8cea3b4ad0818a8a | prerelease: false -->
 
 - Better handling of form deletion with tests
 - Fix cherry pick
 
-## [MISSING] 2.1.7 (2026-03-25)
+## 2.1.7 (2026-03-25)
 <!-- tag: 2.1.7 | target: 6c1dfd26a0d672f7129abfd42f04e3c6acb196b6 | prerelease: false -->
 
 - Add revisionsFilter property to icure-form component
 
-## [MISSING] 3.1.6 (2026-05-20)
+## 3.1.6 (2026-05-20)
 <!-- tag: 3.1.6 | target: 3dc5434c0dd5069a2e3cb924b9d8d7d0276ae768 | prerelease: false -->
 
 - Fix chery pick
@@ -799,7 +855,7 @@ Maintenance release (version bump only).
 - Add patient-cards renderer for Typeform-style patient intake
 - Add keyboard navigation and review polish to patient-cards renderer
 
-## [MISSING] 3.2.0 (2026-05-22)
+## 3.2.0 (2026-05-22)
 <!-- tag: 3.2.0 | target: f37d7056712c087d091a45fa3ded8315dfb95036 | prerelease: false -->
 
 - Convert themes to function-based registration with per-component overrides
@@ -812,7 +868,7 @@ Maintenance release (version bump only).
 - Replace hiddenForPatient with role-based visibility
 - Add samePage flag to pull fields/groups onto the previous card
 
-## [MISSING] 2.2.0 (2026-06-03)
+## 2.2.0 (2026-06-03)
 <!-- tag: 2.2.0 | target: 5a0e2f5e9f4e44d83a42479009a9db8d11af3588 | prerelease: false -->
 
 This release makes form editing *configurable*: token fields can delegate their edition to the host, individual tokens can be deleted, and the originating DOM event is forwarded to handlers. Under the hood, each text schema now owns a self-contained `SchemaSpec`.
@@ -895,12 +951,12 @@ For fully custom editors, each schema's `SchemaSpec` exposes an optional `onEdit
 
 The demo application (`app/`) was reorganised into numbered, feature-focused samples (`app/samples/NN-*.yaml`) and gained a Playwright end-to-end suite (`app/e2e/`), runnable with `yarn test:e2e:app`. Several form rendering bugs surfaced by the suite were fixed along the way.
 
-## [MISSING] 2.2.1 (2026-06-03)
+## 2.2.1 (2026-06-03)
 <!-- tag: 2.2.1 | target: d26777e2485d88301c558dafeef25c957f8808db | prerelease: false -->
 
 - Fix date/date-time round-trip scrambling value on blur
 
-## [MISSING] 2.2.2 (2026-06-15)
+## 2.2.2 (2026-06-15)
 <!-- tag: 2.2.2 | target: 477ee471d9d3cd7edb35cfbf6f1aad734fe74cbf | prerelease: false -->
 
 ### `computedProperties` and `readonly` on action buttons
@@ -941,23 +997,23 @@ See the live `01-components-gallery` (disabled button) and `02-formulas` (hidabl
 
 `computedProperties.readonly` was silently ignored on **every** field — the renderer negated the `compute()` result wrapper (always truthy) instead of its `.value`, so the formula never took effect. It now unwraps `.value`, so a formula returning `true` correctly makes the field (or button) readonly.
 
-## [MISSING] 2.2.3 (2026-06-18)
+## 2.2.3 (2026-06-18)
 <!-- tag: 2.2.3 | target: e9ead438a603a5ae6e6376c727cf585711f1ae73 | prerelease: false -->
 
 - Accept hard_break and hardbreak token in MD parser
 
-## [MISSING] 2.2.4 (2026-06-18)
+## 2.2.4 (2026-06-18)
 <!-- tag: 2.2.4 | target: e9ead438a603a5ae6e6376c727cf585711f1ae73 | prerelease: false -->
 
 Maintenance release (version bump only).
 
-## [MISSING] 2.2.5 (2026-07-01)
+## 2.2.5 (2026-07-01)
 <!-- tag: 2.2.5 | target: d32343bfd49b2d4e34fdaf38dcabe4208cd404ea | prerelease: false -->
 
 - Fix schema pinning in text-field
 - Fix setValue removing history-backed services on empty
 
-## [MISSING] 2.2.6 (2026-07-16)
+## 2.2.6 (2026-07-16)
 <!-- tag: 2.2.6 | target: 0da4943a068b29489ed45b755c40a5fee78f7b2d | prerelease: false -->
 
 ### `readOnlyEvent`: clicks on readonly fields notify the host

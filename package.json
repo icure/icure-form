@@ -88,7 +88,7 @@
 		"prosemirror-state": "^1.4.3",
 		"prosemirror-transform": "^1.10.3",
 		"prosemirror-view": "^1.38.1",
-		"uuid": "^9.0.1"
+		"uuid": "^11.1.1"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.11.3",
@@ -102,12 +102,11 @@
 		"@types/jest": "^27.0.2",
 		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^18.16.3",
-		"@types/uuid": "^9.0.1",
 		"@typescript-eslint/eslint-plugin": "^5.54.1",
 		"@typescript-eslint/parser": "^5.54.1",
 		"assert": "^2.0.0",
 		"dotenv": "^16.4.7",
-		"esbuild": "^0.20.0",
+		"esbuild": "^0.25.0",
 		"eslint": "^8.35.0",
 		"eslint-config-prettier": "^8.7.0",
 		"eslint-plugin-import": "^2.27.5",
@@ -145,7 +144,13 @@
 		"lit-element": "3.3.2",
 		"@babel/traverse": "^7.26.10",
 		"braces": "^3.0.3",
-		"ip": "^2.0.1"
+		"ip": "^2.0.1",
+		"qs": "^6.15.2",
+		"webpack-dev-server": "^5.2.5",
+		"on-headers": "^1.1.0",
+		"ip-address": "^10.1.1",
+		"@icure/cardinal-sdk/ws": "^8.21.1",
+		"sockjs/uuid": "^11.1.1"
 	},
 	"browserslist": {
 		"production": [

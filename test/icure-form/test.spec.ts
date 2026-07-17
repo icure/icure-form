@@ -27,7 +27,6 @@ describe('Form parsing tests', () => {
 				'        field: What symptoms, or more generally what reason motivated your visit\n' +
 				'        type: text-field\n' +
 				'        grows: true\n' +
-				'        schema: styled-text-with-codes\n' +
 				'        readonly: false\n' +
 				'        multiline: false\n' +
 				'        translate: true\n',
@@ -133,7 +132,6 @@ sections:
         type: text-field
         shortLabel: TextField
         grows: true
-        schema: styled-text-with-codes
         readonly: false
         multiline: false
         translate: true
@@ -187,7 +185,6 @@ sections:
             type: text-field
             shortLabel: TextField
             grows: true
-            schema: styled-text-with-codes
             readonly: false
             multiline: false
             translate: true

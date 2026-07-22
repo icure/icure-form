@@ -157,28 +157,63 @@ test.describe('Phase 8 / focus management', () => {
 		expect(focusedTag).toContain('card__start')
 	})
 
-	test('Focus moves to Continue / interactive field on entering input stage', async ({ page }) => {
+	test('Focus moves to the first field editor on entering input stage', async ({ page }) => {
 		await gotoHarness(page)
 		await initCard(page, sampleYaml)
 		await waitForInternal(page)
 		await clickByClass(page, 'card__start')
 		await page.waitForTimeout(300)
-		const focusInfo = await page.evaluate(() => {
-			let active: Element | null = document.activeElement
-			while (active && (active as any).shadowRoot && (active as any).shadowRoot.activeElement) {
-				active = (active as any).shadowRoot.activeElement
-			}
-			return {
-				className: (active as HTMLElement | null)?.className ?? null,
-				tagName: active?.tagName.toLowerCase() ?? null,
-				editable: (active as HTMLElement | null)?.isContentEditable ?? false,
-			}
-		})
-		// Either an editable element inside the field, or the Continue button as fallback if no editable was found.
-		const looksGood = !!(focusInfo.editable || focusInfo.className?.includes('card__continue') || focusInfo.tagName === 'input' || focusInfo.tagName === 'textarea')
-		expect(looksGood).toBe(true)
+		const focusInfo = await deepActiveInfo(page)
+		expect(focusInfo.editable || focusInfo.tagName === 'input' || focusInfo.tagName === 'textarea').toBe(true)
+		expect(focusInfo.fieldLabel).toBe('Q1')
+	})
+
+	test('Focus moves to the first field editor when changing card', async ({ page }) => {
+		await gotoHarness(page)
+		await initCard(page, sampleYaml)
+		await waitForInternal(page)
+		await clickByClass(page, 'card__start')
+		await page.waitForTimeout(300)
+		await clickByClass(page, 'card__continue')
+		await page.waitForTimeout(300)
+		const forward = await deepActiveInfo(page)
+		expect(forward.editable || forward.tagName === 'input' || forward.tagName === 'textarea').toBe(true)
+		expect(forward.fieldLabel).toBe('Q2')
+		await clickByClass(page, 'card__back')
+		await page.waitForTimeout(300)
+		const backward = await deepActiveInfo(page)
+		expect(backward.editable || backward.tagName === 'input' || backward.tagName === 'textarea').toBe(true)
+		expect(backward.fieldLabel).toBe('Q1')
 	})
 })
+
+// Deep active element across shadow boundaries, plus the label of the icure-form-* field host it sits in.
+async function deepActiveInfo(page: Page) {
+	return await page.evaluate(() => {
+		let active: Element | null = document.activeElement
+		while (active && (active as any).shadowRoot && (active as any).shadowRoot.activeElement) {
+			active = (active as any).shadowRoot.activeElement
+		}
+		let fieldLabel: string | null = null
+		let node: Node | null = active
+		while (node) {
+			const root = node.getRootNode()
+			if (!(root instanceof ShadowRoot)) break
+			const host = root.host
+			if (host.tagName.toLowerCase().startsWith('icure-form-')) {
+				fieldLabel = host.getAttribute('label') ?? (host as any).label ?? null
+				break
+			}
+			node = host
+		}
+		return {
+			className: (active as HTMLElement | null)?.className ?? null,
+			tagName: active?.tagName.toLowerCase() ?? null,
+			editable: (active as HTMLElement | null)?.isContentEditable ?? false,
+			fieldLabel,
+		}
+	})
+}
 
 // ============================================================
 // Touch targets

@@ -605,26 +605,38 @@ export class IcureCardInternal extends LitElement {
 	private moveFocusForCurrentStage(): void {
 		const root = this.shadowRoot
 		if (!root) return
-		// Preferred focus targets per stage. Input-stage focus aims at the first interactive form field;
-		// other stages focus their primary action button.
-		const selectorByStage: Record<Stage, string[]> = {
-			welcome: ['.card__start'],
-			input: ['.card__field input', '.card__field textarea', '.card__field select', '.card__field [contenteditable="true"]', '.card__continue'],
-			review: ['.card__submit'],
-			confirmation: ['.card__confirmation-heading'],
-		}
-		const candidates = selectorByStage[this.stage] ?? []
-		for (const sel of candidates) {
-			const target = this.queryDeep(root, sel)
-			if (target && typeof (target as HTMLElement).focus === 'function') {
-				try {
-					;(target as HTMLElement).focus({ preventScroll: false })
-				} catch {
-					/* ignore */
+		if (this.stage === 'input') {
+			// Focus the first editable control of the first field on the card. The `.card__field` class
+			// sits on the field's host element while the actual input lives behind one or more shadow
+			// boundaries (a descendant selector cannot cross them), so the search is two-step: locate the
+			// hosts in our own shadow root, then pierce into each one.
+			for (const fieldHost of Array.from(root.querySelectorAll('.card__field'))) {
+				for (const sel of ['input:not([disabled])', 'textarea:not([disabled])', 'select:not([disabled])', '[contenteditable="true"]', '.ProseMirror']) {
+					const target = this.queryDeep(fieldHost, sel)
+					if (this.tryFocus(target)) return
 				}
-				return
 			}
+			this.tryFocus(this.queryDeep(root, '.card__continue'))
+			return
 		}
+		// Other stages focus their primary action / heading.
+		const selectorByStage: Record<Stage, string> = {
+			welcome: '.card__start',
+			input: '.card__continue',
+			review: '.card__submit',
+			confirmation: '.card__confirmation-heading',
+		}
+		this.tryFocus(this.queryDeep(root, selectorByStage[this.stage]))
+	}
+
+	private tryFocus(target: Element | null): boolean {
+		if (!target || typeof (target as HTMLElement).focus !== 'function') return false
+		try {
+			;(target as HTMLElement).focus({ preventScroll: false })
+		} catch {
+			/* ignore */
+		}
+		return true
 	}
 
 	/**

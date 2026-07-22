@@ -977,3 +977,11 @@ A `delegatedEdition` token field that is also readonly fires `readOnlyEvent` ins
 ```
 
 See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/blob/main/README.md#read-only-fields-and-readonlyevent) in the README.
+
+## [MISSING] 2.2.7 (2026-07-22)
+<!-- tag: 2.2.7 | target: c96fc13ecbe3787c7880a9e7d057425668d84c49 | prerelease: false -->
+
+- Fix deleted services reappearing after multiple contact edits
+- Update dependencies to resolve Dependabot security alerts
+- Fix render-test expectations after schema pinning removal
+- Add release skill and backfill scripts for GitHub releases

@@ -30,7 +30,7 @@
 			"/test/e2e/",
 			"/app/e2e/",
 			"/test/__mocks__/",
-			"/.worktrees/"
+			"<rootDir>/.worktrees/"
 		],
 		"modulePathIgnorePatterns": [
 			"<rootDir>/.worktrees/",

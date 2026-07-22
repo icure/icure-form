@@ -1,5 +1,6 @@
 import { html, LitElement, nothing, PropertyValues, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
+import { keyed } from 'lit/directives/keyed.js'
 
 import { Field, FieldMetadata, FieldValue, Form, SortOptions } from '../../../model'
 import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
@@ -290,13 +291,20 @@ export class IcureCardInternal extends LitElement {
 					<div class="card__progress-bar" style="width: ${((idx + 1) / total) * 100}%"></div>
 					<div class="card__progress-text" aria-live="polite">${progressLabel}</div>
 				</div>
-				<div class="card__card" data-card-section="${card.sectionTitle}">
-					<div class="card__card-header">
-						<div class="card__section-title">${localisedSectionTitle}</div>
-						${localisedGroupTitle ? html`<div class="card__group-title">${localisedGroupTitle}</div>` : nothing}
-					</div>
-					<div class="card__card-body">${card.fields.map((f) => this.renderField(f))}</div>
-				</div>
+				${keyed(
+					// Field components hold state bound to the field they were created for (e.g. the
+					// ProseMirror schema of icure-text-field is fixed at first render), so a card's DOM
+					// must never be reused for a different card. Key by card identity, not index: the
+					// card list can shift when computed visibility changes.
+					`${card.sectionTitle} ${card.groupTitle ?? ''} ${card.fields.map((f) => f.field).join(' ')}`,
+					html`<div class="card__card" data-card-section="${card.sectionTitle}">
+						<div class="card__card-header">
+							<div class="card__section-title">${localisedSectionTitle}</div>
+							${localisedGroupTitle ? html`<div class="card__group-title">${localisedGroupTitle}</div>` : nothing}
+						</div>
+						<div class="card__card-body">${card.fields.map((f) => this.renderField(f))}</div>
+					</div>`,
+				)}
 				<div class="card__nav">
 					<button class="card__back" type="button" @click="${this.onBack}">${backLabel}</button>
 					${this.cameFromReview
@@ -526,9 +534,15 @@ export class IcureCardInternal extends LitElement {
 			return { anyText: false, multiline: false, isButton: false }
 		}
 		if ((target as HTMLElement).isContentEditable) {
-			const textField = path.find((n) => (n as Element).tagName?.toLowerCase() === 'icure-form-text-field') as HTMLElement | undefined
-			const ml = textField ? !!(textField as any).multiline : false
-			return { anyText: true, multiline: ml, isButton: false }
+			const fieldHost = path.find((n) => {
+				const t = (n as Element).tagName?.toLowerCase()
+				return t === 'icure-form-text-field' || t === 'icure-form-token-field' || t === 'icure-form-items-list-field'
+			}) as HTMLElement | undefined
+			const hostTag = fieldHost?.tagName?.toLowerCase()
+			// Enter always edits in token (commits/splits a token) and items-list (adds an item)
+			// editors; in a text field it only edits when the field is multiline.
+			const consumesEnter = hostTag === 'icure-form-token-field' || hostTag === 'icure-form-items-list-field' || !!(fieldHost as any)?.multiline
+			return { anyText: true, multiline: consumesEnter, isButton: false }
 		}
 		return { anyText: false, multiline: false, isButton: false }
 	}

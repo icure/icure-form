@@ -901,6 +901,16 @@ span.code-count-3::before {
 	width: 260px;
 	overflow-y: auto;
 	max-height: 280px;
+
+	// Top-layer variant (Popover API): JS sets top/left from the field's viewport position;
+	// neutralise the UA popover defaults (inset: 0, margin: auto, border).
+	&:popover-open {
+		position: fixed;
+		inset: auto;
+		margin: 0;
+		border: none;
+		padding: 0;
+	}
 }
 
 app-date-picker {

@@ -1,4 +1,4 @@
-import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
+import { CSSResultGroup, html, nothing, PropertyValues, TemplateResult } from 'lit'
 import { generateLabels } from '../common/utils'
 import { property, state } from 'lit/decorators.js'
 import '@icure/motss-app-datepicker'
@@ -74,7 +74,7 @@ export class IcureDatePickerField extends Field {
 				<div id="extra" class=${'extra forced'}>
 					<button class="btn select-arrow">${datePicto}</button>
 					${this.displayDatePicker
-						? html`<div id="menu" class="date-picker" @click="${(event: Event) => event.stopPropagation()}">
+						? html`<div id="menu" class="date-picker" popover="manual" @click="${(event: Event) => event.stopPropagation()}">
 								<app-date-picker
 									locale="${this.selectedLanguage ?? this.defaultLanguage ?? 'en'}"
 									style=""
@@ -112,5 +112,24 @@ export class IcureDatePickerField extends Field {
 			return
 		}
 		this.displayDatePicker = !this.displayDatePicker
+	}
+
+	updated(changedProperties: PropertyValues) {
+		super.updated(changedProperties)
+		// Promote the calendar to the browser top layer so it is not clipped by overflow:hidden/auto
+		// ancestors (e.g. the card renderer's fixed-height card). Browsers without the Popover API
+		// keep the legacy absolutely-positioned popup.
+		const menu = this.shadowRoot?.getElementById('menu') as (HTMLElement & { showPopover?: () => void }) | null
+		if (menu?.showPopover && this.displayDatePicker && !menu.matches(':popover-open')) {
+			menu.showPopover()
+			const anchor = this.shadowRoot?.getElementById('test')
+			if (anchor) {
+				const a = anchor.getBoundingClientRect()
+				const m = menu.getBoundingClientRect()
+				const fitsBelow = a.bottom + 6 + m.height <= window.innerHeight
+				menu.style.top = `${fitsBelow ? a.bottom + 6 : Math.max(8, a.top - 6 - m.height)}px`
+				menu.style.left = `${Math.max(8, Math.min(a.left, window.innerWidth - m.width - 8))}px`
+			}
+		}
 	}
 }

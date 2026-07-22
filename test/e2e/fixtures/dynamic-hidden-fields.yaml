@@ -1,0 +1,41 @@
+form: Dynamic hidden fields
+description: Minimal extract of the former preventi.yaml sample covering formula-driven hidden fields (NH17 checkbox reveals NH19/NH25 follow-ups)
+sections:
+  - section: Food intolerances
+    fields:
+      - field: NH17
+        shortLabel: field.NH17.label.Which_foods_are_you_intolerant
+        span: 24
+        type: checkbox
+        options:
+          NH17|1|1: field.NH17.option.Milk_lactose
+          NH17|2|1: field.NH17.option.Peanuts
+          NH17|3|1: field.NH17.option.Walnuts
+          NH17|4|1: field.NH17.option.Hazelnuts
+          NH17|5|1: field.NH17.option.Other_nuts
+          NH17|6|1: field.NH17.option.Shellfish
+          NH17|7|1: field.NH17.option.Soy
+          NH17|8|1: field.NH17.option.Gluten_containing_cereals
+          NH17|9|1: field.NH17.option.Eggs
+          NH17|10|1: field.NH17.option.Fish
+          NH17|11|1: field.NH17.option.Other_specify
+      - field: NH19
+        shortLabel: field.NH19.label.Has_this_milk_lactose
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: return !hasOption(NH17[0],'1')
+        options:
+          NH19|1|1: field.NH19.option.Yes
+          NH19|2|1: field.NH19.option.No
+          NH19|3|1: field.NH19.option.Don_t_know
+      - field: NH25
+        shortLabel: field.NH25.label.Has_this_egg_intolerance_or
+        span: 24
+        type: radio-button
+        computedProperties:
+          hidden: return !hasOption(NH17[0],'9')
+        options:
+          NH25|1|1: field.NH25.option.Yes
+          NH25|2|1: field.NH25.option.No
+          NH25|3|1: field.NH25.option.Don_t_know

@@ -35,11 +35,17 @@ async function readChromeStrings(page: Page) {
 	return await page.evaluate(() => {
 		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
 		const root = internal?.shadowRoot
+		// Action buttons wrap their text in .card__action-label next to a decorative ↵ key hint;
+		// read the label span so the hint doesn't pollute the asserted string.
+		const buttonText = (sel: string) => {
+			const btn = root?.querySelector(sel)
+			return (btn?.querySelector('.card__action-label') ?? btn)?.textContent?.trim() ?? null
+		}
 		return {
-			start: root?.querySelector('.card__start')?.textContent?.trim() ?? null,
-			continue: root?.querySelector('[class*="card__continue"]')?.textContent?.trim() ?? null,
-			back: root?.querySelector('.card__back')?.textContent?.trim() ?? null,
-			submit: root?.querySelector('.card__submit')?.textContent?.trim() ?? null,
+			start: buttonText('.card__start'),
+			continue: buttonText('[class*="card__continue"]'),
+			back: buttonText('.card__back'),
+			submit: buttonText('.card__submit'),
 			progress: root?.querySelector('.card__progress-text')?.textContent?.trim() ?? null,
 			reviewHeading: root?.querySelector('.card__review-heading')?.textContent?.trim() ?? null,
 			reviewEdit: root?.querySelector('.card__review-edit')?.textContent?.trim() ?? null,

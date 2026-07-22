@@ -684,11 +684,19 @@ export class ContactFormValuesContainer implements FormValuesContainer<Service, 
 		this.changeListeners = changeListeners
 		this._initialised = initialised
 
-		// Collect IDs of services that have been marked with endOfLife in the most recent contact
+		// Collect IDs of services whose latest known version is marked with endOfLife. A save only
+		// persists modified services, so a tombstone may live in a past contact version without being
+		// repeated in the current one — we must scan the whole chain, not just the current contact.
+		// Contacts are iterated most recent first and the first occurrence of a service wins, so a
+		// service re-created after having been tombstoned is displayed again.
 		const endOfLifeServiceIds = new Set<string>()
-		const mostRecentContact = this.currentContact
-		for (const s of mostRecentContact.services ?? []) {
-			if (s.id && s.endOfLife) endOfLifeServiceIds.add(s.id)
+		const seenServiceIds = new Set<string>()
+		for (const ctc of [this.currentContact, ...this.contactsHistory]) {
+			for (const s of ctc.services ?? []) {
+				if (!s.id || seenServiceIds.has(s.id)) continue
+				seenServiceIds.add(s.id)
+				if (s.endOfLife) endOfLifeServiceIds.add(s.id)
+			}
 		}
 
 		this.indexedServices = [this.currentContact].concat(this.contactsHistory).reduce((acc, ctc) => {

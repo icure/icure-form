@@ -28,7 +28,13 @@
 		"testPathIgnorePatterns": [
 			"/node_modules/",
 			"/test/e2e/",
-			"/app/e2e/"
+			"/app/e2e/",
+			"/test/__mocks__/",
+			"<rootDir>/.worktrees/"
+		],
+		"modulePathIgnorePatterns": [
+			"<rootDir>/.worktrees/",
+			"<rootDir>/lib/"
 		],
 		"moduleNameMapper": {
 			"^lit$": "<rootDir>/test/__mocks__/lit.js",

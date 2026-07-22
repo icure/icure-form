@@ -977,3 +977,23 @@ A `delegatedEdition` token field that is also readonly fires `readOnlyEvent` ins
 ```
 
 See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/blob/main/README.md#read-only-fields-and-readonlyevent) in the README.
+
+## [MISSING] 3.3.0 (2026-07-22)
+<!-- tag: 3.3.0 | target: 6936d662ef4b00b636fe7f24baf322310f211add | prerelease: false -->
+
+- Add readOnlyEvent: opt-in click notifications on readonly fields
+- Add optional delete-cross on tokens-list tokens
+- Allow delete cross and delegated edition to coexist on a token field
+- Support computedProperties/readonly on action buttons; token field fixes
+- Write delegated-edition tokens under the form's active language
+- Include clicked token's service id in delegated-edition payload
+- Forward originating DOM event to actionListener and edit-request hook
+- Fix date/date-time round-trip scrambling value on blur
+- Fix schema pinning in text-field
+- Accept hard_break and hardbreak token in MD parser
+- Fix setValue removing history-backed services on empty
+- Fix deleted services reappearing after multiple contact edits
+- Fix card renderer Enter handling and date picker clipping
+- Refactor icure-text-field schemas into per-schema SchemaSpec
+- Reorganise demo app, add e2e suite, fix multiple form bugs
+- Update dependencies to resolve Dependabot security alerts

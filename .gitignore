@@ -5,6 +5,7 @@
 /dist/
 /test-results/
 /tsconfig.tmp.json
+/.worktrees/
 
 .DS_Store
 

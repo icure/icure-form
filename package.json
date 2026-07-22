@@ -28,7 +28,13 @@
 		"testPathIgnorePatterns": [
 			"/node_modules/",
 			"/test/e2e/",
-			"/app/e2e/"
+			"/app/e2e/",
+			"/test/__mocks__/",
+			"/.worktrees/"
+		],
+		"modulePathIgnorePatterns": [
+			"<rootDir>/.worktrees/",
+			"<rootDir>/lib/"
 		],
 		"moduleNameMapper": {
 			"^lit$": "<rootDir>/test/__mocks__/lit.js",
@@ -39,9 +45,13 @@
 			"tsx",
 			"js",
 			"jsx",
+			"mjs",
 			"json",
 			"node",
 			"yaml"
+		],
+		"transformIgnorePatterns": [
+			"/node_modules/(?!@icure/cardinal-sdk/)"
 		],
 		"transform": {
 			"^.+\\.tsx?$": [
@@ -52,7 +62,8 @@
 						"allowSyntheticDefaultImports": true
 					}
 				}
-			]
+			],
+			"^.+\\.mjs$": "<rootDir>/jest-mjs-transformer.js"
 		}
 	},
 	"husky": {

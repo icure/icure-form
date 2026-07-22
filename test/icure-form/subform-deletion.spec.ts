@@ -95,8 +95,8 @@ describe('SubForm deletion — endOfLife handling', () => {
 			created: Date.now(),
 			services: [parentService, childService],
 			subContacts: [
-				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-service-1' }] },
-				{ formId: CHILD_FORM_ID, services: [{ serviceId: 'child-service-1' }] },
+				new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-service-1' })] }),
+				new DecryptedSubContact({ formId: CHILD_FORM_ID, services: [new ServiceLink({ serviceId: 'child-service-1' })] }),
 			],
 		})
 
@@ -187,8 +187,8 @@ describe('SubForm deletion — endOfLife handling', () => {
 			created: Date.now(),
 			services: [parentService, childService],
 			subContacts: [
-				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-service-1' }] },
-				{ formId: CHILD_FORM_ID, services: [{ serviceId: 'child-service-1' }] },
+				new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-service-1' })] }),
+				new DecryptedSubContact({ formId: CHILD_FORM_ID, services: [new ServiceLink({ serviceId: 'child-service-1' })] }),
 			],
 		})
 
@@ -280,7 +280,7 @@ describe('SubForm deletion — endOfLife handling', () => {
 			rev: '2-def',
 			created: savedTimestamp + 5000,
 			services: [parentService, childServiceWithEndOfLife],
-			subContacts: [{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-service-1' }] }],
+			subContacts: [new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-service-1' })] })],
 		})
 
 		// History: the first version of the contact (before subForm removal)
@@ -305,8 +305,8 @@ describe('SubForm deletion — endOfLife handling', () => {
 				}),
 			],
 			subContacts: [
-				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-service-1' }] },
-				{ formId: CHILD_FORM_ID, services: [{ serviceId: 'child-service-1' }] },
+				new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-service-1' })] }),
+				new DecryptedSubContact({ formId: CHILD_FORM_ID, services: [new ServiceLink({ serviceId: 'child-service-1' })] }),
 			],
 		})
 
@@ -356,9 +356,9 @@ describe('SubForm deletion — endOfLife handling', () => {
 				new DecryptedService({ id: 'b-svc', label: 'BField', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b' }) } }),
 			],
 			subContacts: [
-				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-svc' }] },
-				{ formId: SUBFORM_A_ID, services: [{ serviceId: 'a-svc' }] },
-				{ formId: SUBFORM_B_ID, services: [{ serviceId: 'b-svc' }] },
+				new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-svc' })] }),
+				new DecryptedSubContact({ formId: SUBFORM_A_ID, services: [new ServiceLink({ serviceId: 'a-svc' })] }),
+				new DecryptedSubContact({ formId: SUBFORM_B_ID, services: [new ServiceLink({ serviceId: 'b-svc' })] }),
 			],
 		})
 
@@ -438,11 +438,11 @@ describe('SubForm deletion — endOfLife handling', () => {
 				new DecryptedService({ id: 'b3-svc', label: 'B3Field', created: savedTimestamp, modified: savedTimestamp, content: { en: new DecryptedContent({ stringValue: 'b3' }) } }),
 			],
 			subContacts: [
-				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-svc' }] },
-				{ formId: SUBFORM_A_ID, services: [{ serviceId: 'a-svc' }] },
-				{ formId: SUBFORM_B1_ID, services: [{ serviceId: 'b1-svc' }] },
-				{ formId: SUBFORM_B2_ID, services: [{ serviceId: 'b2-svc-1' }, { serviceId: 'b2-svc-2' }] },
-				{ formId: SUBFORM_B3_ID, services: [{ serviceId: 'b3-svc' }] },
+				new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-svc' })] }),
+				new DecryptedSubContact({ formId: SUBFORM_A_ID, services: [new ServiceLink({ serviceId: 'a-svc' })] }),
+				new DecryptedSubContact({ formId: SUBFORM_B1_ID, services: [new ServiceLink({ serviceId: 'b1-svc' })] }),
+				new DecryptedSubContact({ formId: SUBFORM_B2_ID, services: [new ServiceLink({ serviceId: 'b2-svc-1' }), new ServiceLink({ serviceId: 'b2-svc-2' })] }),
+				new DecryptedSubContact({ formId: SUBFORM_B3_ID, services: [new ServiceLink({ serviceId: 'b3-svc' })] }),
 			],
 		})
 
@@ -544,8 +544,8 @@ describe('SubForm deletion — endOfLife handling', () => {
 			created: savedTimestamp + 5000,
 			services: [parentService, childServiceWithEndOfLife],
 			subContacts: [
-				{ formId: PARENT_FORM_ID, services: [{ serviceId: 'parent-service-1' }] },
-				{ formId: CHILD_FORM_ID, services: [{ serviceId: 'child-service-1' }] },
+				new DecryptedSubContact({ formId: PARENT_FORM_ID, services: [new ServiceLink({ serviceId: 'parent-service-1' })] }),
+				new DecryptedSubContact({ formId: CHILD_FORM_ID, services: [new ServiceLink({ serviceId: 'child-service-1' })] }),
 			],
 		})
 

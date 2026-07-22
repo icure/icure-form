@@ -1,5 +1,5 @@
-import { Contact, Form as ICureForm, Service } from '@icure/api'
-import { ContactFormValuesContainer } from '../../src/icure/form-values-container'
+import { DecryptedContact, DecryptedContent, DecryptedForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
+import { ContactFormValuesContainer } from '../../src/icure'
 
 /**
  * Tests for emptying a field (setValue with no content) and how the underlying
@@ -18,8 +18,8 @@ const FIELD_LABEL = 'Field1'
 const SERVICE_ID = 'service-1'
 
 let serviceOrdinal = 0
-const serviceFactory = (label: string, serviceId?: string): Service =>
-	new Service({
+const serviceFactory = (label: string, serviceId?: string): DecryptedService =>
+	new DecryptedService({
 		id: serviceId ?? `service-${++serviceOrdinal}`,
 		label,
 		created: Date.now(),
@@ -27,18 +27,19 @@ const serviceFactory = (label: string, serviceId?: string): Service =>
 		content: {},
 	})
 
-const formFactory = async (parentId: string, anchorId: string, formTemplateId: string, label: string): Promise<ICureForm> =>
-	new ICureForm({ id: `new-form-${Date.now()}`, formTemplateId, descr: label, parent: parentId })
+const formFactory = async (parentId: string, anchorId: string, formTemplateId: string, label: string): Promise<DecryptedForm> =>
+	new DecryptedForm({ id: `new-form-${Date.now()}`, formTemplateId, descr: label, parent: parentId })
 
 const formRecycler = async (): Promise<void> => {
 	// no-op
 }
 
-const makeForm = (): ICureForm => new ICureForm({ id: FORM_ID, formTemplateId: FORM_TEMPLATE_ID, descr: 'Form' })
+const makeForm = (): DecryptedForm => new DecryptedForm({ id: FORM_ID, formTemplateId: FORM_TEMPLATE_ID, descr: 'Form' })
 
-const filledService = (createdAt: number): Service => new Service({ id: SERVICE_ID, label: FIELD_LABEL, created: createdAt, modified: createdAt, content: { en: { stringValue: 'value' } } })
+const filledService = (createdAt: number): DecryptedService =>
+	new DecryptedService({ id: SERVICE_ID, label: FIELD_LABEL, created: createdAt, modified: createdAt, content: { en: new DecryptedContent({ stringValue: 'value' }) } })
 
-const buildContainer = (currentContact: Contact, history: Contact[]): ContactFormValuesContainer =>
+const buildContainer = (currentContact: DecryptedContact, history: DecryptedContact[]): ContactFormValuesContainer =>
 	new ContactFormValuesContainer(makeForm(), currentContact, history, serviceFactory, [], formFactory, formRecycler, [], undefined, true)
 
 const emptyField = (container: ContactFormValuesContainer): ContactFormValuesContainer => {
@@ -47,7 +48,7 @@ const emptyField = (container: ContactFormValuesContainer): ContactFormValuesCon
 		updated = newValue as ContactFormValuesContainer
 	})
 	// An empty content for the language clears the field.
-	container.setValue(FIELD_LABEL, 'en', new Service({ id: SERVICE_ID, content: {} }), SERVICE_ID)
+	container.setValue(FIELD_LABEL, 'en', new DecryptedService({ id: SERVICE_ID, content: {} }), SERVICE_ID)
 	expect(updated).toBeDefined()
 	return updated!
 }
@@ -55,11 +56,11 @@ const emptyField = (container: ContactFormValuesContainer): ContactFormValuesCon
 describe('setValue — emptying a field', () => {
 	it('removes a service that exists only in the current contact', () => {
 		const now = Date.now()
-		const currentContact = new Contact({
+		const currentContact = new DecryptedContact({
 			id: 'contact-current',
 			created: now,
 			services: [filledService(now)],
-			subContacts: [{ formId: FORM_ID, services: [{ serviceId: SERVICE_ID }] }],
+			subContacts: [new DecryptedSubContact({ formId: FORM_ID, services: [new ServiceLink({ serviceId: SERVICE_ID })] })],
 		})
 
 		const container = buildContainer(currentContact, [])
@@ -71,19 +72,19 @@ describe('setValue — emptying a field', () => {
 
 	it('keeps a service that also exists in history, marking it with endOfLife', () => {
 		const past = Date.now() - 10000
-		const historyContact = new Contact({
+		const historyContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: past,
 			services: [filledService(past)],
-			subContacts: [{ formId: FORM_ID, services: [{ serviceId: SERVICE_ID }] }],
+			subContacts: [new DecryptedSubContact({ formId: FORM_ID, services: [new ServiceLink({ serviceId: SERVICE_ID })] })],
 		})
-		const currentContact = new Contact({
+		const currentContact = new DecryptedContact({
 			id: 'contact-2',
 			rev: '2-def',
 			created: past + 5000,
 			services: [filledService(past + 5000)],
-			subContacts: [{ formId: FORM_ID, services: [{ serviceId: SERVICE_ID }] }],
+			subContacts: [new DecryptedSubContact({ formId: FORM_ID, services: [new ServiceLink({ serviceId: SERVICE_ID })] })],
 		})
 
 		const container = buildContainer(currentContact, [historyContact])
@@ -101,14 +102,14 @@ describe('setValue — emptying a field', () => {
 
 	it('adds an endOfLife tombstone when the service exists only in history (not yet in the current contact)', () => {
 		const past = Date.now() - 10000
-		const historyContact = new Contact({
+		const historyContact = new DecryptedContact({
 			id: 'contact-1',
 			rev: '1-abc',
 			created: past,
 			services: [filledService(past)],
-			subContacts: [{ formId: FORM_ID, services: [{ serviceId: SERVICE_ID }] }],
+			subContacts: [new DecryptedSubContact({ formId: FORM_ID, services: [new ServiceLink({ serviceId: SERVICE_ID })] })],
 		})
-		const currentContact = new Contact({
+		const currentContact = new DecryptedContact({
 			id: 'contact-2',
 			rev: '2-def',
 			created: past + 5000,

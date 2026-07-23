@@ -225,18 +225,26 @@ export class IcureTextField extends Field {
 		} else {
 			const [valueId] = extractSingleValue(this.valueProvider?.())
 			const value = this.primitiveTypeExtractor?.(tr.doc)
-			this.updateInvalidValueState(tr.doc, value)
-			this.handleValueChanged?.(
-				this.label,
-				this.language(),
-				value
-					? {
-							content: { [this.language()]: value },
-							codes: this.codesExtractor?.(tr.doc) ?? [],
-					  }
-					: undefined,
-				valueId,
-			) && (this.selectedRevision = undefined)
+			const invalid = this.updateInvalidValueState(tr.doc, value)
+			// Invalid date/time input has no value to persist, but we must NOT clear the
+			// stored value either: clearing rebuilds the editor from the (empty) stored
+			// value on the next render and wipes the text the user is trying to correct
+			// (and, in hosts that swap the container per change, resets this field's
+			// invalid state so the warning vanishes). Leave the value untouched and let
+			// the inline warning stand until the input becomes valid or is emptied.
+			if (!invalid) {
+				this.handleValueChanged?.(
+					this.label,
+					this.language(),
+					value
+						? {
+								content: { [this.language()]: value },
+								codes: this.codesExtractor?.(tr.doc) ?? [],
+						  }
+						: undefined,
+					valueId,
+				) && (this.selectedRevision = undefined)
+			}
 		}
 	}
 
@@ -279,7 +287,12 @@ export class IcureTextField extends Field {
 				metadata = id && rev !== undefined ? this.metadataProvider?.(id, versions?.map((v) => v.revision) ?? [])?.[id]?.find((m) => m.revision === rev)?.value : undefined
 			}
 
-			if (parsedDoc) {
+			// While the field holds invalid date/time input, keep the editor doc as the
+			// user typed it: rebuilding from the (unstored, hence empty) value here would
+			// wipe the text they are correcting and hide the inline warning.
+			if (this.invalidValue) {
+				// no-op: preserve the current editor doc
+			} else if (parsedDoc) {
 				const selection = this.view.state.selection
 				const selAnchor = selection.$anchor.pos
 				const selHead = selection.$head.pos
@@ -840,11 +853,13 @@ export class IcureTextField extends Field {
 			: () => []
 	}
 
-	private updateInvalidValueState(doc: ProsemirrorNode, value: PrimitiveType | undefined): void {
+	private updateInvalidValueState(doc: ProsemirrorNode, value: PrimitiveType | undefined): boolean {
 		const invalid = isInvalidDateTimeInput(this.schema, doc?.firstChild?.textContent, doc?.lastChild?.textContent, value)
-		if (invalid === this.invalidValue) return
-		this.invalidValue = invalid
-		this.dispatchEvent(new CustomEvent('field-validity-changed', { bubbles: true, composed: true, detail: { label: this.label, invalid } }))
+		if (invalid !== this.invalidValue) {
+			this.invalidValue = invalid
+			this.dispatchEvent(new CustomEvent('field-validity-changed', { bubbles: true, composed: true, detail: { label: this.label, invalid } }))
+		}
+		return invalid
 	}
 
 	private invalidValueMessage(): string {

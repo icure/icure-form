@@ -86,6 +86,16 @@ async function invalidWarningVisible(page: Page): Promise<boolean> {
 	})
 }
 
+// The text currently shown in the time field's editor (used to assert invalid input is not wiped).
+async function timeEditorText(page: Page): Promise<string> {
+	return await page.evaluate(() => {
+		const internal = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-card-internal') as any
+		const picker = internal?.shadowRoot?.querySelector('icure-form-time-picker') as any
+		const textField = picker?.shadowRoot?.querySelector('icure-text-field') as any
+		return (textField?.shadowRoot?.querySelector('.ProseMirror') as HTMLElement | null)?.textContent ?? ''
+	})
+}
+
 const yaml = `
 form: F
 sections:
@@ -117,6 +127,8 @@ test.describe('Invalid date/time value blocks Continue (card renderer)', () => {
 		expect(await invalidFormatFlag(page)).toBe('1')
 		expect(await invalidWarningVisible(page)).toBe(true)
 		expect(await isContinueDisabled(page)).toBe(true)
+		// The invalid text the user typed must be preserved, not wiped to the empty mask.
+		expect(await timeEditorText(page)).toBe('25:59:99')
 
 		// Enter must not advance while blocked.
 		await page.keyboard.press('Enter')
@@ -154,6 +166,8 @@ test.describe('Invalid date/time value blocks Continue (card renderer)', () => {
 		expect(await currentCardIndex(page)).toBe(0)
 		expect(await invalidFormatFlag(page)).toBe('1')
 		expect(await invalidWarningVisible(page)).toBe(true)
+		// The invalid text must survive the Enter commit, not be cleared to the empty mask.
+		expect(await timeEditorText(page)).toBe('25:59:99')
 
 		// Fix to a valid time and press Enter (still without an explicit blur): it advances.
 		expect(await focusTimeEditor(page)).toBe(true)

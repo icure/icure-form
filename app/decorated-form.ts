@@ -538,7 +538,7 @@ export class DecoratedForm extends LitElement {
 	render() {
 		return html`
 			<icure-form
-				style="min-height: 600px"
+				style="min-height: 200px"
 				.form="${this.form}"
 				labelPosition="above"
 				renderer="${this.renderer}"

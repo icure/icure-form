@@ -78,7 +78,7 @@ sections:
                 const dob = parseContent(dateOfBirth[0]?.content)
                 if (!dob) { return undefined }
                 // The date-picker stores yyyyMMddHHmmss but ageText() expects yyyyMMdd
-                return ageText(dob >= 100000000 ? Math.floor(dob / 1000000) : dob)
+                return ageText(dob)
       - field: "Computed value derived from a date. Age calls ageText(dob) — a host-provided helper exposed via the interpreter context. The date-picker stores yyyyMMddHHmmss so the formula divides by 1_000_000 first. Test: pick a date in the past (e.g. 01/01/1990) — Age fills in with the corresponding number of years."
         type: label
         span: 24

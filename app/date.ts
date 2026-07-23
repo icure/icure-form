@@ -66,7 +66,7 @@ export const convertTimeInSeconds = (text?: string) => {
 
 export const getAge = (date: number | undefined): number | undefined => (date ? differenceInYears(new Date(), new Date(date / 10000, (date % 10000) / 100 - 1, date % 100)) : undefined)
 
-export const getAgeDescription = (date: number | undefined, language = 'fr'): string | undefined => {
+export const getAgeDescription = (date: number | Date | undefined, language = 'fr'): string | undefined => {
 	if (!date) {
 		return '-'
 	}
@@ -91,7 +91,7 @@ export const getAgeDescription = (date: number | undefined, language = 'fr'): st
 			  ]
 
 	const now = new Date()
-	const birthDate = new Date(date / 10000, (date % 10000) / 100 - 1, date % 100)
+	const birthDate = date instanceof Date ? date : date < 10000000 ? new Date(date * 1000) : date > 29990000 ? new Date(date) : new Date(date / 10000, (date % 10000) / 100 - 1, date % 100)
 
 	const years = differenceInYears(now, birthDate)
 	if (years !== 0) {

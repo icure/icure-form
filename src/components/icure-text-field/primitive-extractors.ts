@@ -37,3 +37,27 @@ export const extractDateTimePrimitive = (dateText: string | undefined, timeText:
 	const parsed = parse(dateText + ' ' + timeText, 'dd/MM/yyyy HH:mm:ss', new Date())
 	return isValid(parsed) ? { type: 'datetime', value: parseInt(format(parsed, 'yyyyMMddHHmmss')) } : undefined
 }
+
+export type DateTimeSchemaName = 'date' | 'time' | 'date-time'
+
+/** True for the three schemas whose text is parsed into a datetime primitive. */
+export const isDateTimeSchemaName = (schema: string): schema is DateTimeSchemaName => schema === 'date' || schema === 'time' || schema === 'date-time'
+
+/**
+ * True when the text carries at least one entered digit, i.e. it is more than
+ * the empty mask (`--/--/----`, `--:--:--`). This is what separates an empty
+ * field (passes) from one the user typed into.
+ */
+export const hasEnteredValue = (text: string | undefined): boolean => /\d/.test(text ?? '')
+
+/**
+ * True when a date/time field has been typed into but its text does not parse
+ * to a value. `extracted` is the result the field already computed with the
+ * matching `extract*Primitive` helper. Empty/all-mask input is not invalid.
+ * For `date-time`, either part carrying a digit counts as "entered".
+ */
+export const isInvalidDateTimeInput = (schema: string, firstText: string | undefined, lastText: string | undefined, extracted: PrimitiveType | undefined): boolean => {
+	if (!isDateTimeSchemaName(schema)) return false
+	const entered = schema === 'date-time' ? hasEnteredValue(firstText) || hasEnteredValue(lastText) : hasEnteredValue(firstText)
+	return entered && extracted === undefined
+}

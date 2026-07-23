@@ -1,4 +1,11 @@
-import { extractDatePrimitive, extractDateTimePrimitive, extractTimePrimitive } from '../../src/components/icure-text-field/primitive-extractors'
+import {
+	extractDatePrimitive,
+	extractDateTimePrimitive,
+	extractTimePrimitive,
+	isDateTimeSchemaName,
+	hasEnteredValue,
+	isInvalidDateTimeInput,
+} from '../../src/components/icure-text-field/primitive-extractors'
 
 describe('primitive extractors', () => {
 	describe('extractDatePrimitive', () => {
@@ -46,6 +53,54 @@ describe('primitive extractors', () => {
 		it('returns undefined for invalid input without throwing', () => {
 			expect(() => extractDateTimePrimitive('99/99/9999', '99:99:99')).not.toThrow()
 			expect(extractDateTimePrimitive('99/99/9999', '99:99:99')).toBeUndefined()
+		})
+	})
+
+	describe('isDateTimeSchemaName', () => {
+		it('recognises the three date/time schemas', () => {
+			expect(isDateTimeSchemaName('date')).toBe(true)
+			expect(isDateTimeSchemaName('time')).toBe(true)
+			expect(isDateTimeSchemaName('date-time')).toBe(true)
+		})
+		it('rejects other schemas', () => {
+			expect(isDateTimeSchemaName('measure')).toBe(false)
+			expect(isDateTimeSchemaName('styled-text-with-codes')).toBe(false)
+		})
+	})
+
+	describe('hasEnteredValue', () => {
+		it('is false for the empty mask and empty/undefined input', () => {
+			expect(hasEnteredValue('--/--/----')).toBe(false)
+			expect(hasEnteredValue('--:--:--')).toBe(false)
+			expect(hasEnteredValue('')).toBe(false)
+			expect(hasEnteredValue(undefined)).toBe(false)
+		})
+		it('is true once any digit is entered', () => {
+			expect(hasEnteredValue('25/--/----')).toBe(true)
+			expect(hasEnteredValue('14:30:15')).toBe(true)
+		})
+	})
+
+	describe('isInvalidDateTimeInput', () => {
+		it('is false for non-date/time schemas', () => {
+			expect(isInvalidDateTimeInput('measure', 'abc', undefined, undefined)).toBe(false)
+		})
+		it('is false for the empty mask (empty, not invalid)', () => {
+			expect(isInvalidDateTimeInput('date', '--/--/----', undefined, extractDatePrimitive('--/--/----'))).toBe(false)
+			expect(isInvalidDateTimeInput('time', '--:--:--', undefined, extractTimePrimitive('--:--:--'))).toBe(false)
+			expect(isInvalidDateTimeInput('date-time', '--/--/----', '--:--:--', extractDateTimePrimitive('--/--/----', '--:--:--'))).toBe(false)
+		})
+		it('is false for valid entered values', () => {
+			expect(isInvalidDateTimeInput('date', '25/12/2023', undefined, extractDatePrimitive('25/12/2023'))).toBe(false)
+			expect(isInvalidDateTimeInput('time', '14:30:15', undefined, extractTimePrimitive('14:30:15'))).toBe(false)
+			expect(isInvalidDateTimeInput('date-time', '25/12/2023', '14:30:15', extractDateTimePrimitive('25/12/2023', '14:30:15'))).toBe(false)
+		})
+		it('is true for non-empty unparseable values', () => {
+			expect(isInvalidDateTimeInput('date', '99/99/9999', undefined, extractDatePrimitive('99/99/9999'))).toBe(true)
+			expect(isInvalidDateTimeInput('time', '25:59:99', undefined, extractTimePrimitive('25:59:99'))).toBe(true)
+		})
+		it('treats a partially-filled date-time as invalid', () => {
+			expect(isInvalidDateTimeInput('date-time', '25/12/2023', '--:--:--', extractDateTimePrimitive('25/12/2023', '--:--:--'))).toBe(true)
 		})
 	})
 })

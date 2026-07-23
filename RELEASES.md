@@ -806,7 +806,7 @@ Maintenance release (version bump only).
 - Base patient card max-height on its container instead of the viewport
 - Rename patient-cards renderer to card
 
-## [MISSING] 3.2.1 (2026-05-26)
+## 3.2.1 (2026-05-26)
 <!-- tag: 3.2.1 | target: 26c6147d7e91035a4b4e598c35ee370b4bef84c1 | prerelease: false -->
 
 - Replace hiddenForPatient with role-based visibility
@@ -978,7 +978,7 @@ A `delegatedEdition` token field that is also readonly fires `readOnlyEvent` ins
 
 See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/blob/main/README.md#read-only-fields-and-readonlyevent) in the README.
 
-## [MISSING] 2.2.7 (2026-07-22)
+## 2.2.7 (2026-07-22)
 <!-- tag: 2.2.7 | target: c96fc13ecbe3787c7880a9e7d057425668d84c49 | prerelease: false -->
 
 - Fix deleted services reappearing after multiple contact edits

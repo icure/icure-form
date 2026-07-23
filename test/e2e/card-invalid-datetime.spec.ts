@@ -134,4 +134,35 @@ test.describe('Invalid date/time value blocks Continue (card renderer)', () => {
 		expect(await invalidWarningVisible(page)).toBe(false)
 		expect(await isContinueDisabled(page)).toBe(false)
 	})
+
+	test('pressing Enter on an unparseable value without blurring shows the warning and does not advance; a valid value advances', async ({ page }) => {
+		await gotoHarness(page)
+		await initCard(page, yaml)
+		await waitForInternal(page)
+		await clickByClass(page, 'card__start')
+
+		expect(await currentCardIndex(page)).toBe(0)
+
+		// Type an invalid time and press Enter WITHOUT blurring first.
+		expect(await focusTimeEditor(page)).toBe(true)
+		await page.keyboard.type('255999')
+		await page.waitForTimeout(200)
+		await page.keyboard.press('Enter')
+		await page.waitForTimeout(300)
+
+		// The Enter handler must commit the field, surface the warning, and refuse to advance.
+		expect(await currentCardIndex(page)).toBe(0)
+		expect(await invalidFormatFlag(page)).toBe('1')
+		expect(await invalidWarningVisible(page)).toBe(true)
+
+		// Fix to a valid time and press Enter (still without an explicit blur): it advances.
+		expect(await focusTimeEditor(page)).toBe(true)
+		await page.keyboard.press('Control+a')
+		await page.keyboard.type('143015')
+		await page.waitForTimeout(200)
+		await page.keyboard.press('Enter')
+		await page.waitForTimeout(300)
+
+		expect(await currentCardIndex(page)).toBe(1)
+	})
 })

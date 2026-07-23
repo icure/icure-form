@@ -84,6 +84,18 @@ export class IcureTextField extends Field {
 		return this.invalidValue
 	}
 
+	/**
+	 * Force a synchronous commit of the current editor content without waiting for
+	 * blur or the debounce. The card renderer calls this before advancing on Enter
+	 * so an un-blurred date/time value's validity (and value) is reflected before
+	 * the navigation gate is evaluated. Mirrors the editor's blur handler.
+	 */
+	public commitNow(): void {
+		if (!this.view) return
+		this.trToSave = undefined
+		this.updateValue(this.view.state.tr)
+	}
+
 	private container?: HTMLElement
 	private readonly windowListeners: [string, () => void][] = []
 	private suggestionPalette?: SuggestionPalette

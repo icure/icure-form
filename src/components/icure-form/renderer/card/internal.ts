@@ -495,6 +495,10 @@ export class IcureCardInternal extends LitElement {
 		if (e.key === 'Enter') {
 			// Let Enter through for multi-line editors and for native button activation.
 			if (editing.multiline || editing.isButton) return
+			// Commit the focused field first: a date/time editor only computes its invalid
+			// state on commit (blur/debounce), so without this an un-blurred invalid value
+			// would not yet have raised the block when we evaluate the advance gate below.
+			this.commitFocusedTextField(path)
 			const advanced = this.advanceForCurrentStage()
 			if (advanced) {
 				e.preventDefault()
@@ -533,6 +537,11 @@ export class IcureCardInternal extends LitElement {
 			node = node instanceof ShadowRoot ? node.host : node.parentNode
 		}
 		return false
+	}
+
+	private commitFocusedTextField(path: EventTarget[]): void {
+		const host = path.find((n) => (n as Element)?.tagName?.toLowerCase() === 'icure-text-field') as (Element & { commitNow?: () => void }) | undefined
+		host?.commitNow?.()
 	}
 
 	private classifyEditingTarget(path: EventTarget[]): { anyText: boolean; multiline: boolean; isButton: boolean } {

@@ -21,7 +21,7 @@ import { hasMark } from './prosemirror-utils'
 import { maskPlugin } from './plugin/mask-plugin'
 import { hasContentClassPlugin } from './plugin/has-content-class-plugin'
 import { regexpPlugin } from './plugin/regexp-plugin'
-import { format, parse } from 'date-fns'
+import { format } from 'date-fns'
 import { Field } from '../common'
 import { Code, FieldMetadata, FieldValue, IcureTextFieldSchema, PrimitiveType, pteq, StringType } from '../model'
 import { Suggestion, Version } from '../../generic'
@@ -34,6 +34,7 @@ import { extractSingleValue, extractValues } from '../icure-form/fields/utils'
 import { preprocessEmptyNodes, SpacePreservingMarkdownParser } from '../../utils/markdown'
 import { measureOnFocusHandler, measureTransactionMapper } from './schema/measure-schema'
 import { anyDateToDate } from '../../utils/dates'
+import { extractDatePrimitive, extractDateTimePrimitive, extractTimePrimitive } from './primitive-extractors'
 import { icureFormLogging } from '../../index'
 import { resetPicto } from '../common/styles/paths'
 
@@ -821,20 +822,9 @@ export class IcureTextField extends Field {
 
 	private makePrimitiveExtractor(schemaName: string): (doc?: ProsemirrorNode) => PrimitiveType | undefined {
 		return schemaName === 'date'
-			? (doc?: ProsemirrorNode) => (doc?.firstChild?.textContent ? { type: 'datetime', value: parseInt(format(parse(doc.firstChild.textContent, 'dd/MM/yyyy', new Date()), 'yyyyMMdd')) } : undefined)
+			? (doc?: ProsemirrorNode) => extractDatePrimitive(doc?.firstChild?.textContent)
 			: schemaName === 'time'
-			? (doc?: ProsemirrorNode) => {
-					if (doc?.firstChild?.textContent && !doc.firstChild.textContent.startsWith('--:')) {
-						const value = parseInt(format(parse(doc.firstChild.textContent.replaceAll('-', '0'), 'HH:mm:ss', new Date()), 'HHmmss'))
-						console.log(`Converted time to: ${value}`)
-						return {
-							type: 'datetime',
-							value: value,
-						}
-					} else {
-						return undefined
-					}
-			  }
+			? (doc?: ProsemirrorNode) => extractTimePrimitive(doc?.firstChild?.textContent)
 			: schemaName === 'measure'
 			? (doc?: ProsemirrorNode) => ({
 					type: 'measure',
@@ -851,13 +841,7 @@ export class IcureTextField extends Field {
 			: schemaName === 'decimal'
 			? (doc?: ProsemirrorNode) => (doc?.firstChild?.textContent?.length ? { type: 'number', value: parseFloat(doc.firstChild.textContent.replace(/,/g, '.')) } : undefined)
 			: schemaName === 'date-time'
-			? (doc?: ProsemirrorNode) =>
-					doc?.firstChild?.textContent && doc?.lastChild?.textContent
-						? {
-								type: 'datetime',
-								value: parseInt(format(parse(doc.firstChild.textContent + ' ' + doc.lastChild.textContent, 'dd/MM/yyyy HH:mm:ss', new Date()), 'yyyyMMddHHmmss')),
-						  }
-						: undefined
+			? (doc?: ProsemirrorNode) => extractDateTimePrimitive(doc?.firstChild?.textContent, doc?.lastChild?.textContent)
 			: (doc?: ProsemirrorNode) => (doc ? { type: 'string', value: this.serializer.serialize(doc) } : undefined)
 	}
 

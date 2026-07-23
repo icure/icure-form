@@ -34,7 +34,7 @@ import { extractSingleValue, extractValues } from '../icure-form/fields/utils'
 import { preprocessEmptyNodes, SpacePreservingMarkdownParser } from '../../utils/markdown'
 import { measureOnFocusHandler, measureTransactionMapper } from './schema/measure-schema'
 import { anyDateToDate } from '../../utils/dates'
-import { extractDatePrimitive, extractDateTimePrimitive, extractTimePrimitive } from './primitive-extractors'
+import { extractDatePrimitive, extractDateTimePrimitive, extractTimePrimitive, isInvalidDateTimeInput } from './primitive-extractors'
 import { icureFormLogging } from '../../index'
 import { resetPicto } from '../common/styles/paths'
 
@@ -77,6 +77,12 @@ export class IcureTextField extends Field {
 
 	@state() private view?: EditorView
 	@state() private pasteWarning = false
+	@state() private invalidValue = false
+
+	/** Whether this field currently holds a non-empty date/time value that cannot be parsed. */
+	public get hasInvalidValue(): boolean {
+		return this.invalidValue
+	}
 
 	private container?: HTMLElement
 	private readonly windowListeners: [string, () => void][] = []
@@ -207,6 +213,7 @@ export class IcureTextField extends Field {
 		} else {
 			const [valueId] = extractSingleValue(this.valueProvider?.())
 			const value = this.primitiveTypeExtractor?.(tr.doc)
+			this.updateInvalidValueState(tr.doc, value)
 			this.handleValueChanged?.(
 				this.label,
 				this.language(),
@@ -321,6 +328,7 @@ export class IcureTextField extends Field {
 						}
 					</div>
 					${this.pasteWarning ? html`<div class="paste-warning">⚠️ Invalid paste content. The pasted content could not be inserted into this field.</div>` : nothing}
+					${this.invalidValue ? html`<div class="error invalid-value-error"><div>${this.invalidValueMessage()}</div></div>` : nothing}
 					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 				</div>
 			</div>
@@ -818,6 +826,19 @@ export class IcureTextField extends Field {
 					return unit ? [{ id: `CD-UNIT|${unit}|1`, label: { [this.selectedLanguage ?? this.defaultLanguage ?? 'en']: unit } }] : []
 			  }
 			: () => []
+	}
+
+	private updateInvalidValueState(doc: ProsemirrorNode, value: PrimitiveType | undefined): void {
+		const invalid = isInvalidDateTimeInput(this.schema, doc?.firstChild?.textContent, doc?.lastChild?.textContent, value)
+		if (invalid === this.invalidValue) return
+		this.invalidValue = invalid
+		this.dispatchEvent(new CustomEvent('field-validity-changed', { bubbles: true, composed: true, detail: { label: this.label, invalid } }))
+	}
+
+	private invalidValueMessage(): string {
+		const messages: Record<string, string> = { date: 'Invalid date', time: 'Invalid time', 'date-time': 'Invalid date and time' }
+		const msg = messages[this.schema] ?? 'Invalid value'
+		return this.translationProvider?.(this.language(), msg) ?? msg
 	}
 
 	private makePrimitiveExtractor(schemaName: string): (doc?: ProsemirrorNode) => PrimitiveType | undefined {

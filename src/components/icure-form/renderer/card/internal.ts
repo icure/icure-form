@@ -58,6 +58,7 @@ export class IcureCardInternal extends LitElement {
 	// Phase 3 validation state.
 	@state() private evaluating = false
 	@state() private blockingFailures: Array<{ fieldLabel: string; message: string }> = []
+	@state() private hasInvalidFormat = false
 	@state() private reviewFailures: Array<{ fieldLabel: string; cardIndex: number; message: string }> = []
 	private validationVersion = 0
 
@@ -78,11 +79,13 @@ export class IcureCardInternal extends LitElement {
 		// subtree (e.g. after the patient clicked on the page background). Capture phase ensures we
 		// intercept Enter before inner editors (ProseMirror) consume it.
 		document.addEventListener('keydown', this.onKeyDown, { capture: true })
+		this.addEventListener('field-validity-changed', this.onFieldValidityChanged)
 	}
 
 	override disconnectedCallback(): void {
 		super.disconnectedCallback()
 		document.removeEventListener('keydown', this.onKeyDown, { capture: true })
+		this.removeEventListener('field-validity-changed', this.onFieldValidityChanged)
 	}
 
 	protected firstUpdated(): void {
@@ -116,6 +119,7 @@ export class IcureCardInternal extends LitElement {
 				this.reviewFailures = []
 				this.evaluating = false
 			}
+			this.computeInvalidFormat()
 		}
 	}
 
@@ -278,7 +282,7 @@ export class IcureCardInternal extends LitElement {
 		const card = cards[idx]
 		const total = cards.length
 		const isLast = idx === total - 1
-		const blocked = this.evaluating || this.blockingFailures.length > 0
+		const blocked = this.inputBlocked
 		const tp = this.translation()
 		const continueLabel = resolveChrome(tp, this.language, 'continue')
 		const backLabel = resolveChrome(tp, this.language, 'back')
@@ -286,7 +290,14 @@ export class IcureCardInternal extends LitElement {
 		const localisedSectionTitle = this.localiseChromeText(card.sectionTitle)
 		const localisedGroupTitle = card.groupTitle ? this.localiseGroupTitle(card.groupTitle) : undefined
 		return html`
-			<div class="card card--stage-input" data-stage="input" data-current-card-index="${idx}" data-total-cards="${total}" data-blocking-failures="${this.blockingFailures.length}">
+			<div
+				class="card card--stage-input"
+				data-stage="input"
+				data-current-card-index="${idx}"
+				data-total-cards="${total}"
+				data-blocking-failures="${this.blockingFailures.length}"
+				data-invalid-format="${this.hasInvalidFormat ? '1' : '0'}"
+			>
 				<div class="card__progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${idx + 1}" aria-label="${progressLabel}">
 					<div class="card__progress-bar" style="width: ${((idx + 1) / total) * 100}%"></div>
 					<div class="card__progress-text" aria-live="polite">${progressLabel}</div>
@@ -431,6 +442,7 @@ export class IcureCardInternal extends LitElement {
 	}
 
 	private onContinue = () => {
+		if (this.inputBlocked) return
 		const cards = this.cards
 		if (this.currentCardIndex < cards.length - 1) {
 			this.currentCardIndex = this.currentCardIndex + 1
@@ -438,10 +450,12 @@ export class IcureCardInternal extends LitElement {
 	}
 
 	private onContinueToReview = () => {
+		if (this.inputBlocked) return
 		this.stage = 'review'
 	}
 
 	private onContinueReturnToReview = () => {
+		if (this.inputBlocked) return
 		this.cameFromReview = false
 		this.stage = 'review'
 	}
@@ -553,7 +567,7 @@ export class IcureCardInternal extends LitElement {
 				this.onStart()
 				return true
 			case 'input': {
-				if (this.evaluating || this.blockingFailures.length > 0) return false
+				if (this.inputBlocked) return false
 				const cards = this.cards
 				if (!cards.length) return false
 				const isLast = this.currentCardIndex === cards.length - 1
@@ -659,6 +673,38 @@ export class IcureCardInternal extends LitElement {
 	}
 
 	// ---- Phase 3: validation classification ----
+
+	/** Continue/advance is blocked while validators are running, a self-validator fails, or a field holds an invalid date/time value. */
+	private get inputBlocked(): boolean {
+		return this.evaluating || this.blockingFailures.length > 0 || this.hasInvalidFormat
+	}
+
+	private onFieldValidityChanged = (): void => {
+		this.computeInvalidFormat()
+	}
+
+	/**
+	 * Recompute whether any field on the currently-mounted card holds an invalid date/time value.
+	 * Only `time` and `date-time` render an `icure-text-field` in the card; `date` is a calendar.
+	 * Scoped to `.card__field` hosts so navigation leaves no stale state.
+	 */
+	private computeInvalidFormat(): void {
+		if (this.stage !== 'input') {
+			this.hasInvalidFormat = false
+			return
+		}
+		const root = this.shadowRoot
+		if (!root) return
+		let invalid = false
+		for (const host of Array.from(root.querySelectorAll('.card__field'))) {
+			const tf = this.queryDeep(host, 'icure-text-field') as (Element & { hasInvalidValue?: boolean }) | null
+			if (tf?.hasInvalidValue) {
+				invalid = true
+				break
+			}
+		}
+		this.hasInvalidFormat = invalid
+	}
 
 	private buildLabelToCardIndex(cards: Card[]): Map<string, number> {
 		const out = new Map<string, number>()

@@ -30,11 +30,16 @@ const subformSamples = compatibleSamples.filter((f) => {
 })
 
 // Simpler forms suitable for field filling tests
-const fillableSamples = ['1-BMI.yaml']
+const fillableSamples = ['01-components-gallery.yaml']
 
 // Helper to read sample file content
 function readSample(filename: string): string {
 	return fs.readFileSync(path.join(samplesDir, filename), 'utf8')
+}
+
+// Helper to read a test-local fixture (forms that no longer ship as demo-app samples)
+function readFixture(filename: string): string {
+	return fs.readFileSync(path.join(__dirname, 'fixtures', filename), 'utf8')
 }
 
 // Helper: wait for icure-form to finish rendering inside its shadow DOM
@@ -271,11 +276,11 @@ test.describe('Form filling', () => {
 })
 
 // ============================================================
-// Part D: Dynamic hidden fields in preventi form
+// Part D: Dynamic hidden fields (minimal extract of the former preventi form)
 // ============================================================
 test.describe('Dynamic hidden fields', () => {
-	test('reveals allergy follow-up fields when NH17 checkboxes are selected in preventi', async ({ page }) => {
-		const content = readSample('preventi.yaml')
+	test('reveals allergy follow-up fields when NH17 checkboxes are selected', async ({ page }) => {
+		const content = readFixture('dynamic-hidden-fields.yaml')
 
 		await page.goto('/')
 		await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })

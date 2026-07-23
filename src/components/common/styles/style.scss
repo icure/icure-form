@@ -903,6 +903,18 @@ span.code-count-3::before {
 		right: 0;
 	}
 
+	// Top-layer variant (Popover API): JS sets width/top/left from the field's viewport
+	// position; neutralise the UA popover defaults (inset: 0, margin: auto, border) and the
+	// min-width:100% (which would resolve against the viewport once the menu is position:fixed).
+	&:popover-open {
+		position: fixed;
+		inset: auto;
+		margin: 0;
+		border: none;
+		min-width: 0;
+		max-height: 280px;
+	}
+
 }
 
 .date-picker {

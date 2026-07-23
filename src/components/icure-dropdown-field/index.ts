@@ -1,4 +1,4 @@
-import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
+import { CSSResultGroup, html, nothing, PropertyValues, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { dropdownPicto } from '../common/styles/paths'
 import { Field } from '../common'
@@ -93,6 +93,28 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		}
 	}
 
+	updated(changedProperties: PropertyValues) {
+		// Chain to FieldWithOptionsMixin.updated so displayedOptions keeps loading.
+		super.updated(changedProperties)
+		// Promote the options menu to the browser top layer so it is not clipped by, and
+		// does not grow scrollbars on, the card renderer's overflow ancestors
+		// (.card__card-body is overflow-y:auto, .card__card is overflow:hidden). Browsers
+		// without the Popover API keep the legacy absolutely-positioned menu.
+		const menu = this.shadowRoot?.getElementById('menu') as (HTMLElement & { showPopover?: () => void }) | null
+		if (menu?.showPopover && this.displayMenu && !menu.matches(':popover-open')) {
+			menu.showPopover()
+			const anchor = this.shadowRoot?.getElementById('test')
+			if (anchor) {
+				const a = anchor.getBoundingClientRect()
+				menu.style.width = `${a.width}px`
+				const m = menu.getBoundingClientRect()
+				const fitsBelow = a.bottom + 6 + m.height <= window.innerHeight
+				menu.style.top = `${fitsBelow ? a.bottom + 6 : Math.max(8, a.top - 6 - m.height)}px`
+				menu.style.left = `${Math.max(8, Math.min(a.left, window.innerWidth - m.width - 8))}px`
+			}
+		}
+	}
+
 	getValueFromProvider(): [string, string] | [undefined, undefined] {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
@@ -128,7 +150,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 						<button class="btn select-arrow" @click="${this.togglePopup}">${dropdownPicto}</button>
 						${this.displayMenu
 							? html`
-									<div id="menu" class="options">
+									<div id="menu" class="options" popover="manual" @click="${(event: Event) => event.stopPropagation()}">
 										${this.displayedOptions?.map(
 											(x) =>
 												html`<button @click="${this.handleOptionButtonClicked(x.id)}" id="${x.id}" class="option ${x?.['label']?.[this.language()] === inputValue ? 'selected' : ''}">

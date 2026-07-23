@@ -37,7 +37,16 @@ $btn-outlined-bg: #FCFCFD;
 $btn-outlined-bg-hover: #F2F2F2;
 
 .tab-container {
+	// Own layout of the <icure-form> tab wrapper: fill the host and let the content pane
+	// (and the active tab within it) grow so the rendered form fills the available height.
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+
 	.tab-bar {
+		flex: 0 0 auto;
+
 		li {
 			display: inline-block;
 			padding: 8px 16px;
@@ -54,11 +63,19 @@ $btn-outlined-bg-hover: #F2F2F2;
 	}
 
 	.tab-content {
+		flex: 1 1 auto;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+
 		.tab {
 			display: none;
 
 			&.active {
-				display: block;
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
 			}
 		}
 	}
@@ -1052,6 +1069,11 @@ app-date-picker {
 	display: grid;
 	gap: 16px 6px;
 	grid-template-columns: repeat(24, 1fr);
+	// Grow to fill the height made available by the <icure-form> host (a flex column).
+	// Ignored when nested inside a non-flex parent (groups/subforms), so this only affects
+	// the top-level section grids.
+	flex: 1 1 auto;
+	min-height: 0;
 
 	hr {
 		display: block;

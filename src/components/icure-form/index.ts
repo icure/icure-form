@@ -10,6 +10,8 @@ import { FormValuesContainer, Suggestion, Version } from '../../generic'
 
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
+// @ts-ignore
+import hostCss from './icure-form.scss'
 import { defaultTranslationProvider, languages } from '../../utils/languages'
 import { Task } from '@lit/task'
 
@@ -45,7 +47,7 @@ export class IcureForm extends LitElement {
 	}
 
 	static get styles() {
-		return [baseCss]
+		return [baseCss, hostCss]
 	}
 
 	_asyncTask = new Task(this, {

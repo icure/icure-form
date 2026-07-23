@@ -1,5 +1,10 @@
 :host {
-	display: block;
+	// Grow to fill the height made available by the <icure-form> host (a flex column),
+	// and lay the card out as a column so `.card` can stretch to that height.
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
 	box-sizing: border-box;
 
 	/* Themeable surface — host apps override via CSS custom properties.
@@ -26,6 +31,13 @@
 	padding: 16px;
 	max-width: var(--icure-card-max-width);
 	margin: 0 auto;
+	// Fill the width up to max-width (centered); border-box keeps the 16px padding inside the
+	// 100% so the card never overflows the host on the right.
+	width: 100%;
+	box-sizing: border-box;
+	// Stretch to fill the height provided by the host flex column.
+	flex: 1 1 auto;
+	min-height: 0;
 	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	color: var(--icure-card-text);
 }
@@ -71,6 +83,7 @@
 	padding: var(--icure-card-card-padding);
 	height: var(--icure-card-card-height);
 	max-height: calc(100% - 210px);
+	flex: 1;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;

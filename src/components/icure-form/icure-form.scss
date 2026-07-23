@@ -1,0 +1,10 @@
+// Host styles specific to <icure-form> (kept out of the shared common stylesheet, which is
+// reused by inline components such as buttons and labels that must stay inline-level).
+//
+// Custom elements default to `display: inline`, on which `min-height`/`height` are ignored.
+// Making the host a flex column lets consumers size it (e.g. `min-height`), and each renderer's
+// own top-level element opts into filling that height via its own stylesheet.
+:host {
+	display: flex;
+	flex-direction: column;
+}

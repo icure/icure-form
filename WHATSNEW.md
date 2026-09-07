@@ -4,6 +4,37 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 2.3.0 (unreleased)
+
+### Hide empty fields in read-only forms
+
+Read-only forms can now hide fields, groups, subform instances and (in the `form` renderer) sections that hold no answer, so a review or summary view isn't dominated by blank boxes. Set `hideEmptyFields` on `<icure-form>` alongside `readonly`; it has no effect otherwise.
+
+```html
+<icure-form .form="${this.form}" .readonly="${true}" .hideEmptyFields="${true}" .formValuesContainer="${this.formValuesContainer}"></icure-form>
+```
+
+A group with no surviving fields disappears together with its title; a subform with no surviving instances disappears together with its heading. In `form:tab`, every tab always stays — an inactive section is never evaluated, so an all-empty active tab simply shows an empty page. See [Read-only review: hiding empty fields](./README.md#read-only-review-hiding-empty-fields).
+
+### `alwaysVisible` on fields, groups, subforms and sections
+
+Form authors can exempt a specific field, group, subform or section from `hideEmptyFields` by marking it `alwaysVisible`. An exempt empty field renders as a blank read-only box; an exempt container with no surviving content renders its title only. It never overrides computed `hidden`.
+
+```yaml
+- field: allergies
+  type: token-field
+  alwaysVisible: true
+```
+
+On `Field`, `Group` and `Subform`, `alwaysVisible` can also be computed, just like `hidden`:
+
+```yaml
+computedProperties:
+  alwaysVisible: "return self['flagged-for-review']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
+```
+
+---
+
 ## 2.2.6 (2026-07-16)
 
 ### `readOnlyEvent`: clicks on readonly fields notify the host

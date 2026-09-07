@@ -21,6 +21,7 @@ export class IcureForm extends LitElement {
 	@property() visible = true
 	@property() readonly = false
 	@property() displayMetadata = false
+	@property({ type: Boolean }) hideEmptyFields = false
 	@property() labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float' | undefined = undefined
 	@property() language?: string
 	@property() languages?: { [iso: string]: string } = languages
@@ -66,7 +67,7 @@ export class IcureForm extends LitElement {
 
 			return renderer(
 				form,
-				{ labelPosition: this.labelPosition, language },
+				{ labelPosition: this.labelPosition, language, hideEmptyFields: !!(this.readonly && this.hideEmptyFields) },
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
 				this.revisionsFilter,
@@ -79,7 +80,7 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab],
+		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.readonly, this.hideEmptyFields],
 	})
 
 	render() {

@@ -7,6 +7,7 @@ import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 import { defaultTranslationProvider } from '../../../../utils/languages'
 import { getLabels } from '../../../common/utils'
 import { filterAndSortOptionsFromFieldDefinition, sortSuggestions } from '../../../../utils/code-utils'
+import { isEmptyFieldValues, VALUE_BEARING_FIELD_TYPES } from '../../../../utils/field-emptiness'
 
 import './form-selection-button'
 import { currentDate, currentDateTime, currentTime } from '../../../../utils/dates'
@@ -421,6 +422,14 @@ export const render: Renderer = async (
 		}
 		if (computedProperties['hidden']) {
 			return nothing
+		}
+		// Read-only review mode: a value-bearing field with no displayable answer is omitted, unless it
+		// opts out with `alwaysVisible`. The typed model flag lands in a later task, hence the `as any`.
+		if (props.hideEmptyFields && fg.clazz === 'field' && VALUE_BEARING_FIELD_TYPES.has(fg.type)) {
+			const alwaysVisible = computedProperties['alwaysVisible'] ?? (fg as any).alwaysVisible
+			if (!alwaysVisible && isEmptyFieldValues(formsValueContainer ? fieldValuesProvider(formsValueContainer, fg, revisionsFilter)() : undefined)) {
+				return nothing
+			}
 		}
 
 		const fgSpan = (computedProperties['span'] ?? fg.span ?? 6) as number

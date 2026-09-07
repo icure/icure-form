@@ -6,6 +6,8 @@ export interface RendererProps {
 	language?: string
 	labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
 	defaultOwner?: string
+	/** Effective read-only flag: `<icure-form>` passes `readonly && hideEmptyFields`. Form renderers omit empty fields when set. */
+	hideEmptyFields?: boolean
 }
 
 export type Renderer = (

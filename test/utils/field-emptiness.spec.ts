@@ -4,8 +4,8 @@ import { VersionedData } from '../../src/generic'
 
 describe('VALUE_BEARING_FIELD_TYPES', () => {
 	it('excludes label and action', () => {
-		expect(VALUE_BEARING_FIELD_TYPES.has('label' as any)).toBe(false)
-		expect(VALUE_BEARING_FIELD_TYPES.has('action' as any)).toBe(false)
+		expect(VALUE_BEARING_FIELD_TYPES.has('label')).toBe(false)
+		expect(VALUE_BEARING_FIELD_TYPES.has('action')).toBe(false)
 	})
 
 	it('includes value-bearing field types', () => {
@@ -30,6 +30,10 @@ describe('isBlankPrimitive', () => {
 
 	it('is not blank for a non-empty string', () => {
 		expect(isBlankPrimitive({ type: 'string', value: 'a' })).toBe(false)
+	})
+
+	it('is blank for a string with undefined value', () => {
+		expect(isBlankPrimitive({ type: 'string', value: undefined as any })).toBe(true)
 	})
 
 	it('is blank for a NaN number', () => {
@@ -62,6 +66,10 @@ describe('isBlankPrimitive', () => {
 
 	it('is blank for a compound with no members', () => {
 		expect(isBlankPrimitive({ type: 'compound', value: {} })).toBe(true)
+	})
+
+	it('is blank for a compound with undefined value', () => {
+		expect(isBlankPrimitive({ type: 'compound', value: undefined as any })).toBe(true)
 	})
 
 	it('is not blank for a compound with one non-blank member', () => {

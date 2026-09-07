@@ -101,7 +101,9 @@ class DemoApp extends LitElement {
 		},
 	]
 
-	@state() private rendererMode: 'form:tab' | 'card' = 'form:tab'
+	@state() private rendererMode: 'form' | 'form:tab' | 'card' = 'form:tab'
+	@state() private readOnly = false
+	@state() private hideEmptyFields = false
 	@state() private selectedSlug: string = this.initialSlug()
 
 	private initialSlug(): string {
@@ -215,6 +217,31 @@ class DemoApp extends LitElement {
 				outline: 2px solid #1d4ed8;
 				outline-offset: 2px;
 			}
+
+			.option-toggle {
+				display: flex;
+				gap: 16px;
+				padding: 8px;
+				border-bottom: 1px solid #d4dde6;
+				font-family: 'Roboto', Helvetica, sans-serif;
+				font-size: 13px;
+				color: #1a1a1a;
+			}
+
+			.option-toggle label {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				cursor: pointer;
+			}
+
+			.option-toggle input[disabled] + span {
+				color: #99a3ad;
+			}
+
+			.option-toggle input:disabled {
+				cursor: not-allowed;
+			}
 		`
 	}
 
@@ -252,10 +279,27 @@ class DemoApp extends LitElement {
 				<div class="master">
 					<theme-language-picker></theme-language-picker>
 					<div class="renderer-toggle" role="group" aria-label="Renderer mode">
+						<button type="button" class="${this.rendererMode === 'form' ? 'active' : ''}" aria-pressed="${this.rendererMode === 'form'}" @click="${() => (this.rendererMode = 'form')}">Form</button>
 						<button type="button" class="${this.rendererMode === 'form:tab' ? 'active' : ''}" aria-pressed="${this.rendererMode === 'form:tab'}" @click="${() => (this.rendererMode = 'form:tab')}">
 							Clinician
 						</button>
 						<button type="button" class="${this.rendererMode === 'card' ? 'active' : ''}" aria-pressed="${this.rendererMode === 'card'}" @click="${() => (this.rendererMode = 'card')}">Card</button>
+					</div>
+					<div class="option-toggle" role="group" aria-label="Display options">
+						<label>
+							<input type="checkbox" id="readonly-toggle" .checked="${this.readOnly}" @change="${(e: Event) => (this.readOnly = (e.target as HTMLInputElement).checked)}" />
+							<span>Read-only</span>
+						</label>
+						<label>
+							<input
+								type="checkbox"
+								id="hide-empty-toggle"
+								.checked="${this.hideEmptyFields}"
+								.disabled="${!this.readOnly}"
+								@change="${(e: Event) => (this.hideEmptyFields = (e.target as HTMLInputElement).checked)}"
+							/>
+							<span>Hide empty fields</span>
+						</label>
 					</div>
 					<ul>
 						${this.samples.map(
@@ -272,7 +316,13 @@ class DemoApp extends LitElement {
 					${this.samples.map(
 						(s) => html`
 							<div style="${s.slug === selected.slug ? '' : 'display: none;'}">
-								<decorated-form id="${s.form.id ?? s.form.form}" .form="${s.form}" renderer="${this.rendererMode}"></decorated-form>
+								<decorated-form
+									id="${s.form.id ?? s.form.form}"
+									.form="${s.form}"
+									renderer="${this.rendererMode}"
+									.readonly="${this.readOnly}"
+									.hideEmptyFields="${this.hideEmptyFields}"
+								></decorated-form>
 							</div>
 						`,
 					)}

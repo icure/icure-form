@@ -539,7 +539,7 @@ const renderInternal = async (
 				}
 				// A section's children are rendered inside this thunk, so a wrapper that never calls it (an
 				// inactive tab) costs no value read and no formula evaluation for that section — ADR 0001.
-				// A section always has a template of its own (its grid), hence the narrower type here.
+				// Narrower than `RenderedNode`: a section always has a template of its own, its grid.
 				const renderSection = async (): Promise<{ template: TemplateResult; content: boolean }> => {
 					const results = await Promise.all(s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3)))
 					return { template: html` <div class="icure-form">${results.map((r) => r.template)}</div>`, content: results.some((r) => r.content) }

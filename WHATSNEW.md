@@ -4,6 +4,22 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 3.3.0 (2026-07-23)
+
+### Invalid date, time and date-time values are flagged and blocked
+
+Typing an unparseable value into a `date`, `time`, or `date-time` field no longer throws `RangeError: Invalid time value`. Instead the field keeps the text you typed, shows an inline warning, and — in the card renderer — disables **Continue** (and the Enter key) until the value is corrected or cleared. Empty fields still pass; only non-empty, unparseable input blocks.
+
+### Dropdowns no longer add scrollbars in the card renderer
+
+The dropdown options menu is now promoted to the browser top layer, so opening a long or wide dropdown inside a card no longer grows a horizontal or vertical scrollbar on the card. This matches the behaviour the date picker already had.
+
+### `<icure-form>` is sizable and renderers fill its height
+
+The host `<icure-form>` element now lays out as a block and its renderers stretch to the height you give it (e.g. via `min-height`), so the card renderer fills the available space instead of collapsing to its content.
+
+---
+
 ## 2.2.6 (2026-07-16)
 
 ### `readOnlyEvent`: clicks on readonly fields notify the host

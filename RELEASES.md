@@ -978,9 +978,13 @@ A `delegatedEdition` token field that is also readonly fires `readOnlyEvent` ins
 
 See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/blob/main/README.md#read-only-fields-and-readonlyevent) in the README.
 
-## [MISSING] 3.3.0 (2026-07-22)
-<!-- tag: 3.3.0 | target: 6936d662ef4b00b636fe7f24baf322310f211add | prerelease: false -->
+## [MISSING] 3.3.0 (2026-07-23)
+<!-- tag: 3.3.0 | target: c76e40ae88ce92a62cbe8c04f3d9b0995c3bb0e9 | prerelease: false -->
 
+- Warn on and block invalid date/time/date-time input: the field keeps the typed text and shows an inline warning, and the card renderer disables Continue (and Enter) until it is corrected or cleared; also fixes the "Invalid time value" crash
+- Promote the dropdown options menu to the browser top layer so it no longer grows scrollbars on the card
+- Make `<icure-form>` sizable and let renderers fill its height
+- Focus the first field editor when the card renderer changes card
 - Add readOnlyEvent: opt-in click notifications on readonly fields
 - Add optional delete-cross on tokens-list tokens
 - Allow delete cross and delegated edition to coexist on a token field

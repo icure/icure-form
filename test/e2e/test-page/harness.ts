@@ -13,6 +13,9 @@ import { CodeStub, Contact, normalizeCode, Service, Form as ICureForm } from '@i
 
 let formCounter = 0
 
+/** Every formula passed to the current container's `compute`, in call order. See `installComputeSpy`. */
+const computedFormulas: string[] = []
+
 function uuid() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
 		const r = (Math.random() * 16) | 0
@@ -227,6 +230,22 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 		}
 	}
 
+	// Formula-evaluation spy (Phase 3 / ADR 0001). `compute` is the single entry point every computed
+	// property goes through, so recording its argument records exactly which formulas a render pass
+	// evaluated. Installed here, after `init()` and the prefill, so the list only ever describes what
+	// rendering asked for. It wraps the *instance*, and a mutation swaps in a fresh container, hence
+	// the re-install in the change listener below.
+	const installComputeSpy = (fvc: BridgedFormValuesContainer) => {
+		const orig = fvc.compute.bind(fvc)
+		;(fvc as any).compute = (formula: string) => {
+			computedFormulas.push(formula)
+			return orig(formula)
+		}
+	}
+	// Cleared per mount, so a test that calls `initForm` twice starts from a known state.
+	computedFormulas.length = 0
+	installComputeSpy(currentFvc)
+
 	// Remove any previous form
 	const container = document.getElementById('form-container')!
 	while (container.firstChild) {
@@ -243,6 +262,9 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	// Register change listener to update icure-form when the container changes (e.g., subform add/remove).
 	// Shares the same listener array as `prefillListener`, so further mutations propagate here too.
 	currentFvc.registerChangeListener((newValue: BridgedFormValuesContainer) => {
+		// Wrapped first: the assignment below schedules a Lit update, so the next render pass has to see
+		// a spied container. Without this the count would stop at the first value change.
+		installComputeSpy(newValue)
 		icureFormEl.formValuesContainer = newValue
 		;(window as any).__currentFvc = newValue
 	})
@@ -296,4 +318,21 @@ harnessWindow.__addSubformInstance = async (anchorId: string, templateId: string
 harnessWindow.__setChildValue = async (childIndex: number, label: string, language: string, value: string) => {
 	const children = await (harnessWindow.__currentFvc as BridgedFormValuesContainer).getChildren()
 	children[childIndex].setValue(label, language, { content: { [language]: { type: 'string', value } }, codes: [] })
+}
+
+// Formula-evaluation accessors for Playwright tests. `__computedFormulas` is what the no-evaluation
+// proof asserts on: a render pass may run more than once, so the *set* of formulas evaluated is the
+// stable signal, while the raw count stays available for reporting.
+harnessWindow.__computeCount = () => computedFormulas.length
+harnessWindow.__computedFormulas = () => [...computedFormulas]
+harnessWindow.__resetComputeCount = () => {
+	computedFormulas.length = 0
+}
+// `selectedTab` is a `@state()` on <icure-form>, so it is set directly rather than through an
+// attribute. `updateComplete` covers the element's own update; the render task it kicks off settles
+// afterwards, which the test waits for separately.
+harnessWindow.__selectTab = async (idx: number) => {
+	const el = harnessWindow.__currentElement
+	el.selectedTab = idx
+	await el.updateComplete
 }

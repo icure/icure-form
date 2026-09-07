@@ -1,0 +1,58 @@
+form: Hide empty fields tabs
+description: >-
+  Phase-3 fixture for the `form:tab` layout and the ADR-0001 no-evaluation proof. Three sections, one
+  per tab, each carrying formulas that only its own render pass can evaluate: section 1 has one, and
+  sections 2 and 3 have three each. Every formula string is unique and names its section, so the set
+  recorded by the harness `compute` spy says unambiguously which sections were evaluated. There is
+  deliberately no `value` or `defaultValue` formula anywhere: those run in the container's own
+  dependency loop whether anything renders or not, and would make the recorded set meaningless.
+  Trailing `//` comments cannot be used as the marker — the interpreter wraps a formula in
+  `with (sandbox) { … }` on one line, so a line comment would swallow the closing brace.
+sections:
+  - section: Section 1
+    fields:
+      - field: S1Plain1
+        type: text-field
+        span: 24
+      - field: S1Plain2
+        type: text-field
+        span: 24
+      - field: S1Hidden
+        type: text-field
+        span: 24
+        computedProperties:
+          hidden: 'return false /* s1-hidden-a */'
+  - section: Section 2
+    fields:
+      - field: S2HiddenA
+        type: text-field
+        span: 24
+        computedProperties:
+          hidden: 'return false /* s2-hidden-a */'
+      - field: S2HiddenB
+        type: text-field
+        span: 24
+        computedProperties:
+          hidden: 'return false /* s2-hidden-b */'
+      - field: S2Always
+        type: text-field
+        span: 24
+        computedProperties:
+          alwaysVisible: 'return false /* s2-always-a */'
+  - section: Section 3
+    fields:
+      - field: S3HiddenA
+        type: text-field
+        span: 24
+        computedProperties:
+          hidden: 'return false /* s3-hidden-a */'
+      - field: S3HiddenB
+        type: text-field
+        span: 24
+        computedProperties:
+          hidden: 'return false /* s3-hidden-b */'
+      - field: S3Always
+        type: text-field
+        span: 24
+        computedProperties:
+          alwaysVisible: 'return false /* s3-always-a */'

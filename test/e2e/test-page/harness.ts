@@ -33,9 +33,8 @@ interface InitFormOptions {
 	/** Omit fields with no displayable answer. Only takes effect together with `readonly`. */
 	hideEmptyFields?: boolean
 	/**
-	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted.
-	 * Used by Phase 5 tests to simulate "resume" scenarios where the patient is returning to a
-	 * partially-completed form.
+	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted,
+	 * so a test can mount a form that already holds answers without driving the editors.
 	 *
 	 * `value` fills a plain string primitive; pass `primitive` instead for any other content type
 	 * (a measure, a timestamp…), and `codes` for the coded answer of a dropdown / radio / checkbox.

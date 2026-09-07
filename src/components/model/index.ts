@@ -258,7 +258,7 @@ export abstract class Field {
 	abstract copyIfNeeded(properties: Partial<Field>): Field
 
 	static parse(json: Field): Field {
-		const result = (
+		const result =
 			(
 				{
 					'text-field': () => new TextField(json.field, { ...json }),
@@ -276,7 +276,6 @@ export abstract class Field {
 					action: () => new Button(json.field, { ...json }),
 				} as { [key: string]: () => Field }
 			)[json.type as string]?.() ?? new TextField(json.field, { ...json })
-		)
 		if ((json as any).alwaysVisible !== undefined) {
 			result.alwaysVisible = !!(json as any).alwaysVisible
 		}

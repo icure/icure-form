@@ -346,7 +346,7 @@ A Field is **empty** when it has no stored value, or when every stored value's m
 | `measure` | a defined, non-NaN `value` (a unit alone does not count) |
 | `compound` | at least one member is non-blank, applying these rules recursively |
 
-Preserved-but-invalid date/time text is a non-blank string, so such a field stays visible together with its warning. `label` and `action` fields carry no value and are outside this predicate; they survive only through their container.
+`label` and `action` fields carry no value and are outside this predicate; they survive only through their container.
 
 With `hideEmptyFields` active, an element survives when it is a non-empty field, or is marked `alwaysVisible` (statically or via a truthy computed property), or is a container with at least one surviving child. The cascade:
 

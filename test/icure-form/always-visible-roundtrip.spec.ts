@@ -73,7 +73,7 @@ describe('alwaysVisible round-trip', () => {
 		expect(subform.alwaysVisible).toBeUndefined()
 
 		// JSON.stringify drops undefined-valued keys, matching how absent optional
-		// flags (e.g. roles, samePage) already serialize elsewhere in this model.
+		// properties (e.g. description, keywords) already serialize elsewhere in this model.
 		expect(JSON.parse(JSON.stringify(section.toJson()))).not.toHaveProperty('alwaysVisible')
 		expect(JSON.parse(JSON.stringify(field.toJson()))).not.toHaveProperty('alwaysVisible')
 		expect(JSON.parse(JSON.stringify(group.toJson()))).not.toHaveProperty('alwaysVisible')

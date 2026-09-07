@@ -132,8 +132,9 @@ test.describe('Phase 3 / the form:tab layout under hideEmptyFields', () => {
 		await waitForFormRender(page)
 
 		// An active section whose content is entirely hidden renders an empty page, not a dropped one.
-		// `gridsInShadowRoot: 1` is also DOM-level evidence for the ADR that does not depend on the
-		// `compute` spy at all: sections 2 and 3 produced no grid, so they were never rendered.
+		// `gridsInShadowRoot: 1` is just the tab layout's existing behaviour — the wrapper already
+		// discards inactive templates, so one grid is always the DOM outcome here, independent of the
+		// ADR. The ADR guard is the formula-set assertion in cases (c) and (d) below.
 		expect(await activeTabContent(page)).toEqual({ gridsInShadowRoot: 1, activeGridChildren: 0, activeFields: 0 })
 	})
 })

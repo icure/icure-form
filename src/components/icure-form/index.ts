@@ -65,10 +65,12 @@ export class IcureForm extends LitElement {
 			}
 			const translationTables = this.form?.translations
 
+			// Only the active tab awaits its section thunk: an inactive section is never rendered, so no
+			// value is read and no formula is evaluated for it (ADR 0001).
 			const sectionWrapper =
 				variant[1] === 'tab'
-					? (index: number, section: () => TemplateResult) => {
-							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
+					? async (index: number, section: () => Promise<TemplateResult>) => {
+							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? await section() : nothing}</div>`
 					  }
 					: undefined
 

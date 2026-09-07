@@ -1,0 +1,55 @@
+form: Hide empty fields
+description: One field of every value-bearing type plus a label and an action, kept flat in a single section so that phase-1 field-level hiding is observed on its own (a group would collapse on its own once empty)
+sections:
+  - section: Every field type
+    fields:
+      - field: Text
+        type: text-field
+        span: 24
+      - field: Measure
+        type: measure-field
+        span: 24
+      - field: Token
+        type: token-field
+        span: 24
+      - field: Items
+        type: items-list-field
+        span: 24
+      - field: Number
+        type: number-field
+        span: 24
+      - field: Date
+        type: date-picker
+        span: 24
+      - field: Time
+        type: time-picker
+        span: 24
+      - field: Date and time
+        type: date-time-picker
+        span: 24
+      - field: Dropdown
+        type: dropdown
+        span: 24
+        options:
+          Dropdown|1|1: Red
+          Dropdown|2|1: Green
+      - field: Radio
+        type: radio-button
+        span: 24
+        options:
+          Radio|1|1: Yes
+          Radio|2|1: No
+      - field: Checkbox
+        type: checkbox
+        span: 24
+        options:
+          Checkbox|1|1: Apples
+          Checkbox|2|1: Bread
+      - field: This static label always renders.
+        type: label
+        span: 24
+      - field: Save
+        type: action
+        shortLabel: save
+        span: 24
+        event: save

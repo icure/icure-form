@@ -3,10 +3,14 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 // ============================================================
-// Phase 1: `hideEmptyFields` hides empty value-bearing fields in the plain `form` renderer.
-// No cascade yet: sections and groups are untouched, so the fixture keeps its 13 fields flat in
-// a single section — nested in a group, an emptied group would collapse on its own and mask
-// whether field-level hiding actually fired.
+// Phase 1: `hideEmptyFields` hides empty value-bearing fields in the plain `form` renderer. The
+// fixture keeps its 13 fields flat in a single section: nested in a group, an emptied group would
+// collapse on its own and mask whether field-level hiding actually fired.
+//
+// Task 4's upward cascade now applies on top of that. Labels and action buttons never count as
+// content, so once every empty field is hidden this fixture's only section has nothing left, and in
+// plain `form` an all-empty section is dropped whole — no `.icure-form` grid at all. That is why the
+// prop-on cases below expect an empty shadow root rather than a surviving label and button.
 // ============================================================
 
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures', 'hide-empty-fields.yaml'), 'utf8')
@@ -69,6 +73,33 @@ async function waitForFormRender(page: Page) {
 	await page.waitForTimeout(500)
 }
 
+/**
+ * Settle signal for a render that may produce nothing: the element's Lit Task has completed
+ * (`TaskStatus.COMPLETE` is 2) and the pending "Loading..." paragraph is gone from the shadow root.
+ * `waitForFormRender` cannot serve here — it waits for a grid or a paragraph to *appear*, and an
+ * all-empty section leaves neither, so it would simply time out. Nothing about what the render
+ * produced is baked into this condition, so the assertions that follow it stay meaningful.
+ */
+async function waitForRenderSettled(page: Page) {
+	await page.waitForSelector('icure-form', { state: 'attached', timeout: 10_000 })
+	await page.waitForFunction(
+		() => {
+			const el = document.querySelector('icure-form') as any
+			if (!el?.shadowRoot) return false
+			if (el._asyncTask?.status !== 2) return false
+			const pending = el.shadowRoot.querySelector('p')
+			return pending === null || pending.textContent?.trim() !== 'Loading...'
+		},
+		undefined,
+		{ timeout: 15_000 },
+	)
+}
+
+/** `.icure-form` grids in the shadow root. 0 means the section itself was dropped. */
+async function gridCount(page: Page): Promise<number> {
+	return await page.evaluate(() => document.querySelector('icure-form')?.shadowRoot?.querySelectorAll('.icure-form').length ?? -1)
+}
+
 interface RenderedCounts {
 	fields: number
 	labels: number
@@ -120,12 +151,15 @@ test.describe('Phase 1 / hideEmptyFields in the form renderer', () => {
 		expect(await countRendered(page)).toEqual({ fields: valueBearingFieldCount, labels: 1, buttons: 1 })
 	})
 
-	test('(b) read-only with the prop on and nothing filled leaves only the label and the button', async ({ page }) => {
+	test('(b) read-only with the prop on and nothing filled renders nothing at all', async ({ page }) => {
 		await gotoHarness(page)
 		await initFixture(page, { readonly: true, hideEmptyFields: true })
-		await waitForFormRender(page)
+		await waitForRenderSettled(page)
 
-		expect(await countRendered(page)).toEqual({ fields: 0, labels: 1, buttons: 1 })
+		// Every value-bearing field is empty, and the label and the action button that remain do not
+		// count as content, so the fixture's only section is dropped along with them.
+		expect(await countRendered(page)).toEqual({ fields: 0, labels: 0, buttons: 0 })
+		expect(await gridCount(page)).toBe(0)
 	})
 
 	test('(c) read-only with the prop on keeps exactly the filled fields', async ({ page }) => {
@@ -179,9 +213,12 @@ test.describe('Phase 1 / hideEmptyFields in the form renderer', () => {
 		await waitForFormRender(page)
 		expect(await countRendered(page)).toEqual({ fields: valueBearingFieldCount, labels: 1, buttons: 1 })
 
+		// A real transition (13 fields → 0) is the wait here, so the counts asserted after it are not
+		// the condition that was waited for.
 		await page.evaluate(() => ((document.querySelector('icure-form') as any).hideEmptyFields = true))
 		await waitForFieldCount(page, 0)
-		expect(await countRendered(page)).toEqual({ fields: 0, labels: 1, buttons: 1 })
+		expect(await countRendered(page)).toEqual({ fields: 0, labels: 0, buttons: 0 })
+		expect(await gridCount(page)).toBe(0)
 
 		await page.evaluate(() => ((document.querySelector('icure-form') as any).readonly = false))
 		await waitForFieldCount(page, valueBearingFieldCount)

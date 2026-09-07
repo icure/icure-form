@@ -4,7 +4,7 @@ registerTheme()
 // Side-effect import: register the card internal element.
 import '../../../src/components/icure-form/renderer/card/register'
 
-import { Form, Field, Group, Subform, FieldMetadata, Validator } from '../../../src/components/model'
+import { Form, Field, Group, Subform, FieldMetadata, Validator, Code, PrimitiveType } from '../../../src/components/model'
 import { flatten as cardFlatten } from '../../../src/components/icure-form/renderer/card/flatten'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
 import { Version } from '../../../src/generic'
@@ -33,12 +33,19 @@ interface InitFormOptions {
 	questionsPerCard?: number
 	/** Active viewer role. Sections/groups/fields/subforms whose `roles` does not include it are hidden. */
 	role?: string
+	/** Render the form in read-only (review) mode. */
+	readonly?: boolean
+	/** Omit fields with no displayable answer. Only takes effect together with `readonly`. */
+	hideEmptyFields?: boolean
 	/**
 	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted.
 	 * Used by Phase 5 tests to simulate "resume" scenarios where the patient is returning to a
 	 * partially-completed form.
+	 *
+	 * `value` fills a plain string primitive; pass `primitive` instead for any other content type
+	 * (a measure, a timestamp…), and `codes` for the coded answer of a dropdown / radio / checkbox.
 	 */
-	prefill?: Array<{ label: string; language?: string; value: string }>
+	prefill?: Array<{ label: string; language?: string; value?: string; primitive?: PrimitiveType; codes?: Code[] }>
 }
 
 interface InitFormResult {
@@ -101,7 +108,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, readonly, hideEmptyFields } = options
 
 	// Parse the form
 	let parsed: any
@@ -222,7 +229,9 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	bridgedFormValuesContainer.registerChangeListener(prefillListener)
 	if (prefill?.length) {
 		for (const p of prefill) {
-			currentFvc.setValue(p.label, p.language ?? language, { content: { [p.language ?? language]: { type: 'string', value: p.value } as any } } as any)
+			const prefillLanguage = p.language ?? language
+			const primitive: PrimitiveType = p.primitive ?? { type: 'string', value: p.value ?? '' }
+			currentFvc.setValue(p.label, prefillLanguage, { content: { [prefillLanguage]: primitive }, codes: p.codes ?? [] })
 		}
 	}
 
@@ -246,7 +255,8 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 		;(window as any).__currentFvc = newValue
 	})
 	icureFormEl.language = language
-	icureFormEl.readonly = false
+	icureFormEl.readonly = readonly ?? false
+	icureFormEl.hideEmptyFields = hideEmptyFields ?? false
 	icureFormEl.displayMetadata = false
 	icureFormEl.renderer = renderer
 	icureFormEl.labelPosition = 'above'
@@ -267,9 +277,11 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 	container.appendChild(icureFormEl)
 
-	// Store references for later access
+	// Store references for later access. `__currentFvc` is deliberately not reassigned here: it was
+	// already pointed at the post-prefill `currentFvc` above, and the change listener keeps it current.
+	// Resetting it to `bridgedFormValuesContainer` would hand tests the stale pre-prefill container,
+	// so a later `__currentFvc.setValue` would mutate that one and drop every prefilled value.
 	;(window as any).__currentForm = form
-	;(window as any).__currentFvc = bridgedFormValuesContainer
 	;(window as any).__currentElement = icureFormEl
 
 	return { fieldCount, fieldLabels }

@@ -10,6 +10,8 @@ export interface RendererProps {
 	questionsPerCard?: number
 	/** Active viewer role. When set, sections/groups/fields/subforms whose `roles` does not include this value are hidden. */
 	role?: string
+	/** Effective read-only flag: `<icure-form>` passes `readonly && hideEmptyFields`. Form renderers omit Empty fields when set; the card renderer ignores it. */
+	hideEmptyFields?: boolean
 }
 
 export type Renderer = (

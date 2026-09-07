@@ -24,6 +24,7 @@ export class IcureForm extends LitElement {
 	@property() visible = true
 	@property() readonly = false
 	@property() displayMetadata = false
+	@property({ type: Boolean }) hideEmptyFields = false
 	// `role` clashes with HTMLElement's ARIA `role` (typed `string | null`); match its shape so the
 	// attribute form `<icure-form role="patient">` and the JS form `el.role = 'patient'` both work.
 	@property() override role: string | null = null
@@ -73,7 +74,13 @@ export class IcureForm extends LitElement {
 
 			return renderer(
 				form,
-				{ labelPosition: this.labelPosition, language, questionsPerCard: this.questionsPerCard, role: this.role ?? undefined },
+				{
+					labelPosition: this.labelPosition,
+					language,
+					questionsPerCard: this.questionsPerCard,
+					role: this.role ?? undefined,
+					hideEmptyFields: !!(this.readonly && this.hideEmptyFields),
+				},
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
 				this.revisionsFilter,
@@ -86,7 +93,7 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.questionsPerCard, this.role],
+		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.questionsPerCard, this.role, this.readonly, this.hideEmptyFields],
 	})
 
 	render() {

@@ -168,6 +168,25 @@ test.describe('Phase 1 / hideEmptyFields in the form renderer', () => {
 		await waitForFieldCount(page, prefill.length - 1)
 		expect(await countRendered(page)).toEqual({ fields: prefill.length - 1, labels: 1, buttons: 1 })
 	})
+
+	// Both props are set before the element is mounted in every case above, so the first render would
+	// pick them up whether or not they are tracked as render-task dependencies. Toggling them on a
+	// mounted form is what actually covers that: the first toggle exercises the `hideEmptyFields`
+	// dependency, the second the `readonly` one (the effective flag goes false, so everything returns).
+	test('(g) toggling either prop on a mounted form re-renders', async ({ page }) => {
+		await gotoHarness(page)
+		await initFixture(page, { readonly: true })
+		await waitForFormRender(page)
+		expect(await countRendered(page)).toEqual({ fields: valueBearingFieldCount, labels: 1, buttons: 1 })
+
+		await page.evaluate(() => ((document.querySelector('icure-form') as any).hideEmptyFields = true))
+		await waitForFieldCount(page, 0)
+		expect(await countRendered(page)).toEqual({ fields: 0, labels: 1, buttons: 1 })
+
+		await page.evaluate(() => ((document.querySelector('icure-form') as any).readonly = false))
+		await waitForFieldCount(page, valueBearingFieldCount)
+		expect(await countRendered(page)).toEqual({ fields: valueBearingFieldCount, labels: 1, buttons: 1 })
+	})
 })
 
 test.describe('Phase 1 / the card renderer ignores hideEmptyFields', () => {

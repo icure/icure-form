@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { countRendered, gotoHarness, waitForFieldCount, waitForFormRender, waitForRenderSettled } from './hide-empty-helpers'
 
 // ============================================================
 // Phase 1: `hideEmptyFields` hides empty value-bearing fields in the plain `form` renderer. The
@@ -11,6 +12,8 @@ import * as path from 'path'
 // content, so once every empty field is hidden this fixture's only section has nothing left, and in
 // plain `form` an all-empty section is dropped whole — no `.icure-form` grid at all. That is why the
 // prop-on cases below expect an empty shadow root rather than a surviving label and button.
+//
+// Plumbing shared with the other `hide-empty-*` suites lives in `./hide-empty-helpers`.
 // ============================================================
 
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures', 'hide-empty-fields.yaml'), 'utf8')
@@ -50,91 +53,13 @@ const prefill = [
 	{ label: dropdownLabel, value: dropdownOptionLabel, codes: [{ id: dropdownOptionId, label: { en: dropdownOptionLabel } }] },
 ]
 
-async function gotoHarness(page: Page) {
-	await page.goto('/')
-	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
-}
-
 async function initFixture(page: Page, options: Record<string, unknown>) {
 	return await page.evaluate(async (opts: Record<string, unknown>) => await (window as any).initForm(opts), { yaml: fixture, language: 'en', ...options })
-}
-
-// Wait for icure-form to finish rendering inside its shadow DOM (mirrors forms.spec.ts).
-async function waitForFormRender(page: Page) {
-	await page.waitForSelector('icure-form', { state: 'attached', timeout: 10_000 })
-	await page.waitForFunction(
-		() => {
-			const el = document.querySelector('icure-form')
-			if (!el?.shadowRoot) return false
-			return el.shadowRoot.querySelector('.icure-form') !== null || el.shadowRoot.querySelector('p') !== null
-		},
-		{ timeout: 15_000 },
-	)
-	await page.waitForTimeout(500)
-}
-
-/**
- * Settle signal for a render that may produce nothing: the element's Lit Task has completed
- * (`TaskStatus.COMPLETE` is 2) and the pending "Loading..." paragraph is gone from the shadow root.
- * `waitForFormRender` cannot serve here — it waits for a grid or a paragraph to *appear*, and an
- * all-empty section leaves neither, so it would simply time out. Nothing about what the render
- * produced is baked into this condition, so the assertions that follow it stay meaningful.
- */
-async function waitForRenderSettled(page: Page) {
-	await page.waitForSelector('icure-form', { state: 'attached', timeout: 10_000 })
-	await page.waitForFunction(
-		() => {
-			const el = document.querySelector('icure-form') as any
-			if (!el?.shadowRoot) return false
-			if (el._asyncTask?.status !== 2) return false
-			const pending = el.shadowRoot.querySelector('p')
-			return pending === null || pending.textContent?.trim() !== 'Loading...'
-		},
-		undefined,
-		{ timeout: 15_000 },
-	)
 }
 
 /** `.icure-form` grids in the shadow root. 0 means the section itself was dropped. */
 async function gridCount(page: Page): Promise<number> {
 	return await page.evaluate(() => document.querySelector('icure-form')?.shadowRoot?.querySelectorAll('.icure-form').length ?? -1)
-}
-
-interface RenderedCounts {
-	fields: number
-	labels: number
-	buttons: number
-}
-
-/**
- * Counts what the `form` renderer actually emits: every field component carries
- * `class="icure-form-field"` (labels included, as `<icure-form-label>`) and action buttons carry
- * `class="icure-form-button"`. `fields` therefore counts only the value-bearing components.
- */
-async function countRendered(page: Page): Promise<RenderedCounts> {
-	return await page.evaluate(() => {
-		const root = document.querySelector('icure-form')?.shadowRoot
-		if (!root) return { fields: -1, labels: -1, buttons: -1 }
-		const fieldElements = Array.from(root.querySelectorAll('.icure-form-field'))
-		const isLabel = (el: Element) => el.tagName.toLowerCase() === 'icure-form-label'
-		return {
-			fields: fieldElements.filter((el) => !isLabel(el)).length,
-			labels: fieldElements.filter(isLabel).length,
-			buttons: root.querySelectorAll('.icure-form-button').length,
-		}
-	})
-}
-
-async function waitForFieldCount(page: Page, expected: number) {
-	await page.waitForFunction(
-		(n: number) => {
-			const root = document.querySelector('icure-form')?.shadowRoot
-			if (!root) return false
-			return Array.from(root.querySelectorAll('.icure-form-field')).filter((el) => el.tagName.toLowerCase() !== 'icure-form-label').length === n
-		},
-		expected,
-		{ timeout: 10_000 },
-	)
 }
 
 async function parsedFieldTypes(page: Page): Promise<string[]> {

@@ -1,14 +1,14 @@
 import { test, expect, Page } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { countRendered, editFixture, gotoHarness, setValue, waitForFieldCount, waitForFormRender } from './hide-empty-helpers'
 
 // ============================================================
 // Phase 2: `hideEmptyFields` cascades upward. A group, a subform instance and (in the plain `form`
 // layout) a section disappear once nothing inside them survives; `alwaysVisible` opts any of them
 // back in. The fixture nests one container of each kind so the cascade is observed at every level.
 //
-// The helpers below are deliberate copies of `hide-empty-phase1.spec.ts`: importing from that file
-// would re-register its seven tests here, and a shared module cannot live in this task's file set.
+// Plumbing shared with the other `hide-empty-*` suites lives in `./hide-empty-helpers`.
 // ============================================================
 
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures', 'hide-empty-cascade.yaml'), 'utf8')
@@ -16,79 +16,13 @@ const fixture = fs.readFileSync(path.join(__dirname, 'fixtures', 'hide-empty-cas
 /** Every `Field` in the fixture definition, labels and the action button included. */
 const fixtureFieldCount = 10
 
-/**
- * Fixture variants as string edits, so the shape they differ by stays visible in the test. Each edit
- * asserts its anchor to fail loudly rather than silently testing the unedited fixture.
- */
-function editFixture(source: string, from: string | RegExp, to: string): string {
-	const edited = source.replace(from, to)
-	if (edited === source) throw new Error(`fixture edit had no effect: ${from}`)
-	return edited
-}
-
 // Nothing opts out of hiding any more: with nothing filled, the whole form has to disappear.
 const noOptOutFixture = editFixture(fixture, /[ \t]*alwaysVisible: true\r?\n/g, '')
 // The Subform itself opts out: its heading stays even with no instance to show.
 const alwaysVisibleSubformFixture = editFixture(fixture, '        id: sub-c\n', '        id: sub-c\n        alwaysVisible: true\n')
 
-async function gotoHarness(page: Page) {
-	await page.goto('/')
-	await page.waitForFunction(() => typeof (window as any).initForm === 'function', { timeout: 10_000 })
-}
-
 async function initFixture(page: Page, options: Record<string, unknown>, yaml: string = fixture) {
 	return await page.evaluate(async (opts: Record<string, unknown>) => await (window as any).initForm(opts), { yaml, language: 'en', ...options })
-}
-
-// Wait for icure-form to finish rendering inside its shadow DOM (mirrors forms.spec.ts).
-async function waitForFormRender(page: Page) {
-	await page.waitForSelector('icure-form', { state: 'attached', timeout: 10_000 })
-	await page.waitForFunction(
-		() => {
-			const el = document.querySelector('icure-form')
-			if (!el?.shadowRoot) return false
-			return el.shadowRoot.querySelector('.icure-form') !== null || el.shadowRoot.querySelector('p') !== null
-		},
-		{ timeout: 15_000 },
-	)
-	await page.waitForTimeout(500)
-}
-
-interface RenderedCounts {
-	fields: number
-	labels: number
-	buttons: number
-}
-
-/**
- * Counts what the `form` renderer actually emits: every field component carries
- * `class="icure-form-field"` (labels included, as `<icure-form-label>`) and action buttons carry
- * `class="icure-form-button"`. `fields` therefore counts only the value-bearing components.
- */
-async function countRendered(page: Page): Promise<RenderedCounts> {
-	return await page.evaluate(() => {
-		const root = document.querySelector('icure-form')?.shadowRoot
-		if (!root) return { fields: -1, labels: -1, buttons: -1 }
-		const fieldElements = Array.from(root.querySelectorAll('.icure-form-field'))
-		const isLabel = (el: Element) => el.tagName.toLowerCase() === 'icure-form-label'
-		return {
-			fields: fieldElements.filter((el) => !isLabel(el)).length,
-			labels: fieldElements.filter(isLabel).length,
-			buttons: root.querySelectorAll('.icure-form-button').length,
-		}
-	})
-}
-
-async function waitForFieldCount(page: Page, expected: number) {
-	await page.waitForFunction(
-		(n: number) => {
-			const root = document.querySelector('icure-form')?.shadowRoot
-			if (!root) return false
-			return Array.from(root.querySelectorAll('.icure-form-field')).filter((el) => el.tagName.toLowerCase() !== 'icure-form-label').length === n
-		},
-		expected,
-		{ timeout: 10_000 },
-	)
 }
 
 interface SectionGrid {
@@ -163,22 +97,6 @@ async function subformCounts(page: Page) {
 
 async function setHideEmptyFields(page: Page, value: boolean) {
 	await page.evaluate((v: boolean) => ((document.querySelector('icure-form') as any).hideEmptyFields = v), value)
-}
-
-/** Sets a top-level value, overwriting the existing one for that label when there is one. */
-async function setValue(page: Page, label: string, value: string) {
-	return await page.evaluate(
-		({ label, value, language }: { label: string; value: string; language: string }) => {
-			const fvc = (window as any).__currentFvc
-			// The revisions filter narrows `getValues` to this label's own value, whose id is needed so
-			// that `setValue` overwrites it instead of appending a second value for the same label.
-			const values = fvc.getValues((_id: string, history: { revision: string | null; value?: { label?: string } }[]) => (history?.[0]?.value?.label === label ? [history[0].revision] : []))
-			const id = Object.keys(values)[0]
-			fvc.setValue(label, language, { content: { [language]: { type: 'string', value } }, codes: [] }, id)
-			return id ?? null
-		},
-		{ label, value, language: 'en' },
-	)
 }
 
 test.describe('Phase 2 / group and section cascade', () => {

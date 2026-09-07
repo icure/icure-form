@@ -21,7 +21,7 @@ $background-color-dark: #e7f0fd;
 $textbox-line-height: 1.4em !default;
 $textbox-default-width: 100%;
 $textbox-font-size: 14px !default;
-$label-font-size: 12px !default;
+$label-font-size: 11px !default;
 
 $input-border-width: 1px;
 $input-border-color: #DDE3E7;
@@ -31,7 +31,7 @@ $input-padding-x: 8px;
 $floating-label-transition: 0.2s ease-out !default;
 $floating-label-scale: 1 !default;
 $floating-label-height: $textbox-line-height * $floating-label-scale;
-$font-weight-label: 500;
+$font-weight-label: 400;
 
 $btn-outlined-bg: #FCFCFD;
 $btn-outlined-bg-hover: #F2F2F2;
@@ -94,11 +94,11 @@ $btn-outlined-bg-hover: #F2F2F2;
 	-webkit-font-variant-ligatures: none;
 	font-variant-ligatures: none;
 	font-feature-settings: 'liga' 0; /* the above doesn't seem to work in Edge */
-	padding: 6px 8px 2px 8px;
+	padding: 3px 8px 2px 8px;
 	line-height: 1.2;
 	color: #274768;
 	font-size: 14px;
-	font-weight: 400;
+	font-weight: 300;
 	outline: none;
 
 	p:last-child,
@@ -273,22 +273,12 @@ li.ProseMirror-selectednode {
 	display: none;
 }
 
-#editor,
-.editor {
-	color: rgb(101, 101, 101);
-	background-clip: padding-box;
-	border-radius: 4px;
-	border: 2px solid rgba(0, 0, 0, 0.2);
-	padding: 5px 0;
-	display: flex;
-	align-items: flex-end;
-}
 
 .icure-input {
 	background: #edf2f7;
 	border-radius: 8px;
 	border: none;
-	min-height: 28px;
+	min-height: 25px;
 	height: auto;
 	display: flex;
 	flex-flow: row nowrap;
@@ -297,12 +287,20 @@ li.ProseMirror-selectednode {
 }
 
 #editor {
-	background: transparent;
+	display: flex;
+	color: rgb(101, 101, 101);
+	background-clip: padding-box;
+	border-radius: 4px;
+
 	border: none;
 	padding: 0;
-	flex-grow: 1;
-	display: flex;
 	align-items: stretch;
+	#align-items: flex-end;
+
+	width: 100%;
+
+	background: transparent;
+	flex-grow: 1;
 
 	&.tokens-list, &.styled-tokens-list {
 		.ProseMirror {
@@ -480,7 +478,9 @@ h3 {
 
 	.buttons-container {
 		display: flex;
-		height: 20px;
+		// Matches the reduced field height (icure-text-field's editor min-height) so a field
+		// doesn't grow when its metadata bar (translation/version/... buttons) is shown.
+		height: 18px;
 		width: auto;
 		flex-flow: row nowrap;
 		align-items: center;
@@ -497,7 +497,7 @@ h3 {
 			display: none;
 			opacity: 0;
 			cursor: pointer;
-			height: 20px;
+			height: 18px;
 			margin-left: 4px;
 			margin-right: 4px;
 			padding: 0;
@@ -1020,8 +1020,10 @@ app-date-picker {
 		height: auto;
 
 		&__title {
-			padding: 0;
+			padding: 4px 8px;
+			font-weight: 700;
 			margin: 0;
+			border-radius: 6px;
 		}
 	}
 
@@ -1063,8 +1065,9 @@ app-date-picker {
 		&__title {
 			padding: 12px !important;
 			border-radius: 6px;
+			font-weight: 700;
 			margin: 0;
-			background-color: $green-light-bg;
+			background: linear-gradient(to right, $background-color-dark, white);
 		}
 
 		.subform {
@@ -1095,28 +1098,33 @@ app-date-picker {
 	}
 
 	h2 {
-		font-size: add-two($label-font-size, 0, 1.2);
+		font-size: 14px;
 		font-weight: 700;
 		color: $label-color;
 		padding: 2px;
 	}
 
 	h3 {
-		font-size: add-two($label-font-size, 0, 1.1);
-		font-weight: 500;
+		font-size: 12px;
+		font-weight: 700;
 		color: $label-color;
 		padding: 6px;
 	}
 
 	.group.bordered {
-		background: #f6f6f6;
-		border-radius: 12px;
+		padding: 8px 4px;
+		border: 0 solid $label-color;
+		border-bottom-width: 1px;
 	}
 }
 
 .icure-form-field {
 	display: grid;
 	align-items: flex-start;
+}
+
+icure-form-checkbox {
+	align-self: self-end;
 }
 
 .error {
@@ -1138,11 +1146,11 @@ app-date-picker {
 		line-height: $textbox-line-height;
 		cursor: text;
 		font-size: $label-font-size;
-		left: add-two($input-padding-x, $input-border-width);
+		left: 9px;
 		color: $label-color;
 		align-items: center;
 		text-wrap: auto;
-		min-height: 28px;
+		min-height: 25px;
 		max-width: 85%;
 		min-width: 0;
 
@@ -1156,6 +1164,37 @@ app-date-picker {
 .icure-text-field {
 	position: relative;
 	width: $textbox-default-width;
+
+	// A side (left/right) label needs the input next to it rather than above it — the
+	// `order` on .icure-label.side below only takes effect once the container is a flex
+	// row, which it otherwise isn't (plain block, label stacked above the input).
+	&:has(> .icure-label.side) {
+		display: flex;
+		// Top-align rather than center: a field wrapper's grid row is as tall as its tallest
+		// cell (e.g. one with a long wrapped label), and every field in that row — including
+		// this one's own input, next to a possibly much taller label — needs to start at the
+		// same top edge as the others, not float to the middle of the label's height.
+		align-items: flex-start;
+
+		// A field can carry both a side label (the row's own name) and a top label (acting
+		// as a one-off column header, e.g. only set on a grid's first row). The top label
+		// takes no part in the left-label/input flex row at all — it's pulled out via
+		// absolute positioning so it can't disturb that layout. Reserve the room for it with
+		// padding rather than a negative offset, so it stays inside this field's own box
+		// instead of spilling above it (where an ancestor's overflow can clip it, e.g. the
+		// very first row of a grid section).
+		&:has(> .icure-label.top) {
+			padding-top: 18px;
+		}
+
+		> .icure-label.top {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			text-align: center;
+		}
+	}
 
 	> .icure-label {
 		transition: transform $floating-label-transition, color $floating-label-transition;
@@ -1336,21 +1375,24 @@ input[type='radio'] {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
+	min-width: 0;
 
 	> div {
 		display: grid;
+		min-width: 0;
 
 		> div {
 			display: flex;
 			align-items: center;
+			min-width: 0;
 
 			> .icure-button-group-label {
 				z-index: 1;
 				line-height: $textbox-line-height;
 				cursor: text;
 				font-size: $label-font-size;
-				top: add-three($floating-label-height, $input-border-width, $input-padding-y);
-				left: add-two($input-padding-x, $input-border-width);
+				top: calc(1.4em + 1px);
+				left: 9px;
 				transition: transform $floating-label-transition, color $floating-label-transition;
 				color: $label-color;
 				display: flex;

@@ -8,7 +8,7 @@ export default defineConfig({
 	testMatch: '*.spec.ts',
 	timeout: 60_000,
 	use: {
-		headless: false,
+		headless: true,
 		baseURL: 'http://localhost:3100',
 	},
 	workers: 1,

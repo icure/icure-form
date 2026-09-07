@@ -16,7 +16,7 @@ $border-radius: 2px;
 $textbox-line-height: 1.4em !default;
 $textbox-default-width: 100%;
 $textbox-font-size: 14px !default;
-$label-font-size: 14px !default;
+$label-font-size: 13px !default;
 
 $input-border-width: 1px;
 $input-padding-y: 0;
@@ -186,8 +186,8 @@ app-date-picker {
 		line-height: $textbox-line-height;
 		cursor: text;
 		font-size: $textbox-font-size;
-		top: add-three($floating-label-height, $input-border-width, $input-padding-y);
-		left: add-two($input-padding-x, $input-border-width);
+		top: calc(1.4em + 1px);
+		left: 9px;
 		color: $color;
 		align-items: center;
 		height: 28px;
@@ -215,8 +215,8 @@ app-date-picker {
 				line-height: $textbox-line-height;
 				cursor: text;
 				font-size: $textbox-font-size;
-				top: add-three($floating-label-height, $input-border-width, $input-padding-y);
-				left: add-two($input-padding-x, $input-border-width);
+				top: calc(1.4em + 1px);
+				left: 9px;
 				transition: transform $floating-label-transition, color $floating-label-transition;
 				color: $color;
 				display: flex;

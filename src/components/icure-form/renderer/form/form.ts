@@ -69,7 +69,7 @@ export const render: Renderer = async (
 		const groupTitle = fg.translate && tp && props.language ? tp(props.language, fg.group) : fg.group
 		return subElements.length
 			? html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
-					${fg.borderless ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
+					${fg.borderless || fg.hideTitle ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
 					<div class="icure-form">${subElements}</div>
 			  </div>`
 			: nothing
@@ -80,7 +80,7 @@ export const render: Renderer = async (
 		const tp = translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))
 		return html`<div class="subform" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
 			<div class="subform__heading">
-				${h(level, 'subform__heading__title', html`${(props.language && fg.shortLabel ? tp?.(props.language, fg.shortLabel) : fg.shortLabel) ?? ''}`)}
+				${h(level, 'subform__heading__title', html`${(fg.shortLabel && tp && props.language ? tp(props.language, fg.shortLabel) : fg.shortLabel) ?? ''}`)}
 				${readonly
 					? nothing
 					: html`<form-selection-button

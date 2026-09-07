@@ -1169,6 +1169,11 @@ export class Group {
 	 * Has no effect on the clinician renderer.
 	 */
 	samePage?: boolean
+	/**
+	 * Read-only review: exempts the group from `hideEmptyFields`. When empty, renders its title
+	 * only. Can also be computed, via `computedProperties.alwaysVisible`. Does not override `roles`
+	 * or computed `hidden`.
+	 */
 	alwaysVisible?: boolean
 
 	constructor(
@@ -1292,6 +1297,11 @@ export class Subform {
 	styleOptions?: { [_key: string]: unknown }
 	labels: Labels
 	roles?: string[]
+	/**
+	 * Read-only review: exempts the subform from `hideEmptyFields`. When empty, renders its
+	 * heading only. Can also be computed, via `computedProperties.alwaysVisible`. Does not override
+	 * `roles` or computed `hidden`.
+	 */
 	alwaysVisible?: boolean
 
 	constructor(
@@ -1390,6 +1400,12 @@ export class Section {
 	description?: string
 	keywords?: string[]
 	roles?: string[]
+	/**
+	 * Read-only review: exempts the section from `hideEmptyFields`, keeping an otherwise-empty
+	 * section (an empty grid) in the plain `form` renderer. Static only, unlike Field/Group/Subform.
+	 * Has no effect in `form:tab`, where every tab stays regardless. Does not override `roles` or
+	 * computed `hidden`.
+	 */
 	alwaysVisible?: boolean
 
 	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[], alwaysVisible?: boolean) {

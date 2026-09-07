@@ -16,6 +16,8 @@ Read-only forms can now hide fields, groups, subform instances and (in the `form
 
 A group with no surviving fields disappears together with its title; a subform with no surviving instances disappears together with its heading. In `form:tab`, every tab always stays — an inactive section is never evaluated, so an all-empty active tab simply shows an empty page. See [Read-only review: hiding empty fields](./README.md#read-only-review-hiding-empty-fields).
 
+As part of this work, `<icure-form>` now also re-renders as soon as `readonly` changes on its own. Previously, toggling `readonly` on a mounted form did not refresh the render until some other prop changed too, so hosts worked around it by re-assigning `formValuesContainer` to force propagation; that workaround is no longer needed.
+
 ### `alwaysVisible` on fields, groups, subforms and sections
 
 Form authors can exempt a specific field, group, subform or section from `hideEmptyFields` by marking it `alwaysVisible`. An exempt empty field renders as a blank read-only box; an exempt container with no surviving content renders its title only. It never overrides `roles` or computed `hidden`.

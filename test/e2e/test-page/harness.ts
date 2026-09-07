@@ -352,7 +352,7 @@ harnessWindow.__selectTab = async (idx: number) => {
 }
 
 // Card helpers exposed for Playwright tests:
-;(window as any).cardFlatten = (formJson: any, role?: string) => {
+harnessWindow.cardFlatten = (formJson: any, role?: string) => {
 	const f = Form.parse(formJson)
 	return cardFlatten(f, { role }).map((c) => ({
 		sectionTitle: c.sectionTitle,
@@ -360,13 +360,13 @@ harnessWindow.__selectTab = async (idx: number) => {
 		fieldLabels: c.fields.map((field) => field.field),
 	}))
 }
-;(window as any).parseForm = (formJson: any) => Form.parse(formJson)
+harnessWindow.parseForm = (formJson: any) => Form.parse(formJson)
 ;(window as any).formToJson = (formJson: any) => Form.parse(formJson).toJson()
 
 // Cycle-detection test helper. Builds a Form whose Subform tree cycles via mutation
 // (Form.parse rejects duplicate subform ids, so this can't be constructed from JSON).
 import { Section as ModelSection } from '../../../src/components/model'
-;(window as any).testCyclicSubformFlatten = () => {
+harnessWindow.testCyclicSubformFlatten = () => {
 	const warnings: string[] = []
 	const origWarn = console.warn
 	console.warn = (...args: unknown[]) => {

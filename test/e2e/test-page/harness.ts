@@ -296,6 +296,22 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	return values
 }
 
+// Subform helpers exposed for Playwright tests. Assigned through a local alias so that neither
+// statement has to start with `(`, which would need a leading `;` that the `semi: never` rule flags.
+const harnessWindow = window as any
+// `addChild` is what the renderer's own <form-selection-button> calls; the `formFactory` above stores
+// `anchorId` as the child form's `descr`, which is what the renderer matches against the Subform's id
+// when it collects the children to render.
+harnessWindow.__addSubformInstance = async (anchorId: string, templateId: string, label: string) => {
+	await (harnessWindow.__currentFvc as BridgedFormValuesContainer).addChild(anchorId, templateId, label)
+}
+// Sets a plain string value inside one subform instance. Children come back in insertion order, and a
+// child's mutation bubbles up to the root container, so `__currentFvc` stays current.
+harnessWindow.__setChildValue = async (childIndex: number, label: string, language: string, value: string) => {
+	const children = await (harnessWindow.__currentFvc as BridgedFormValuesContainer).getChildren()
+	children[childIndex].setValue(label, language, { content: { [language]: { type: 'string', value } }, codes: [] })
+}
+
 // Card helpers exposed for Playwright tests:
 ;(window as any).cardFlatten = (formJson: any, role?: string) => {
 	const f = Form.parse(formJson)

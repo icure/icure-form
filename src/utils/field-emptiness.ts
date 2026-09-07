@@ -29,14 +29,18 @@ export const VALUE_BEARING_FIELD_TYPES: ReadonlySet<FieldType> = new Set(Object.
 
 /**
  * A primitive is blank when it carries no displayable answer: absent, an empty/whitespace-only
- * string, a non-finite number or measure magnitude, or an unset boolean/timestamp/datetime.
+ * string, a NaN number or measure magnitude, or an unset boolean/timestamp/datetime.
  * A compound is blank when every one of its members is blank (a compound with no members is blank).
+ *
+ * The type annotations on `PrimitiveType`'s members mark most `value`s as required, but data coming
+ * from parsed/external sources is not guaranteed to honor that, so every branch below tolerates an
+ * `undefined` value defensively instead of dereferencing it.
  */
 export function isBlankPrimitive(p: PrimitiveType | undefined): boolean {
 	if (p === undefined) return true
 	switch (p.type) {
 		case 'string':
-			return p.value.trim().length === 0
+			return (p.value ?? '').trim().length === 0
 		case 'number':
 		case 'measure': {
 			const value = p.value as number | undefined
@@ -49,7 +53,7 @@ export function isBlankPrimitive(p: PrimitiveType | undefined): boolean {
 			return value === undefined
 		}
 		case 'compound':
-			return Object.values(p.value).every((member) => isBlankPrimitive(member))
+			return Object.values(p.value ?? {}).every((member) => isBlankPrimitive(member))
 	}
 }
 
@@ -66,6 +70,6 @@ export function isEmptyFieldValues(values: VersionedData<FieldValue> | undefined
 		const latest = values[id]?.[0]
 		if (latest === undefined) return true
 		const { content, codes } = latest.value
-		return (codes ?? []).length === 0 && Object.values(content).every((p) => isBlankPrimitive(p))
+		return (codes ?? []).length === 0 && Object.values(content ?? {}).every((p) => isBlankPrimitive(p))
 	})
 }

@@ -38,6 +38,14 @@ import { extractDatePrimitive, extractDateTimePrimitive, extractTimePrimitive, i
 import { icureFormLogging } from '../../index'
 import { resetPicto } from '../common/styles/paths'
 
+// Defaults for the code/link presentation providers. Hosts rarely set them, and the form renderer binds
+// `fg.options?.xxxProvider` — i.e. `undefined` — onto the property, which replaces the initialiser. The schema spec
+// therefore falls back to these at call time instead of trusting the property (a link mark's toDOM would otherwise throw
+// "contentProvider is not a function" the first time a suggestion is inserted).
+const defaultCodeColorProvider = (): string => 'XI'
+const defaultLinkColorProvider = (): string => 'cat1'
+const defaultCodeContentProvider = (codes: { type: string; code: string }[]): string => codes.map((c) => c.code).join(',')
+
 // Extend the LitElement base class
 export class IcureTextField extends Field {
 	@property() placeholder = ''
@@ -49,9 +57,9 @@ export class IcureTextField extends Field {
 	@property({ type: Boolean }) links = false
 	@property() linksProvider: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined> = async () => undefined
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
-	@property() codeColorProvider: (type: string, code: string) => string = () => 'XI'
-	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'
-	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = (codes) => codes.map((c) => c.code).join(',')
+	@property() codeColorProvider: (type: string, code: string) => string = defaultCodeColorProvider
+	@property() linkColorProvider: (type: string, code: string) => string = defaultLinkColorProvider
+	@property() codeContentProvider: (codes: { type: string; code: string }[]) => string = defaultCodeContentProvider
 	@property() schema: IcureTextFieldSchema = 'styled-text-with-codes'
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = undefined
 	@property({ type: Boolean }) tokenDeleteButton = false
@@ -414,7 +422,11 @@ export class IcureTextField extends Field {
 	firstUpdated() {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const cmp = this
-		const spec = (this.schemaSpec = createSchemaSpec(this.schema, (t, c, isC) => (isC ? this.codeColorProvider(t, c) : this.linkColorProvider(t, c)), this.codeContentProvider))
+		const spec = (this.schemaSpec = createSchemaSpec(
+			this.schema,
+			(t, c, isC) => (isC ? (this.codeColorProvider ?? defaultCodeColorProvider)(t, c) : (this.linkColorProvider ?? defaultLinkColorProvider)(t, c)),
+			(codes) => (this.codeContentProvider ?? defaultCodeContentProvider)(codes),
+		))
 		const pms: Schema = (this.proseMirrorSchema = new Schema(spec.proseMirror))
 
 		const parser = this.makeParser(this.schema, pms)
@@ -467,6 +479,8 @@ export class IcureTextField extends Field {
 											editorView,
 											(terms: string[]) => cmp.suggestionProvider(terms),
 											() => cmp.suggestionStopWords,
+											undefined,
+											replaceRangeWithSuggestion,
 										))
 									},
 							  })
@@ -481,6 +495,13 @@ export class IcureTextField extends Field {
 									},
 									ArrowDown: () => {
 										return (cmp.suggestionPalette && cmp.suggestionPalette.arrowDown()) || false
+									},
+									// Tree keys: consumed only while the palette has focus, so the editor keeps its caret movement otherwise.
+									ArrowRight: () => {
+										return (cmp.suggestionPalette && cmp.suggestionPalette.arrowRight()) || false
+									},
+									ArrowLeft: () => {
+										return (cmp.suggestionPalette && cmp.suggestionPalette.arrowLeft()) || false
 									},
 									Enter: () => {
 										return (cmp.suggestionPalette && this.view && cmp.suggestionPalette.insert(this.view, replaceRangeWithSuggestion)) || false

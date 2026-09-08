@@ -798,7 +798,9 @@ span {
 			box-sizing: border-box;
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
+			justify-content: flex-start;
+			// Hierarchical suggestions: rows below the root are indented by depth (`--depth` is only set on tree rows).
+			padding-left: calc(8px + var(--depth, 0) * 12px);
 			border-radius: 4px;
 			color: rgb(39, 71, 104);
 
@@ -819,6 +821,39 @@ span {
 				path {
 					fill: rgb(128, 154, 180);
 				}
+			}
+
+			.icn-container {
+				margin-left: auto;
+				display: flex;
+				align-items: center;
+			}
+
+			// Binary chevron in front of a node that has children.
+			.chevron {
+				display: inline-flex;
+				flex: 0 0 auto;
+				margin-right: 4px;
+				cursor: pointer;
+
+				svg {
+					transition: transform 0.1s ease-in-out;
+
+					path {
+						fill: none;
+						stroke: rgb(128, 154, 180);
+					}
+				}
+
+				&[aria-expanded='true'] svg {
+					transform: rotate(90deg);
+				}
+			}
+
+			// "N more" row: the siblings hidden by the match markers.
+			&.more {
+				font-style: italic;
+				color: rgb(128, 154, 180);
 			}
 		}
 	}

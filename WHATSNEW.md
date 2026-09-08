@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## 2.3.0 (unreleased)
+## 2.3.0 (2026-09-08)
 
 ### Hide empty fields in read-only forms
 

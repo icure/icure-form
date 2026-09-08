@@ -53,3 +53,21 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 **Pre-visit intake** — The canonical patient-cards use case: the clinician shares a link with a patient before an appointment; the patient fills out a one-shot questionnaire; the clinician reviews the submission ahead of or during the visit. Distinct from longitudinal self-monitoring, post-visit summary, and full patient-as-DataOwner editing — none of which are supported by patient-cards.
 
 **Token-scoped bounded delegation** — The canonical (recommended but not enforced) authentication pattern for patient intake. The clinician's system generates a short-lived link containing a token; the token resolves to a `User` holding a `SecureDelegation` permitting write access to a single target `Contact` (the intake submission) for a bounded time window. Patient never authenticates beyond clicking the link; link expires after submit or after timeout. Renderer itself is agnostic to this mechanism.
+
+## Suggestions
+
+**Suggestion** — An item proposed to the clinician in response to a search: typically a code from a codification (ICD-10, ICPC-2, a custom entity list), carrying a display text, per-language labels, and the search terms it answers. Suggestions are produced by a Suggestion provider and consumed by a suggestion surface.
+
+**Suggestion provider** — A host-application-supplied asynchronous function that answers a search with Suggestions. The host owns the search semantics (accent folding, prefix matching, synonyms, code-number lookup); the library never re-implements matching. Three providers exist: the text suggestion provider (feeds the Suggestion palette), the options provider (feeds the Dropdown popover), and the owners provider (feeds the owner picker).
+
+**Suggestion palette** — The floating autocomplete list that appears under a Text or Token field while the clinician types. The search is the last few words typed in the field itself; there is no separate search box. Keyboard-first: Tab focuses the list, ↑/↓ move through the visible rows, →/← expand/collapse a hierarchical suggestion (← on a child returns to its parent), Enter selects. Rows, chevrons and "N more" rows are also clickable. Selecting a Suggestion — at any depth — replaces the typed words with the Suggestion's text, linked to its code.
+
+**Dropdown popover** — The options menu of a Dropdown field. Contains a search box that filters the options as the clinician types. Selecting an option sets the field's value and code.
+
+**Hierarchical suggestion** — A Suggestion that carries child Suggestions, to arbitrary depth (children may themselves have children, mirroring codifications such as ICD-10 chapter → block → category → subcategory). The whole subtree is returned by the provider together with the root (no lazy loading of children). Any node — root, intermediate, or leaf — can be selected. Supported on the Suggestion palette and the Dropdown popover; not on the owner picker. Only host Suggestion providers produce hierarchies; the inline `codifications` a form author declares in the form YAML remain flat.
+
+**Match marker** — A flag set by the Suggestion provider on each Suggestion it returns, stating whether that Suggestion *itself* matched the search — as opposed to being present only because a descendant matched. The marker is the sole source of truth for the auto-expand and hide-siblings behaviour of hierarchical suggestions. Rules are recursive: a node is shown expanded iff some node in its subtree carries the marker; inside an expanded node, a child is hidden iff neither it nor any of its descendants carries the marker; a marked node with no marked descendant is shown collapsed.
+
+**Chevron** — The binary expand/collapse control shown in front of a hierarchical suggestion that has children. Its two states are *expanded* and *collapsed*; whether an expanded node's children are filtered is derived from the Match markers, never from the chevron.
+
+**"N more" row** — The trailing row of an expanded hierarchical suggestion when some of its children are hidden by the Match marker filter. Shows the count of hidden children; activating it reveals them for that node until the search changes. It is the only way to reach non-matching siblings without changing the search.

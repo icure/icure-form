@@ -3,13 +3,14 @@ import '../../../src/components/themes/default/index'
 
 import { Form, Field, Group, Subform, FieldMetadata, Validator, Code, PrimitiveType } from '../../../src/components/model'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
-import { Version } from '../../../src/generic'
+import { Suggestion, Version } from '../../../src/generic'
 import { makeInterpreter } from '../../../src/utils/interpreter'
 import { getRevisionsFilter } from '../../../src/utils/fields-values-provider'
 import { defaultTranslationProvider } from '../../../src/utils/languages'
 
 import YAML from 'yaml'
 import { CodeStub, Contact, normalizeCode, Service, Form as ICureForm } from '@icure/api'
+import { fixtureProvider } from './suggestion-fixtures'
 
 let formCounter = 0
 
@@ -40,6 +41,17 @@ interface InitFormOptions {
 	 * (a measure, a timestamp…), and `codes` for the coded answer of a dropdown / radio / checkbox.
 	 */
 	prefill?: Array<{ label: string; language?: string; value?: string; primitive?: PrimitiveType; codes?: Code[] }>
+	/**
+	 * Name of a tree in test/e2e/test-page/suggestion-fixtures.ts served as the form's `optionsProvider` for every
+	 * codification (dropdown popover tests). Functions cannot cross the Playwright boundary, hence named fixtures.
+	 */
+	optionsFixture?: string
+	/**
+	 * Name of a tree in test/e2e/test-page/suggestion-fixtures.ts attached as `options.suggestionProvider` (plus a
+	 * `linksProvider`) to every parsed field whose `options.suggestions` is set — the same marker the demo app uses
+	 * (suggestion palette tests).
+	 */
+	suggestionsFixture?: string
 }
 
 interface InitFormResult {
@@ -102,7 +114,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, readonly, hideEmptyFields } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, readonly, hideEmptyFields, optionsFixture, suggestionsFixture } = options
 
 	// Parse the form
 	let parsed: any
@@ -112,6 +124,21 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 		parsed = JSON.parse(yamlContent)
 	}
 	const form = Form.parse(parsed)
+
+	// Suggestion palette tests: providers can only reach a text field as functions on its `options`, which YAML cannot
+	// carry and Playwright cannot pass, so attach the named fixture to every field carrying the `options.suggestions` marker.
+	if (suggestionsFixture) {
+		const attach = (fields: (Field | Group | Subform)[]): void =>
+			fields.forEach((fg) => {
+				if (fg.clazz === 'group') {
+					attach(fg.fields ?? [])
+				} else if (fg.clazz === 'field' && fg.options?.suggestions) {
+					fg.options.suggestionProvider = fixtureProvider(suggestionsFixture)
+					fg.options.linksProvider = async (sug: Suggestion) => ({ href: `c-FIXTURE://${sug.id}`, title: sug.text })
+				}
+			})
+		form.sections.forEach((s) => attach(s.fields))
+	}
 
 	// Count fields in the form definition
 	const countFields = (fields: (Field | Group | Subform)[]): number =>
@@ -280,7 +307,7 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	}
 
 	icureFormEl.ownersProvider = async () => []
-	icureFormEl.optionsProvider = async () => []
+	icureFormEl.optionsProvider = optionsFixture ? async (_language: string, _codifications: string[], terms?: string[]) => fixtureProvider(optionsFixture)(terms ?? []) : async () => []
 
 	container.appendChild(icureFormEl)
 
@@ -296,6 +323,67 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 // Expose on window for Playwright
 ;(window as any).initForm = initForm
+// ---- Hierarchical-suggestions specs -------------------------------------------------------------------------------
+// The shadow root of the first dropdown's inner <icure-dropdown-field>, where the popover (#menu), its search box
+// (#editor) and its click target (#test) live.
+const dropdownRoot = (): ShadowRoot | null => {
+	const dd = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-form-dropdown-field') as HTMLElement | null
+	const inner = dd?.shadowRoot?.querySelector('icure-dropdown-field') as HTMLElement | null
+	return inner?.shadowRoot ?? null
+}
+// The shadow root of the first text field's inner <icure-text-field>, where the ProseMirror editor and its palette live.
+const textFieldRoot = (): ShadowRoot | null => {
+	const tf = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-form-text-field') as HTMLElement | null
+	const inner = tf?.shadowRoot?.querySelector('icure-text-field') as HTMLElement | null
+	return inner?.shadowRoot ?? null
+}
+// Focuses that editor so `page.keyboard` types into it. Returns false while it is not mounted yet.
+const focusEditor = (): boolean => {
+	const editor = textFieldRoot()?.querySelector('.ProseMirror[contenteditable="true"]') as HTMLElement | null
+	if (!editor) return false
+	editor.focus()
+	return true
+}
+// A snapshot of the palette: visibility, focus, one entry per row in display order, and the editor's content.
+const paletteSnapshot = () => {
+	const root = textFieldRoot()
+	const palette = root?.querySelector('.suggestion-palette') as HTMLElement | null
+	if (!palette) return null
+	const lis = Array.from(palette.querySelectorAll('li'))
+	const editor = root?.querySelector('.ProseMirror') as HTMLElement | null
+	return {
+		visible: palette.style.display !== 'none',
+		ulFocused: !!palette.querySelector('ul.focused'),
+		focus: lis.findIndex((li) => li.classList.contains('focused')),
+		rows: lis.map((li) => ({
+			kind: li.classList.contains('more') ? 'more' : 'node',
+			text: (li.classList.contains('more')
+				? li.textContent ?? ''
+				: Array.from(li.childNodes)
+						.filter((n) => n.nodeType === Node.TEXT_NODE)
+						.map((n) => n.textContent ?? '')
+						.join('')
+			).trim(),
+			depth: Number(li.style.getPropertyValue('--depth') || 0),
+			expanded: li.querySelector('.chevron')?.getAttribute('aria-expanded') ?? null,
+			hasChevron: !!li.querySelector('.chevron'),
+			path: li.dataset.path ?? null,
+			id: li.id || null,
+		})),
+		editorText: editor?.textContent ?? '',
+		editorHtml: editor?.innerHTML ?? '',
+	}
+}
+// Viewport centre of a palette row (by text) or of its chevron, for real pointer events.
+const paletteRect = (text: string, part: 'row' | 'chevron') => {
+	const palette = textFieldRoot()?.querySelector('.suggestion-palette') as HTMLElement | null
+	const li = Array.from(palette?.querySelectorAll('li') ?? []).find((el) => (el.textContent ?? '').trim().startsWith(text))
+	const target = part === 'chevron' ? li?.querySelector('.chevron') : li
+	if (!target) return null
+	const r = target.getBoundingClientRect()
+	return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+}
+Object.assign(window as any, { __dropdownRoot: dropdownRoot, __focusEditor: focusEditor, __palette: paletteSnapshot, __paletteRect: paletteRect })
 ;(window as any).getFormValues = () => {
 	const fvc = (window as any).__currentFvc as BridgedFormValuesContainer | undefined
 	if (!fvc) return null

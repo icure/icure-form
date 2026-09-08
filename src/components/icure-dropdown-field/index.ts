@@ -1,6 +1,6 @@
 import { CSSResultGroup, html, nothing, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
-import { dropdownPicto } from '../common/styles/paths'
+import { chevronPicto, dropdownPicto } from '../common/styles/paths'
 import { Field } from '../common'
 import { generateLabels } from '../common/utils'
 import { extractSingleValue } from '../icure-form/fields/utils'
@@ -9,12 +9,23 @@ import { FieldWithOptionsMixin } from '../common/field-with-options'
 import baseCss from '../common/styles/style.scss'
 import { icureFormLogging } from '../../index'
 import { FieldMetadata } from '../model'
+import { Suggestion } from '../../generic'
+import { emptyTreeState, nodeAtPath, reveal, SuggestionRow, toggleExpanded, TreePath, TreeUiState, visibleRows } from '../../utils/suggestion-tree'
+
+type NodeRow = Extract<SuggestionRow, { kind: 'node' }>
 
 export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
+	// A dropdown's options provider answers with Suggestions, possibly hierarchical (see src/utils/suggestion-tree.ts).
+	// Narrow the mixin's Code typing so the tree is typed end to end without touching radio and checkbox.
+	declare optionsProvider: (language: string, terms?: string[]) => Promise<Suggestion[]>
+	declare displayedOptions: Suggestion[]
+
 	@property() placeholder = ''
 
 	@state() protected displayMenu = false
 	@state() protected textInputValue?: string = undefined
+	// Manual chevron toggles and "N more" reveals. Reset whenever the search text changes or an option is selected.
+	@state() protected treeState: TreeUiState = emptyTreeState()
 
 	static get styles(): CSSResultGroup[] {
 		return [baseCss]
@@ -51,6 +62,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 			const target = e.target as HTMLInputElement
 			const textInputValue = target.value
 			this.textInputValue = textInputValue
+			this.treeState = emptyTreeState()
 			this.triggerSearch(textInputValue)
 		}
 	}
@@ -67,29 +79,49 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		}, cooldown)
 	}
 
-	handleOptionButtonClicked(id: string | undefined): (e: Event) => boolean {
+	handleOptionClicked(path: TreePath): (e: Event) => boolean {
 		return (e: Event) => {
 			e.preventDefault()
 			e.stopPropagation()
+			const node = nodeAtPath(this.displayedOptions ?? [], path)
+			if (!node) return false
 			const [valueId] = this.getValueFromProvider() ?? ''
-			if (id) {
-				const code = this.displayedOptions?.find((option) => option.id === id)
-				const inputValue = this.displayedOptions?.find((option) => option.id === id)?.['label']?.[this.language()] ?? ''
-				this.displayMenu = false
-				this.textInputValue = undefined
-				this.handleValueChanged?.(
-					this.label,
-					this.language(),
-					{
-						content: { [this.language()]: { type: 'string', value: inputValue } },
-						codes: code ? [code] : [],
-					},
-					valueId,
-				)
-				this.triggerSearch(undefined, 0)
-				return true
-			}
-			return false
+			const language = this.language()
+			// Store the node exactly as a flat provider would have produced it: never persist the subtree or the marker.
+			const code: Suggestion = { ...node }
+			delete code.children
+			delete code.matched
+			const inputValue = node.label?.[language] ?? ''
+			this.displayMenu = false
+			this.textInputValue = undefined
+			this.treeState = emptyTreeState()
+			this.handleValueChanged?.(
+				this.label,
+				language,
+				{
+					content: { [language]: { type: 'string', value: inputValue } },
+					codes: [code],
+				},
+				valueId,
+			)
+			this.triggerSearch(undefined, 0)
+			return true
+		}
+	}
+
+	handleChevronClicked(row: NodeRow): (e: Event) => void {
+		return (e: Event) => {
+			e.preventDefault()
+			e.stopPropagation()
+			this.treeState = toggleExpanded(this.treeState, row.path, row.expanded)
+		}
+	}
+
+	handleMoreClicked(path: TreePath): (e: Event) => void {
+		return (e: Event) => {
+			e.preventDefault()
+			e.stopPropagation()
+			this.treeState = reveal(this.treeState, path)
 		}
 	}
 
@@ -107,6 +139,32 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		return [undefined, undefined]
 	}
 
+	/**
+	 * One popover row. A flat option (no children, depth 0) renders exactly the markup used before hierarchy existed.
+	 * Nodes with children, or any row below the root level, get a wrapper with a chevron (or a spacer) in front of the
+	 * option button; an "N more" row reveals the siblings hidden by the match markers.
+	 */
+	private renderRow(row: SuggestionRow, inputValue: string | undefined, language: string): TemplateResult {
+		if (row.kind === 'more') {
+			return html`<button class="option option--more" style="--depth: ${row.depth}" @click="${this.handleMoreClicked(row.path)}">
+				… ${row.count} ${this.translationProvider?.(language, 'more') ?? 'more'}
+			</button>`
+		}
+		const x = row.suggestion
+		const option = html`<button @click="${this.handleOptionClicked(row.path)}" id="${x.id}" class="option ${x?.['label']?.[language] === inputValue ? 'selected' : ''}">
+			${x?.['label']?.[language] || ''}
+		</button>`
+		if (!row.hasChildren && row.depth === 0) {
+			return option
+		}
+		return html`<div class="option-row" style="--depth: ${row.depth}" aria-level="${row.depth + 1}">
+			${row.hasChildren
+				? html`<button class="chevron" aria-expanded="${row.expanded}" aria-label="${row.expanded ? 'Collapse' : 'Expand'}" @click="${this.handleChevronClicked(row)}">${chevronPicto}</button>`
+				: html`<span class="chevron chevron--spacer"></span>`}
+			${option}
+		</div>`
+	}
+
 	override renderSync({ validationErrors }: { validationErrors: [FieldMetadata, string][] }): TemplateResult {
 		if (!this.visible) {
 			return html``
@@ -118,29 +176,20 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 
 		const [, inputValue] = this.getValueFromProvider() ?? ''
 		const validationError = validationErrors.length
+		const language = this.language()
+		const rows = this.displayMenu ? visibleRows(this.displayedOptions ?? [], !!this.textInputValue?.trim(), this.treeState) : []
 
 		return html`
 			<div id="root" class="icure-text-field ${inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, language, this.translate ? this.translationProvider : undefined) : nothing}
 				<div class="icure-input ${validationError && 'icure-input__validationError'}" id="test" @click="${(event: MouseEvent) => this.togglePopup(event, true)}">
 					<input type="text" id="editor" style="outline: none" .value=${this.textInputValue ?? inputValue ?? ''} @input="${this.textInputChanged()}" autocomplete="off" />
 					<div id="extra" class=${'extra forced'}>
 						<button class="btn select-arrow" @click="${this.togglePopup}">${dropdownPicto}</button>
-						${this.displayMenu
-							? html`
-									<div id="menu" class="options">
-										${this.displayedOptions?.map(
-											(x) =>
-												html`<button @click="${this.handleOptionButtonClicked(x.id)}" id="${x.id}" class="option ${x?.['label']?.[this.language()] === inputValue ? 'selected' : ''}">
-													${x?.['label']?.[this.language()] || ''}
-												</button>`,
-										)}
-									</div>
-							  `
-							: ''}
+						${this.displayMenu ? html` <div id="menu" class="options">${rows.map((row) => this.renderRow(row, inputValue, language))}</div>` : ''}
 					</div>
 				</div>
-				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
+				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(language, error) ?? error}</div>`)}</div>
 			</div>
 		`
 	}

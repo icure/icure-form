@@ -54,6 +54,10 @@ export const markPicto = html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0
 	<path fill="none" stroke="white" stroke-linecap="square" stroke-linejoin="square" stroke-width="2" d="M3,8 l3,3 l7-7" />
 </svg>`
 
+export const chevronPicto = html`<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+</svg>`
+
 export const dropdownPicto = html`<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
 		<g clip-path="url(#clip0_1_841)">
 			<path d="M5.5575 6.4425L9 9.8775L12.4425 6.4425L13.5 7.5L9 12L4.5 7.5L5.5575 6.4425Z" fill="#9CA8B2" />

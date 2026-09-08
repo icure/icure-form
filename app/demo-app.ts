@@ -19,6 +19,8 @@ import legacyPrescription from './samples/09-legacy-prescription.json'
 import clinicalWorkflow from './samples/10-clinical-workflow.yaml'
 // @ts-ignore
 import delegatedEdition from './samples/11-delegated-edition.yaml'
+// @ts-ignore
+import hierarchicalSuggestions from './samples/12-hierarchical-suggestions.yaml'
 
 import { FormLayout } from '@icure/api'
 import { css, html, LitElement } from 'lit'
@@ -119,6 +121,12 @@ class DemoApp extends LitElement {
 			title: '11 — Delegated edition',
 			description: 'Token field that delegates clicks to a host action.',
 			form: Form.parse(YAML.parse(delegatedEdition)),
+		},
+		{
+			slug: '12-hierarchical-suggestions',
+			title: '12 — Hierarchical suggestions',
+			description: 'ICD chapter → code → term tree in the palette and the dropdown.',
+			form: Form.parse(YAML.parse(hierarchicalSuggestions)),
 		},
 	]
 

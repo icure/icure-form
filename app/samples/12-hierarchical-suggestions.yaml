@@ -1,0 +1,26 @@
+form: demo.hierarchical-suggestions
+id: 10000012-0000-0000-0000-000000000012
+description: Hierarchical suggestions — one ICD-10 chapter → code → thesaurus-term tree served to the text-field palette and to the dropdown popover.
+sections:
+  - section: Coding with a hierarchy
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: Diagnosis
+            type: dropdown
+            shortLabel: diagnosis
+            span: 12
+            codifications:
+              - ICD
+          - field: Clinical note
+            type: text-field
+            shortLabel: note
+            span: 12
+            schema: styled-text-with-codes
+            options:
+              suggestions: ICD
+      - field: "Both fields are fed the same tree by the host app: ICD-10 chapter → ICD code → BE-THESAURUS term. Dropdown: open it to browse the chapters collapsed, or search a code prefix (G40) or a French word (épilep) — the branch that leads to a match opens, the other siblings hide behind '… N more'. Text field: type a French word (crise, migraine, asthme), press Tab to enter the palette, then ↑/↓ to move, → / ← to expand or collapse, Enter to insert; rows and chevrons are clickable too. Selecting a chapter, a code or a term stores just that code."
+        type: label
+        span: 24

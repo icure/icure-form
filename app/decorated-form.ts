@@ -131,6 +131,8 @@ export class DecoratedForm extends LitElement {
 	@property() renderer = 'form'
 	@property() form: Form
 	@property() language?: string = getStoredLanguage()
+	@property() readonly = false
+	@property() hideEmptyFields = false
 
 	// Viewer role passed to <icure-form>: derived from the renderer string so swapping renderers
 	// also swaps the role filter. Returns `null` (no filter) for any renderer that doesn't match.
@@ -543,7 +545,8 @@ export class DecoratedForm extends LitElement {
 				labelPosition="above"
 				renderer="${this.renderer}"
 				.role="${this.role}"
-				.readOnly="${false}"
+				.readonly="${this.readonly}"
+				.hideEmptyFields="${this.hideEmptyFields}"
 				.displayMetadata="${false}"
 				.language="${this.language}"
 				.formValuesContainer="${this.formValuesContainer}"

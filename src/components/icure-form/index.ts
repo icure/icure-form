@@ -24,6 +24,7 @@ export class IcureForm extends LitElement {
 	@property() visible = true
 	@property() readonly = false
 	@property() displayMetadata = false
+	@property({ type: Boolean }) hideEmptyFields = false
 	// `role` clashes with HTMLElement's ARIA `role` (typed `string | null`); match its shape so the
 	// attribute form `<icure-form role="patient">` and the JS form `el.role = 'patient'` both work.
 	@property() override role: string | null = null
@@ -64,16 +65,24 @@ export class IcureForm extends LitElement {
 			}
 			const translationTables = this.form?.translations
 
+			// Only the active tab awaits its section thunk: an inactive section is never rendered, so no
+			// value is read and no formula is evaluated for it (ADR 0001).
 			const sectionWrapper =
 				variant[1] === 'tab'
-					? (index: number, section: () => TemplateResult) => {
-							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
+					? async (index: number, section: () => Promise<TemplateResult>) => {
+							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? await section() : nothing}</div>`
 					  }
 					: undefined
 
 			return renderer(
 				form,
-				{ labelPosition: this.labelPosition, language, questionsPerCard: this.questionsPerCard, role: this.role ?? undefined },
+				{
+					labelPosition: this.labelPosition,
+					language,
+					questionsPerCard: this.questionsPerCard,
+					role: this.role ?? undefined,
+					hideEmptyFields: !!(this.readonly && this.hideEmptyFields),
+				},
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
 				this.revisionsFilter,
@@ -86,7 +95,7 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.questionsPerCard, this.role],
+		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.questionsPerCard, this.role, this.readonly, this.hideEmptyFields],
 	})
 
 	render() {

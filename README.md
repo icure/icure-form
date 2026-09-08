@@ -81,6 +81,7 @@ The Section class represents a section within a form. A section groups related f
 - description: string - An optional description of the section.
 - keywords: string[] - Optional keywords associated with the section.
 - roles: string[] - Optional list of viewer roles that may see this section. When omitted, the section is visible to every role. When set, the section is hidden unless the form's `role` matches one of the listed values. An empty array hides the section for everyone. See [Role-based visibility](#role-based-visibility).
+- alwaysVisible: boolean - Optional property that exempts the section from `hideEmptyFields` when it has no surviving content. Static only (no `computedProperties.alwaysVisible` on Section). Does not override `roles` or computed `hidden`. See [Read-only review: hiding empty fields](#read-only-review-hiding-empty-fields).
 
 ### Field
 
@@ -117,6 +118,7 @@ The Field class represents a generic field within a form. It is designed to be e
 - width: number - Optional fixed width of the field in pixels.
 - styleOptions: { width: number, direction: string, span: number, rows: number, alignItems: string } - Optional style options for the field.
 - roles: string[] - Optional list of viewer roles that may see this field. Same semantics as `Section.roles`. Also available on `Group` and `Subform`. See [Role-based visibility](#role-based-visibility).
+- alwaysVisible: boolean - Optional property that exempts the field from `hideEmptyFields` when it holds no answer; it then renders as a blank read-only box. Also available on `Group` and `Subform`, where it exempts a container with no surviving content. Can be computed via `computedProperties.alwaysVisible`. Does not override `roles` or computed `hidden`. See [Read-only review: hiding empty fields](#read-only-review-hiding-empty-fields).
 
 #### Implementations
 
@@ -189,7 +191,7 @@ Computed properties allow you to dynamically calculate the value of a field prop
 
 #### Field Properties
 
-You can compute standard properties of a field (e.g., `readonly`, `hidden`, `label`, `span`, `styleOptions`). The formula is evaluated, and the result is directly assigned to the property.
+You can compute standard properties of a field (e.g., `readonly`, `hidden`, `label`, `span`, `styleOptions`, `alwaysVisible`). The formula is evaluated, and the result is directly assigned to the property.
 
 Example:
 ```yaml
@@ -309,6 +311,7 @@ The icure-form component accepts the following properties:
 - visible: boolean - a boolean indicating if the form should be visible or not. Defaults to true.
 - readonly: boolean - a boolean indicating if the form should be read-only or not. Defaults to false.
 - displayMetadata: boolean - a boolean indicating if metadata (owner, date, etc.) should be displayed on fields. Defaults to false.
+- hideEmptyFields: boolean - a boolean indicating if fields, groups, subform instances and (in the `form` renderer) sections that hold no answer should be omitted. Defaults to false. Effective only while `readonly` is true; otherwise ignored. Ignored by the `card` renderer. See [Read-only review: hiding empty fields](#read-only-review-hiding-empty-fields).
 - role: string - the active viewer role. Sections, groups, fields and subforms whose `roles` does not include this value are hidden by both renderers. When unset (or `null`), no role filter is applied — items with `roles` are still rendered. See [Role-based visibility](#role-based-visibility).
 - labelPosition: string - the favoured position of the labels in the form. Valid values: `'top'`, `'left'`, `'right'`, `'bottom'`, `'float'`. This option can or cannot be honoured by the renderer.
 - formValuesContainer: FormValuesContainer<FieldValue, FieldMetadata> - the form values container that contains the values of the form
@@ -396,6 +399,68 @@ sections:
 ```
 
 There is no built-in migration for the legacy `hiddenForPatient` flag; any `hiddenForPatient: true` in saved YAML/JSON is silently dropped on parse. Update existing form definitions to use `roles` directly.
+
+### Read-only review: hiding empty fields
+
+Set `hideEmptyFields` on `<icure-form>` alongside `readonly` to get a compact read-only view that shows only fields that were actually answered. It is honoured by the `form` and `form:tab` renderers, re-evaluated on every render pass exactly like computed `hidden` (so swapping the `formValuesContainer` updates the visible set), and ignored while `readonly` is `false` or by the `card` renderer. `roles` and computed `hidden` are applied first and are unaffected: an element they hide is never a candidate for survival, `alwaysVisible` or not.
+
+A Field is **empty** when it has no stored value, or when every stored value's most recent version has no codes and no non-blank primitive in any language. Language is not considered: an answer written in one language keeps the field visible for a viewer in another.
+
+| Type | Non-blank when |
+|---|---|
+| `string` | trimmed length > 0 |
+| `number` | a defined, non-NaN number |
+| `boolean` | defined (`false` counts as an answer) |
+| `timestamp`, `datetime` | defined |
+| `measure` | a defined, non-NaN `value` (a unit alone does not count) |
+| `compound` | at least one member is non-blank, applying these rules recursively |
+
+Preserved-but-invalid date/time text is a non-blank string, so such a field stays visible together with its warning. `label` and `action` fields carry no value and are outside this predicate; they survive only through their container.
+
+With `hideEmptyFields` active, an element survives when it is a non-empty field, or is marked `alwaysVisible` (statically or via a truthy computed property), or is a container with at least one surviving child. The cascade:
+
+- **Field** — rendered if it survives; otherwise omitted.
+- **Group** — rendered with its title and surviving children if any child survives. If no child survives and the group is `alwaysVisible`, rendered as title only (bordered or borderless as authored — a borderless `alwaysVisible` empty group therefore renders nothing visible). Otherwise omitted, together with its labels and buttons.
+- **Subform instance** — rendered if any field in the embedded form survives; otherwise omitted. The subform heading is rendered if at least one instance survives or the subform is `alwaysVisible`; otherwise omitted.
+- **Section, plain `form`** — rendered if any child survives, or if the section is `alwaysVisible`. Otherwise omitted. A section has no visible title of its own in this layout, so an `alwaysVisible` empty section keeps its (now empty) grid but renders nothing visible.
+- **Section, `form:tab`** — the tab bar is unaffected: every section keeps its tab, and `alwaysVisible` on a section is meaningful only in plain `form`. The active section renders its surviving content, or an empty page when nothing survives.
+- **Whole form** — in plain `form`, when no section survives the element renders nothing; in `form:tab` the tab bar remains and the active page is empty. No event, attribute or placeholder is emitted either way.
+
+`alwaysVisible` is the author's per-element exemption from `hideEmptyFields`. It is available on `Field`, `Group`, `Subform` and `Section`; on `Field`, `Group` and `Subform` it may also be supplied as `computedProperties.alwaysVisible`, evaluated per render like any other computed property, while on `Section` it is static only. It never overrides `roles` or computed `hidden` — an element those rules hide stays hidden regardless of `alwaysVisible`.
+
+In `form:tab`, an inactive section is never evaluated: no value is read and no formula is computed for it, so every section always keeps its tab even when it turns out to hold nothing. This is a hard constraint of the tab layout, not an oversight — see [ADR 0001: Inactive tab sections are never evaluated](./code-docs/adr/0001-lazy-tab-evaluation.md).
+
+Example — `alwaysVisible` on a field and on a group:
+
+```yaml
+form: Vitals
+sections:
+  - section: main
+    fields:
+      - field: allergies
+        type: token-field
+        alwaysVisible: true    # keep the box even when nothing was recorded
+      - group: measures
+        span: 24
+        alwaysVisible: true    # keep the heading even if weight and height are both empty
+        fields:
+          - field: weight
+            type: measure-field
+          - field: height
+            type: measure-field
+      - field: notes
+        type: text-field
+        multiline: true        # disappears entirely if left blank
+```
+
+```html
+<icure-form
+	.form="${this.form}"
+	.readonly="${true}"
+	.hideEmptyFields="${true}"
+	.formValuesContainer="${this.formValuesContainer}"
+></icure-form>
+```
 
 ### Listeners and notifications
 

@@ -180,6 +180,11 @@ export abstract class Field {
 	 */
 	standalone?: boolean
 	/**
+	 * Read-only review: exempts the field from `hideEmptyFields`. Does not override `roles` or
+	 * computed `hidden`.
+	 */
+	alwaysVisible?: boolean
+	/**
 	 * Card renderer only: when `true`, this Field is rendered on the same card as the previous
 	 * Field, overriding `questionsPerCard` and section/group boundaries that would normally force
 	 * a new card. If no previous card exists, a fresh card is started. Has no effect on the
@@ -312,6 +317,9 @@ export abstract class Field {
 		if ((json as any).standalone !== undefined) {
 			result.standalone = !!(json as any).standalone
 		}
+		if ((json as any).alwaysVisible !== undefined) {
+			result.alwaysVisible = !!(json as any).alwaysVisible
+		}
 		if ((json as any).samePage !== undefined) {
 			result.samePage = !!(json as any).samePage
 		}
@@ -356,6 +364,7 @@ export abstract class Field {
 		value: string | undefined
 		roles: string[] | undefined
 		standalone: boolean | undefined
+		alwaysVisible: boolean | undefined
 		samePage: boolean | undefined
 		event?: string
 		readOnlyEvent?: string
@@ -389,6 +398,7 @@ export abstract class Field {
 			styleOptions: this.styleOptions,
 			roles: this.roles,
 			standalone: this.standalone,
+			alwaysVisible: this.alwaysVisible,
 			samePage: this.samePage,
 		}
 	}
@@ -1159,6 +1169,12 @@ export class Group {
 	 * Has no effect on the clinician renderer.
 	 */
 	samePage?: boolean
+	/**
+	 * Read-only review: exempts the group from `hideEmptyFields`. When empty, renders its title
+	 * only. Can also be computed, via `computedProperties.alwaysVisible`. Does not override `roles`
+	 * or computed `hidden`.
+	 */
+	alwaysVisible?: boolean
 
 	constructor(
 		title: string,
@@ -1173,6 +1189,7 @@ export class Group {
 			styleOptions,
 			roles,
 			samePage,
+			alwaysVisible,
 		}: {
 			borderless?: boolean
 			translate?: boolean
@@ -1183,6 +1200,7 @@ export class Group {
 			styleOptions?: { [_key: string]: unknown }
 			roles?: string[]
 			samePage?: boolean
+			alwaysVisible?: boolean
 		},
 	) {
 		this.group = title
@@ -1197,6 +1215,7 @@ export class Group {
 		this.styleOptions = styleOptions
 		this.roles = roles
 		this.samePage = samePage
+		this.alwaysVisible = alwaysVisible
 	}
 
 	copyIfNeeded(properties: Partial<Group>): Group {
@@ -1213,6 +1232,7 @@ export class Group {
 		width,
 		roles,
 		samePage,
+		alwaysVisible,
 	}: {
 		group: string
 		fields?: Array<Field | Group | Subform>
@@ -1224,6 +1244,7 @@ export class Group {
 		width?: number
 		roles?: string[]
 		samePage?: boolean
+		alwaysVisible?: boolean
 	}): Group {
 		return new Group(
 			group,
@@ -1242,6 +1263,7 @@ export class Group {
 				width: width,
 				roles: Array.isArray(roles) ? roles : undefined,
 				samePage: samePage !== undefined ? !!samePage : undefined,
+				alwaysVisible: alwaysVisible !== undefined ? !!alwaysVisible : undefined,
 			},
 		)
 	}
@@ -1257,6 +1279,7 @@ export class Group {
 			width: this.width,
 			roles: this.roles,
 			samePage: this.samePage,
+			alwaysVisible: this.alwaysVisible,
 		}
 	}
 }
@@ -1274,6 +1297,12 @@ export class Subform {
 	styleOptions?: { [_key: string]: unknown }
 	labels: Labels
 	roles?: string[]
+	/**
+	 * Read-only review: exempts the subform from `hideEmptyFields`. When empty, renders its
+	 * heading only. Can also be computed, via `computedProperties.alwaysVisible`. Does not override
+	 * `roles` or computed `hidden`.
+	 */
+	alwaysVisible?: boolean
 
 	constructor(
 		title: string,
@@ -1289,6 +1318,7 @@ export class Subform {
 			refs,
 			labels,
 			roles,
+			alwaysVisible,
 		}: {
 			id?: string
 			shortLabel?: string
@@ -1300,6 +1330,7 @@ export class Subform {
 			refs?: string[]
 			labels?: Labels
 			roles?: string[]
+			alwaysVisible?: boolean
 		},
 	) {
 		this.id = id || title
@@ -1313,6 +1344,7 @@ export class Subform {
 		this.refs = refs
 		this.labels = labels ?? {}
 		this.roles = roles
+		this.alwaysVisible = alwaysVisible
 	}
 
 	copyIfNeeded(properties: Partial<Subform>): Subform {
@@ -1332,6 +1364,7 @@ export class Subform {
 		labels?: Labels
 		id: string
 		roles?: string[]
+		alwaysVisible?: boolean
 	}): Subform {
 		return new Subform(json.subform, json.forms ?? {}, {
 			id: json.id,
@@ -1343,6 +1376,7 @@ export class Subform {
 			refs: json.refs,
 			labels: json.labels,
 			roles: Array.isArray(json.roles) ? json.roles : undefined,
+			alwaysVisible: json.alwaysVisible !== undefined ? !!json.alwaysVisible : undefined,
 		})
 	}
 
@@ -1356,6 +1390,7 @@ export class Subform {
 			width: this.width,
 			styleOptions: this.styleOptions,
 			roles: this.roles,
+			alwaysVisible: this.alwaysVisible,
 		}
 	}
 }
@@ -1365,13 +1400,21 @@ export class Section {
 	description?: string
 	keywords?: string[]
 	roles?: string[]
+	/**
+	 * Read-only review: exempts the section from `hideEmptyFields`, keeping an otherwise-empty
+	 * section (an empty grid) in the plain `form` renderer. Static only, unlike Field/Group/Subform.
+	 * Has no effect in `form:tab`, where every tab stays regardless. Does not override `roles` or
+	 * computed `hidden`.
+	 */
+	alwaysVisible?: boolean
 
-	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[]) {
+	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[], alwaysVisible?: boolean) {
 		this.section = title
 		this.fields = fields
 		this.description = description
 		this.keywords = keywords
 		this.roles = roles
+		this.alwaysVisible = alwaysVisible
 	}
 
 	static parse(json: {
@@ -1382,6 +1425,7 @@ export class Section {
 		description?: string
 		keywords?: string[]
 		roles?: string[]
+		alwaysVisible?: boolean
 	}): Section {
 		return new Section(
 			json.section,
@@ -1395,6 +1439,7 @@ export class Section {
 			json.description,
 			json.keywords,
 			Array.isArray(json.roles) ? json.roles : undefined,
+			json.alwaysVisible !== undefined ? !!json.alwaysVisible : undefined,
 		)
 	}
 
@@ -1404,6 +1449,7 @@ export class Section {
 		description?: string
 		fields: (Field | Group | Subform)[]
 		roles?: string[]
+		alwaysVisible?: boolean
 	} {
 		return {
 			section: this.section,
@@ -1411,6 +1457,7 @@ export class Section {
 			description: this.description,
 			keywords: this.keywords,
 			roles: this.roles,
+			alwaysVisible: this.alwaysVisible,
 		}
 	}
 }

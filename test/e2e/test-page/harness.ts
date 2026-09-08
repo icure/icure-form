@@ -4,7 +4,7 @@ registerTheme()
 // Side-effect import: register the card internal element.
 import '../../../src/components/icure-form/renderer/card/register'
 
-import { Form, Field, Group, Subform, FieldMetadata, Validator } from '../../../src/components/model'
+import { Form, Field, Group, Subform, FieldMetadata, Validator, Code, PrimitiveType } from '../../../src/components/model'
 import { flatten as cardFlatten } from '../../../src/components/icure-form/renderer/card/flatten'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
 import { Version } from '../../../src/generic'
@@ -16,6 +16,9 @@ import { CodeStub, DecryptedContact, DecryptedForm, DecryptedService } from '@ic
 import YAML from 'yaml'
 
 let formCounter = 0
+
+/** Every formula passed to the current container's `compute`, in call order. See `installComputeSpy`. */
+const computedFormulas: string[] = []
 
 function uuid() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -33,12 +36,19 @@ interface InitFormOptions {
 	questionsPerCard?: number
 	/** Active viewer role. Sections/groups/fields/subforms whose `roles` does not include it are hidden. */
 	role?: string
+	/** Render the form in read-only (review) mode. */
+	readonly?: boolean
+	/** Omit fields with no displayable answer. Only takes effect together with `readonly`. */
+	hideEmptyFields?: boolean
 	/**
 	 * Optional pre-fill: values set on the BridgedFormValuesContainer BEFORE the renderer is mounted.
 	 * Used by Phase 5 tests to simulate "resume" scenarios where the patient is returning to a
 	 * partially-completed form.
+	 *
+	 * `value` fills a plain string primitive; pass `primitive` instead for any other content type
+	 * (a measure, a timestamp…), and `codes` for the coded answer of a dropdown / radio / checkbox.
 	 */
-	prefill?: Array<{ label: string; language?: string; value: string }>
+	prefill?: Array<{ label: string; language?: string; value?: string; primitive?: PrimitiveType; codes?: Code[] }>
 }
 
 interface InitFormResult {
@@ -101,7 +111,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, readonly, hideEmptyFields } = options
 
 	// Parse the form
 	let parsed: any
@@ -222,9 +232,27 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	bridgedFormValuesContainer.registerChangeListener(prefillListener)
 	if (prefill?.length) {
 		for (const p of prefill) {
-			currentFvc.setValue(p.label, p.language ?? language, { content: { [p.language ?? language]: { type: 'string', value: p.value } as any } } as any)
+			const prefillLanguage = p.language ?? language
+			const primitive: PrimitiveType = p.primitive ?? { type: 'string', value: p.value ?? '' }
+			currentFvc.setValue(p.label, prefillLanguage, { content: { [prefillLanguage]: primitive }, codes: p.codes ?? [] })
 		}
 	}
+
+	// Formula-evaluation spy (Phase 3 / ADR 0001). `compute` is the single entry point every computed
+	// property goes through, so recording its argument records exactly which formulas a render pass
+	// evaluated. Installed here, after `init()` and the prefill, so the list only ever describes what
+	// rendering asked for. It wraps the *instance*, and a mutation swaps in a fresh container, hence
+	// the re-install in the change listener below.
+	const installComputeSpy = (fvc: BridgedFormValuesContainer) => {
+		const orig = fvc.compute.bind(fvc)
+		;(fvc as any).compute = (formula: string) => {
+			computedFormulas.push(formula)
+			return orig(formula)
+		}
+	}
+	// Cleared per mount, so a test that calls `initForm` twice starts from a known state.
+	computedFormulas.length = 0
+	installComputeSpy(currentFvc)
 
 	// Remove any previous form
 	const container = document.getElementById('form-container')!
@@ -242,11 +270,15 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	// Register change listener to update icure-form when the container changes (e.g., subform add/remove).
 	// Shares the same listener array as `prefillListener`, so further mutations propagate here too.
 	currentFvc.registerChangeListener((newValue: BridgedFormValuesContainer) => {
+		// Wrapped first: the assignment below schedules a Lit update, so the next render pass has to see
+		// a spied container. Without this the count would stop at the first value change.
+		installComputeSpy(newValue)
 		icureFormEl.formValuesContainer = newValue
 		;(window as any).__currentFvc = newValue
 	})
 	icureFormEl.language = language
-	icureFormEl.readonly = false
+	icureFormEl.readonly = readonly ?? false
+	icureFormEl.hideEmptyFields = hideEmptyFields ?? false
 	icureFormEl.displayMetadata = false
 	icureFormEl.renderer = renderer
 	icureFormEl.labelPosition = 'above'
@@ -267,9 +299,11 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 	container.appendChild(icureFormEl)
 
-	// Store references for later access
+	// Store references for later access. `__currentFvc` is deliberately not reassigned here: it was
+	// already pointed at the post-prefill `currentFvc` above, and the change listener keeps it current.
+	// Resetting it to `bridgedFormValuesContainer` would hand tests the stale pre-prefill container,
+	// so a later `__currentFvc.setValue` would mutate that one and drop every prefilled value.
 	;(window as any).__currentForm = form
-	;(window as any).__currentFvc = bridgedFormValuesContainer
 	;(window as any).__currentElement = icureFormEl
 
 	return { fieldCount, fieldLabels }
@@ -284,8 +318,41 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	return values
 }
 
+// Subform helpers exposed for Playwright tests. Assigned through a local alias so that neither
+// statement has to start with `(`, which would need a leading `;` that the `semi: never` rule flags.
+const harnessWindow = window as any
+// `addChild` is what the renderer's own <form-selection-button> calls; the `formFactory` above stores
+// `anchorId` as the child form's `descr`, which is what the renderer matches against the Subform's id
+// when it collects the children to render.
+harnessWindow.__addSubformInstance = async (anchorId: string, templateId: string, label: string) => {
+	await (harnessWindow.__currentFvc as BridgedFormValuesContainer).addChild(anchorId, templateId, label)
+}
+// Sets a plain string value inside one subform instance. Children come back in insertion order, and a
+// child's mutation bubbles up to the root container, so `__currentFvc` stays current.
+harnessWindow.__setChildValue = async (childIndex: number, label: string, language: string, value: string) => {
+	const children = await (harnessWindow.__currentFvc as BridgedFormValuesContainer).getChildren()
+	children[childIndex].setValue(label, language, { content: { [language]: { type: 'string', value } }, codes: [] })
+}
+
+// Formula-evaluation accessors for Playwright tests. `__computedFormulas` is what the no-evaluation
+// proof asserts on: a render pass may run more than once, so the *set* of formulas evaluated is the
+// stable signal, while the raw count stays available for reporting.
+harnessWindow.__computeCount = () => computedFormulas.length
+harnessWindow.__computedFormulas = () => [...computedFormulas]
+harnessWindow.__resetComputeCount = () => {
+	computedFormulas.length = 0
+}
+// `selectedTab` is a `@state()` on <icure-form>, so it is set directly rather than through an
+// attribute. `updateComplete` covers the element's own update; the render task it kicks off settles
+// afterwards, which the test waits for separately.
+harnessWindow.__selectTab = async (idx: number) => {
+	const el = harnessWindow.__currentElement
+	el.selectedTab = idx
+	await el.updateComplete
+}
+
 // Card helpers exposed for Playwright tests:
-;(window as any).cardFlatten = (formJson: any, role?: string) => {
+harnessWindow.cardFlatten = (formJson: any, role?: string) => {
 	const f = Form.parse(formJson)
 	return cardFlatten(f, { role }).map((c) => ({
 		sectionTitle: c.sectionTitle,
@@ -293,13 +360,13 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 		fieldLabels: c.fields.map((field) => field.field),
 	}))
 }
-;(window as any).parseForm = (formJson: any) => Form.parse(formJson)
+harnessWindow.parseForm = (formJson: any) => Form.parse(formJson)
 ;(window as any).formToJson = (formJson: any) => Form.parse(formJson).toJson()
 
 // Cycle-detection test helper. Builds a Form whose Subform tree cycles via mutation
 // (Form.parse rejects duplicate subform ids, so this can't be constructed from JSON).
 import { Section as ModelSection } from '../../../src/components/model'
-;(window as any).testCyclicSubformFlatten = () => {
+harnessWindow.testCyclicSubformFlatten = () => {
 	const warnings: string[] = []
 	const origWarn = console.warn
 	console.warn = (...args: unknown[]) => {

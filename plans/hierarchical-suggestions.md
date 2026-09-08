@@ -6,7 +6,7 @@
 >
 > Glossary: CONTEXT.md, section "Suggestions" (`Suggestion`, `Suggestion provider`, `Suggestion palette`, `Dropdown popover`, `Hierarchical suggestion`, `Match marker`, `Chevron`, `"N more" row`)
 
-Lets host providers return trees of `Suggestion`s. `Suggestion` gains optional `children` and `matched`; the Suggestion palette and the Dropdown popover render the tree with a binary chevron, auto-expand branches that lead to a match, hide non-matching siblings behind an "N more" row, and let the clinician select any node. Flat providers are unchanged. Ships as **3.4.0** (minor: two optional properties on a public type, no breaking change; renumbered at release time if another minor lands first).
+Lets host providers return trees of `Suggestion`s. `Suggestion` gains optional `children` and `matched`; the Suggestion palette and the Dropdown popover render the tree with a binary chevron, auto-expand branches that lead to a match, hide non-matching siblings behind an "N more" row, and let the clinician select any node. Flat providers are unchanged. Ships as **2.4.0** on `main` (minor: two optional properties on a public type, no breaking change) and as **3.4.0** on `cardinal`; this plan was executed on `cardinal` first and cherry-picked onto `main`.
 
 ## Task status overview
 
@@ -21,7 +21,7 @@ Tasks are grouped in four phases; each task is one dispatch. Status is tracked i
 | 5 | 4 | Demo: ICD tree, `options.suggestions` wiring, sample 12 | manual |
 | 6 | 4 | README and WHATSNEW | – |
 
-Regression gate for every task: `yarn test` (jest) and `yarn test:e2e` (Playwright) green, `test/e2e/forms.spec.ts` unchanged in outcome, `npx eslint . --ext .ts` clean on touched files. Release 3.4.0 (`form-release` skill) happens after the branch is reviewed and merged; it is not a task.
+Regression gate for every task: `yarn test` (jest) and `yarn test:e2e` (Playwright) green, `test/e2e/forms.spec.ts` unchanged in outcome, `npx eslint . --ext .ts` clean on touched files. The release (`form-release` skill; 2.4.0 on `main`, 3.4.0 on `cardinal`) happens after the branch is reviewed and merged; it is not a task.
 
 ## Architectural decisions
 
@@ -45,7 +45,7 @@ Durable across all phases. Each traces to a PRD decision number or requirement.
 - **Zero regression by construction (PRD R5, criterion 1).** Every new branch is entered only when `hasHierarchy(roots)` or a row has children / depth > 0. With flat input, `visibleRows` returns one depth-0 leaf row per suggestion and both surfaces emit today's elements and classes.
 - **Test strategy (criterion 2, 3; plan Q3).** Jest for the pure module, the recursive sort and `replacementTerms`. Playwright through the harness, which gains `optionsFixture?: string` and `suggestionsFixture?: string` naming deterministic trees defined in `test/e2e/test-page/suggestion-fixtures.ts`. The fixture provider marks a node `matched` iff a query term is a case-insensitive substring of its `text` — a fixture convenience only; the library never matches. The harness attaches the suggestion fixture as `options.suggestionProvider` / `options.linksProvider` to every parsed field whose `options.suggestions` is set, the same marker the demo uses. The demo is for manual checking; `app/e2e` is not extended.
 - **Accessibility.** Chevron buttons (popover) and chevron spans (palette) carry `aria-expanded`; rows carry `aria-level` (depth + 1). Nothing else changes.
-- **Release.** 3.4.0 via the `form-release` skill after phase 4. WHATSNEW entry under 3.4.0.
+- **Release.** Via the `form-release` skill after phase 4: 2.4.0 on `main`, 3.4.0 on `cardinal`. WHATSNEW entry under that version.
 
 ## Global Constraints
 
@@ -69,7 +69,7 @@ Binding for every task. Reviewers check against these verbatim.
 - **Palette focus.** `SuggestionPalette.update()` hides the palette on any editor update where the document text is unchanged. A pointer event that blurs the editor or moves its selection closes the palette before the action lands. `mousedown` + `preventDefault()` is the mitigation; task 4's e2e asserts the palette stays open through a chevron toggle. If a browser still blurs, fall back to re-focusing `view.dom` in the handler — do not remove the hide rule, which protects every other interaction.
 - **Palette plugin is always installed.** `text-field.ts` passes `?suggestions=${!!this.suggestionProvider}` and the default provider is a function, so the palette exists on every text field and returns `[]`. Not changed here; flat regression tests cover it implicitly.
 - **`replacementTerms` fallback.** A flat provider that returns empty `terms` today gets a degenerate range (`length = -1`); with the fallback it replaces the query terms. Strictly an improvement, but a behaviour change to mention in WHATSNEW.
-- **Concurrent 3.4.0.** The hide-empty-fields branch also targets 3.4.0; WHATSNEW headings will conflict trivially at merge and the release renumbers whichever lands second.
+- **Two release lines.** `main` (2.x, `@icure/api`, no card renderer) and `cardinal` (3.x, `@icure/cardinal-sdk`) both receive this feature; the dropdown port keeps each line's own menu behaviour (no popover-API code on `main`) and the WHATSNEW heading follows each line's next minor.
 - **Generic mixin ripple.** Making `FieldWithOptionsMixin` generic touches radio and checkbox typings; keep `Code` as the default so their code does not change.
 - **ProseMirror under Playwright.** Typing must go through `page.keyboard` after focusing the `.ProseMirror` element inside two shadow roots (`icure-form` → `icure-form-text-field` → `icure-text-field`); use `page.evaluate` to focus and a helper to reach the palette `<ul>`. Budget time for this helper in task 4.
 - **Fixture marker semantics.** The fixture's substring matching must live in `suggestion-fixtures.ts` only. A reviewer finding `toLowerCase().includes` in `src/` for suggestions should fail the task (constraint 1).
@@ -168,6 +168,6 @@ Everything below a `Task N` heading up to the next one is that task's brief. Pat
 
 **README.** In the `<icure-form>` props list, extend the `optionsProvider` entry and add a note under `ownersProvider` that owners are read flat. New section "Hierarchical suggestions" after the providers list: the `Suggestion` shape with `children` and `matched` (absent = matched; a node's presence must be justified by a match in its subtree), the visibility rules in the PRD's words (auto-expand, pruning, "N more", collapsed when only the title matched, empty search shows roots collapsed), the palette keys (Tab, ↑/↓, →/←, Enter) and that rows are clickable, the popover behaviour, sorting per sibling group, and a JSON example of a two-level provider result for the query "allergic". State that inline `codifications` remain flat and that the stored value is the selected node's code alone.
 
-**WHATSNEW.** New `## 3.4.0 (date)` entry "Hierarchical suggestions" summarising the above with the provider example and the palette keys; one line noting the `replacementTerms` fallback for suggestions returned without `terms`.
+**WHATSNEW.** New `## 2.4.0 (date)` entry (3.4.0 on `cardinal`) "Hierarchical suggestions" summarising the above with the provider example and the palette keys; one line noting the `replacementTerms` fallback for suggestions returned without `terms`.
 
 **Acceptance.** Links resolve; examples match the shipped type; regression gate (no code touched).

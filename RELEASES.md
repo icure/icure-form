@@ -986,7 +986,7 @@ See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/b
 - Fix render-test expectations after schema pinning removal
 - Add release skill and backfill scripts for GitHub releases
 
-## [MISSING] 2.3.0 (2026-09-08)
+## 2.3.0 (2026-09-08)
 <!-- tag: 2.3.0 | target: e35e3b2ec69eddb58fda8ff4ca729ca439fc298a | prerelease: false -->
 
 ### Hide empty fields in read-only forms

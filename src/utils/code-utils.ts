@@ -29,11 +29,30 @@ export const sortCodes = (codes: Code[], language: string, sortOptions?: SortOpt
 		? codes.sort(defaultCodesComparator(language, sortOptions?.sort === 'asc', sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
 		: codes.sort(naturalCodesComparator(sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
 
-export const sortSuggestions = (codes: (Code | Suggestion)[], language: string, sortOptions?: SortOptions): Suggestion[] =>
-	(sortOptions?.sort && sortOptions?.sort !== 'natural'
-		? codes.sort(defaultCodesComparator(language, sortOptions?.sort === 'asc', sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
-		: codes.sort(naturalCodesComparator(sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter))
-	).map((c) => ({ id: c.id, label: c.label ?? { [language]: c.id }, text: c.label?.[language] ?? c.id, terms: [] }))
+/**
+ * Sorts a provider result with the field's sort options and normalises every entry to a `Suggestion`.
+ *
+ * Hierarchical results are sorted per sibling group: each node's `children` are sorted recursively with the same options,
+ * so a promotion applies within its own group only. `code`, `terms`, `matched` and `children` survive the mapping; a flat
+ * `Code` input yields the same shape as before (`{ id, label, text, terms: [] }`).
+ */
+export const sortSuggestions = (codes: (Code | Suggestion)[], language: string, sortOptions?: SortOptions): Suggestion[] => {
+	const promoter = sortOptions?.promotions ? makePromoter(sortOptions.promotions.split(/ ?, ?/)) : defaultCodePromoter
+	const comparator = sortOptions?.sort && sortOptions?.sort !== 'natural' ? defaultCodesComparator(language, sortOptions?.sort === 'asc', promoter) : naturalCodesComparator(promoter)
+	return codes.sort(comparator).map((c) => {
+		const s = c as Partial<Suggestion>
+		const label = c.label ?? { [language]: c.id }
+		return {
+			id: c.id,
+			label,
+			text: label[language] ?? c.id,
+			terms: s.terms ?? [],
+			...(c.code !== undefined ? { code: c.code } : {}),
+			...(s.matched !== undefined ? { matched: s.matched } : {}),
+			...(s.children ? { children: sortSuggestions(s.children, language, sortOptions) } : {}),
+		}
+	})
+}
 
 export const filterAndSortOptionsFromFieldDefinition = (language: string, fg: Field, translationProvider: ((language: string, text: string) => string) | undefined, terms?: string[]) =>
 	Promise.resolve(

@@ -21,6 +21,7 @@ export class IcureForm extends LitElement {
 	@property() visible = true
 	@property() readonly = false
 	@property() displayMetadata = false
+	@property({ type: Boolean }) hideEmptyFields = false
 	@property() labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float' | undefined = undefined
 	@property() language?: string
 	@property() languages?: { [iso: string]: string } = languages
@@ -57,16 +58,18 @@ export class IcureForm extends LitElement {
 			}
 			const translationTables = this.form?.translations
 
+			// Only the active tab awaits its section thunk: an inactive section is never rendered, so no
+			// value is read and no formula is evaluated for it (ADR 0001).
 			const sectionWrapper =
 				variant[1] === 'tab'
-					? (index: number, section: () => TemplateResult) => {
-							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? section() : nothing}</div>`
+					? async (index: number, section: () => Promise<TemplateResult>) => {
+							return html`<div class="tab ${index === this.selectedTab ? 'active' : ''}">${index === this.selectedTab ? await section() : nothing}</div>`
 					  }
 					: undefined
 
 			return renderer(
 				form,
-				{ labelPosition: this.labelPosition, language },
+				{ labelPosition: this.labelPosition, language, hideEmptyFields: !!(this.readonly && this.hideEmptyFields) },
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),
 				this.revisionsFilter,
@@ -79,7 +82,7 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab],
+		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.readonly, this.hideEmptyFields],
 	})
 
 	render() {

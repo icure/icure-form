@@ -125,6 +125,8 @@ export class DecoratedForm extends LitElement {
 	@property() renderer = 'form'
 	@property() form: Form
 	@property() language?: string = getStoredLanguage()
+	@property() readonly = false
+	@property() hideEmptyFields = false
 
 	private undoStack: BridgedFormValuesContainer[] = []
 	private redoStack: BridgedFormValuesContainer[] = []
@@ -526,7 +528,8 @@ export class DecoratedForm extends LitElement {
 				.form="${this.form}"
 				labelPosition="above"
 				renderer="${this.renderer}"
-				.readOnly="${false}"
+				.readonly="${this.readonly}"
+				.hideEmptyFields="${this.hideEmptyFields}"
 				.displayMetadata="${false}"
 				.language="${this.language}"
 				.formValuesContainer="${this.formValuesContainer}"

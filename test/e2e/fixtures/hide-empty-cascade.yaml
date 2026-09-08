@@ -1,0 +1,87 @@
+form: Hide empty fields cascade
+description: >-
+  Phase-2 cascade fixture. One container of every kind that the upward cascade has to collapse
+  (group, nested group, subform instance, section) plus one opt-out of every kind (a section, a
+  group, a static field and a computed field marked alwaysVisible). The form's only label and only
+  action button both live in the first group of section A, so their presence in the DOM is an
+  unambiguous signal that that group survived.
+sections:
+  - section: A
+    fields:
+      - group: A-plain
+        span: 24
+        fields:
+          - field: A1
+            type: text-field
+            span: 24
+          - field: A2
+            type: text-field
+            span: 24
+          - field: "This label survives only as long as its group does."
+            type: label
+            span: 24
+          - field: Save
+            type: action
+            shortLabel: save
+            span: 24
+            event: save
+      - group: A-always
+        span: 24
+        alwaysVisible: true
+        fields:
+          - field: A3
+            type: text-field
+            span: 24
+  - section: B
+    fields:
+      - group: B-outer
+        span: 24
+        fields:
+          - group: B-inner
+            span: 24
+            fields:
+              - field: B1
+                type: text-field
+                span: 24
+  - section: C
+    fields:
+      - subform: Encounters
+        id: sub-c
+        shortLabel: Encounters
+        span: 24
+        labels:
+          add: Add encounter
+          remove: Remove encounter
+        forms:
+          sub-c-child:
+            form: Encounter
+            description: One repeatable encounter, empty until one of its two fields is filled.
+            sections:
+              - section: Encounter
+                fields:
+                  - field: C1
+                    type: text-field
+                    span: 24
+                  - field: C2
+                    type: text-field
+                    span: 24
+  - section: D
+    alwaysVisible: true
+    fields:
+      - field: D1
+        type: text-field
+        span: 24
+  - section: E
+    fields:
+      - field: EAlways
+        type: text-field
+        span: 24
+        alwaysVisible: true
+      - field: driver
+        type: text-field
+        span: 24
+      - field: EComputed
+        type: text-field
+        span: 24
+        computedProperties:
+          alwaysVisible: return !!parseContent(driver[0]?.content)

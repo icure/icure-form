@@ -160,6 +160,10 @@ export abstract class Field {
 	// action handler is then responsible for mutating the form values and
 	// triggering a re-render. Currently honoured by token-field.
 	delegatedEdition?: boolean
+	/**
+	 * Read-only review: exempts the field from `hideEmptyFields`. Does not override computed `hidden`.
+	 */
+	alwaysVisible?: boolean
 
 	label(): string {
 		return this.field
@@ -254,7 +258,7 @@ export abstract class Field {
 	abstract copyIfNeeded(properties: Partial<Field>): Field
 
 	static parse(json: Field): Field {
-		return (
+		const result =
 			(
 				{
 					'text-field': () => new TextField(json.field, { ...json }),
@@ -272,7 +276,10 @@ export abstract class Field {
 					action: () => new Button(json.field, { ...json }),
 				} as { [key: string]: () => Field }
 			)[json.type as string]?.() ?? new TextField(json.field, { ...json })
-		)
+		if ((json as any).alwaysVisible !== undefined) {
+			result.alwaysVisible = !!(json as any).alwaysVisible
+		}
+		return result
 	}
 
 	// noinspection JSUnusedGlobalSymbols
@@ -315,6 +322,7 @@ export abstract class Field {
 		readOnlyEvent?: string
 		payload?: unknown
 		delegatedEdition?: boolean
+		alwaysVisible?: boolean
 	} {
 		return {
 			field: this.field,
@@ -335,6 +343,7 @@ export abstract class Field {
 			...(this.readOnlyEvent !== undefined ? { readOnlyEvent: this.readOnlyEvent } : {}),
 			...(this.payload !== undefined ? { payload: this.payload } : {}),
 			...(this.delegatedEdition ? { delegatedEdition: true } : {}),
+			...(this.alwaysVisible !== undefined ? { alwaysVisible: this.alwaysVisible } : {}),
 			computedProperties: this.computedProperties,
 			now: this.now,
 			translate: this.translate,
@@ -1102,6 +1111,12 @@ export class Group {
 	computedProperties?: { [_key: string]: string }
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
+	/**
+	 * Read-only review: exempts the group from `hideEmptyFields`. When empty, renders its title
+	 * only. Can also be computed, via `computedProperties.alwaysVisible`. Does not override computed
+	 * `hidden`.
+	 */
+	alwaysVisible?: boolean
 
 	constructor(
 		title: string,
@@ -1114,6 +1129,7 @@ export class Group {
 			computedProperties,
 			width,
 			styleOptions,
+			alwaysVisible,
 		}: {
 			borderless?: boolean
 			translate?: boolean
@@ -1122,6 +1138,7 @@ export class Group {
 			computedProperties?: { [_key: string]: string }
 			width?: number
 			styleOptions?: { [_key: string]: unknown }
+			alwaysVisible?: boolean
 		},
 	) {
 		this.group = title
@@ -1134,6 +1151,7 @@ export class Group {
 		this.computedProperties = computedProperties
 		this.width = width
 		this.styleOptions = styleOptions
+		this.alwaysVisible = alwaysVisible
 	}
 
 	copyIfNeeded(properties: Partial<Group>): Group {
@@ -1148,6 +1166,7 @@ export class Group {
 		group,
 		translate,
 		width,
+		alwaysVisible,
 	}: {
 		group: string
 		fields?: Array<Field | Group | Subform>
@@ -1157,6 +1176,7 @@ export class Group {
 		rowSpan?: number
 		computedProperties?: { [_key: string]: string }
 		width?: number
+		alwaysVisible?: boolean
 	}): Group {
 		return new Group(
 			group,
@@ -1173,6 +1193,7 @@ export class Group {
 				translate: translate,
 				computedProperties: computedProperties,
 				width: width,
+				alwaysVisible: alwaysVisible !== undefined ? !!alwaysVisible : undefined,
 			},
 		)
 	}
@@ -1186,6 +1207,7 @@ export class Group {
 			translatable: this.translate,
 			span: this.span,
 			width: this.width,
+			alwaysVisible: this.alwaysVisible,
 		}
 	}
 }
@@ -1202,6 +1224,12 @@ export class Subform {
 	width?: number
 	styleOptions?: { [_key: string]: unknown }
 	labels: Labels
+	/**
+	 * Read-only review: exempts the subform from `hideEmptyFields`. When empty, renders its
+	 * heading only. Can also be computed, via `computedProperties.alwaysVisible`. Does not override
+	 * computed `hidden`.
+	 */
+	alwaysVisible?: boolean
 
 	constructor(
 		title: string,
@@ -1216,6 +1244,7 @@ export class Subform {
 			styleOptions,
 			refs,
 			labels,
+			alwaysVisible,
 		}: {
 			id?: string
 			shortLabel?: string
@@ -1226,6 +1255,7 @@ export class Subform {
 			styleOptions?: { [_key: string]: unknown }
 			refs?: string[]
 			labels?: Labels
+			alwaysVisible?: boolean
 		},
 	) {
 		this.id = id || title
@@ -1238,6 +1268,7 @@ export class Subform {
 		this.styleOptions = styleOptions
 		this.refs = refs
 		this.labels = labels ?? {}
+		this.alwaysVisible = alwaysVisible
 	}
 
 	copyIfNeeded(properties: Partial<Subform>): Subform {
@@ -1256,6 +1287,7 @@ export class Subform {
 		styleOptions?: { [_key: string]: unknown }
 		labels?: Labels
 		id: string
+		alwaysVisible?: boolean
 	}): Subform {
 		return new Subform(json.subform, json.forms ?? {}, {
 			id: json.id,
@@ -1266,6 +1298,7 @@ export class Subform {
 			styleOptions: json.styleOptions,
 			refs: json.refs,
 			labels: json.labels,
+			alwaysVisible: json.alwaysVisible !== undefined ? !!json.alwaysVisible : undefined,
 		})
 	}
 
@@ -1278,6 +1311,7 @@ export class Subform {
 			computedProperties: this.computedProperties,
 			width: this.width,
 			styleOptions: this.styleOptions,
+			alwaysVisible: this.alwaysVisible,
 		}
 	}
 }
@@ -1286,12 +1320,20 @@ export class Section {
 	fields: Array<Field | Group | Subform>
 	description?: string
 	keywords?: string[]
+	/**
+	 * Read-only review: exempts the section from `hideEmptyFields`, keeping an otherwise-empty
+	 * section (an empty grid) in the plain `form` renderer. Static only, unlike Field/Group/Subform.
+	 * Has no effect in `form:tab`, where every tab stays regardless. Does not override computed
+	 * `hidden`.
+	 */
+	alwaysVisible?: boolean
 
-	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[]) {
+	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], alwaysVisible?: boolean) {
 		this.section = title
 		this.fields = fields
 		this.description = description
 		this.keywords = keywords
+		this.alwaysVisible = alwaysVisible
 	}
 
 	static parse(json: {
@@ -1301,6 +1343,7 @@ export class Section {
 		sections?: Array<Field | Group | Subform>
 		description?: string
 		keywords?: string[]
+		alwaysVisible?: boolean
 	}): Section {
 		return new Section(
 			json.section,
@@ -1313,6 +1356,7 @@ export class Section {
 			),
 			json.description,
 			json.keywords,
+			json.alwaysVisible !== undefined ? !!json.alwaysVisible : undefined,
 		)
 	}
 
@@ -1321,12 +1365,14 @@ export class Section {
 		keywords?: string[]
 		description?: string
 		fields: (Field | Group | Subform)[]
+		alwaysVisible?: boolean
 	} {
 		return {
 			section: this.section,
 			fields: this.fields.map((f: Field | Group | Subform) => (f && f.toJson ? f.toJson() : JSON.stringify(f))),
 			description: this.description,
 			keywords: this.keywords,
+			alwaysVisible: this.alwaysVisible,
 		}
 	}
 }

@@ -53,7 +53,7 @@ Each decision was taken during the grilling; the alternative rejected is named s
 
 The three provider signatures are unchanged. `suggestionProvider` and `optionsProvider` may return trees; `ownersProvider` results are read as flat (children ignored).
 
-A provider must not return a node whose subtree contains no matched node (with markers present); the library does not defend against it beyond rendering it collapsed.
+A provider must not return a **root** whose subtree contains no matched node (with markers present); the library does not defend against it beyond rendering it collapsed. Unmatched children of a returned node are expected — they are what the "N more" row hides — and a returned node carries its full child list, not only the matching children.
 
 ### R2. Visibility rules
 

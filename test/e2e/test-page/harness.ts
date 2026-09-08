@@ -14,6 +14,7 @@ import { normalizeCode } from '../../../src/utils/code-utils'
 import { defaultTranslationProvider } from '../../../src/utils/languages'
 import { CodeStub, DecryptedContact, DecryptedForm, DecryptedService } from '@icure/cardinal-sdk'
 import YAML from 'yaml'
+import { fixtureProvider } from './suggestion-fixtures'
 
 let formCounter = 0
 
@@ -39,6 +40,11 @@ interface InitFormOptions {
 	 * partially-completed form.
 	 */
 	prefill?: Array<{ label: string; language?: string; value: string }>
+	/**
+	 * Name of a tree in test/e2e/test-page/suggestion-fixtures.ts served as the form's `optionsProvider` for every
+	 * codification (dropdown popover tests). Functions cannot cross the Playwright boundary, hence named fixtures.
+	 */
+	optionsFixture?: string
 }
 
 interface InitFormResult {
@@ -101,7 +107,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, optionsFixture } = options
 
 	// Parse the form
 	let parsed: any
@@ -263,7 +269,7 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	}
 
 	icureFormEl.ownersProvider = async () => []
-	icureFormEl.optionsProvider = async () => []
+	icureFormEl.optionsProvider = optionsFixture ? async (_language: string, _codifications: string[], terms?: string[]) => fixtureProvider(optionsFixture)(terms ?? []) : async () => []
 
 	container.appendChild(icureFormEl)
 
@@ -277,6 +283,13 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 // Expose on window for Playwright
 ;(window as any).initForm = initForm
+// Hierarchical-suggestions specs: the shadow root of the first dropdown's inner <icure-dropdown-field>, where the
+// popover (#menu), its search box (#editor) and its click target (#test) live.
+;(window as any).__dropdownRoot = (): ShadowRoot | null => {
+	const dd = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-form-dropdown-field') as HTMLElement | null
+	const inner = dd?.shadowRoot?.querySelector('icure-dropdown-field') as HTMLElement | null
+	return inner?.shadowRoot ?? null
+}
 ;(window as any).getFormValues = () => {
 	const fvc = (window as any).__currentFvc as BridgedFormValuesContainer | undefined
 	if (!fvc) return null

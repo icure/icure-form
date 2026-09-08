@@ -977,6 +977,57 @@ app-date-picker {
 	}
 }
 
+// Hierarchical suggestions in the options popover: one row per node, indented by depth, a binary chevron in
+// front of nodes that have children (a spacer otherwise), and an "N more" row for the siblings hidden by the
+// match markers. Flat options never get the wrapper and keep the plain `.option` markup.
+.option-row {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	padding-left: calc(var(--depth, 0) * 16px);
+
+	.option {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
+.chevron {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #545454;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+
+	svg {
+		width: 12px;
+		height: 12px;
+		transition: transform 0.1s ease-in-out;
+	}
+
+	&[aria-expanded='true'] svg {
+		transform: rotate(90deg);
+	}
+
+	&--spacer {
+		cursor: default;
+	}
+}
+
+.option--more {
+	font-style: italic;
+	color: #8a8a8a;
+	padding-left: calc(var(--depth, 0) * 16px + 28px);
+}
+
 .select-arrow {
 	border: none;
 	background: 0px 0px;

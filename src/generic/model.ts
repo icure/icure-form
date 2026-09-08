@@ -96,9 +96,9 @@ export interface FormValuesContainerMutation<Value, Metadata, FVC extends FormVa
  * Hierarchical suggestions: a provider may return a tree by filling `children` on any node, to arbitrary depth. The whole
  * subtree is returned together with its root; children are never fetched later. `matched` states whether the node itself
  * matched the search (as opposed to being present only because a descendant matched). When absent it is read as `true`,
- * so providers returning flat lists are unaffected. A node whose subtree contains no matched node should not be returned
- * when markers are used. The library never matches labels against the search itself: expansion and pruning of the tree
- * derive from `matched` only.
+ * so providers returning flat lists are unaffected. A root whose subtree contains no matched node should not be returned
+ * when markers are used; unmatched children of a returned node are expected (they are what the "N more" row hides). The
+ * library never matches labels against the search itself: expansion and pruning of the tree derive from `matched` only.
  */
 export type Suggestion = { id: string; code?: string; text: string; terms: string[]; label: { [lng: string]: string }; children?: Suggestion[]; matched?: boolean }
 

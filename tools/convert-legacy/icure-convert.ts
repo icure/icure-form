@@ -56,8 +56,11 @@ export function convertLegacy(form: FormLayout, formsLibrary: FormLayout[]): For
 		})
 
 	const makeSubForm = (formData: FormLayoutData, width: number, height: number) => {
-		const subForms = ((formData.editor as any)?.optionalFormGuids as string[])
-			?.map((guid: string) => {
+		const optionalGuids = ((formData.editor as any)?.optionalFormGuids as string[]) ?? []
+		const compulsoryGuids = ((formData.editor as any)?.compulsoryFormGuids as string[]) ?? []
+		const guids = [...new Set([...optionalGuids, ...compulsoryGuids])]
+		const subForms = guids
+			.map((guid: string) => {
 				const subForm = formsLibrary.find((it) => it.guid === guid)
 				if (!subForm) {
 					console.warn(`Skipping dangling subform reference ${guid} in "${formData.name}"`)

@@ -1,0 +1,3 @@
+[submodule "app/samples/curated"]
+	path = app/samples/curated
+	url = git@github.com:icure/speciality-forms.git

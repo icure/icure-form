@@ -1,7 +1,13 @@
 /**
  * Ad-hoc sanity check for convertLegacy(): runs it against a handful of the raw legacy
  * form dumps extracted into app/samples/legacy/<specialty>/ and writes the resulting
- * new-format Form JSON into app/samples/converted/<specialty>/.
+ * new-format Form JSON into app/samples/curated/<specialty>/.
+ *
+ * app/samples/curated is a git submodule (icure/speciality-forms) holding every sample
+ * form, auto-converted or hand-tuned alike. Since there's no separate directory to shield
+ * hand-tuned files from a bulk regeneration anymore, this script never overwrites a file
+ * that already exists there — delete the specific file first if you want a fresh
+ * conversion of it.
  *
  * Usage: npx ts-node --transpile-only -O '{"module":"commonjs"}' tools/convert-legacy/sanity-check.ts [count]
  */
@@ -12,7 +18,7 @@ import { FormLayout } from './legacy/FormLayout'
 
 const SAMPLE_COUNT = Number(process.argv[2] ?? 5)
 const LEGACY_ROOT = path.resolve(__dirname, '../../app/samples/legacy')
-const OUT_ROOT = path.resolve(__dirname, '../../app/samples/converted')
+const OUT_ROOT = path.resolve(__dirname, '../../app/samples/curated')
 
 const specialties = fs
 	.readdirSync(LEGACY_ROOT, { withFileTypes: true })
@@ -38,16 +44,25 @@ for (const specialty of specialties) {
 
 	let ok = 0
 	let fail = 0
+	let skipped = 0
 	for (const file of picked) {
+		const outPath = path.join(outDir, file)
+		if (fs.existsSync(outPath)) {
+			skipped++
+			continue
+		}
 		const form: FormLayout = library[files.indexOf(file)]
 		try {
 			const converted = convertLegacy(form, library)
-			fs.writeFileSync(path.join(outDir, file), JSON.stringify(converted, null, 2) + '\n', 'utf-8')
+			fs.writeFileSync(outPath, JSON.stringify(converted, null, 2) + '\n', 'utf-8')
 			ok++
 		} catch (e) {
 			fail++
 			console.error(`  FAIL ${specialty}/${file}: ${(e as Error).message}`)
 		}
+	}
+	if (skipped) {
+		console.log(`  (skipped ${skipped} already present in ${specialty})`)
 	}
 	totalOk += ok
 	totalFail += fail

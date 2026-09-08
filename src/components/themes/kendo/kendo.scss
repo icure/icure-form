@@ -40,7 +40,7 @@ $font-weight-label: 500;
 
 .icure-text-field,
 .icure-button-group {
-	padding-top: 16px;
+	padding-top: var(--icure-field-padding-top, 16px);
 	width: $textbox-default-width;
 	.icure-label {
 		color: $color;
@@ -221,7 +221,7 @@ app-date-picker {
 				color: $color;
 				display: flex;
 				align-items: center;
-				height: 28px;
+				height: var(--icure-field-option-height, 28px);
 				max-width: 85%;
 				min-width: 0;
 

@@ -81,6 +81,7 @@ The Section class represents a section within a form. A section groups related f
 - description: string - An optional description of the section.
 - keywords: string[] - Optional keywords associated with the section.
 - roles: string[] - Optional list of viewer roles that may see this section. When omitted, the section is visible to every role. When set, the section is hidden unless the form's `role` matches one of the listed values. An empty array hides the section for everyone. See [Role-based visibility](#role-based-visibility).
+- compact: boolean - Optional. When true, the section's grid is rendered with the `compact` CSS class: no vertical margin or padding on its fields and a row pitch at least halved. Meant for dense layouts such as several rows of checkboxes.
 
 ### Field
 

@@ -478,7 +478,7 @@ export const render: Renderer = async (
 					return nothing
 				}
 				const section = await Promise.all(s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3)))
-				return sectionWrapper(idx, () => html` <div class="icure-form">${section}</div>`)
+				return sectionWrapper(idx, () => html` <div class="${s.compact ? 'icure-form compact' : 'icure-form'}">${section}</div>`)
 			}),
 		)
 	}

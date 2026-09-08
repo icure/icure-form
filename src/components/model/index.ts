@@ -1379,13 +1379,19 @@ export class Section {
 	description?: string
 	keywords?: string[]
 	roles?: string[]
+	/**
+	 * Renders the section's grid with the `compact` CSS class: no vertical margin or padding
+	 * on its fields and a much tighter row pitch, for e.g. several rows of checkboxes.
+	 */
+	compact?: boolean
 
-	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[]) {
+	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[], compact?: boolean) {
 		this.section = title
 		this.fields = fields
 		this.description = description
 		this.keywords = keywords
 		this.roles = roles
+		this.compact = compact
 	}
 
 	static parse(json: {
@@ -1396,6 +1402,7 @@ export class Section {
 		description?: string
 		keywords?: string[]
 		roles?: string[]
+		compact?: boolean
 	}): Section {
 		return new Section(
 			json.section,
@@ -1409,6 +1416,7 @@ export class Section {
 			json.description,
 			json.keywords,
 			Array.isArray(json.roles) ? json.roles : undefined,
+			json.compact === true ? true : undefined,
 		)
 	}
 
@@ -1418,6 +1426,7 @@ export class Section {
 		description?: string
 		fields: (Field | Group | Subform)[]
 		roles?: string[]
+		compact?: boolean
 	} {
 		return {
 			section: this.section,
@@ -1425,6 +1434,7 @@ export class Section {
 			description: this.description,
 			keywords: this.keywords,
 			roles: this.roles,
+			compact: this.compact,
 		}
 	}
 }

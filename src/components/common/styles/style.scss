@@ -1082,7 +1082,7 @@ app-date-picker {
 .icure-form {
 	background-color: $background-color;
 	display: grid;
-	gap: 16px 6px;
+	gap: var(--icure-form-row-gap, 16px) 6px;
 	grid-template-columns: repeat(24, 1fr);
 	// Grow to fill the height made available by the <icure-form> host (a flex column).
 	// Ignored when nested inside a non-flex parent (groups/subforms), so this only affects
@@ -1116,6 +1116,26 @@ app-date-picker {
 		border: 0 solid $label-color;
 		border-bottom-width: 1px;
 	}
+
+	// A section flagged `compact` (Section.compact) packs its fields: no vertical margin or
+	// padding on them, and a row pitch at least halved (a row of checkboxes goes from 56px to
+	// 24px). The fields' internals live in nested shadow roots, out of reach of descendant
+	// selectors, so the tightened values travel as custom properties — those do inherit across
+	// shadow boundaries — and the rules that read them fall back to the regular values.
+	&.compact {
+		--icure-form-row-gap: 4px;
+		--icure-field-gap: 0px;
+		--icure-field-padding-top: 0px;
+		--icure-field-option-height: 20px;
+		--icure-field-error-margin-top: 0px;
+
+		.icure-form-field {
+			margin-top: 0;
+			margin-bottom: 0;
+			padding-top: 0;
+			padding-bottom: 0;
+		}
+	}
 }
 
 .icure-form-field {
@@ -1123,14 +1143,15 @@ app-date-picker {
 	align-items: flex-start;
 }
 
-icure-form-checkbox {
+icure-form-checkbox,
+icure-form-button {
 	align-self: self-end;
 }
 
 .error {
 	color: red;
 	font-size: $label-font-size;
-	margin-top: 4px;
+	margin-top: var(--icure-field-error-margin-top, 4px);
 }
 
 .icure-text-field, .icure-button-group {
@@ -1374,7 +1395,7 @@ input[type='radio'] {
 .icure-button-group {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: var(--icure-field-gap, 4px);
 	min-width: 0;
 
 	> div {
@@ -1397,7 +1418,7 @@ input[type='radio'] {
 				color: $label-color;
 				display: flex;
 				align-items: center;
-				height: 28px;
+				height: var(--icure-field-option-height, 28px);
 				max-width: 85%;
 				min-width: 0;
 

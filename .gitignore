@@ -20,3 +20,5 @@ test/e2e/test-results/
 .yarn/releases
 .yarn/sdks
 .yarn/versions
+/.claude/worktrees/
+/app/samples/legacy/

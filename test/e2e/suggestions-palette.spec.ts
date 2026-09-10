@@ -93,6 +93,8 @@ test.describe('Suggestion palette / flat provider (regression)', () => {
 		expect(p.editorText).toContain('Alpha')
 		expect(p.editorText).not.toContain('alp ')
 		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|A|1')
+		// The host-level codeColorProvider reaches the editor: its category colours the inserted code.
+		expect(p.editorHtml).toContain('--bg-code-color-1: #123456')
 	})
 })
 

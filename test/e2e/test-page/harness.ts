@@ -312,6 +312,8 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	if (suggestionsFixture) {
 		icureFormEl.suggestionProvider = async (terms: string[], _codifications: string[]) => fixtureProvider(suggestionsFixture)(terms)
 		icureFormEl.linksProvider = async (sug: Suggestion) => ({ href: `c-FIXTURE://${sug.id}`, title: sug.text })
+		// A colour category outside the built-in table is echoed verbatim into the code's style, which the spec asserts.
+		icureFormEl.codeColorProvider = (_type: string, _code: string) => '#123456'
 	}
 
 	container.appendChild(icureFormEl)

@@ -8,6 +8,7 @@ export class ItemsListField extends Field {
 	@property() lines = 1
 	@property() suggestionProvider?: (terms: string[]) => Promise<Suggestion[]>
 	@property() linksProvider?: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
+	@property() codeColorProvider?: (type: string, code: string) => string
 	override renderSync(): TemplateResult {
 		return html`<icure-text-field
 			schema="items-list"
@@ -22,6 +23,7 @@ export class ItemsListField extends Field {
 			?links=${!!this.linksProvider}
 			.suggestionProvider=${this.suggestionProvider}
 			.linksProvider=${this.linksProvider}
+			.codeColorProvider=${this.codeColorProvider}
 			.ownersProvider=${this.ownersProvider}
 			.valueProvider=${this.valueProvider}
 			.validationErrorsProvider=${this.validationErrorsProvider}

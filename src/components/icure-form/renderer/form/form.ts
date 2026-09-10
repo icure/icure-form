@@ -174,6 +174,9 @@ const renderInternal = async (
 		const host = props.suggestionProvider
 		return host && suggestionsOptedIn(fg) ? (terms) => host(terms, fg.codifications ?? []) : undefined
 	}
+	// Presentation providers are not gated by an opt-in: they only affect codes already present in the text.
+	const fieldCodeColorProvider = (fg: Field): ((type: string, code: string) => string) | undefined =>
+		(fg.options?.codeColorProvider as ((type: string, code: string) => string) | undefined) ?? props.codeColorProvider
 	const fieldLinksProvider = (fg: Field): FieldLinksProvider | undefined => {
 		const own = fg.options?.linksProvider as FieldLinksProvider | undefined
 		if (own) return own
@@ -198,7 +201,7 @@ const renderInternal = async (
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
-			.codeColorProvider=${fg.options?.codeColorProvider}
+			.codeColorProvider=${fieldCodeColorProvider(fg)}
 			.linkColorProvider=${fg.options?.linkColorProvider}
 			.codeContentProvider=${fg.options?.codeContentProvider}
 			.defaultValueProvider=${formsValueContainer?.getDefaultValueProvider(fg.field)}
@@ -226,6 +229,7 @@ const renderInternal = async (
 			.defaultLanguage="${props.language}"
 			.suggestionProvider=${fieldSuggestionProvider(fg)}
 			.linksProvider=${fieldLinksProvider(fg)}
+			.codeColorProvider=${fieldCodeColorProvider(fg)}
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
@@ -256,6 +260,7 @@ const renderInternal = async (
 			.defaultLanguage="${props.language}"
 			.suggestionProvider=${fieldSuggestionProvider(fg)}
 			.linksProvider=${fieldLinksProvider(fg)}
+			.codeColorProvider=${fieldCodeColorProvider(fg)}
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"

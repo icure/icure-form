@@ -581,6 +581,7 @@ export class DecoratedForm extends LitElement {
 				.optionsProvider="${this.optionsProvider.bind(this)}"
 				.suggestionProvider="${this.suggestionProvider.bind(this)}"
 				.linksProvider="${this.linksProvider.bind(this)}"
+				.codeColorProvider="${this.codeColorProvider.bind(this)}"
 				.actionListener="${this.handleAction}"
 			></icure-form>
 		`

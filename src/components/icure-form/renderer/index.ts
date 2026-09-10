@@ -24,6 +24,11 @@ export interface RendererProps {
 	 * A `linksProvider` function set on a field's `options` takes precedence.
 	 */
 	linksProvider?: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
+	/**
+	 * Host-level colour category for the codes shown in text, token and items-list fields (`(type, code) => category`).
+	 * Applies to every such field; a `codeColorProvider` function set on a field's `options` takes precedence.
+	 */
+	codeColorProvider?: (type: string, code: string) => string
 }
 
 export type Renderer = (

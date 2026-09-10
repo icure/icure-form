@@ -203,6 +203,35 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(pageErrors).toEqual([])
 	})
 
+	test('the palette hides when the editor loses focus', async ({ page }) => {
+		await typeText(page, 'hypertension')
+		expect((await palette(page)).visible).toBe(true)
+		// A real pointer click on another field blurs the editor without any ProseMirror transaction.
+		const pt = (await page.evaluate(() => {
+			const r = ((window as any).__dropdownRoot()?.querySelector('#test') as HTMLElement | null)?.getBoundingClientRect()
+			return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+		})) as { x: number; y: number } | null
+		if (!pt) throw new Error('no dropdown to click')
+		await page.mouse.click(pt.x, pt.y)
+		await page.waitForTimeout(300)
+		expect((await palette(page)).visible).toBe(false)
+	})
+
+	test('typing right after an inserted suggestion searches the new text only', async ({ page }) => {
+		await typeText(page, 'hypertension')
+		await press(page, 'Tab')
+		await press(page, 'ArrowDown', 2)
+		await press(page, 'Enter')
+		let p = await afterInsert(page)
+		expect(p.editorText).toContain('Essential hypertension')
+		// Glued to the linked term, no space: the query must be "asth", not "hypertensionasth".
+		await page.keyboard.type('asth')
+		await page.waitForTimeout(500)
+		p = await palette(page)
+		expect(p.visible).toBe(true)
+		expect(p.rows.map((r) => r.text)).toContain('Asthma')
+	})
+
 	test('typing more (a new search) resets a manual collapse', async ({ page }) => {
 		await typeText(page, 'hyperten')
 		await press(page, 'Tab')

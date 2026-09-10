@@ -34,6 +34,10 @@ Suggestion providers can now return a tree. `Suggestion` gains `children` (the n
 
 The provider owns matching: it marks what matched, returns roots that have a match in their subtree, and returns every node with its full child list. The library never compares labels to the search. In the palette, Tab focuses the list, ↑/↓ move, → expands, ← collapses or moves to the parent, Enter inserts (or reveals a "N more" row); rows and chevrons are also clickable. See [Hierarchical suggestions](./README.md#hierarchical-suggestions).
 
+### Suggestion palette: hides on blur, ignores already-coded words
+
+Two palette defects surfaced with hierarchical suggestions in the demo. The palette no longer lingers after the editor loses focus: it hides on blur, and a palette re-created when the field rebuilds its editor state (for instance after the blur that saves the value) no longer opens under an unfocused editor. And the palette's query now starts after the last linked (already coded) word of the paragraph instead of spanning the whole paragraph, so typing right after an inserted suggestion searches the new word only — previously `douleur de l'épaule` + `crise` produced the query `l'épaulecrise` and no results.
+
 ### Palette insertion works in form-rendered text fields
 
 Two defects made inserting a palette suggestion impossible in a text field rendered by `<icure-form>`: the renderer bound the field's undefined code/link presentation providers over the component defaults, so the link mark failed to render, and the palette queried the provider before any word was typed. Both are fixed; the text field now falls back to its default providers. A suggestion returned without `terms` now replaces the query terms (an unmatched ancestor replaces the same range as its first matched descendant) instead of computing an empty range.

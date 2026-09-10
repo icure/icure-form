@@ -1,6 +1,6 @@
 // Theme is dynamically imported by `./bootstrap.ts` based on localStorage,
 // so it is intentionally NOT imported here.
-import { css, html, LitElement, PropertyValues } from 'lit'
+import { css, html, LitElement } from 'lit'
 import { getStoredLanguage } from './bootstrap'
 import { BridgedFormValuesContainer } from '../src/icure'
 import { property, state } from 'lit/decorators.js'
@@ -402,28 +402,6 @@ export class DecoratedForm extends LitElement {
 		this.icdTree = buildIcdTree(codes, icd10)
 	}
 
-	override willUpdate(changed: PropertyValues) {
-		super.willUpdate(changed)
-		if (changed.has('form')) this.wireSuggestionProviders(this.form)
-	}
-
-	/**
-	 * Providers reach a text field only as functions on its `options`, which YAML cannot carry: attach this form's
-	 * suggestion, links and code-colour providers to every field declaring `options: { suggestions: ICD }`.
-	 */
-	private wireSuggestionProviders(form: Form | undefined): void {
-		const visit = (fields: (Field | Group | Subform)[]): void =>
-			fields.forEach((fg) => {
-				if (fg.clazz === 'group') {
-					visit(fg.fields ?? [])
-				} else if (fg.clazz === 'field' && fg.options?.suggestions === 'ICD') {
-					fg.options.suggestionProvider = this.suggestionProvider.bind(this)
-					fg.options.linksProvider = this.linksProvider.bind(this)
-					fg.options.codeColorProvider = this.codeColorProvider.bind(this)
-				}
-			})
-		form?.sections?.forEach((s) => visit(s.fields))
-	}
 
 	codeColorProvider(type: string, code: string) {
 		if (!code) {
@@ -433,12 +411,13 @@ export class DecoratedForm extends LitElement {
 	}
 
 	/**
-	 * Text suggestions: the ICD tree marked for the query (terms by MiniSearch hit, codes by number prefix), followed by
-	 * the thesaurus hits that carry no ICD link as flat roots. Before the tree is built, the flat hits alone.
+	 * Host-level text suggestions, bound on <icure-form>: fields opting in with `codifications: [ICD]` get the ICD tree
+	 * marked for the query (terms by MiniSearch hit, codes by number prefix), followed by the thesaurus hits that carry
+	 * no ICD link as flat roots; any other opted-in field gets the flat thesaurus hits.
 	 */
-	async suggestionProvider(terms: string[]) {
+	async suggestionProvider(terms: string[], codifications: string[] = []) {
 		const hits = this.searchThesaurus(terms)
-		if (!this.icdTree.length) return hits
+		if (!this.icdTree.length || !codifications.includes('ICD')) return hits
 		const tree = markIcdTree(this.icdTree, terms, new Set(hits.map((h) => h.id)))
 		const unlinked = hits.filter((h) => !((h.links as string[] | undefined) ?? []).some((l) => l.startsWith('ICD|')))
 		return [...tree, ...unlinked]
@@ -583,6 +562,8 @@ export class DecoratedForm extends LitElement {
 				.formValuesContainer="${this.formValuesContainer}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"
 				.optionsProvider="${this.optionsProvider.bind(this)}"
+				.suggestionProvider="${this.suggestionProvider.bind(this)}"
+				.linksProvider="${this.linksProvider.bind(this)}"
 				.actionListener="${this.handleAction}"
 			></icure-form>
 		`

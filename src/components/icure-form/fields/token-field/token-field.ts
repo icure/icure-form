@@ -6,6 +6,7 @@ import { Suggestion } from '../../../../generic'
 export class TokenField extends Field {
 	@property() multiline: boolean | string = false
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
+	@property() linksProvider?: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
 	@property() lines = 1
 	@property({ type: Boolean }) tokenDeleteButton = false
 	// When true, clicks no longer open the inner ProseMirror editor. Clicking an
@@ -45,7 +46,10 @@ export class TokenField extends Field {
 			.handleValueChanged=${this.handleValueChanged}
 			.metadataProvider=${this.metadataProvider}
 			.ownersProvider=${this.ownersProvider}
+			?suggestions=${!!this.suggestionProvider}
+			?links=${!!this.linksProvider}
 			.suggestionProvider=${this.suggestionProvider}
+			.linksProvider=${this.linksProvider}
 			.translationProvider=${this.translationProvider}
 			.validationErrorsProvider=${this.validationErrorsProvider}
 			.valueProvider=${this.valueProvider}

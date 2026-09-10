@@ -4,6 +4,20 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 2.5.0 (unreleased)
+
+### `suggestionProvider` and `linksProvider` on `<icure-form>`
+
+The suggestion palette's providers are now host-level properties of `<icure-form>`, like `optionsProvider`, instead of functions the host had to set on each parsed field's `options`. `suggestionProvider(terms, codifications)` receives the field's `codifications`; `linksProvider(sug)` builds the link carried by an inserted suggestion. Fields opt in by declaring `codifications`, or with the new field flags `suggestions: true` (palette) and `links: true` (links); fields declaring neither are unchanged. Functions set on a field's `options` keep precedence, so existing hosts are unaffected. Token and items-list fields now receive both providers too.
+
+```html
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+```
+
+Selecting a suggestion when no links provider applies (or it returns nothing) now inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](./README.md#hierarchical-suggestions).
+
+---
+
 ## 2.4.0 (2026-09-08)
 
 ### Hierarchical suggestions

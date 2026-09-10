@@ -5,6 +5,7 @@ import { EditorState, Transaction } from 'prosemirror-state'
 import { Schema } from 'prosemirror-model'
 import { Suggestion } from '../../generic'
 import { emptyTreeState, parentPath, replacementTerms, reveal, SuggestionRow, toggleExpanded, TreePath, TreeUiState, visibleRows } from '../../utils/suggestion-tree'
+import { suggestionQueryStart } from './suggestion-query'
 
 export type SuggestionInsertHandler = (from: number, to: number, sug: Suggestion) => Promise<Transaction | undefined>
 
@@ -147,6 +148,14 @@ export class SuggestionPalette {
 		this.focusItem(undefined)
 		this.hasFocus = false
 
+		// The palette belongs to a focused editor. A plugin view is re-created (with this constructor's initial update)
+		// whenever the field rebuilds its editor state, e.g. after the blur that saves the value; without this guard the
+		// new palette would search the current text and open under an editor the user has just left.
+		if (!view.hasFocus()) {
+			this.palette.style.display = 'none'
+			return
+		}
+
 		if (!state.selection.empty) {
 			this.palette.style.display = 'none'
 			return
@@ -158,7 +167,9 @@ export class SuggestionPalette {
 			return
 		}
 
-		const text = state.doc.textBetween($pos.pos && $pos.depth ? $pos.before() + 1 : 0, $pos.pos)
+		// The query is the text typed since the last linked (already coded) word of the paragraph, not the whole paragraph.
+		const paragraphStart = $pos.pos && $pos.depth ? $pos.before() + 1 : 0
+		const text = state.doc.textBetween(suggestionQueryStart(state.doc, paragraphStart, $pos.pos, this.schema.marks['link']), $pos.pos)
 
 		const words = text.split(/\s+/)
 		const lastWordDelta = Math.min(
@@ -337,6 +348,13 @@ export class SuggestionPalette {
 			this.palette.style.left = Math.max(0, Math.min(pos.left - box.left - 12, box.width - palBox.width)) + 'px'
 			this.palette.style.top = pos.bottom - box.top + 4 + 'px'
 		}
+	}
+
+	/** Hides the palette and drops its focus; used when the editor loses focus, which produces no ProseMirror transaction. */
+	hide(): void {
+		this.palette.style.display = 'none'
+		this.hasFocus = false
+		this.focusItem(undefined)
 	}
 
 	destroy(): void {

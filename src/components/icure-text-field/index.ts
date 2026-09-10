@@ -563,6 +563,8 @@ export class IcureTextField extends Field {
 					blur: (view) => {
 						this.trToSave = undefined
 						this.updateValue(view.state.tr)
+						// Focus moved to another field: the palette would otherwise linger until the next transaction.
+						this.suggestionPalette?.hide()
 					},
 					focus: (view, event) => {
 						this.schema === 'measure' && measureOnFocusHandler(view)

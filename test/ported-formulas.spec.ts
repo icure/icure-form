@@ -15,8 +15,15 @@ const CURATED = resolve(__dirname, '../app/samples/curated')
 
 type FieldValue = { content: { [language: string]: PrimitiveType }; codes?: { id: string }[] }
 
+/**
+ * What the demo app's interpreterContext contributes: the data a formula needs
+ * that its own form does not hold. The real implementation is app/formula-host.ts
+ * (covered by host-formula-context.spec.ts); this is the shape the bodies see.
+ */
+type Host = { services?: (filter?: any) => Promise<{ label?: string; content: { [language: string]: PrimitiveType } }[]>; consultDate?: Date }
+
 /** The subset of BridgedFormValuesContainer.compute's sandbox that the ported bodies use. */
-const sandboxFor = (values: { [label: string]: FieldValue[] }) => {
+const sandboxFor = (values: { [label: string]: FieldValue[] }, host: Host = {}) => {
 	const parseContent = (content?: { [key: string]: PrimitiveType }, toString = false) => {
 		if (!content) {
 			return undefined
@@ -25,6 +32,9 @@ const sandboxFor = (values: { [label: string]: FieldValue[] }) => {
 		return primitive && parsePrimitive(primitive, toString)
 	}
 	const natives: { [key: string]: any } = { parseInt, parseFloat, Date, Math, Number, String, Boolean, Array, Object, Promise, parseContent }
+	// Named on the context rather than merged into natives, so a body that reaches
+	// the host in a run that supplies none fails the way the real thing would.
+	const context: { [key: string]: any } = { services: host.services, consultDate: host.consultDate }
 	const proxy: any = new Proxy(
 		{},
 		{
@@ -33,6 +43,7 @@ const sandboxFor = (values: { [label: string]: FieldValue[] }) => {
 				if (key === 'undefined') return undefined
 				if (natives[key as string]) return natives[key as string]
 				if (key === 'self') return proxy
+				if (key in context) return context[key as string]
 				return values[key as string] ?? []
 			},
 		},
@@ -48,7 +59,19 @@ const ticked = (option: string): FieldValue[] => [{ content: { '*': { type: 'com
 const unticked = (): FieldValue[] => [{ content: { '*': { type: 'compound', value: {} } }, codes: [] }]
 
 const interpret = makeInterpreter()
-const evaluate = (body: string, values: { [label: string]: FieldValue[] }) => interpret<unknown, any>(body, sandboxFor(values))
+const evaluate = (body: string, values: { [label: string]: FieldValue[] }, host: Host = {}) => interpret<unknown, any>(body, sandboxFor(values, host))
+
+/** A host service in the shape app/formula-host.ts hands back. */
+const hostService = (label: string, primitive: PrimitiveType) => ({ label, content: { '*': primitive } })
+
+/**
+ * A host that answers the two queries the obstetric formulas make. `services` is
+ * a jest mock so a test can also assert on what was asked for.
+ */
+const hostWith = (found: { [query: string]: { label?: string; content: { [language: string]: PrimitiveType } }[] }, consultDate?: Date): Host => ({
+	services: jest.fn(async (filter?: any) => found[`${filter?.codeType}|${filter?.code}`] ?? []),
+	consultDate,
+})
 
 type Computed = { file: string; field: string; type?: string; body: string; reads: string[] }
 
@@ -96,6 +119,19 @@ const plausible = (type?: string): FieldValue[] => {
 	}
 }
 
+/**
+ * A patient 30 weeks into a pregnancy, weighing 62 kg before it, seen today — enough
+ * for every host-reading body to produce a value.
+ */
+const OBSTETRIC_HOST: Host = {
+	services: async (filter?: any) => {
+		if (filter?.code === 'duedate') return [hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })]
+		if (filter?.code === 'weightbeforepregnancy') return [hostService('Poids avant grossesse', { type: 'measure', value: 62, unit: 'kg' })]
+		return []
+	},
+	consultDate: new Date(2024, 7, 1),
+}
+
 describe('every ported formula runs', () => {
 	test('the curated submodule is checked out and carries ported formulas', () => {
 		expect(curatedFiles.length).toBeGreaterThan(0)
@@ -117,16 +153,18 @@ describe('every ported formula runs', () => {
 	test.each(computedFields.map((computed) => [`${computed.file} › ${computed.field}`, computed] as [string, Computed & { readTypes?: (string | undefined)[] }]))('%s', async (_name, computed) => {
 		// Every label the body reads must be a field of the same form: the sandbox
 		// resolves an unknown label to [], which is truthy, so a typo would hide here.
-		expect(computed.reads.length).toBeGreaterThan(0)
 		expect((computed as any).readTypes).not.toContain(undefined)
+		// A body reads fields, the host, or both — but something, or it is a constant.
+		const usesHost = /\bservices\(|\bconsultDate\b/.test(computed.body)
+		expect(computed.reads.length > 0 || usesHost).toBe(true)
 
 		const values = Object.fromEntries(computed.reads.map((read, index) => [read, plausible((computed as any).readTypes[index])]))
-		await expect(evaluate(computed.body, values)).resolves.toBeDefined()
+		await expect(evaluate(computed.body, values, OBSTETRIC_HOST)).resolves.toBeDefined()
 		// And with nothing filled in, a formula must decline to produce a value
 		// rather than throw or invent one — except the scores, which legitimately
 		// total 0, and the gestational ages, which say so in words.
-		const empty = await evaluate(computed.body, {})
-		expect(['undefined', 'number', 'string']).toContain(typeof empty)
+		const empty = await evaluate(computed.body, {}, OBSTETRIC_HOST)
+		expect(['undefined', 'number', 'string', 'object']).toContain(typeof empty)
 	})
 })
 
@@ -267,5 +305,143 @@ describe('ported formulas produce the legacy results', () => {
 		const body = bodyOf('ophtalmology-fr/consultation.json', 'acuité visuelle OD')
 		expect(await evaluate(body, { 'lunettes loin vision OD': number(0.8), 'réfraction objective vision OD': number(1), 'réfraction subjective de loin vision OD': number(0.9) })).toEqual(1)
 		expect(await evaluate(body, {})).toEqual(0)
+	})
+})
+
+/**
+ * The percentile family, ported with the demo app's host helpers.
+ *
+ * Every one of these formulas derives the gestational age the same way, and the
+ * arithmetic collapses usefully: the term is the last period plus 279 days and
+ * the age is `279 + today - term`, so gaInDays is exactly the number of days
+ * between the last period and the consultation. `at(weeks)` below uses that.
+ */
+describe('the percentile family', () => {
+	const bodyOf = (file: string, field: string) => {
+		const found = computedFields.find((computed) => computed.file === file && computed.field === field)
+		if (!found) throw new Error(`${file} has no computed field '${field}'`)
+		return found.body
+	}
+
+	const LAST_PERIOD = { year: 2024, month: 0, day: 1 }
+	const lastPeriodService = [hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })]
+	/** A host whose patient is exactly `weeks` weeks pregnant at the consultation. */
+	const at = (weeks: number, days = 0) => hostWith({ 'CD-GYNECOLOGY|duedate': lastPeriodService }, new Date(LAST_PERIOD.year, LAST_PERIOD.month, LAST_PERIOD.day + weeks * 7 + days))
+
+	const T2T3 = 'gynecology-fr/bb-t2-t3.json'
+	const LONG = 'gynecology-fr/suivi-obstetrical-long.json'
+
+	test('a measurement on a chart curve gives that curve percentile', async () => {
+		const body = bodyOf(T2T3, 'Percentile Diamètre bipariétal')
+		// The biparietal chart at 30 weeks: 3→69.07, 10→71.21, 50→75.80, 90→80.37, 97→82.52.
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(75.8, 'mm') }, at(30))).toBeCloseTo(50, 6)
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(71.21, 'mm') }, at(30))).toBeCloseTo(10, 6)
+	})
+
+	test('a measurement between two curves interpolates between their percentiles', async () => {
+		const body = bodyOf(T2T3, 'Percentile Diamètre bipariétal')
+		// Halfway between the 50th (75.80) and the 90th (80.37) at 30 weeks.
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure((75.8 + 80.37) / 2, 'mm') }, at(30))).toBeCloseTo(70, 6)
+	})
+
+	test('the chart clamps rather than extrapolating past either end', async () => {
+		const body = bodyOf(T2T3, 'Percentile Diamètre bipariétal')
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(40, 'mm') }, at(30))).toEqual(3)
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(120, 'mm') }, at(30))).toEqual(97)
+	})
+
+	test('a measure typed with a unit and one typed without agree', async () => {
+		const body = bodyOf(T2T3, 'Percentile Diamètre bipariétal')
+		// A measure carrying a unit reaches the formula normalised to metres; one
+		// typed bare arrives as the millimetre figure. Both must read the same chart.
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(75.8, 'mm') }, at(30))).toBeCloseTo(50, 6)
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(75.8) }, at(30))).toBeCloseTo(50, 6)
+		expect(await evaluate(body, { 'Diamètre bipariétal': measure(7.58, 'cm') }, at(30))).toBeCloseTo(50, 6)
+	})
+
+	test('a Doppler index is read on the scale its chart tabulates, not as a length', async () => {
+		const body = bodyOf(LONG, 'Percentile RI omb')
+		// The umbilical resistance chart at 30 weeks: 5→0.56, 50→1.05, 95→1.54. An
+		// index below 1 must stay itself: recovering millimetres from it, as the
+		// biometric charts need, would make it 560 and clamp to the top curve.
+		expect(await evaluate(body, { 'Indice de résistance ombilical': measure(0.56) }, at(30))).toBeCloseTo(5, 6)
+		expect(await evaluate(body, { 'Indice de résistance ombilical': measure(1.05) }, at(30))).toBeCloseTo(50, 6)
+	})
+
+	test('the head circumference chart reads its 97th centile row despite the stray separator', async () => {
+		const body = bodyOf(T2T3, 'Percentile Périmètre crânien')
+		// That row is written `97>;16,136.11;…`. The Kotlin percentile throws on the
+		// empty first segment, and only once a measurement exceeds the 90th centile,
+		// so the legacy field blanked for exactly the large heads it mattered for.
+		expect(await evaluate(body, { 'Périmètre crânien': measure(296, 'mm') }, at(30))).toBeCloseTo(97, 6)
+		expect(await evaluate(body, { 'Périmètre crânien': measure(400, 'mm') }, at(30))).toEqual(97)
+		expect(await evaluate(body, { 'Périmètre crânien': measure(270.84, 'mm') }, at(30))).toBeCloseTo(50, 6)
+	})
+
+	test('gestational age comes out in days on one form and in words on the other', async () => {
+		expect(await evaluate(bodyOf(T2T3, 'jours'), {}, at(30, 3))).toEqual(213)
+		// The sibling formula carries a 280-day offset where this one carries 279, so
+		// the two disagree by a day. That is the legacy's discrepancy, kept as it was.
+		expect(await evaluate(bodyOf(LONG, 'Age gestationnel'), {}, at(30, 3))).toEqual('30 sem. 4 j.')
+	})
+
+	test('a patient with no due-date service gets N/A in words and nothing in a number', async () => {
+		const empty = hostWith({}, new Date(2024, 7, 1))
+		expect(await evaluate(bodyOf(LONG, 'Age gestationnel'), {}, empty)).toEqual('N/A')
+		expect(await evaluate(bodyOf(T2T3, 'jours'), {}, empty)).toBeUndefined()
+		expect(await evaluate(bodyOf(T2T3, 'Percentile Diamètre bipariétal'), { 'Diamètre bipariétal': measure(75.8, 'mm') }, empty)).toBeUndefined()
+	})
+
+	test('the term prefers ovulation, then the corrected term, then the last period', async () => {
+		const body = bodyOf(T2T3, 'jours')
+		const consultation = new Date(2024, 0, 1 + 210)
+		const ovulation = hostService('Date ovulation', { type: 'datetime', value: 20240115 })
+		const corrected = hostService('Terme corrigé', { type: 'datetime', value: 20241001 })
+		const lastPeriod = hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })
+		// The consultation is 210 days after the last period, and the age is
+		// 279 + today - term, so each rule in the cascade gives a different answer.
+		// Ovulation wins: its term is 266 days after 15 Jan, i.e. 13 days later than
+		// the 279 the offset assumes, so 210 - 14 + 13 = 209.
+		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod, ovulation, corrected] }, consultation))).toEqual(209)
+		// The corrected term is taken as recorded: 274 days after the last period,
+		// five short of 279, so the age reads five days more.
+		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod, corrected] }, consultation))).toEqual(215)
+		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod] }, consultation))).toEqual(210)
+	})
+
+	test('the estimated weight is placed on the birth-weight chart', async () => {
+		const measurements = { 'Circonférence abdominale': measure(250, 'mm'), 'Périmètre crânien': measure(270, 'mm'), 'Diamètre bipariétal': measure(75, 'mm'), 'Longueur fémorale': measure(55, 'mm') }
+		const centile = (await evaluate(bodyOf(T2T3, 'Percentile poids'), measurements, at(30))) as number
+		// The chart at 30 weeks runs 5→1231 g, 50→1450 g, 95→1669 g, and a fetus of
+		// these dimensions sits inside it rather than against a clamp.
+		expect(centile).toBeGreaterThan(5)
+		expect(centile).toBeLessThan(95)
+
+		// The projected birth weight reads that centile off the chart's term row.
+		const projected = (await evaluate(bodyOf(T2T3, 'Poids naissance'), measurements, at(30))) as { value: number; unit: string }
+		expect(projected.unit).toEqual('g')
+		expect(projected.value).toBeGreaterThan(2848)
+		expect(projected.value).toBeLessThan(3860)
+
+		// A bigger fetus tracks a higher centile, and so a heavier birth weight.
+		const bigger = { ...measurements, 'Circonférence abdominale': measure(290, 'mm') }
+		expect((await evaluate(bodyOf(T2T3, 'Percentile poids'), bigger, at(30))) as number).toBeGreaterThan(centile)
+	})
+
+	test('weight gain is this visit less the weight recorded before the pregnancy', async () => {
+		const body = bodyOf(LONG, 'Différence de poids')
+		const host = hostWith({ 'CD-GYNECOLOGY|weightbeforepregnancy': [hostService('Poids avant grossesse', { type: 'measure', value: 62, unit: 'kg' })] })
+		expect(await evaluate(body, { Poids: measure(71, 'kg') }, host)).toBeCloseTo(9, 6)
+		// Either side missing yields no value, as the legacy's !pag||!x.Poids did.
+		expect(await evaluate(body, {}, host)).toBeUndefined()
+		expect(await evaluate(body, { Poids: measure(71, 'kg') }, hostWith({}))).toBeUndefined()
+	})
+
+	test('the consultation date and the CRL term come from the host', async () => {
+		const consultation = new Date(2024, 7, 1)
+		expect(await evaluate(bodyOf('gynecology-fr/echo-t1.json', 'Date de consultation'), {}, { consultDate: consultation })).toEqual(consultation)
+		// The CRL table maps millimetres straight to days: 54 mm sits on the 86-day
+		// point, so the term is 280 - 86 = 194 days after the consultation.
+		expect(await evaluate(bodyOf('gynecology-fr/bb-t1.json', 'Terme CRL'), { CRL: measure(54, 'mm') }, { consultDate: consultation })).toEqual(new Date(2024, 7, 1 + 194))
 	})
 })

@@ -28,7 +28,7 @@ import * as crypto from 'crypto'
 import * as fs from 'fs'
 import * as path from 'path'
 
-import { FORMULA_PORTS, FORMULA_REPAIRS, FormulaPort, FormulaRepair, PortContext } from './formula-ports'
+import { DECLINED_PORTS, FORMULA_PORTS, FORMULA_REPAIRS, FormulaPort, FormulaRepair, PortContext } from './formula-ports'
 
 type LegacyFormula = {
 	legacyFile: string
@@ -67,10 +67,7 @@ const sha8 = (value: string): string => crypto.createHash('sha1').update(value).
 const UNPORTABLE: [RegExp, string][] = [
 	[/@</, 'reads services through a legacy XPath expression'],
 	[/sscontacts\[|\/services\[/, 'reads services through a legacy XPath expression'],
-	[/withServices\s*\(/, "looks services up across the patient's other contacts"],
-	[/\bpatient\./, 'reads patient demographics'],
 	[/elDeSoinLogic/, 'reads services from a care path'],
-	[/\bconsultDate\b/, 'reads the consultation date from the host'],
 ]
 
 const unportableReason = (formula: string): string | undefined => UNPORTABLE.find(([pattern]) => pattern.test(formula))?.[1]
@@ -92,6 +89,8 @@ const RESERVED = new Set([
 	'else',
 	'for',
 	'while',
+	'break',
+	'continue',
 	'function',
 	'typeof',
 	'Math',
@@ -149,6 +148,10 @@ const RESERVED = new Set([
 	'obsWeights',
 	'withServices',
 	'undefined',
+	// Answered by the host rather than by a field of the form: `services`, above,
+	// and these two. See the host-helper note in formula-ports.ts.
+	'consultDate',
+	'patient',
 ])
 
 /**
@@ -157,14 +160,26 @@ const RESERVED = new Set([
  * String literals are stripped first — formulas embed long French sentences,
  * lookup tables and map keys such as `ws['Hadlock et al. 1985']` that would
  * otherwise read as identifiers.
+ *
+ * Locals are the `var` declarations, the bare assignments and the parameters of
+ * the callbacks the async dialect is built out of — `function(services)` and
+ * `function(e) { reject(e) }` bind names that are no more fields than a `var` is.
  */
 const fieldIdentifiers = (formula: string): string[] => {
 	const body = STRING_LITERALS.reduce((text, pattern) => text.replace(pattern, '""'), formula)
 	const locals = new Set<string>()
 	for (const match of body.matchAll(/\bvar\s+([A-Za-z_][A-Za-z0-9_]*)/g)) locals.add(match[1])
 	for (const match of body.matchAll(/(?:^|[;\n{])\s*([A-Za-z_][A-Za-z0-9_]*)\s*=(?!=)/g)) locals.add(match[1])
+	for (const match of body.matchAll(/\bfunction\s*(?:[A-Za-z_][A-Za-z0-9_]*)?\s*\(([^)]*)\)/g)) {
+		for (const parameter of match[1].split(',')) {
+			const name = parameter.trim()
+			if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) locals.add(name)
+		}
+	}
 	const identifiers = new Set<string>()
-	for (const match of body.matchAll(/\bx\.([A-Za-z_][A-Za-z0-9_]*)/g)) identifiers.add(match[1])
+	for (const match of body.matchAll(/\bx\.([A-Za-z_][A-Za-z0-9_]*)/g)) {
+		if (!RESERVED.has(match[1])) identifiers.add(match[1])
+	}
 	for (const match of body.matchAll(/(?:^|[^.\w])([A-Za-z_][A-Za-z0-9_]*)/g)) {
 		if (!RESERVED.has(match[1]) && !locals.has(match[1])) identifiers.add(match[1])
 	}
@@ -251,6 +266,7 @@ const applyToField = (form: CuratedForm, fieldName: string, body: string): strin
 
 type Outcome =
 	| { kind: 'ported'; destinations: string[] }
+	| { kind: 'declined'; reason: string }
 	| { kind: 'no-port'; reason: string }
 	| { kind: 'unportable'; reason: string }
 	| { kind: 'no-descendant' }
@@ -271,6 +287,10 @@ const main = () => {
 
 	const ports = new Map<string, FormulaPort>(FORMULA_PORTS.map((port) => [port.hash, port]))
 	if (ports.size !== FORMULA_PORTS.length) throw new Error('formula-ports.ts has duplicate hashes')
+	const declined = new Map<string, string>(DECLINED_PORTS.map((entry) => [entry.hash, entry.reason]))
+	for (const hash of declined.keys()) {
+		if (ports.has(hash)) throw new Error(`${hash} is both ported and declined in formula-ports.ts`)
+	}
 
 	const legacyFormulas = readLegacyFormulas(legacyDir)
 	const curatedForms = readCuratedForms(curatedDir)
@@ -287,6 +307,11 @@ const main = () => {
 	const usedHashes = new Set<string>()
 
 	for (const formula of legacyFormulas) {
+		const declinedReason = declined.get(formula.hash)
+		if (declinedReason) {
+			outcomes.push([formula, { kind: 'declined', reason: declinedReason }])
+			continue
+		}
 		const provenance = [...new Set([...(byId.get(formula.guid ?? '') ?? []), ...(byTitle.get(formula.title) ?? [])])]
 		const needed = [formula.target, ...formula.identifiers]
 		const destinations = provenance.filter((form) => needed.every((field) => form.fieldsByNormalisedName.has(normalise(field))))
@@ -403,7 +428,8 @@ const report = (
 	out.push(`- the legacy form has no curated descendant: **${group('no-descendant').length}**`)
 	out.push(`- needs data the sandbox cannot reach: **${group('unportable').length}**`)
 	out.push(`- reads a field the curated form does not have: **${group('missing-fields').length}**`)
-	out.push(`- no translation written yet: **${group('no-port').length}**`, '')
+	out.push(`- no translation written yet: **${group('no-port').length}**`)
+	out.push(`- declined, because the legacy behaviour cannot be reconstructed: **${group('declined').length}**`, '')
 
 	out.push('## Ported', '')
 	out.push('| curated form | field | legacy formula(s) |', '| --- | --- | --- |')
@@ -427,9 +453,10 @@ const report = (
 		out.push('')
 	}
 
-	const listing = (title: string, rows: [LegacyFormula, Outcome][], detail: (outcome: Outcome) => string) => {
+	const listing = (title: string, rows: [LegacyFormula, Outcome][], detail: (outcome: Outcome) => string, intro: string[] = []) => {
 		if (!rows.length) return
 		out.push(`## ${title}`, '')
+		if (intro.length) out.push(...intro, '')
 		out.push('| legacy form | field | detail | formula |', '| --- | --- | --- | --- |')
 		for (const [formula, outcome] of rows.sort(([a], [b]) => a.legacyFile.localeCompare(b.legacyFile) || a.target.localeCompare(b.target))) {
 			const text = formula.formula.replace(/\s+/g, ' ').replace(/\|/g, '\\|').slice(0, 160)
@@ -444,6 +471,11 @@ const report = (
 		return `absent from \`${nearest}\`: ${missing.map((field) => `\`${field}\``).join(', ')}`
 	})
 	listing('No translation written yet', group('no-port'), (outcome) => (outcome as { reason: string }).reason)
+	listing('Declined', group('declined'), (outcome) => (outcome as { reason: string }).reason, [
+		'Not gaps in the translation table. The legacy formula on these fields depended on a variable that leaked out of another formula, so what it displayed',
+		'depended on the order the forms happened to be computed in. Reconstructing it would mean inventing a specification, so the fields are left uncomputed',
+		'until someone who owns the forms decides what they should show.',
+	])
 
 	const orphans = group('no-descendant')
 	if (orphans.length) {

@@ -1,6 +1,10 @@
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { CodeStub, DecryptedContact, DecryptedContent, DecryptedPatient, DecryptedService, Gender } from '@icure/cardinal-sdk'
 import { makeFormulaHostContext, HostService } from '../app/formula-host'
 import { parsePrimitive } from '../src/utils/primitive'
+import { makeInterpreter } from '../src/utils/interpreter'
+import { PrimitiveType } from '../src/components/model'
 
 // The demo app exposes these three entries through <icure-form>'s interpreterContext,
 // so a formula can reach data that is not a field of its own form. They are the demo's
@@ -137,5 +141,93 @@ describe('patient and consultDate', () => {
 
 	it('reports the date of the contact being edited', async () => {
 		expect(context().consultDate()).toEqual(new Date(Date.UTC(2024, 5, 1)))
+	})
+})
+
+/**
+ * The seam between the two halves of this feature: `ported-formulas.spec.ts` runs
+ * the ported bodies against a stub host, and the tests above check this host in
+ * isolation, so a disagreement over the filter's key names would pass both and
+ * still leave the field blank in the app. This runs a real ported body against the
+ * real host.
+ */
+describe('a ported formula against the real host context', () => {
+	const bodyOf = (file: string, field: string): string => {
+		let found: string | undefined
+		const walk = (node: any): void => {
+			if (Array.isArray(node)) return node.forEach(walk)
+			if (!node || typeof node !== 'object') return
+			if (node.field === field && node.computedProperties?.value) found = node.computedProperties.value
+			Object.values(node).forEach(walk)
+		}
+		walk(JSON.parse(readFileSync(resolve(__dirname, '../app/samples/curated', file), 'utf8')))
+		if (!found) throw new Error(`${file} has no computed field '${field}'`)
+		return found
+	}
+
+	/** The sandbox `BridgedFormValuesContainer.compute` builds, over one host context. */
+	const sandboxOf = (ctx: ReturnType<typeof makeFormulaHostContext>, values: { [label: string]: { content: { [language: string]: PrimitiveType } }[] } = {}) => {
+		const parseContent = (content?: { [key: string]: PrimitiveType }) => {
+			const primitive = content && (content['fr'] ?? content[Object.keys(content)[0]])
+			return primitive && parsePrimitive(primitive)
+		}
+		const natives: { [key: string]: any } = { parseInt, parseFloat, Date, Math, Number, String, Boolean, Array, Object, Promise, parseContent }
+		const context: { [key: string]: () => unknown } = { services: ctx.services, consultDate: ctx.consultDate, patient: ctx.patient }
+		const proxy: any = new Proxy(
+			{},
+			{
+				has: () => true,
+				get: (_target, key: string | symbol) => {
+					if (key === 'undefined') return undefined
+					if (natives[key as string]) return natives[key as string]
+					if (key === 'self') return proxy
+					if (context[key as string]) return context[key as string]()
+					return values[key as string] ?? []
+				},
+			},
+		)
+		return proxy
+	}
+
+	// Seen on 1 August 2024, with a last period of 1 January — 213 days, and a term
+	// 279 days after the last period, so the 280-day offset gives 214 days.
+	const seenOn = new DecryptedContact({
+		id: 'today',
+		created: Date.UTC(2024, 7, 1),
+		services: [service('s-ddr-now', 'Date des dernières règles', { valueDate: 20240801, codes: ['CD-GYNECOLOGY|duedate|1'], date: 20240101 })],
+	})
+
+	it('reads the gestational age out of the host, not out of the form', async () => {
+		const ctx = makeFormulaHostContext({ patient, contacts: [seenOn], currentContact: seenOn })
+		const body = bodyOf('gynecology-fr/suivi-obstetrical-long.json', 'Age gestationnel')
+		expect(await makeInterpreter()<unknown, any>(body, sandboxOf(ctx))).toEqual('30 sem. 4 j.')
+		// And it asked the host exactly once, through the filter the host understands.
+		expect(ctx.lookupCount()).toEqual(1)
+	})
+
+	it('leaves the field blank when the patient has no due-date service', async () => {
+		const bare = new DecryptedContact({ id: 'bare', created: Date.UTC(2024, 7, 1), services: [] })
+		const ctx = makeFormulaHostContext({ patient, contacts: [bare], currentContact: bare })
+		// The text field says so in words, as the legacy did; a number field stores nothing.
+		expect(await makeInterpreter()<unknown, any>(bodyOf('gynecology-fr/suivi-obstetrical-long.json', 'Age gestationnel'), sandboxOf(ctx))).toEqual('N/A')
+		expect(await makeInterpreter()<unknown, any>(bodyOf('gynecology-fr/bb-t2-t3.json', 'jours'), sandboxOf(ctx))).toBeUndefined()
+	})
+
+	it('computes a centile from a measurement on the form and an age from the host', async () => {
+		const ctx = makeFormulaHostContext({ patient, contacts: [seenOn], currentContact: seenOn })
+		const body = bodyOf('gynecology-fr/bb-t2-t3.json', 'Percentile Diamètre bipariétal')
+		// 214 days is 30.57 weeks; the chart's 50th centile runs 75.80 at 30 weeks and
+		// 78.00 at 31, so a measurement on that line sits just above 50.
+		const centile = (await makeInterpreter()<unknown, any>(body, sandboxOf(ctx, { 'Diamètre bipariétal': [{ content: { fr: { type: 'measure', value: 76.6, unit: 'mm' } } }] }))) as number
+		expect(centile).toBeGreaterThan(45)
+		expect(centile).toBeLessThan(55)
+	})
+
+	it('renders nothing at all when the host provides neither name', async () => {
+		// What a host without these helpers sees: services resolves to [], calling it
+		// throws, the interpreter swallows the throw, and the field stays empty.
+		const body = bodyOf('gynecology-fr/suivi-obstetrical-long.json', 'Age gestationnel')
+		const bare: any = new Proxy({}, { has: () => true, get: (_t, key) => (key === 'undefined' ? undefined : key === 'Promise' ? Promise : []) })
+		expect(await makeInterpreter()<unknown, any>(body, bare)).toBeUndefined()
 	})
 })

@@ -55,8 +55,12 @@ formulas it can through the hand-written table in `formula-ports.ts`, and writes
 them onto the matching curated forms as `computedProperties.value`:
 
 ```sh
-npx ts-node tools/convert-legacy/port-formulas.ts            # writes into app/samples/curated
-npx ts-node tools/convert-legacy/port-formulas.ts --dry-run   # counts only
+# The repo compiles to ESM, which ts-node then hands to node as ESM; these scripts
+# are CommonJS, so the module override is needed. The legacy sources are not
+# committed, so --legacy points at wherever they are checked out.
+export TS_NODE_COMPILER_OPTIONS='{"module":"commonjs"}'
+npx ts-node tools/convert-legacy/port-formulas.ts --legacy path/to/legacy             # writes into app/samples/curated
+npx ts-node tools/convert-legacy/port-formulas.ts --legacy path/to/legacy --dry-run   # counts only, no report
 ```
 
 It is idempotent — rerunning it reproduces exactly the same bodies — and it
@@ -65,10 +69,39 @@ importantly, every formula it left behind and why. A second, much shorter table,
 `FORMULA_REPAIRS`, covers fields whose legacy formula is broken beyond porting —
 it reads a field its own form never had — but where the intent is unambiguous and
 the curated form carries the operands under other names. Repairs are applied last,
-never over a ported field, and reported apart from the ports. Roughly two thirds of the
-legacy formulas have nowhere to go: their form has no curated descendant, or they
-read patient demographics, services from other contacts, or a care path, none of
-which the `computedProperties` sandbox can reach.
+never over a ported field, and reported apart from the ports. A third table,
+`DECLINED_PORTS`, is for formulas whose legacy behaviour cannot be reconstructed
+at all, so that the report says why rather than listing them as merely
+untranslated. Roughly two thirds of the legacy formulas still have nowhere to go:
+their form has no curated descendant, or they read data through a legacy XPath
+expression or a care path, neither of which anything here can reach.
+
+### The ported formulas that need a host
+
+Fifteen of the translations — the obstetric percentile family, the gestational
+ages and the projected birth weights — reach outside their own form, for the
+patient's earlier services and for the date of the consultation. They read them
+through two names the form itself does not provide, `services(filter)` and
+`consultDate`, which reach the sandbox through `<icure-form>`'s
+`interpreterContext`.
+
+**Only the demo app provides them.** `app/formula-host.ts` answers them out of
+the in-memory contacts in `app/decorated-form.ts`; there is no implementation in
+the library and no typed contract exported from it. In a host that does not
+supply them the sandbox resolves `services` to `[]` — an unknown name resolves to
+an empty array, which is truthy — and calling it throws. The field then renders
+blank, indistinguishable from one whose inputs are empty. That is the failure
+mode to expect wherever these forms are used before a real host implements the
+two names.
+
+That it blanks rather than hangs is not free, and is worth knowing before writing
+another async formula by hand. The interpreter catches a throw from a synchronous
+body and returns `undefined`, but these bodies return a promise, and a throw
+inside an async executor rejects only the executor's own invisible promise: the
+promise the body returned never settles, and whatever awaited the computed value
+waits for ever. Every generated body therefore wraps its executor in a
+`try`/`catch` that resolves `undefined`, which is what turns a hung computation
+into an empty field.
 
 Why a table of hand-written translations instead of a transpiler: the legacy
 corpus mixes three unrelated dialects, and only 29 distinct formulas survive into
@@ -81,6 +114,14 @@ Two of the translations reproduce host helpers the legacy formulas called into,
 `interpolate` and `obsWeights`, both transcribed from
 `org.taktik.icure.utils.Math` in kraken-cloud
 (`kraken-common/domain/src/main/java/org/taktik/icure/utils/Math.kt`) and
-cross-checked against it in the test. Its `percentile` is not reproduced: every
-formula that uses it also needs the gestational age, which the legacy code reads
-from services on the patient's other contacts.
+cross-checked against it in the test, as is a third, `percentile`, which reads a
+measurement off a chart of one interpolable curve per centile.
+
+The transcription of `percentile` diverges from the Kotlin in one place, and
+deliberately. Both split a chart's rows on `;` and drop trailing empty segments,
+but one chart in the corpus — the 97th centile row of the head circumference
+chart — carries a stray separator at the *front* (`97>;16,136.11;…`). The Kotlin
+throws on it, and only once a measurement exceeds the 90th centile, so the legacy
+field silently blanked for exactly the large heads it mattered for. The ported
+`interpolate` skips empty segments wherever they fall and reads the row as the
+curve it plainly is.

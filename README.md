@@ -393,6 +393,8 @@ Example result for the query `allergic`, two levels deep:
 
 This renders as *J45 Asthma* expanded over *Predominantly allergic asthma* and "… 2 more". Inline `codifications` declared in the form stay flat. Sample 12 of the demo app shows both surfaces on an ICD-10 chapter → code → thesaurus-term tree.
 
+What an inserted suggestion leaves in the value: the field's `content` is stored as inline markdown for the `styled-text`, `text-with-codes` and `styled-text-with-codes` schemas (`[text](href "title")`, `**bold**`, `*italic*` — what the field's parser already reads), so links and styling survive a save and re-render; and the value's `codes` lists the codes named by the links, one per `c-<type>://<code>` entry of a link's `href` (`<code>` may also be a full `type|code|version` id; the version defaults to `1`). `text-document` behaves the same for codes; the plain `text` schema stays plain.
+
 ### Themes
 
 Themes can be applied to renderers by importing one theme before importing/instantiating the icure-form component.

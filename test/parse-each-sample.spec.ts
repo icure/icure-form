@@ -3,10 +3,14 @@ import { resolve } from 'path'
 import YAML from 'yaml'
 import { Form, Group, Subform } from '../src/components/model'
 
-const SAMPLES = '/Users/aduchate/Sources/icure/icure-form/app/samples'
+// Relative to this file, so a git worktree tests its own samples rather than
+// whichever checkout happens to sit at an absolute path.
+const SAMPLES = resolve(__dirname, '../app/samples')
 
 describe('every demo sample parses cleanly', () => {
-	const files = readdirSync(SAMPLES).filter((f) => f.endsWith('.yaml')).sort()
+	const files = readdirSync(SAMPLES)
+		.filter((f) => f.endsWith('.yaml'))
+		.sort()
 	for (const file of files) {
 		test(file, () => {
 			const form = Form.parse(YAML.parse(readFileSync(resolve(SAMPLES, file), 'utf8')))

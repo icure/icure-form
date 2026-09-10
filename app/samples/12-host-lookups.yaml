@@ -1,0 +1,108 @@
+form: demo.host-lookups
+id: 10000012-0000-0000-0000-000000000012
+description: Formulas reading data the form does not hold, through the host context.
+translations:
+  - language: fr
+    translations:
+      Age: Âge
+      Consultation date: Date de consultation
+      Last note in the record: Dernière note au dossier
+      Notes tagged as comments: Notes taguées commentaire
+      Note in this care path: Note dans ce parcours
+      Note anywhere in the record: Note dans tout le dossier
+  - language: nl
+    translations:
+      Age: Leeftijd
+      Consultation date: Consultatiedatum
+      Last note in the record: Laatste notitie in het dossier
+      Notes tagged as comments: Als commentaar getagde notities
+      Note in this care path: Notitie in dit zorgtraject
+      Note anywhere in the record: Notitie ergens in het dossier
+sections:
+  - section: The patient, not the form
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: age
+            type: text-field
+            shortLabel: Age
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                return ageText(patient.dateOfBirth)
+          - field: consultationDate
+            type: date-picker
+            shortLabel: Consultation date
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                return consultDate
+      - field: "`patient` and `consultDate` are plain values on the host context, not fields of this form — nothing here feeds them. Age comes from the patient's date of birth through ageText(), which takes a Date as it stands; the consultation date is the date of the contact being edited. Test: both fill in on load, and neither reacts to anything you type."
+        type: label
+        span: 24
+  - section: Services of the record
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: lastNote
+            type: text-field
+            shortLabel: Last note in the record
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                return new Promise(async (resolve) => {
+                  const [note] = await services({ label: 'abortion-forms.field-labels.NOTES', limit: 1 })
+                  resolve(note ? parseContent(note.content) : 'No note on file')
+                })
+          - field: noteCount
+            type: number-field
+            shortLabel: Notes tagged as comments
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                return new Promise(async (resolve) => {
+                  const notes = await services({ tagType: 'MS-ABORTION-ITEM', tag: 'comment-note' })
+                  resolve(notes.length)
+                })
+      - field: "services(filter) is async: the formula returns a Promise and the bridge awaits it, so a host can answer over the network — the demo defers every distinct lookup by 200 ms. A returned service carries the same content shape a field value does, which is why parseContent(note.content) reads it without learning a second format. These two reach the same note, once by label and once by tag."
+        type: label
+        span: 24
+  - section: Care path versus the whole record
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: noteInCarePath
+            type: text-field
+            shortLabel: Note in this care path
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                return new Promise(async (resolve) => {
+                  const [note] = await services({ scope: 'carePath', label: 'abortion-forms.field-labels.NOTES', limit: 1 })
+                  resolve(note ? parseContent(note.content) : 'Not in this care path')
+                })
+          - field: noteInRecord
+            type: text-field
+            shortLabel: Note anywhere in the record
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                return new Promise(async (resolve) => {
+                  const [note] = await services({ label: 'abortion-forms.field-labels.NOTES', limit: 1 })
+                  resolve(note ? parseContent(note.content) : 'Not in the record')
+                })
+      - field: "Scope and selector are independent, so the same question can be asked of a narrower set of contacts. Both fields select the same note by label; the left one only within the current care path, the right one across the whole record. Test: the left says the note is not in this care path and the right finds it, because the note was recorded on an earlier contact."
+        type: label
+        span: 24

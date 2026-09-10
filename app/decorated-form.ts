@@ -9,13 +9,14 @@ import { makeInterpreter } from '../src/utils/interpreter'
 import MiniSearch, { SearchResult } from 'minisearch'
 import { codes, icd10, icpc2 } from './codes'
 import { Field, FieldMetadata, Form, Group, Subform, Validator } from '../src/components/model'
-import { CodeStub, DecryptedContact, DecryptedContent, DecryptedForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
+import { CodeStub, DecryptedContact, DecryptedContent, DecryptedForm, DecryptedPatient, DecryptedService, DecryptedSubContact, Gender, ServiceLink } from '@icure/cardinal-sdk'
 import { Suggestion, Version } from '../src/generic'
 import { getRevisionsFilter } from '../src/utils/fields-values-provider'
 import { v4 as uuid } from 'uuid'
 import { normalizeCode } from '../src/utils/code-utils'
 import { defaultTranslationProvider } from '../src/utils/languages'
 import { getAge, getAgeDescription } from './date'
+import { makeFormulaHostContext } from './formula-host'
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
@@ -91,6 +92,24 @@ const history = [
 		],
 	}),
 ]
+
+const patient = new DecryptedPatient({
+	id: 'p1',
+	firstName: 'Alice',
+	lastName: 'Dubois',
+	dateOfBirth: 19850723,
+	gender: Gender.Female,
+})
+
+// Answers `services()`, `patient` and `consultDate` inside formulas out of the fixtures
+// above, standing in for the SDK calls a real host would make. The 200 ms is there so the
+// demo defers its answer like a networked host would, rather than resolving on the spot.
+const hostContext = makeFormulaHostContext({
+	patient,
+	contacts: [currentContact, ...history],
+	currentContact,
+	beforeLookup: () => new Promise((resolve) => setTimeout(resolve, 200)),
+})
 
 const rootForm = new DecryptedForm({
 	id: 'f1',
@@ -327,6 +346,12 @@ export class DecoratedForm extends LitElement {
 				delay: () => (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
 				ageText: () => getAgeDescription,
 				age: () => getAge,
+				// Data a formula needs but its own form does not hold: the patient's earlier
+				// services, the services of the care path, the demographics, the date of the
+				// consultation. A real host answers these out of the SDK; see formula-host.ts.
+				services: hostContext.services,
+				patient: hostContext.patient,
+				consultDate: hostContext.consultDate,
 				summarize: () => (domainOrParams: string | Partial<MistralSummarizeParams>, questionsArg?: [string, string][]) => {
 					const params: MistralSummarizeParams =
 						typeof domainOrParams === 'string'

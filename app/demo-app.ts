@@ -18,6 +18,8 @@ import richText from './samples/08-rich-text.yaml'
 import clinicalWorkflow from './samples/10-clinical-workflow.yaml'
 // @ts-ignore
 import delegatedEdition from './samples/11-delegated-edition.yaml'
+// @ts-ignore
+import hostLookups from './samples/12-host-lookups.yaml'
 import specialtyIndexJson from './samples/curated/index.json'
 
 import { css, html, LitElement } from 'lit'
@@ -166,6 +168,12 @@ class DemoApp extends LitElement {
 			title: '11 — Delegated edition',
 			description: 'Token field that delegates clicks to a host action.',
 			form: Form.parse(YAML.parse(delegatedEdition)),
+		},
+		{
+			slug: '12-host-lookups',
+			title: '12 — Host lookups',
+			description: 'Formulas reading services, the patient and the consultation date from the host.',
+			form: Form.parse(YAML.parse(hostLookups)),
 		},
 	]
 

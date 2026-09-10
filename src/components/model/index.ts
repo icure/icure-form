@@ -156,6 +156,10 @@ export abstract class Field {
 	unit?: string
 	multiline?: boolean
 	tokenDeleteButton?: boolean
+	/** Opts a text, token or items-list field in to the host-level suggestion provider (the palette) even without `codifications`. */
+	suggestions?: boolean
+	/** Opts a text, token or items-list field in to the host-level links provider even without `codifications`. */
+	links?: boolean
 	computedProperties?: { [_key: string]: string }
 	validators?: Validator[]
 	now?: boolean
@@ -222,6 +226,8 @@ export abstract class Field {
 			unit,
 			multiline,
 			tokenDeleteButton,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			now,
@@ -248,6 +254,8 @@ export abstract class Field {
 			unit?: string
 			multiline?: boolean
 			tokenDeleteButton?: boolean
+			suggestions?: boolean
+			links?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			now?: boolean
@@ -277,6 +285,8 @@ export abstract class Field {
 		this.unit = unit
 		this.multiline = multiline || false
 		this.tokenDeleteButton = tokenDeleteButton
+		this.suggestions = suggestions
+		this.links = links
 		this.computedProperties = computedProperties
 		this.validators = validators
 		this.now = now
@@ -356,6 +366,8 @@ export abstract class Field {
 		sortOptions: SortOptions | undefined
 		multiline: boolean | undefined
 		tokenDeleteButton?: boolean
+		suggestions?: boolean
+		links?: boolean
 		now: boolean | undefined
 		options: { [_key: string]: unknown } | undefined
 		width: number | undefined
@@ -386,6 +398,8 @@ export abstract class Field {
 			unit: this.unit,
 			multiline: this.multiline,
 			...(this.tokenDeleteButton ? { tokenDeleteButton: true } : {}),
+			...(this.suggestions ? { suggestions: true } : {}),
+			...(this.links ? { links: true } : {}),
 			...(this.event !== undefined ? { event: this.event } : {}),
 			...(this.readOnlyEvent !== undefined ? { readOnlyEvent: this.readOnlyEvent } : {}),
 			...(this.payload !== undefined ? { payload: this.payload } : {}),
@@ -421,6 +435,8 @@ export class TextField extends Field {
 			value,
 			unit,
 			multiline,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			translate,
@@ -441,6 +457,8 @@ export class TextField extends Field {
 			value?: string
 			unit?: string
 			multiline?: boolean
+			suggestions?: boolean
+			links?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			translate?: boolean
@@ -463,6 +481,8 @@ export class TextField extends Field {
 			value,
 			unit,
 			multiline: multiline,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			translate,
@@ -619,6 +639,8 @@ export class TokenField extends Field {
 			value,
 			unit,
 			tokenDeleteButton,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			translate,
@@ -640,6 +662,8 @@ export class TokenField extends Field {
 			value?: string
 			unit?: string
 			tokenDeleteButton?: boolean
+			suggestions?: boolean
+			links?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			translate?: boolean
@@ -663,6 +687,8 @@ export class TokenField extends Field {
 			value,
 			unit,
 			tokenDeleteButton,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			translate,
@@ -693,6 +719,8 @@ export class ItemsListField extends Field {
 			labels,
 			value,
 			unit,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			translate,
@@ -710,6 +738,8 @@ export class ItemsListField extends Field {
 			labels?: Labels
 			value?: string
 			unit?: string
+			suggestions?: boolean
+			links?: boolean
 			computedProperties?: { [_key: string]: string }
 			validators?: Validator[]
 			translate?: boolean
@@ -729,6 +759,8 @@ export class ItemsListField extends Field {
 			labels,
 			value,
 			unit,
+			suggestions,
+			links,
 			computedProperties,
 			validators,
 			translate,

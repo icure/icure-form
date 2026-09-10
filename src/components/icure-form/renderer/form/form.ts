@@ -162,6 +162,24 @@ const renderInternal = async (
 		}
 	}
 
+	// Palette providers of a text, token or items-list field. A function set on the field's `options` wins (the
+	// original host wiring); otherwise the host-level providers of `<icure-form>` apply to fields that opted in:
+	// `codifications` declared, or `suggestions: true` / `links: true`. Every other field gets none, as before.
+	type FieldSuggestionProvider = (terms: string[]) => Promise<Suggestion[]>
+	type FieldLinksProvider = (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
+	const suggestionsOptedIn = (fg: Field): boolean => !!fg.suggestions || !!fg.codifications?.length
+	const fieldSuggestionProvider = (fg: Field): FieldSuggestionProvider | undefined => {
+		const own = fg.options?.suggestionProvider as FieldSuggestionProvider | undefined
+		if (own) return own
+		const host = props.suggestionProvider
+		return host && suggestionsOptedIn(fg) ? (terms) => host(terms, fg.codifications ?? []) : undefined
+	}
+	const fieldLinksProvider = (fg: Field): FieldLinksProvider | undefined => {
+		const own = fg.options?.linksProvider as FieldLinksProvider | undefined
+		if (own) return own
+		return props.linksProvider && (fg.links || suggestionsOptedIn(fg)) ? props.linksProvider : undefined
+	}
+
 	async function renderTextField(fgSpan: number, fgRowSpan: number, fg: Field) {
 		return html`<icure-form-text-field
 			class="icure-form-field"
@@ -175,8 +193,8 @@ const renderInternal = async (
 			.lines=${fgRowSpan}
 			.defaultLanguage="${props.language}"
 			.languages="${languages}"
-			.linksProvider=${fg.options?.linksProvider}
-			.suggestionProvider=${fg.options?.suggestionProvider}
+			.linksProvider=${fieldLinksProvider(fg)}
+			.suggestionProvider=${fieldSuggestionProvider(fg)}
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
@@ -206,7 +224,8 @@ const renderInternal = async (
 			.multiline="${fg.multiline || false}"
 			.lines=${fgRowSpan}
 			.defaultLanguage="${props.language}"
-			.suggestionProvider=${fg.options?.suggestionProvider}
+			.suggestionProvider=${fieldSuggestionProvider(fg)}
+			.linksProvider=${fieldLinksProvider(fg)}
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
@@ -235,7 +254,8 @@ const renderInternal = async (
 			.multiline="${fg.multiline || false}"
 			.lines=${fgRowSpan}
 			.defaultLanguage="${props.language}"
-			.suggestionProvider=${fg.options?.suggestionProvider}
+			.suggestionProvider=${fieldSuggestionProvider(fg)}
+			.linksProvider=${fieldLinksProvider(fg)}
 			.ownersProvider=${ownersProvider}
 			.translationProvider=${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"

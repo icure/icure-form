@@ -12,6 +12,18 @@ export interface RendererProps {
 	role?: string
 	/** Effective read-only flag: `<icure-form>` passes `readonly && hideEmptyFields`. Form renderers omit Empty fields when set; the card renderer ignores it. */
 	hideEmptyFields?: boolean
+	/**
+	 * Host-level palette provider for text, token and items-list fields that opt in (`codifications` declared, or
+	 * `suggestions: true`). Receives the field's `codifications` so one provider can serve several codifications.
+	 * A `suggestionProvider` function set on a field's `options` takes precedence.
+	 */
+	suggestionProvider?: (terms: string[], codifications: string[]) => Promise<Suggestion[]>
+	/**
+	 * Host-level link builder: turns an inserted suggestion into the link mark carried by the text, and serves fields
+	 * with `links: true`. Applies to the fields the suggestion provider applies to, plus `links: true` fields.
+	 * A `linksProvider` function set on a field's `options` takes precedence.
+	 */
+	linksProvider?: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
 }
 
 export type Renderer = (

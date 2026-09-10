@@ -40,9 +40,9 @@ async function afterInsert(page: Page): Promise<Palette> {
 	return p
 }
 
-// Types into the focused editor and waits for the palette's debounce, provider call and positioning.
-async function typeText(page: Page, text: string) {
-	await page.evaluate(() => (window as any).__focusEditor())
+// Types into the focused editor (the n-th text field) and waits for the palette's debounce, provider call and positioning.
+async function typeText(page: Page, text: string, index = 0) {
+	await page.evaluate((i: number) => (window as any).__focusEditor(i), index)
 	await page.keyboard.type(text)
 	await page.waitForTimeout(500)
 }
@@ -54,8 +54,8 @@ async function press(page: Page, key: string, times = 1) {
 	}
 }
 
-async function palette(page: Page): Promise<Palette> {
-	const p = (await page.evaluate(() => (window as any).__palette())) as Palette | null
+async function palette(page: Page, index = 0): Promise<Palette> {
+	const p = (await page.evaluate((i: number) => (window as any).__palette(i), index)) as Palette | null
 	if (!p) throw new Error('no suggestion palette in the text field')
 	return p
 }
@@ -185,6 +185,20 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(p.visible).toBe(false)
 		expect(p.editorText).toContain('Essential hypertension')
 		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|T1|1')
+	})
+
+	test('a field opting in with `suggestions: true` gets the host provider, with no codifications', async ({ page }) => {
+		await typeText(page, 'hypertension', 1)
+		const p = await palette(page, 1)
+		expect(p.visible).toBe(true)
+		expect(summary(p)).toEqual(['Chapter IX — Circulatory [-]', '  I10 [-]', '    Essential hypertension', '    … 1 more', '  … 2 more'])
+	})
+
+	test('a field that does not opt in gets no palette from the host provider', async ({ page }) => {
+		await typeText(page, 'hypertension', 2)
+		const p = (await page.evaluate(() => (window as any).__palette(2))) as Palette | null
+		expect(p).toBeNull()
+		expect(pageErrors).toEqual([])
 	})
 
 	test('typing more (a new search) resets a manual collapse', async ({ page }) => {

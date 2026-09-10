@@ -447,8 +447,11 @@ export class IcureTextField extends Field {
 			})
 
 			const replaceRangeWithSuggestion = async (from: number, to: number, sug: Suggestion) => {
-				const link = await this.linksProvider(sug)
-				return (link && cmp.view && cmp.view.state.tr.replaceWith(from, to, pms.text(sug.text, [pms.mark('link', link)]))) || undefined
+				if (!cmp.view) return undefined
+				// Linked text when a links provider yields a link and the schema has the mark; the plain text otherwise.
+				const link = this.linksProvider ? await this.linksProvider(sug) : undefined
+				const marks = link && pms.marks['link'] ? [pms.mark('link', link)] : []
+				return cmp.view.state.tr.replaceWith(from, to, pms.text(sug.text, marks))
 			}
 
 			const headingsKeymap = keymap(

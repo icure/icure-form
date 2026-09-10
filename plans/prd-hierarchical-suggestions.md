@@ -113,7 +113,7 @@ The demo (`app/`) exposes its existing data as an ICD-10 chapter → ICD code �
 - **Ancestor path in the displayed or stored value** (breadcrumb, "J45 › J45.0"). Declined to keep the stored value identical to a flat selection; revisit with a design for the read-only rendering.
 - **Lazy loading of children.** Declined: the subtree arrives with the root, which keeps the palette's debounce path synchronous; revisit if a host has trees too large to return at once.
 - **Owner picker hierarchy** (for instance by speciality or organisation). Declined because it selects people, not codes; revisit if a host asks.
-- **First-class `suggestionProvider` / `linksProvider` props on `<icure-form>`**, dispatched to fields by a declarative `options.suggestions` key, instead of functions stashed on a Field's `options` after parsing. Surfaced while wiring the demo; declined here because the PRD keeps provider plumbing unchanged, but it is the natural follow-up.
+- ~~**First-class `suggestionProvider` / `linksProvider` props on `<icure-form>`**~~ — done as the immediate follow-up: host-level props on `<icure-form>`, fields opt in through `codifications` or the new `suggestions: true` / `links: true` flags; functions on a Field's `options` keep precedence.
 
 ### Out of scope
 

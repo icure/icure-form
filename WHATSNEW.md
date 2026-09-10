@@ -6,6 +6,16 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ## 3.4.0 (unreleased)
 
+### `suggestionProvider` and `linksProvider` on `<icure-form>`
+
+The suggestion palette's providers are host-level properties of `<icure-form>`, like `optionsProvider`, instead of functions the host had to set on each parsed field's `options`. `suggestionProvider(terms, codifications)` receives the field's `codifications`; `linksProvider(sug)` builds the link carried by an inserted suggestion. Fields opt in by declaring `codifications`, or with the field flags `suggestions: true` (palette) and `links: true` (links); fields declaring neither are unchanged. Functions set on a field's `options` keep precedence, so existing hosts are unaffected. Token and items-list fields receive both providers too.
+
+```html
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+```
+
+Selecting a suggestion when no links provider applies (or it returns nothing) inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](./README.md#hierarchical-suggestions).
+
 ### Hierarchical suggestions
 
 Suggestion providers can now return a tree. `Suggestion` gains `children` (the node's children, to any depth, returned together with the node) and `matched` (whether the node itself matched the search; absent means matched). The dropdown popover and the text-field suggestion palette render the tree with a chevron in front of each node that has children, open the branches that lead to a match, hide the non-matching siblings behind a "… N more" row, and let the user pick any node — a chapter, a code or a term. Selecting a node stores exactly what a flat selection stores. Providers returning flat lists behave as before.

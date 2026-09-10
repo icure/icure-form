@@ -26,11 +26,13 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 
 **Renderer** — A strategy for translating a Form into Lit templates. The `<icure-form>` element dispatches to one renderer per render pass, selected by its `renderer` prop. Today: `form` (clinician-dense layout) and `patient-cards` (patient-friendly card sequence).
 
+**Empty field** — A Field that holds no displayable answer. A Field is empty when it has no stored value at all, or when every stored value's most recent version has no codes and no non-blank primitive in any language. Non-blank means: a string with non-whitespace characters, a defined number, boolean or timestamp, a measure with a numeric value (a unit alone does not count), a compound with at least one non-blank member. Preserved-but-invalid date or time text is a non-blank string, so such a Field is not empty. Language is not considered: an answer written in one language keeps the Field non-empty for a viewer in another. Label and action Fields carry no answer and are outside this definition.
+
 **Patient renderer** / **patient-cards renderer** — The renderer that presents a Form to a patient as a linear sequence of Typeform-style cards. Optimized for pre-visit intake.
 
 **Card** (patient-cards only) — A single screen presented to the patient. Contains at most `questionsPerCard` interactive Fields (default 1). Labels and read-only display Fields can additionally appear on the card but do not count toward the limit.
 
-**Auto-flatten** — The algorithm by which the patient renderer turns a Form's Section/Group/Subform/Field tree into a flat linear sequence of Cards. Walks the tree depth-first, skips elements hidden by `hiddenForPatient` or by computed `hidden`, recurses transparently into Subforms, and chunks interactive Fields into Cards of size ≤ `questionsPerCard`.
+**Auto-flatten** — The algorithm by which the patient renderer turns a Form's Section/Group/Subform/Field tree into a flat linear sequence of Cards. Walks the tree depth-first, skips elements hidden by `roles` or by computed `hidden`, recurses transparently into Subforms, and chunks interactive Fields into Cards of size ≤ `questionsPerCard`.
 
 **Welcome card** — The first card the patient sees. Shows the Form title and `description`. Patient presses Start to enter the question sequence. Not counted in progress.
 
@@ -42,9 +44,15 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 
 **Stay semantics** (back-edit) — When the patient goes back, edits a value, and presses Continue, downstream Cards keep their previously-entered values. Visibility/conditional re-evaluation happens; data preservation is unconditional.
 
+## Read-only review
+
+**`hideEmptyFields`** — A `<icure-form>` display prop set by the host, sibling of `readonly` and `displayMetadata`. Never stored in the Form definition. Honoured only while `readonly` is `true`; ignored otherwise. When active, the `form` and `form:tab` renderers omit every Empty field and cascade upward: a Group with no surviving content is dropped together with its labels and buttons, a Subform instance with no surviving content is dropped and the Subform heading goes when no instance survives, in the plain `form` layout a Section with no surviving content is dropped. In `form:tab` every Section keeps its tab and an all-empty active tab shows an empty page, because an inactive Section is never evaluated. Surviving content is a non-empty Field or an element marked `alwaysVisible`. When nothing survives in plain `form`, the form renders nothing and emits no signal. The card renderer does not honour it.
+
+**`alwaysVisible`** — Optional authored boolean on a Field, Group, Subform, or Section, stored in the Form definition. On Field, Group, and Subform it may also be a Computed property (`computedProperties.alwaysVisible`), evaluated at render time like `hidden`; Section is static only. The author's exception to `hideEmptyFields`: an `alwaysVisible` Empty field renders as a blank read-only box; an `alwaysVisible` container with no surviving content renders its title only. Either counts as surviving content, so its ancestors and tab stay. It does not override `roles` or computed `hidden`: an element those rules hide stays hidden. Has no effect when `hideEmptyFields` is inactive.
+
 ## Patient-facing schema
 
-**`hiddenForPatient`** — Cascading boolean flag on Section, Group, Subform, or Field. Default `false`. When `true`, the element and its entire subtree are excluded from the patient renderer. Has no effect on the clinician renderer.
+**`roles`** — Optional list of viewer roles on a Section, Group, Subform, or Field, matched against the `role` the host passes to the renderer. Omitted means visible to every role; an empty list means visible to nobody; otherwise visible only when the active role is listed. Cascades: hiding a container hides its whole subtree. Honoured by both renderers. Replaces the former `hiddenForPatient` flag, which is no longer parsed.
 
 **`questionsPerCard`** — A patient-cards renderer prop (not a Form-model property). Controls how many interactive Fields fit on one Card. Default `1`. `2` allowed.
 

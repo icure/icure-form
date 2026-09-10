@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## 3.4.0 (2026-09-08)
+## 3.4.0 (unreleased)
 
 ### Hierarchical suggestions
 
@@ -31,6 +31,35 @@ Two defects made inserting a palette suggestion impossible in a text field rende
 ### Demo
 
 Sample 12 shows both surfaces on an ICD-10 chapter → code → BE-THESAURUS term tree, and the demo's ICD-10 chapter table now matches real code ranges (its regexes used en-dashes, so every code fell into chapter XXII).
+
+### Hide empty fields in read-only forms
+
+Read-only forms can now hide fields, groups, subform instances and (in the `form` renderer) sections that hold no answer, so a review or summary view isn't dominated by blank boxes. Set `hideEmptyFields` on `<icure-form>` alongside `readonly`; it has no effect otherwise, and the `card` renderer ignores it.
+
+```html
+<icure-form .form="${this.form}" .readonly="${true}" .hideEmptyFields="${true}" .formValuesContainer="${this.formValuesContainer}"></icure-form>
+```
+
+A group with no surviving fields disappears together with its title; a subform with no surviving instances disappears together with its heading. In `form:tab`, every tab always stays — an inactive section is never evaluated, so an all-empty active tab simply shows an empty page. See [Read-only review: hiding empty fields](./README.md#read-only-review-hiding-empty-fields).
+
+As part of this work, `<icure-form>` now also re-renders as soon as `readonly` changes on its own. Previously, toggling `readonly` on a mounted form did not refresh the render until some other prop changed too, so hosts worked around it by re-assigning `formValuesContainer` to force propagation; that workaround is no longer needed.
+
+### `alwaysVisible` on fields, groups, subforms and sections
+
+Form authors can exempt a specific field, group, subform or section from `hideEmptyFields` by marking it `alwaysVisible`. An exempt empty field renders as a blank read-only box; an exempt container with no surviving content renders its title only. It never overrides `roles` or computed `hidden`.
+
+```yaml
+- field: allergies
+  type: token-field
+  alwaysVisible: true
+```
+
+On `Field`, `Group` and `Subform`, `alwaysVisible` can also be computed, just like `hidden`:
+
+```yaml
+computedProperties:
+  alwaysVisible: "return self['flagged-for-review']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
+```
 
 ---
 

@@ -7,11 +7,34 @@ import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 import { defaultTranslationProvider } from '../../../../utils/languages'
 import { getLabels } from '../../../common/utils'
 import { filterAndSortOptionsFromFieldDefinition, sortSuggestions } from '../../../../utils/code-utils'
+import { isEmptyFieldValues, VALUE_BEARING_FIELD_TYPES } from '../../../../utils/field-emptiness'
 
 import './form-selection-button'
 import { currentDate, currentDateTime, currentTime } from '../../../../utils/dates'
 
-export const render: Renderer = async (
+/**
+ * What an internal render function hands its caller: the template to emit — `nothing` when the node
+ * is dropped — and whether the node counts as surviving content for the upward cascade. Rendered
+ * nodes that carry no answer of their own (labels, action buttons) are `content: false`, so a
+ * container holding nothing else still collapses. Render-and-observe: a container decides after its
+ * children have rendered, never from a pre-pass (ADR 0001).
+ */
+type RenderedNode = { template: TemplateResult | typeof nothing; content: boolean }
+
+/** Evaluated `computedProperties` of a Field, Group or Subform, minus `value` / `defaultValue`. */
+type ComputedProperties = { [key: string]: string | number | boolean | undefined }
+
+/** A section wrapper awaits the section thunk; an inactive tab never calls it at all (ADR 0001). */
+type SectionWrapper = (index: number, section: () => Promise<TemplateResult>) => Promise<TemplateResult>
+
+/**
+ * `alwaysVisible` of a Field, Group or Subform: the computed property when the definition declares
+ * one — an explicit `false` from the formula wins over the static flag — the model flag otherwise.
+ * Always resolved on the original node, never on the `copyIfNeeded` copy handed to the renderers.
+ */
+const resolveAlwaysVisible = (fg: Field | Group | Subform, computedProperties: ComputedProperties): boolean => !!(computedProperties['alwaysVisible'] ?? fg.alwaysVisible)
+
+const renderInternal = async (
 	form: Form,
 	props: RendererProps,
 	formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>,
@@ -23,8 +46,12 @@ export const render: Renderer = async (
 	languages?: { [iso: string]: string },
 	readonly?: boolean,
 	displayMetadata?: boolean,
-	sectionWrapper?: (index: number, section: () => TemplateResult) => TemplateResult,
-) => {
+	sectionWrapper?: SectionWrapper,
+): Promise<RenderedNode> => {
+	// Read-only review mode. When off, every cascade rule below is a pass-through: `content` is still
+	// computed but never changes what is emitted.
+	const hide = !!props.hideEmptyFields
+
 	const composedOptionsProvider =
 		optionsProvider && form.codifications
 			? async (language: string, codifications: string[], terms?: string[], sortOptions?: SortOptions): Promise<Suggestion[]> => {
@@ -63,55 +90,76 @@ export const render: Renderer = async (
 			: html`<h6 class="${className}">${content}</h6>`
 	}
 
-	async function renderGroup(fg: Group, fgSpan: number, level: number) {
+	async function renderGroup(fg: Group, fgSpan: number, level: number, alwaysVisible: boolean): Promise<RenderedNode> {
 		const tp = translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))
-		const subElements = (await Promise.all((fg.fields ?? []).map((fieldOrGroup: Field | Group) => renderFieldGroupOrSubform(fieldOrGroup, level + 1)))).filter((x) => !!x && x !== nothing)
+		const results = await Promise.all((fg.fields ?? []).map((fieldOrGroup: Field | Group) => renderFieldGroupOrSubform(fieldOrGroup, level + 1)))
+		const subElements = results.map((r) => r.template).filter((x) => !!x && x !== nothing)
+		const hasContent = results.some((r) => r.content)
 		const groupTitle = fg.translate && tp && props.language ? tp(props.language, fg.group) : fg.group
-		return subElements.length
-			? html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
-					${fg.borderless ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
-					<div class="icure-form">${subElements}</div>
-			  </div>`
-			: nothing
+		const shell = (children: unknown) =>
+			html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
+				${fg.borderless ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
+				<div class="icure-form">${children}</div>
+			</div>`
+		// Read-only review: a group whose children all dropped goes with them, unless it opts out with
+		// `alwaysVisible` — then its shell (title as usual, empty grid) stands in for the missing content.
+		if (hide && !hasContent) {
+			return alwaysVisible ? { template: shell(nothing), content: true } : { template: nothing, content: false }
+		}
+		// Flag off: unchanged behaviour — collapse only when every child template is `nothing`.
+		return subElements.length ? { template: shell(subElements), content: hasContent } : { template: nothing, content: false }
 	}
 
-	async function renderSubform(fg: Subform, fgSpan: number, level: number) {
+	async function renderSubform(fg: Subform, fgSpan: number, level: number, alwaysVisible: boolean): Promise<RenderedNode> {
 		const children = (await formsValueContainer?.getChildren())?.filter((c) => c.getLabel() === fg.id)
 		const tp = translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))
-		return html`<div class="subform" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
-			<div class="subform__heading">
-				${h(level, 'subform__heading__title', html`${(props.language && fg.shortLabel ? tp?.(props.language, fg.shortLabel) : fg.shortLabel) ?? ''}`)}
-				${readonly
-					? nothing
-					: html`<form-selection-button
-							.label="${fg.labels.add ?? 'Add subform'}"
-							.forms="${Object.entries(fg.forms)}"
-							.formAdded="${(title: string, form: Form) => {
-								form.id && formsValueContainer?.addChild(fg.id, form.id, fg.shortLabel ?? '')
-							}}"
-							.translationProvider="${tp}"
-							.language="${props.language}"
-					  ></form-selection-button>`}
-			</div>
-			${await children?.reduce(async (templatesPromise, child) => {
-				const templates = await templatesPromise
-
-				const childForm = Object.values(fg.forms).find((f) => f.id === child.getFormId())
-				const title = childForm?.form ?? childForm?.description
-				const localisedTitle = (title && tp && props.language ? tp?.(props.language, title) : title) ?? ''
-				const localisedRemove = (fg.labels.remove && tp && props.language ? tp?.(props.language, fg.labels.remove) : fg.labels.remove) ?? 'Remove'
-				if (childForm) {
-					templates.push(html`
-						<div class="subform__child">
-							<h3 class="subform__child__title">${localisedTitle}</h3>
-							${await render(childForm, props, child, translationProvider, revisionsFilter, ownersProvider, optionsProvider, actionListener, languages, readonly, displayMetadata)}
-							${readonly ? nothing : html` <button class="subform__removeBtn" @click="${() => formsValueContainer?.removeChild?.(child)}">${localisedRemove}</button>`}
-						</div>
-					`)
-				}
-				return templates
-			}, Promise.resolve([] as TemplateResult[]))}
-		</div>`
+		const instances: TemplateResult[] = []
+		for (const child of children ?? []) {
+			const childForm = Object.values(fg.forms).find((f) => f.id === child.getFormId())
+			if (!childForm) {
+				continue
+			}
+			const rendered = await renderInternal(childForm, props, child, translationProvider, revisionsFilter, ownersProvider, optionsProvider, actionListener, languages, readonly, displayMetadata)
+			// Read-only review: an instance whose whole child form dropped is skipped entirely — no title
+			// and no remove button either.
+			if (hide && !rendered.content) {
+				continue
+			}
+			const title = childForm.form ?? childForm.description
+			const localisedTitle = (title && tp && props.language ? tp?.(props.language, title) : title) ?? ''
+			const localisedRemove = (fg.labels.remove && tp && props.language ? tp?.(props.language, fg.labels.remove) : fg.labels.remove) ?? 'Remove'
+			instances.push(html`
+				<div class="subform__child">
+					<h3 class="subform__child__title">${localisedTitle}</h3>
+					${rendered.template} ${readonly ? nothing : html` <button class="subform__removeBtn" @click="${() => formsValueContainer?.removeChild?.(child)}">${localisedRemove}</button>`}
+				</div>
+			`)
+		}
+		// The heading carries the add button, so it stays as long as the subform itself is shown. With no
+		// instance left and no opt-out, the whole node drops rather than leaving an empty heading behind.
+		if (hide && !instances.length && !alwaysVisible) {
+			return { template: nothing, content: false }
+		}
+		return {
+			template: html`<div class="subform" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
+				<div class="subform__heading">
+					${h(level, 'subform__heading__title', html`${(props.language && fg.shortLabel ? tp?.(props.language, fg.shortLabel) : fg.shortLabel) ?? ''}`)}
+					${readonly
+						? nothing
+						: html`<form-selection-button
+								.label="${fg.labels.add ?? 'Add subform'}"
+								.forms="${Object.entries(fg.forms)}"
+								.formAdded="${(title: string, form: Form) => {
+									form.id && formsValueContainer?.addChild(fg.id, form.id, fg.shortLabel ?? '')
+								}}"
+								.translationProvider="${tp}"
+								.language="${props.language}"
+						  ></form-selection-button>`}
+				</div>
+				${instances}
+			</div>`,
+			content: instances.length > 0 || alwaysVisible,
+		}
 	}
 
 	async function renderTextField(fgSpan: number, fgRowSpan: number, fg: Field) {
@@ -410,32 +458,41 @@ export const render: Renderer = async (
 		></icure-form-label>`
 	}
 
-	const renderFieldGroupOrSubform = async function (fg: Field | Group | Subform, level: number): Promise<TemplateResult | TemplateResult[] | typeof nothing> {
+	const renderFieldGroupOrSubform = async function (fg: Field | Group | Subform, level: number): Promise<RenderedNode> {
 		if (!fg) {
-			return nothing
+			return { template: nothing, content: false }
 		}
 		if (!isVisibleForRole((fg as any).roles, props.role)) {
-			return nothing
+			return { template: nothing, content: false }
 		}
 		const computedProperties = (await Object.keys(fg.computedProperties ?? {})
 			.filter((k) => k !== 'value' && k !== 'defaultValue')
-			.reduce(async (acc, k) => ({ ...(await acc), [k]: fg.computedProperties?.[k] && (await formsValueContainer?.compute(fg.computedProperties[k]))?.value }), Promise.resolve({}))) as {
-			[key: string]: string | number | boolean | undefined
-		}
+			.reduce(
+				async (acc, k) => ({ ...(await acc), [k]: fg.computedProperties?.[k] && (await formsValueContainer?.compute(fg.computedProperties[k]))?.value }),
+				Promise.resolve({}),
+			)) as ComputedProperties
 		if (computedProperties['hidden']) {
-			return nothing
+			return { template: nothing, content: false }
+		}
+		const alwaysVisible = resolveAlwaysVisible(fg, computedProperties)
+		// Read-only review mode: a value-bearing field with no displayable answer is omitted, unless it
+		// opts out with `alwaysVisible`.
+		if (hide && fg.clazz === 'field' && VALUE_BEARING_FIELD_TYPES.has(fg.type)) {
+			if (!alwaysVisible && isEmptyFieldValues(formsValueContainer ? fieldValuesProvider(formsValueContainer, fg, revisionsFilter)() : undefined)) {
+				return { template: nothing, content: false }
+			}
 		}
 
 		const fgSpan = (computedProperties['span'] ?? fg.span ?? 6) as number
 		const fgRowSpan = (computedProperties['rowSpan'] ?? fg.rowSpan ?? 1) as number
 
 		if (fg.clazz === 'group' && fg.fields?.length) {
-			return await renderGroup((fg as Group).copyIfNeeded({ ...computedProperties }), fgSpan, level)
+			return await renderGroup((fg as Group).copyIfNeeded({ ...computedProperties }), fgSpan, level, alwaysVisible)
 		} else if (fg.clazz === 'subform' && (fg.id || computedProperties['title'])) {
-			return await renderSubform((fg as Subform).copyIfNeeded({ ...computedProperties }), fgSpan, level)
+			return await renderSubform((fg as Subform).copyIfNeeded({ ...computedProperties }), fgSpan, level, alwaysVisible)
 		} else if (fg.clazz === 'field') {
 			const field = fg.copyIfNeeded({ ...computedProperties })
-			return html`${fg.type === 'text-field'
+			const template = html`${fg.type === 'text-field'
 				? await renderTextField(fgSpan, fgRowSpan, field)
 				: fg.type === 'measure-field'
 				? await renderMeasureField(fgSpan, fgRowSpan, field)
@@ -462,8 +519,11 @@ export const render: Renderer = async (
 				: fg.type === 'action'
 				? await renderButton(fgSpan, fgRowSpan, field)
 				: ''}`
+			// A label or an action button renders whenever it is reached, but never counts as surviving
+			// content: a group or section holding nothing else still collapses around it.
+			return { template, content: VALUE_BEARING_FIELD_TYPES.has(fg.type) }
 		}
-		return html``
+		return { template: html``, content: false }
 	}
 
 	const calculateFieldOrGroupSize = (span: number, rowSpan: number, fixedWidth?: number | undefined) => {
@@ -471,17 +531,69 @@ export const render: Renderer = async (
 		return `grid-column: span ${span}; ${rowSpan > 1 ? `grid-row: span ${rowSpan}` : ''}`
 	}
 
-	const renderForm = async (form: Form, sectionWrapper: (index: number, section: () => TemplateResult) => TemplateResult) => {
+	const renderForm = async (form: Form, sectionWrapper?: SectionWrapper): Promise<RenderedNode[]> => {
 		return await Promise.all(
-			form.sections.map(async (s, idx) => {
+			form.sections.map(async (s, idx): Promise<RenderedNode> => {
 				if (!isVisibleForRole(s.roles, props.role)) {
-					return nothing
+					return { template: nothing, content: false }
 				}
-				const section = await Promise.all(s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3)))
-				return sectionWrapper(idx, () => html` <div class="icure-form">${section}</div>`)
+				// A section's children are rendered inside this thunk, so a wrapper that never calls it (an
+				// inactive tab) costs no value read and no formula evaluation for that section — ADR 0001.
+				// Narrower than `RenderedNode`: a section always has a template of its own, its grid.
+				const renderSection = async (): Promise<{ template: TemplateResult; content: boolean }> => {
+					const results = await Promise.all(s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3)))
+					return { template: html` <div class="icure-form">${results.map((r) => r.template)}</div>`, content: results.some((r) => r.content) }
+				}
+				if (sectionWrapper) {
+					// `form:tab`: the wrapper is always called — every section keeps its tab — and it alone
+					// decides whether the thunk runs. Section-level cascade is therefore plain-`form` only,
+					// and the node counts as content because the wrapper always emits its own tab element.
+					return { template: await sectionWrapper(idx, async () => (await renderSection()).template), content: true }
+				}
+				const rendered = await renderSection()
+				if (hide && !rendered.content) {
+					// An `alwaysVisible` section keeps its (now empty) grid and reports content, so that a
+					// subform instance holding only such a section survives too — as the group shell does.
+					return s.alwaysVisible ? { template: rendered.template, content: true } : { template: nothing, content: false }
+				}
+				return rendered
 			}),
 		)
 	}
 
-	return html`${await renderForm(form, sectionWrapper ?? ((idx, section) => section()))}`
+	const sections = await renderForm(form, sectionWrapper)
+	return { template: html`${sections.map((s) => s.template)}`, content: sections.some((s) => s.content) }
+}
+
+export const render: Renderer = async (
+	form,
+	props,
+	formsValueContainer,
+	translationProvider,
+	revisionsFilter,
+	ownersProvider,
+	optionsProvider,
+	actionListener,
+	languages,
+	readonly,
+	displayMetadata,
+	sectionWrapper,
+) => {
+	const rendered = await renderInternal(
+		form,
+		props,
+		formsValueContainer,
+		translationProvider,
+		revisionsFilter,
+		ownersProvider,
+		optionsProvider,
+		actionListener,
+		languages,
+		readonly,
+		displayMetadata,
+		sectionWrapper,
+	)
+	// The whole-form node always carries a template (`html`${sections}``); the `nothing` arm of
+	// `RenderedNode` only ever describes a dropped child, so the public contract stays a bare template.
+	return rendered.template as TemplateResult
 }

@@ -1149,6 +1149,7 @@ app-date-picker {
 		&__title {
 			padding: 12px !important;
 			border-radius: 6px;
+			font-weight: 700;
 			margin: 0;
 			background-color: $green-light-bg;
 		}
@@ -1189,7 +1190,7 @@ app-date-picker {
 
 	h3 {
 		font-size: add-two($label-font-size, 0, 1.1);
-		font-weight: 500;
+		font-weight: 700;
 		color: $label-color;
 		padding: 6px;
 	}

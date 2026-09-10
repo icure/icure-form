@@ -232,6 +232,53 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(p.rows.map((r) => r.text)).toContain('Asthma')
 	})
 
+	test('an inserted term keeps its link across a blur, typing right after it searches the new word, and the stored codes name it', async ({ page }) => {
+		await typeText(page, 'hypertension')
+		await press(page, 'Tab')
+		await press(page, 'ArrowDown', 2)
+		await press(page, 'Enter')
+		let p = await afterInsert(page)
+		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|T1|1')
+
+		// Leave with a real click on the dropdown: the blur saves the value and the form re-renders the field from it.
+		const dropdown = (await page.evaluate(() => {
+			const r = ((window as any).__dropdownRoot()?.querySelector('#test') as HTMLElement | null)?.getBoundingClientRect()
+			return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+		})) as { x: number; y: number } | null
+		if (!dropdown) throw new Error('no dropdown to click')
+		await page.mouse.click(dropdown.x, dropdown.y)
+		await page.waitForTimeout(500)
+
+		// Come back with a real click, go to the end of the text: the link must have survived the round trip.
+		const editor = (await page.evaluate(() => (window as any).__editorRect(0))) as { x: number; y: number } | null
+		if (!editor) throw new Error('no editor to click')
+		await page.mouse.click(editor.x, editor.y)
+		await press(page, 'End')
+		p = await palette(page)
+		expect(p.editorText).toContain('Essential hypertension')
+		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|T1|1')
+
+		// Glued to the linked term: the query is the new word only.
+		await page.keyboard.type('asth')
+		await page.waitForTimeout(500)
+		p = await palette(page)
+		expect(p.visible).toBe(true)
+		expect(p.rows.map((r) => r.text)).toContain('Asthma')
+
+		// The value saved on blur carries the inserted term's code.
+		const codes = (await page.evaluate(() => {
+			const values = (window as any).getFormValues() as Record<string, { value?: { codes?: { id: string }[] } }[]> | null
+			return (
+				Object.values(values ?? {})
+					.flat()
+					.map((v) => v?.value?.codes)
+					.find((c) => c?.length) ?? null
+			)
+		})) as { id: string }[] | null
+		expect(codes?.map((c) => c.id)).toContain('FIXTURE|T1|1')
+		expect(pageErrors).toEqual([])
+	})
+
 	test('typing more (a new search) resets a manual collapse', async ({ page }) => {
 		await typeText(page, 'hyperten')
 		await press(page, 'Tab')

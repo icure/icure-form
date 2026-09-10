@@ -390,7 +390,12 @@ const paletteRect = (text: string, part: 'row' | 'chevron', index = 0) => {
 	const r = target.getBoundingClientRect()
 	return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
 }
-Object.assign(window as any, { __dropdownRoot: dropdownRoot, __focusEditor: focusEditor, __palette: paletteSnapshot, __paletteRect: paletteRect })
+// Viewport centre of the n-th text field's editor, for a real pointer click back into it.
+const editorRect = (index = 0) => {
+	const r = textFieldRoot(index)?.querySelector('.ProseMirror')?.getBoundingClientRect()
+	return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+}
+Object.assign(window as any, { __dropdownRoot: dropdownRoot, __focusEditor: focusEditor, __palette: paletteSnapshot, __paletteRect: paletteRect, __editorRect: editorRect })
 ;(window as any).getFormValues = () => {
 	const fvc = (window as any).__currentFvc as BridgedFormValuesContainer | undefined
 	if (!fvc) return null

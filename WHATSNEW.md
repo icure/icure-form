@@ -38,6 +38,10 @@ The provider owns matching: it marks what matched, returns roots that have a mat
 
 Two palette defects surfaced with hierarchical suggestions in the demo. The palette no longer lingers after the editor loses focus: it hides on blur, and a palette re-created when the field rebuilds its editor state (for instance after the blur that saves the value) no longer opens under an unfocused editor. And the palette's query now starts after the last linked (already coded) word of the paragraph instead of spanning the whole paragraph, so typing right after an inserted suggestion searches the new word only — previously `douleur de l'épaule` + `crise` produced the query `l'épaulecrise` and no results.
 
+### Styled text fields keep their marks and record their codes
+
+`styled-text`, `text-with-codes` and `styled-text-with-codes` fields now store their value as inline markdown, so bold, italic and links survive a save — previously they were stored as plain text and an inserted suggestion lost its link as soon as the field lost focus. The value's `codes` now lists the codes named by the text's links (one per `c-<type>://<code>` href entry; version `1` unless the entry carries a full `type|code|version` id), for these schemas and `text-document`. The plain `text` schema is unchanged. Hosts that read the raw `content` string of a styled field will now see markdown — the same markdown the field's parser has always accepted.
+
 ### Palette insertion works in form-rendered text fields
 
 Two defects made inserting a palette suggestion impossible in a text field rendered by `<icure-form>`: the renderer bound the field's undefined code/link presentation providers over the component defaults, so the link mark failed to render, and the palette queried the provider before any word was typed. Both are fixed; the text field now falls back to its default providers. A suggestion returned without `terms` now replaces the query terms (an unmatched ancestor replaces the same range as its first matched descendant) instead of computing an empty range.

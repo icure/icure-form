@@ -36,6 +36,7 @@ import { measureOnFocusHandler, measureTransactionMapper } from './schema/measur
 import { anyDateToDate } from '../../utils/dates'
 import { icureFormLogging } from '../../index'
 import { resetPicto } from '../common/styles/paths'
+import { codesFromLinks, serializeInlineMarkdown } from './serialization'
 
 // Defaults for the code/link presentation providers. Hosts rarely set them, and the form renderer binds
 // `fg.options?.xxxProvider` — i.e. `undefined` — onto the property, which replaces the initialiser. The schema spec
@@ -413,8 +414,11 @@ export class IcureTextField extends Field {
 			})
 
 			const replaceRangeWithSuggestion = async (from: number, to: number, sug: Suggestion) => {
-				const link = await this.linksProvider(sug)
-				return (link && cmp.view && cmp.view.state.tr.replaceWith(from, to, pms.text(sug.text, [pms.mark('link', link)]))) || undefined
+				if (!cmp.view) return undefined
+				// Linked text when a links provider yields a link and the schema has the mark; the plain text otherwise.
+				const link = this.linksProvider ? await this.linksProvider(sug) : undefined
+				const marks = link && pms.marks['link'] ? [pms.mark('link', link)] : []
+				return cmp.view.state.tr.replaceWith(from, to, pms.text(sug.text, marks))
 			}
 
 			const headingsKeymap = keymap(
@@ -560,6 +564,8 @@ export class IcureTextField extends Field {
 					blur: (view) => {
 						this.trToSave = undefined
 						this.updateValue(view.state.tr)
+						// Focus moved to another field: the palette would otherwise linger until the next transaction.
+						this.suggestionPalette?.hide()
 					},
 					focus: (view, event) => {
 						this.schema === 'measure' && measureOnFocusHandler(view)
@@ -646,6 +652,9 @@ export class IcureTextField extends Field {
 
 	private makeParser(schemaName: string, pms: Schema) {
 		const tokenizer = MarkdownIt('commonmark', { html: false })
+		// Keep link destinations verbatim: markdown-it would otherwise percent-encode the `|` of the code ids that
+		// `c-<type>://<id>` hrefs carry, breaking the codes extracted from the links after a save round trip.
+		tokenizer.normalizeLink = (url: string) => url
 		return schemaName.includes('tokens-list')
 			? {
 					parse: (value: PrimitiveType, id?: string, renderHash?: number) => {
@@ -759,7 +768,7 @@ export class IcureTextField extends Field {
 			  }
 			: schemaName === 'text-document'
 			? new SpacePreservingMarkdownParser(
-					new MarkdownParser(pms, MarkdownIt('commonmark', { html: false }), {
+					new MarkdownParser(pms, tokenizer, {
 						blockquote: { block: 'blockquote' },
 						paragraph: { block: 'paragraph' },
 						list_item: { block: 'list_item' },
@@ -817,13 +826,15 @@ export class IcureTextField extends Field {
 	}
 
 	private makeSerializer(schemaName: string, pms: Schema) {
-		return schemaName === 'text-document'
-			? {
-					serialize: (content: ProsemirrorNode) => defaultMarkdownSerializer.serialize(preprocessEmptyNodes(content, pms)),
-			  }
-			: {
-					serialize: (content: ProsemirrorNode) => content.textBetween(0, content.nodeSize - 2, ' '),
-			  }
+		if (schemaName === 'text-document') {
+			return { serialize: (content: ProsemirrorNode) => defaultMarkdownSerializer.serialize(preprocessEmptyNodes(content, pms)) }
+		}
+		// Paragraph-topped schemas that carry marks: store them as inline markdown, which is what the parser reads back.
+		// Plain textBetween dropped styling and links at every save, so an inserted suggestion lost its link on blur.
+		if (schemaName === 'styled-text' || schemaName === 'text-with-codes' || schemaName === 'styled-text-with-codes') {
+			return { serialize: (content: ProsemirrorNode) => serializeInlineMarkdown(content) }
+		}
+		return { serialize: (content: ProsemirrorNode) => content.textBetween(0, content.nodeSize - 2, ' ') }
 	}
 
 	private makeCodesExtractor(schemaName: string): (doc?: ProsemirrorNode) => Code[] {
@@ -832,11 +843,9 @@ export class IcureTextField extends Field {
 					const unit = (doc?.childCount ?? 0) > 1 ? doc?.child(1)?.textContent : undefined
 					return unit ? [{ id: `CD-UNIT|${unit}|1`, label: { [this.selectedLanguage ?? this.defaultLanguage ?? 'en']: unit } }] : []
 			  }
-			: schemaName === 'measure'
-			? (doc?: ProsemirrorNode) => {
-					const unit = doc?.child(1)?.textContent
-					return unit ? [{ id: `CD-UNIT|${unit}|1`, label: { [this.selectedLanguage ?? this.defaultLanguage ?? 'en']: unit } }] : []
-			  }
+			: schemaName === 'text-with-codes' || schemaName === 'styled-text-with-codes' || schemaName === 'text-document'
+			? // The codes of the links carried by the text (inserted suggestions), so the stored value names what was coded.
+			  (doc?: ProsemirrorNode) => codesFromLinks(doc)
 			: () => []
 	}
 

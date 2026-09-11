@@ -5,6 +5,7 @@ import { EditorState, Transaction } from 'prosemirror-state'
 import { Schema } from 'prosemirror-model'
 import { Suggestion } from '../../generic'
 import { emptyTreeState, parentPath, replacementTerms, reveal, SuggestionRow, toggleExpanded, TreePath, TreeUiState, visibleRows } from '../../utils/suggestion-tree'
+import { suggestionQueryStart } from './suggestion-query'
 
 export type SuggestionInsertHandler = (from: number, to: number, sug: Suggestion) => Promise<Transaction | undefined>
 
@@ -12,6 +13,9 @@ const TAB_ICN =
 	'<svg class="tab-icn" viewBox="0 0 24 24"><path d="M12.29 8.12L15.17 11H2c-.55 0-1 .45-1 1s.45 1 1 1h13.17l-2.88 2.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41L13.7 6.7c-.39-.39-1.02-.39-1.41 0-.38.39-.39 1.03 0 1.42zM20 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z"/></svg>'
 const RETURN_ICN =
 	'<svg class="return-icn" viewBox="0 0 24 24"><path d="M19 8v3H5.83l2.88-2.88c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L2.71 11.3c-.39.39-.39 1.02 0 1.41L7.3 17.3c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L5.83 13H20c.55 0 1-.45 1-1V8c0-.55-.45-1-1-1s-1 .45-1 1z"/></svg>'
+// The palette is as wide as the field it belongs to, but never narrower than this (the rows are ellipsed).
+const MIN_WIDTH = 300
+
 const CHEVRON_SVG = '<svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 /**
@@ -74,7 +78,15 @@ export class SuggestionPalette {
 			Array.from(lis).forEach((li) => li.classList.remove('focused'))
 			idx !== undefined && lis[idx]?.classList.add('focused')
 			this.currentFocus = idx
+			idx !== undefined && lis[idx] && this.scrollRowIntoView(lis[idx])
 		}
+	}
+
+	/** The palette scrolls (max height 80vh); keep the focused row visible without scrolling the page. */
+	private scrollRowIntoView(li: HTMLElement): void {
+		const pal = this.palette
+		if (li.offsetTop < pal.scrollTop) pal.scrollTop = li.offsetTop
+		else if (li.offsetTop + li.offsetHeight > pal.scrollTop + pal.clientHeight) pal.scrollTop = li.offsetTop + li.offsetHeight - pal.clientHeight
 	}
 
 	focus(): boolean {
@@ -147,6 +159,14 @@ export class SuggestionPalette {
 		this.focusItem(undefined)
 		this.hasFocus = false
 
+		// The palette belongs to a focused editor. A plugin view is re-created (with this constructor's initial update)
+		// whenever the field rebuilds its editor state, e.g. after the blur that saves the value; without this guard the
+		// new palette would search the current text and open under an editor the user has just left.
+		if (!view.hasFocus()) {
+			this.palette.style.display = 'none'
+			return
+		}
+
 		if (!state.selection.empty) {
 			this.palette.style.display = 'none'
 			return
@@ -158,7 +178,9 @@ export class SuggestionPalette {
 			return
 		}
 
-		const text = state.doc.textBetween($pos.pos && $pos.depth ? $pos.before() + 1 : 0, $pos.pos)
+		// The query is the text typed since the last linked (already coded) word of the paragraph, not the whole paragraph.
+		const paragraphStart = $pos.pos && $pos.depth ? $pos.before() + 1 : 0
+		const text = state.doc.textBetween(suggestionQueryStart(state.doc, paragraphStart, $pos.pos, this.schema.marks['link']), $pos.pos)
 
 		const words = text.split(/\s+/)
 		const lastWordDelta = Math.min(
@@ -239,7 +261,7 @@ export class SuggestionPalette {
 			li.className = 'more'
 			li.style.setProperty('--depth', `${row.depth}`)
 			li.setAttribute('aria-level', `${row.depth + 1}`)
-			li.textContent = `… ${row.count} more`
+			li.appendChild(this.label(`… ${row.count} more`))
 			return li
 		}
 		const sug = row.suggestion
@@ -256,12 +278,21 @@ export class SuggestionPalette {
 			chevron.innerHTML = CHEVRON_SVG
 			li.appendChild(chevron)
 		}
-		li.appendChild(document.createTextNode(sug.text))
+		li.appendChild(this.label(sug.text, sug.text))
 		const icons = document.createElement('div')
 		icons.className = 'icn-container'
 		icons.innerHTML = TAB_ICN + RETURN_ICN
 		li.appendChild(icons)
 		return li
+	}
+
+	// The row's text, ellipsed by CSS when it overflows the palette; `title` shows the full text on hover.
+	private label(text: string, title?: string): HTMLSpanElement {
+		const span = document.createElement('span')
+		span.className = 'label'
+		span.textContent = text
+		title && (span.title = title)
+		return span
 	}
 
 	private onMouseDown(event: MouseEvent): void {
@@ -331,12 +362,27 @@ export class SuggestionPalette {
 			return
 		}
 		this.palette.style.display = ''
-		const box = this.palette.offsetParent?.getBoundingClientRect()
-		const palBox = this.palette.getBoundingClientRect()
-		if (box) {
-			this.palette.style.left = Math.max(0, Math.min(pos.left - box.left - 12, box.width - palBox.width)) + 'px'
-			this.palette.style.top = pos.bottom - box.top + 4 + 'px'
+		this.palette.scrollTop = 0
+		// As wide as the field (never narrower than MIN_WIDTH), aligned on its left edge, just under the caret's line.
+		// `left`/`top` are relative to the offset parent's padding edge, hence the border (clientLeft/clientTop) offsets.
+		const parent = this.palette.offsetParent
+		const box = parent?.getBoundingClientRect()
+		const field = this.view.dom.getBoundingClientRect()
+		if (parent && box) {
+			const width = Math.max(MIN_WIDTH, field.width)
+			// A palette wider than its field (the minimum kicked in) is shifted left rather than clipped by the viewport.
+			const left = Math.max(0, Math.min(field.left, document.documentElement.clientWidth - width))
+			this.palette.style.width = `${width}px`
+			this.palette.style.left = `${left - box.left - parent.clientLeft}px`
+			this.palette.style.top = `${pos.bottom - box.top - parent.clientTop + 4}px`
 		}
+	}
+
+	/** Hides the palette and drops its focus; used when the editor loses focus, which produces no ProseMirror transaction. */
+	hide(): void {
+		this.palette.style.display = 'none'
+		this.hasFocus = false
+		this.focusItem(undefined)
 	}
 
 	destroy(): void {

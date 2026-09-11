@@ -4,6 +4,20 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 2.5.0 (unreleased)
+
+### `suggestionProvider` and `linksProvider` on `<icure-form>`
+
+The suggestion palette's providers are now host-level properties of `<icure-form>`, like `optionsProvider`, instead of functions the host had to set on each parsed field's `options`. `suggestionProvider(terms, codifications)` receives the field's `codifications`; `linksProvider(sug)` builds the link carried by an inserted suggestion. Fields opt in by declaring `codifications`, or with the new field flags `suggestions: true` (palette) and `links: true` (links); fields declaring neither are unchanged. Functions set on a field's `options` keep precedence, so existing hosts are unaffected. Token and items-list fields now receive both providers too. `codeColorProvider(type, code)` joins them as a host-level property colouring the codes shown in those fields (a field's `options.codeColorProvider` still wins).
+
+```html
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+```
+
+Selecting a suggestion when no links provider applies (or it returns nothing) now inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](./README.md#hierarchical-suggestions).
+
+---
+
 ## 2.4.0 (2026-09-08)
 
 ### Hierarchical suggestions
@@ -23,6 +37,18 @@ Suggestion providers can now return a tree. `Suggestion` gains `children` (the n
 ```
 
 The provider owns matching: it marks what matched, returns roots that have a match in their subtree, and returns every node with its full child list. The library never compares labels to the search. In the palette, Tab focuses the list, ↑/↓ move, → expands, ← collapses or moves to the parent, Enter inserts (or reveals a "N more" row); rows and chevrons are also clickable. See [Hierarchical suggestions](./README.md#hierarchical-suggestions).
+
+### Suggestion palette: hides on blur, ignores already-coded words
+
+Two palette defects surfaced with hierarchical suggestions in the demo. The palette no longer lingers after the editor loses focus: it hides on blur, and a palette re-created when the field rebuilds its editor state (for instance after the blur that saves the value) no longer opens under an unfocused editor. And the palette's query now starts after the last linked (already coded) word of the paragraph instead of spanning the whole paragraph, so typing right after an inserted suggestion searches the new word only — previously `douleur de l'épaule` + `crise` produced the query `l'épaulecrise` and no results.
+
+### Styled text fields keep their marks and record their codes
+
+`styled-text`, `text-with-codes` and `styled-text-with-codes` fields now store their value as inline markdown, so bold, italic and links survive a save — previously they were stored as plain text and an inserted suggestion lost its link as soon as the field lost focus. The value's `codes` now lists the codes named by the text's links (one per `c-<type>://<code>` href entry; version `1` unless the entry carries a full `type|code|version` id), for these schemas and `text-document`. The plain `text` schema is unchanged. Hosts that read the raw `content` string of a styled field will now see markdown — the same markdown the field's parser has always accepted.
+
+### Suggestion palette sizing
+
+The palette is now as wide as its field (never narrower than 300px) and aligned on the field's left edge, instead of a 380px-max box anchored at the caret. It is at least 300px tall, never taller than 80% of the viewport, and scrolls, keeping the focused row in view as ↑/↓ move; rows that do not fit on one line are ellipsed, the full text showing on hover.
 
 ### Palette insertion works in form-rendered text fields
 

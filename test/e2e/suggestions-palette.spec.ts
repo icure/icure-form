@@ -40,9 +40,9 @@ async function afterInsert(page: Page): Promise<Palette> {
 	return p
 }
 
-// Types into the focused editor and waits for the palette's debounce, provider call and positioning.
-async function typeText(page: Page, text: string) {
-	await page.evaluate(() => (window as any).__focusEditor())
+// Types into the focused editor (the n-th text field) and waits for the palette's debounce, provider call and positioning.
+async function typeText(page: Page, text: string, index = 0) {
+	await page.evaluate((i: number) => (window as any).__focusEditor(i), index)
 	await page.keyboard.type(text)
 	await page.waitForTimeout(500)
 }
@@ -54,8 +54,8 @@ async function press(page: Page, key: string, times = 1) {
 	}
 }
 
-async function palette(page: Page): Promise<Palette> {
-	const p = (await page.evaluate(() => (window as any).__palette())) as Palette | null
+async function palette(page: Page, index = 0): Promise<Palette> {
+	const p = (await page.evaluate((i: number) => (window as any).__palette(i), index)) as Palette | null
 	if (!p) throw new Error('no suggestion palette in the text field')
 	return p
 }
@@ -93,6 +93,8 @@ test.describe('Suggestion palette / flat provider (regression)', () => {
 		expect(p.editorText).toContain('Alpha')
 		expect(p.editorText).not.toContain('alp ')
 		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|A|1')
+		// The host-level codeColorProvider reaches the editor: its category colours the inserted code.
+		expect(p.editorHtml).toContain('--bg-code-color-1: #123456')
 	})
 })
 
@@ -187,6 +189,96 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|T1|1')
 	})
 
+	test('a field opting in with `suggestions: true` gets the host provider, with no codifications', async ({ page }) => {
+		await typeText(page, 'hypertension', 1)
+		const p = await palette(page, 1)
+		expect(p.visible).toBe(true)
+		expect(summary(p)).toEqual(['Chapter IX — Circulatory [-]', '  I10 [-]', '    Essential hypertension', '    … 1 more', '  … 2 more'])
+	})
+
+	test('a field that does not opt in gets no palette from the host provider', async ({ page }) => {
+		await typeText(page, 'hypertension', 2)
+		const p = (await page.evaluate(() => (window as any).__palette(2))) as Palette | null
+		expect(p).toBeNull()
+		expect(pageErrors).toEqual([])
+	})
+
+	test('the palette hides when the editor loses focus', async ({ page }) => {
+		await typeText(page, 'hypertension')
+		expect((await palette(page)).visible).toBe(true)
+		// A real pointer click on another field blurs the editor without any ProseMirror transaction.
+		const pt = (await page.evaluate(() => {
+			const r = ((window as any).__dropdownRoot()?.querySelector('#test') as HTMLElement | null)?.getBoundingClientRect()
+			return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+		})) as { x: number; y: number } | null
+		if (!pt) throw new Error('no dropdown to click')
+		await page.mouse.click(pt.x, pt.y)
+		await page.waitForTimeout(300)
+		expect((await palette(page)).visible).toBe(false)
+	})
+
+	test('typing right after an inserted suggestion searches the new text only', async ({ page }) => {
+		await typeText(page, 'hypertension')
+		await press(page, 'Tab')
+		await press(page, 'ArrowDown', 2)
+		await press(page, 'Enter')
+		let p = await afterInsert(page)
+		expect(p.editorText).toContain('Essential hypertension')
+		// Glued to the linked term, no space: the query must be "asth", not "hypertensionasth".
+		await page.keyboard.type('asth')
+		await page.waitForTimeout(500)
+		p = await palette(page)
+		expect(p.visible).toBe(true)
+		expect(p.rows.map((r) => r.text)).toContain('Asthma')
+	})
+
+	test('an inserted term keeps its link across a blur, typing right after it searches the new word, and the stored codes name it', async ({ page }) => {
+		await typeText(page, 'hypertension')
+		await press(page, 'Tab')
+		await press(page, 'ArrowDown', 2)
+		await press(page, 'Enter')
+		let p = await afterInsert(page)
+		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|T1|1')
+
+		// Leave with a real click on the dropdown: the blur saves the value and the form re-renders the field from it.
+		const dropdown = (await page.evaluate(() => {
+			const r = ((window as any).__dropdownRoot()?.querySelector('#test') as HTMLElement | null)?.getBoundingClientRect()
+			return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+		})) as { x: number; y: number } | null
+		if (!dropdown) throw new Error('no dropdown to click')
+		await page.mouse.click(dropdown.x, dropdown.y)
+		await page.waitForTimeout(500)
+
+		// Come back with a real click, go to the end of the text: the link must have survived the round trip.
+		const editor = (await page.evaluate(() => (window as any).__editorRect(0))) as { x: number; y: number } | null
+		if (!editor) throw new Error('no editor to click')
+		await page.mouse.click(editor.x, editor.y)
+		await press(page, 'End')
+		p = await palette(page)
+		expect(p.editorText).toContain('Essential hypertension')
+		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|T1|1')
+
+		// Glued to the linked term: the query is the new word only.
+		await page.keyboard.type('asth')
+		await page.waitForTimeout(500)
+		p = await palette(page)
+		expect(p.visible).toBe(true)
+		expect(p.rows.map((r) => r.text)).toContain('Asthma')
+
+		// The value saved on blur carries the inserted term's code.
+		const codes = (await page.evaluate(() => {
+			const values = (window as any).getFormValues() as Record<string, { value?: { codes?: { id: string }[] } }[]> | null
+			return (
+				Object.values(values ?? {})
+					.flat()
+					.map((v) => v?.value?.codes)
+					.find((c) => c?.length) ?? null
+			)
+		})) as { id: string }[] | null
+		expect(codes?.map((c) => c.id)).toContain('FIXTURE|T1|1')
+		expect(pageErrors).toEqual([])
+	})
+
 	test('typing more (a new search) resets a manual collapse', async ({ page }) => {
 		await typeText(page, 'hyperten')
 		await press(page, 'Tab')
@@ -200,5 +292,74 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		p = await palette(page)
 		expect(p.visible).toBe(true)
 		expect(summary(p)).toEqual(['Chapter IX — Circulatory [-]', '  I10 [-]', '    Essential hypertension', '    … 1 more', '  … 2 more'])
+	})
+})
+
+test.describe('Suggestion palette / sizing', () => {
+	type Geometry = {
+		palette: { left: number; width: number; height: number }
+		editor: { left: number; width: number }
+		viewportHeight: number
+		viewportWidth: number
+		scrollHeight: number
+		clientHeight: number
+		labelCount: number
+		overflowingLabels: number
+		labelTextOverflow: string | null
+		focusedInView: boolean | null
+	}
+	const geometry = async (page: Page): Promise<Geometry> => {
+		const g = (await page.evaluate(() => (window as any).__paletteGeometry(0))) as Geometry | null
+		if (!g) throw new Error('no palette geometry')
+		return g
+	}
+
+	test('the palette is as wide as its field and aligned on it', async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'wide')
+		await typeText(page, 'wide')
+		const p = await palette(page)
+		expect(p.visible).toBe(true)
+		expect(p.rows.length).toBe(60)
+		const g = await geometry(page)
+		expect(g.editor.width).toBeGreaterThan(300)
+		expect(g.palette.width).toBeCloseTo(g.editor.width, 0)
+		expect(g.palette.left).toBeCloseTo(g.editor.left, 0)
+	})
+
+	test('a short list still gets the 300px minimum height', async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'flat')
+		await typeText(page, 'alp')
+		const p = await palette(page)
+		expect(p.rows.length).toBe(1)
+		const g = await geometry(page)
+		expect(g.palette.height).toBeCloseTo(300, 0)
+	})
+
+	test('in a narrow viewport the palette keeps a 300px minimum, caps its height at 80% of the viewport, ellipses its rows and scrolls the focused row into view', async ({ page }) => {
+		await page.setViewportSize({ width: 360, height: 400 })
+		await gotoHarness(page)
+		await initForm(page, 'wide')
+		await typeText(page, 'wide')
+		let g = await geometry(page)
+		expect(g.editor.width).toBeLessThan(300)
+		expect(g.palette.width).toBeCloseTo(300, 0)
+		expect(g.palette.left + g.palette.width).toBeLessThanOrEqual(g.viewportWidth + 1)
+		expect(g.palette.height).toBeLessThanOrEqual(0.8 * g.viewportHeight + 1)
+		expect(g.palette.height).toBeGreaterThan(0.5 * g.viewportHeight)
+		expect(g.scrollHeight).toBeGreaterThan(g.clientHeight)
+		expect(g.labelCount).toBe(60)
+		expect(g.overflowingLabels).toBe(60)
+		expect(g.labelTextOverflow).toBe('ellipsis')
+
+		// The last row is far below the fold; walking down to it scrolls the palette, not the page.
+		await press(page, 'Tab')
+		await press(page, 'ArrowDown', 59)
+		const p = await palette(page)
+		expect(p.focus).toBe(59)
+		g = await geometry(page)
+		expect(g.focusedInView).toBe(true)
+		expect(g.palette.height).toBeLessThanOrEqual(0.8 * g.viewportHeight + 1)
 	})
 })

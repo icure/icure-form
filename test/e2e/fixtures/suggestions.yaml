@@ -1,5 +1,5 @@
 form: Suggestions
-description: Fixture for hierarchical suggestions — a dropdown fed by the harness options fixture and a text field whose palette is fed by the harness suggestions fixture (see test/e2e/test-page/suggestion-fixtures.ts)
+description: "Fixture for hierarchical suggestions: a dropdown fed by the harness options fixture, and text fields whose palette is fed by the harness suggestions fixture (Notes opts in through codifications, Flagged through `suggestions: true`, Free text does not opt in). See test/e2e/test-page/suggestion-fixtures.ts."
 sections:
   - section: Coding
     fields:
@@ -12,5 +12,15 @@ sections:
         type: text-field
         span: 12
         schema: styled-text-with-codes
-        options:
-          suggestions: FIXTURE
+        codifications:
+          - FIXTURE
+      - field: Flagged
+        type: text-field
+        span: 12
+        schema: styled-text-with-codes
+        suggestions: true
+        links: true
+      - field: Free text
+        type: text-field
+        span: 12
+        schema: styled-text-with-codes

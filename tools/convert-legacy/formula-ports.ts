@@ -288,13 +288,21 @@ const deferred = (body: string) => lines('return new Promise(async (resolve) => 
  * service at all; the legacy always resolved the string `"N/A"`, which only says
  * anything on a text field.
  *
+ * The 280-day offset is deliberately not a parameter. The legacy formulas of this
+ * family disagreed about it — `Age gestationnel` counted 280 where the days count
+ * and every centile counted 279, so two fields of the same record could report
+ * gestational ages a day apart — and they are reconciled here on 280. Holding it
+ * as one constant is what keeps them reconciled.
+ *
  * Two judgement calls, both narrow:
  * - the legacy fed a null term to `dateToDaysSince1970` and published whatever
  *   came back; here a missing term yields no value;
  * - `consultDate` falls back to today when the host does not supply one, as the
  *   already-ported `39dfbd84`-era formulas do.
  */
-const gestationalAgeFromServices = (offsetInDays: number, whenNoServices: string) =>
+const GESTATIONAL_AGE_OFFSET_IN_DAYS = 280
+
+const gestationalAgeFromServices = (whenNoServices: string) =>
 	lines(
 		AS_DATE,
 		ADD_DAYS,
@@ -308,7 +316,7 @@ const gestationalAgeFromServices = (offsetInDays: number, whenNoServices: string
 		'const term = ovulation ? addDays(ovulation, 266) : corrected ? corrected : lastPeriod ? addDays(lastPeriod, 279) : undefined',
 		'if (!term) { resolve(undefined); return }',
 		'const today = consultDate ? dayNumber(consultDate) : dayNumber(new Date())',
-		`const gaInDays = ${offsetInDays} + today - dayNumber(term)`,
+		`const gaInDays = ${GESTATIONAL_AGE_OFFSET_IN_DAYS} + today - dayNumber(term)`,
 	)
 
 /**
@@ -329,7 +337,7 @@ const percentileFromServices = (c: PortContext, ident: string, desc: string, sca
 			scale === 'mm' ? TO_MM : undefined,
 			`const m = ${c.value(ident)}`,
 			"if (typeof m !== 'number') { resolve(undefined); return }",
-			gestationalAgeFromServices(279, 'undefined'),
+			gestationalAgeFromServices('undefined'),
 			`resolve(percentile('${desc}', gaInDays / 7, ${scale === 'mm' ? 'toMm(m)' : 'm'}))`,
 		),
 	)
@@ -716,7 +724,7 @@ export const FORMULA_PORTS: FormulaPort[] = [
 					PERCENTILE,
 					OBSTETRIC_WEIGHT_VALUE(c),
 					'if (!weight) { resolve(undefined); return }',
-					gestationalAgeFromServices(279, 'undefined'),
+					gestationalAgeFromServices('undefined'),
 					`const perc = percentile('${BIRTH_WEIGHT_CHART}', gaInDays / 7, weight)`,
 					"resolve(perc === undefined ? undefined : { value: interpolate('5,2848;50,3354;95,3860', perc), unit: 'g' })",
 				),
@@ -733,7 +741,7 @@ export const FORMULA_PORTS: FormulaPort[] = [
 					PERCENTILE,
 					OBSTETRIC_WEIGHT_VALUE(c),
 					'if (!weight) { resolve(undefined); return }',
-					gestationalAgeFromServices(279, 'undefined'),
+					gestationalAgeFromServices('undefined'),
 					`resolve(percentile('${BIRTH_WEIGHT_CHART}', gaInDays / 7, weight))`,
 				),
 			),
@@ -741,15 +749,16 @@ export const FORMULA_PORTS: FormulaPort[] = [
 	{
 		hash: '0eb124b5',
 		legacy: 'withServices(p.id,"CD-GYNECOLOGY","duedate",{"direction":"descending","limit":3}, function(services) { if (services.length) { var ddr = null; var dov  …',
-		notes: 'Gestational age in days. The legacy resolved the string "N/A" when the patient had no due-date service; on a number field that stores nothing, so it is left undefined.',
-		build: () => deferred(lines(gestationalAgeFromServices(279, 'undefined'), 'resolve(gaInDays)')),
+		notes:
+			'Gestational age in days. Counted on the reconciled 280-day offset rather than the 279 this formula carried, so it agrees with 7b288ab4 on the sibling form; see the note there. The legacy resolved the string "N/A" when the patient had no due-date service; on a number field that stores nothing, so it is left undefined.',
+		build: () => deferred(lines(gestationalAgeFromServices('undefined'), 'resolve(gaInDays)')),
 	},
 	{
 		hash: '7b288ab4',
 		legacy: 'withServices(p.id,"CD-GYNECOLOGY","duedate",{"direction":"descending","limit":3}, function(services) { if (services.length) { var ddr = null; var dov  …',
 		notes:
 			'Gestational age as "<w> sem. <d> j.". Keeps the legacy 280-day offset, which is one day more than the 279 every other formula in this family uses — including 0eb124b5, the days count on the sibling form — so the two disagree by a day; the discrepancy is the legacy\'s and is preserved rather than reconciled. Being a text field it keeps the literal "N/A" for a patient with no due-date service.',
-		build: () => deferred(lines(gestationalAgeFromServices(280, "'N/A'"), `resolve(${weeksAndDaysExpr('gaInDays')})`)),
+		build: () => deferred(lines(gestationalAgeFromServices("'N/A'"), `resolve(${weeksAndDaysExpr('gaInDays')})`)),
 	},
 	{
 		hash: '356df209',

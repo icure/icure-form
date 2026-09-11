@@ -311,10 +311,10 @@ describe('ported formulas produce the legacy results', () => {
 /**
  * The percentile family, ported with the demo app's host helpers.
  *
- * Every one of these formulas derives the gestational age the same way, and the
- * arithmetic collapses usefully: the term is the last period plus 279 days and
- * the age is `279 + today - term`, so gaInDays is exactly the number of days
- * between the last period and the consultation. `at(weeks)` below uses that.
+ * Every one of these formulas derives the gestational age the same way: the term
+ * is the last period plus 279 days (40 weeks less a day) and the age is
+ * `280 + today - term`. `at(weeks, days)` inverts that, so a test says how
+ * pregnant the patient is and never has to restate the offset.
  */
 describe('the percentile family', () => {
 	const bodyOf = (file: string, field: string) => {
@@ -325,8 +325,8 @@ describe('the percentile family', () => {
 
 	const LAST_PERIOD = { year: 2024, month: 0, day: 1 }
 	const lastPeriodService = [hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })]
-	/** A host whose patient is exactly `weeks` weeks pregnant at the consultation. */
-	const at = (weeks: number, days = 0) => hostWith({ 'CD-GYNECOLOGY|duedate': lastPeriodService }, new Date(LAST_PERIOD.year, LAST_PERIOD.month, LAST_PERIOD.day + weeks * 7 + days))
+	/** A host whose patient is exactly `weeks` weeks and `days` days pregnant at the consultation. */
+	const at = (weeks: number, days = 0) => hostWith({ 'CD-GYNECOLOGY|duedate': lastPeriodService }, new Date(LAST_PERIOD.year, LAST_PERIOD.month, LAST_PERIOD.day + weeks * 7 + days - 1))
 
 	const T2T3 = 'gynecology-fr/bb-t2-t3.json'
 	const LONG = 'gynecology-fr/suivi-obstetrical-long.json'
@@ -378,11 +378,12 @@ describe('the percentile family', () => {
 		expect(await evaluate(body, { 'Périmètre crânien': measure(270.84, 'mm') }, at(30))).toBeCloseTo(50, 6)
 	})
 
-	test('gestational age comes out in days on one form and in words on the other', async () => {
+	test('gestational age comes out in days on one form and in words on the other, and they agree', async () => {
+		// 30 weeks and 3 days is 213 days. The legacy counted 280 days here and 279
+		// there, so these two fields of one record used to disagree by a day; they are
+		// reconciled on 280, and this is the test that would catch them drifting apart.
 		expect(await evaluate(bodyOf(T2T3, 'jours'), {}, at(30, 3))).toEqual(213)
-		// The sibling formula carries a 280-day offset where this one carries 279, so
-		// the two disagree by a day. That is the legacy's discrepancy, kept as it was.
-		expect(await evaluate(bodyOf(LONG, 'Age gestationnel'), {}, at(30, 3))).toEqual('30 sem. 4 j.')
+		expect(await evaluate(bodyOf(LONG, 'Age gestationnel'), {}, at(30, 3))).toEqual('30 sem. 3 j.')
 	})
 
 	test('a patient with no due-date service gets N/A in words and nothing in a number', async () => {
@@ -399,14 +400,15 @@ describe('the percentile family', () => {
 		const corrected = hostService('Terme corrigé', { type: 'datetime', value: 20241001 })
 		const lastPeriod = hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })
 		// The consultation is 210 days after the last period, and the age is
-		// 279 + today - term, so each rule in the cascade gives a different answer.
-		// Ovulation wins: its term is 266 days after 15 Jan, i.e. 13 days later than
-		// the 279 the offset assumes, so 210 - 14 + 13 = 209.
-		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod, ovulation, corrected] }, consultation))).toEqual(209)
+		// 280 + today - term, so each rule in the cascade gives a different answer.
+		// Ovulation wins: its term is 266 days after 15 Jan, i.e. 280 after the last
+		// period, so the age is exactly the 210 days since it.
+		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod, ovulation, corrected] }, consultation))).toEqual(210)
 		// The corrected term is taken as recorded: 274 days after the last period,
-		// five short of 279, so the age reads five days more.
-		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod, corrected] }, consultation))).toEqual(215)
-		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod] }, consultation))).toEqual(210)
+		// six short of 280, so the age reads six days more.
+		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod, corrected] }, consultation))).toEqual(216)
+		// The last period alone: its term is 40 weeks less a day, so one day more.
+		expect(await evaluate(body, {}, hostWith({ 'CD-GYNECOLOGY|duedate': [lastPeriod] }, consultation))).toEqual(211)
 	})
 
 	test('the estimated weight is placed on the birth-weight chart', async () => {

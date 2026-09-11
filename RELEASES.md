@@ -1002,7 +1002,7 @@ See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/b
 - Reorganise demo app, add e2e suite, fix multiple form bugs
 - Update dependencies to resolve Dependabot security alerts
 
-## [MISSING] 3.4.0 (2026-09-11)
+## 3.4.0 (2026-09-11)
 <!-- tag: 3.4.0 | target: e70c170baaf49c059e710fe33531f9714c56e02f | prerelease: false -->
 
 _First 3.x version published to NPM since 3.2.1: it also ships everything listed under [3.3.0](https://github.com/icure/icure-form/blob/cardinal/WHATSNEW.md#330-2026-07-23) in WHATSNEW.md._

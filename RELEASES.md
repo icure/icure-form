@@ -1047,8 +1047,8 @@ Two defects made inserting a palette suggestion impossible in a text field rende
 
 Sample 12 shows both surfaces on an ICD-10 chapter → code → BE-THESAURUS term tree, and the demo's ICD-10 chapter table now matches real code ranges (its regexes used en-dashes, so every code fell into chapter XXII).
 
-## [MISSING] 2.5.0 (2026-09-11)
-<!-- tag: 2.5.0 | target: ece1b7c58b599ea0a198561f361e2da4bc2555c2 | prerelease: false -->
+## [MISSING] 2.4.1 (2026-09-11)
+<!-- tag: 2.4.1 | target: 002eb30c469859603bc8d586faed32c09a2e7e8d | prerelease: false -->
 
 ### `suggestionProvider` and `linksProvider` on `<icure-form>`
 

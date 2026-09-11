@@ -1046,3 +1046,16 @@ Two defects made inserting a palette suggestion impossible in a text field rende
 ### Demo
 
 Sample 12 shows both surfaces on an ICD-10 chapter → code → BE-THESAURUS term tree, and the demo's ICD-10 chapter table now matches real code ranges (its regexes used en-dashes, so every code fell into chapter XXII).
+
+## [MISSING] 2.5.0 (2026-09-11)
+<!-- tag: 2.5.0 | target: ece1b7c58b599ea0a198561f361e2da4bc2555c2 | prerelease: false -->
+
+### `suggestionProvider` and `linksProvider` on `<icure-form>`
+
+The suggestion palette's providers are now host-level properties of `<icure-form>`, like `optionsProvider`, instead of functions the host had to set on each parsed field's `options`. `suggestionProvider(terms, codifications)` receives the field's `codifications`; `linksProvider(sug)` builds the link carried by an inserted suggestion. Fields opt in by declaring `codifications`, or with the new field flags `suggestions: true` (palette) and `links: true` (links); fields declaring neither are unchanged. Functions set on a field's `options` keep precedence, so existing hosts are unaffected. Token and items-list fields now receive both providers too. `codeColorProvider(type, code)` joins them as a host-level property colouring the codes shown in those fields (a field's `options.codeColorProvider` still wins).
+
+```html
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+```
+
+Selecting a suggestion when no links provider applies (or it returns nothing) now inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](https://github.com/icure/icure-form/blob/main/README.md#hierarchical-suggestions).

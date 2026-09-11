@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## 3.4.0 (unreleased)
+## 3.4.0 (2026-09-11)
 
 ### `suggestionProvider` and `linksProvider` on `<icure-form>`
 

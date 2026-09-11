@@ -1001,3 +1001,85 @@ See [Read-only fields and `readOnlyEvent`](https://github.com/icure/icure-form/b
 - Refactor icure-text-field schemas into per-schema SchemaSpec
 - Reorganise demo app, add e2e suite, fix multiple form bugs
 - Update dependencies to resolve Dependabot security alerts
+
+## [MISSING] 3.4.0 (2026-09-11)
+<!-- tag: 3.4.0 | target: e70c170baaf49c059e710fe33531f9714c56e02f | prerelease: false -->
+
+_First 3.x version published to NPM since 3.2.1: it also ships everything listed under [3.3.0](https://github.com/icure/icure-form/blob/cardinal/WHATSNEW.md#330-2026-07-23) in WHATSNEW.md._
+
+### `suggestionProvider` and `linksProvider` on `<icure-form>`
+
+The suggestion palette's providers are host-level properties of `<icure-form>`, like `optionsProvider`, instead of functions the host had to set on each parsed field's `options`. `suggestionProvider(terms, codifications)` receives the field's `codifications`; `linksProvider(sug)` builds the link carried by an inserted suggestion. Fields opt in by declaring `codifications`, or with the field flags `suggestions: true` (palette) and `links: true` (links); fields declaring neither are unchanged. Functions set on a field's `options` keep precedence, so existing hosts are unaffected. Token and items-list fields receive both providers too. `codeColorProvider(type, code)` joins them as a host-level property colouring the codes shown in those fields (a field's `options.codeColorProvider` still wins).
+
+```html
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+```
+
+Selecting a suggestion when no links provider applies (or it returns nothing) inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](https://github.com/icure/icure-form/blob/cardinal/README.md#hierarchical-suggestions).
+
+### Hierarchical suggestions
+
+Suggestion providers can now return a tree. `Suggestion` gains `children` (the node's children, to any depth, returned together with the node) and `matched` (whether the node itself matched the search; absent means matched). The dropdown popover and the text-field suggestion palette render the tree with a chevron in front of each node that has children, open the branches that lead to a match, hide the non-matching siblings behind a "… N more" row, and let the user pick any node — a chapter, a code or a term. Selecting a node stores exactly what a flat selection stores. Providers returning flat lists behave as before.
+
+```json
+[
+	{
+		"id": "ICD|J45|10", "text": "J45 Asthma", "terms": [], "label": { "en": "J45 Asthma" }, "matched": false,
+		"children": [
+			{ "id": "ICD|J45.0|10", "text": "Predominantly allergic asthma", "terms": ["allergic"], "label": { "en": "Predominantly allergic asthma" }, "matched": true },
+			{ "id": "ICD|J45.1|10", "text": "Nonallergic asthma", "terms": [], "label": { "en": "Nonallergic asthma" }, "matched": false }
+		]
+	}
+]
+```
+
+The provider owns matching: it marks what matched, returns roots that have a match in their subtree, and returns every node with its full child list. The library never compares labels to the search. In the palette, Tab focuses the list, ↑/↓ move, → expands, ← collapses or moves to the parent, Enter inserts (or reveals a "N more" row); rows and chevrons are also clickable. See [Hierarchical suggestions](https://github.com/icure/icure-form/blob/cardinal/README.md#hierarchical-suggestions).
+
+### Suggestion palette: hides on blur, ignores already-coded words
+
+Two palette defects surfaced with hierarchical suggestions in the demo. The palette no longer lingers after the editor loses focus: it hides on blur, and a palette re-created when the field rebuilds its editor state (for instance after the blur that saves the value) no longer opens under an unfocused editor. And the palette's query now starts after the last linked (already coded) word of the paragraph instead of spanning the whole paragraph, so typing right after an inserted suggestion searches the new word only — previously `douleur de l'épaule` + `crise` produced the query `l'épaulecrise` and no results.
+
+### Styled text fields keep their marks and record their codes
+
+`styled-text`, `text-with-codes` and `styled-text-with-codes` fields now store their value as inline markdown, so bold, italic and links survive a save — previously they were stored as plain text and an inserted suggestion lost its link as soon as the field lost focus. The value's `codes` now lists the codes named by the text's links (one per `c-<type>://<code>` href entry; version `1` unless the entry carries a full `type|code|version` id), for these schemas and `text-document`. The plain `text` schema is unchanged. Hosts that read the raw `content` string of a styled field will now see markdown — the same markdown the field's parser has always accepted.
+
+### Suggestion palette sizing
+
+The palette is now as wide as its field (never narrower than 300px) and aligned on the field's left edge, instead of a 380px-max box anchored at the caret. It is at least 300px tall, never taller than 80% of the viewport, and scrolls, keeping the focused row in view as ↑/↓ move; rows that do not fit on one line are ellipsed, the full text showing on hover.
+
+### Palette insertion works in form-rendered text fields
+
+Two defects made inserting a palette suggestion impossible in a text field rendered by `<icure-form>`: the renderer bound the field's undefined code/link presentation providers over the component defaults, so the link mark failed to render, and the palette queried the provider before any word was typed. Both are fixed; the text field now falls back to its default providers. A suggestion returned without `terms` now replaces the query terms (an unmatched ancestor replaces the same range as its first matched descendant) instead of computing an empty range.
+
+### Demo
+
+Sample 12 shows both surfaces on an ICD-10 chapter → code → BE-THESAURUS term tree, and the demo's ICD-10 chapter table now matches real code ranges (its regexes used en-dashes, so every code fell into chapter XXII).
+
+### Hide empty fields in read-only forms
+
+Read-only forms can now hide fields, groups, subform instances and (in the `form` renderer) sections that hold no answer, so a review or summary view isn't dominated by blank boxes. Set `hideEmptyFields` on `<icure-form>` alongside `readonly`; it has no effect otherwise, and the `card` renderer ignores it.
+
+```html
+<icure-form .form="${this.form}" .readonly="${true}" .hideEmptyFields="${true}" .formValuesContainer="${this.formValuesContainer}"></icure-form>
+```
+
+A group with no surviving fields disappears together with its title; a subform with no surviving instances disappears together with its heading. In `form:tab`, every tab always stays — an inactive section is never evaluated, so an all-empty active tab simply shows an empty page. See [Read-only review: hiding empty fields](https://github.com/icure/icure-form/blob/cardinal/README.md#read-only-review-hiding-empty-fields).
+
+As part of this work, `<icure-form>` now also re-renders as soon as `readonly` changes on its own. Previously, toggling `readonly` on a mounted form did not refresh the render until some other prop changed too, so hosts worked around it by re-assigning `formValuesContainer` to force propagation; that workaround is no longer needed.
+
+### `alwaysVisible` on fields, groups, subforms and sections
+
+Form authors can exempt a specific field, group, subform or section from `hideEmptyFields` by marking it `alwaysVisible`. An exempt empty field renders as a blank read-only box; an exempt container with no surviving content renders its title only. It never overrides `roles` or computed `hidden`.
+
+```yaml
+- field: allergies
+  type: token-field
+  alwaysVisible: true
+```
+
+On `Field`, `Group` and `Subform`, `alwaysVisible` can also be computed, just like `hidden`:
+
+```yaml
+computedProperties:
+  alwaysVisible: "return self['flagged-for-review']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
+```

@@ -46,6 +46,10 @@ Two palette defects surfaced with hierarchical suggestions in the demo. The pale
 
 `styled-text`, `text-with-codes` and `styled-text-with-codes` fields now store their value as inline markdown, so bold, italic and links survive a save — previously they were stored as plain text and an inserted suggestion lost its link as soon as the field lost focus. The value's `codes` now lists the codes named by the text's links (one per `c-<type>://<code>` href entry; version `1` unless the entry carries a full `type|code|version` id), for these schemas and `text-document`. The plain `text` schema is unchanged. Hosts that read the raw `content` string of a styled field will now see markdown — the same markdown the field's parser has always accepted.
 
+### Suggestion palette sizing
+
+The palette is now as wide as its field (never narrower than 300px) and aligned on the field's left edge, instead of a 380px-max box anchored at the caret. It is at least 300px tall, never taller than 80% of the viewport, and scrolls, keeping the focused row in view as ↑/↓ move; rows that do not fit on one line are ellipsed, the full text showing on hover.
+
 ### Palette insertion works in form-rendered text fields
 
 Two defects made inserting a palette suggestion impossible in a text field rendered by `<icure-form>`: the renderer bound the field's undefined code/link presentation providers over the component defaults, so the link mark failed to render, and the palette queried the provider before any word was typed. Both are fixed; the text field now falls back to its default providers. A suggestion returned without `terms` now replaces the query terms (an unmatched ancestor replaces the same range as its first matched descendant) instead of computing an empty range.

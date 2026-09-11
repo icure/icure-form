@@ -349,13 +349,7 @@ const paletteSnapshot = (index = 0) => {
 		focus: lis.findIndex((li) => li.classList.contains('focused')),
 		rows: lis.map((li) => ({
 			kind: li.classList.contains('more') ? 'more' : 'node',
-			text: (li.classList.contains('more')
-				? li.textContent ?? ''
-				: Array.from(li.childNodes)
-						.filter((n) => n.nodeType === Node.TEXT_NODE)
-						.map((n) => n.textContent ?? '')
-						.join('')
-			).trim(),
+			text: (li.querySelector('.label')?.textContent ?? li.textContent ?? '').trim(),
 			depth: Number(li.style.getPropertyValue('--depth') || 0),
 			expanded: li.querySelector('.chevron')?.getAttribute('aria-expanded') ?? null,
 			hasChevron: !!li.querySelector('.chevron'),
@@ -380,7 +374,42 @@ const editorRect = (index = 0) => {
 	const r = textFieldRoot(index)?.querySelector('.ProseMirror')?.getBoundingClientRect()
 	return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
 }
-Object.assign(window as any, { __dropdownRoot: dropdownRoot, __focusEditor: focusEditor, __palette: paletteSnapshot, __paletteRect: paletteRect, __editorRect: editorRect })
+// Geometry of the n-th text field's palette against its editor and the viewport (sizing tests).
+const paletteGeometry = (index = 0) => {
+	const root = textFieldRoot(index)
+	const palette = root?.querySelector('.suggestion-palette') as HTMLElement | null
+	const editor = root?.querySelector('.ProseMirror') as HTMLElement | null
+	if (!palette || !editor) return null
+	const rect = (el: Element) => {
+		const r = el.getBoundingClientRect()
+		return { left: r.left, top: r.top, width: r.width, height: r.height, bottom: r.bottom }
+	}
+	const labels = Array.from(palette.querySelectorAll('li .label')) as HTMLElement[]
+	const focused = palette.querySelector('li.focused')
+	const pr = palette.getBoundingClientRect()
+	const fr = focused?.getBoundingClientRect()
+	return {
+		palette: rect(palette),
+		editor: rect(editor),
+		viewportHeight: window.innerHeight,
+		viewportWidth: document.documentElement.clientWidth,
+		scrollHeight: palette.scrollHeight,
+		clientHeight: palette.clientHeight,
+		labelCount: labels.length,
+		// Labels whose text is wider than their box, i.e. ellipsed by CSS.
+		overflowingLabels: labels.filter((l) => l.scrollWidth > l.clientWidth + 1).length,
+		labelTextOverflow: labels[0] ? getComputedStyle(labels[0]).textOverflow : null,
+		focusedInView: fr ? fr.top >= pr.top - 1 && fr.bottom <= pr.bottom + 1 : null,
+	}
+}
+Object.assign(window as any, {
+	__dropdownRoot: dropdownRoot,
+	__focusEditor: focusEditor,
+	__palette: paletteSnapshot,
+	__paletteRect: paletteRect,
+	__editorRect: editorRect,
+	__paletteGeometry: paletteGeometry,
+})
 ;(window as any).getFormValues = () => {
 	const fvc = (window as any).__currentFvc as BridgedFormValuesContainer | undefined
 	if (!fvc) return null

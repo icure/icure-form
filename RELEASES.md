@@ -1018,7 +1018,7 @@ computedProperties:
   alwaysVisible: "return self['flagged-for-review']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
 ```
 
-## [MISSING] 2.4.0 (2026-09-08)
+## 2.4.0 (2026-09-08)
 <!-- tag: 2.4.0 | target: 2337728940bfd17ef92b0bb739ea36c2c31e98b1 | prerelease: false -->
 
 ### Hierarchical suggestions

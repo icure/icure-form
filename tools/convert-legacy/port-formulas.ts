@@ -51,6 +51,8 @@ type CuratedForm = {
 	/** Normalised field name -> the field name as written in the form. */
 	fieldsByNormalisedName: Map<string, string>
 	fieldTypes: Map<string, string | undefined>
+	/** Field name -> the ids of its options, for the fields that have any. */
+	fieldOptions: Map<string, string[]>
 }
 
 /** Field names, legacy identifiers and formula identifiers all collapse to this. */
@@ -231,15 +233,17 @@ const readCuratedForms = (curatedDir: string): CuratedForm[] =>
 			const json = JSON.parse(fs.readFileSync(file, 'utf8'))
 			const fieldsByNormalisedName = new Map<string, string>()
 			const fieldTypes = new Map<string, string | undefined>()
+			const fieldOptions = new Map<string, string[]>()
 			walk(json, (node) => {
 				if (node.clazz === 'field' && typeof node.field === 'string') {
 					// First spelling wins, so a form holding both "Remarques" and
 					// "remarques" resolves deterministically.
 					if (!fieldsByNormalisedName.has(normalise(node.field))) fieldsByNormalisedName.set(normalise(node.field), node.field)
 					fieldTypes.set(node.field, node.type)
+					if (node.options && typeof node.options === 'object') fieldOptions.set(node.field, Object.keys(node.options))
 				}
 			})
-			return { file: path.relative(curatedDir, file), id: json.id, title: json.form, json, fieldsByNormalisedName, fieldTypes }
+			return { file: path.relative(curatedDir, file), id: json.id, title: json.form, json, fieldsByNormalisedName, fieldTypes, fieldOptions }
 		})
 
 const contextFor = (form: CuratedForm): PortContext => {
@@ -249,7 +253,12 @@ const contextFor = (form: CuratedForm): PortContext => {
 		return resolved
 	}
 	const item = (legacyIdent: string) => `self[${JSON.stringify(name(legacyIdent))}]?.[0]`
-	return { name, item, value: (legacyIdent) => `parseContent(${item(legacyIdent)}?.content)` }
+	const options = (legacyIdent: string): string[] => {
+		const found = form.fieldOptions.get(name(legacyIdent))
+		if (!found?.length) throw new Error(`${form.file} › ${name(legacyIdent)} has no options to tick`)
+		return found
+	}
+	return { name, item, options, value: (legacyIdent) => `parseContent(${item(legacyIdent)}?.content)` }
 }
 
 /** Sets `computedProperties.value` on a field, returning the previous body if any. */

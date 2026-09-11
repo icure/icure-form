@@ -120,16 +120,28 @@ const plausible = (type?: string): FieldValue[] => {
 }
 
 /**
- * A patient 30 weeks into a pregnancy, weighing 62 kg before it, seen today — enough
- * for every host-reading body to produce a value.
+ * The obstetric formulas all derive the gestational age the same way: the term is
+ * the last period plus 279 days (40 weeks less a day) and the age is
+ * `280 + today - term`. `at(weeks, days)` inverts that, so a test says how pregnant
+ * the patient is and never has to restate the offset.
+ */
+const LAST_PERIOD = { year: 2024, month: 0, day: 1 }
+const lastPeriodService = [hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })]
+const at = (weeks: number, days = 0) => hostWith({ 'CD-GYNECOLOGY|duedate': lastPeriodService }, new Date(LAST_PERIOD.year, LAST_PERIOD.month, LAST_PERIOD.day + weeks * 7 + days - 1))
+
+/**
+ * A patient ten weeks into a pregnancy, weighing 62 kg before it, with nothing yet
+ * screened — early enough that every host-reading body has something to say,
+ * including the screening boxes, whose windows close at twenty and twenty-two
+ * weeks.
  */
 const OBSTETRIC_HOST: Host = {
 	services: async (filter?: any) => {
-		if (filter?.code === 'duedate') return [hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })]
+		if (filter?.code === 'duedate') return lastPeriodService
 		if (filter?.code === 'weightbeforepregnancy') return [hostService('Poids avant grossesse', { type: 'measure', value: 62, unit: 'kg' })]
 		return []
 	},
-	consultDate: new Date(2024, 7, 1),
+	consultDate: new Date(LAST_PERIOD.year, LAST_PERIOD.month, LAST_PERIOD.day + 10 * 7 - 1),
 }
 
 describe('every ported formula runs', () => {
@@ -311,10 +323,7 @@ describe('ported formulas produce the legacy results', () => {
 /**
  * The percentile family, ported with the demo app's host helpers.
  *
- * Every one of these formulas derives the gestational age the same way: the term
- * is the last period plus 279 days (40 weeks less a day) and the age is
- * `280 + today - term`. `at(weeks, days)` inverts that, so a test says how
- * pregnant the patient is and never has to restate the offset.
+ * The gestational age they share comes from `at(weeks, days)` above.
  */
 describe('the percentile family', () => {
 	const bodyOf = (file: string, field: string) => {
@@ -322,11 +331,6 @@ describe('the percentile family', () => {
 		if (!found) throw new Error(`${file} has no computed field '${field}'`)
 		return found.body
 	}
-
-	const LAST_PERIOD = { year: 2024, month: 0, day: 1 }
-	const lastPeriodService = [hostService('Date des dernières règles', { type: 'datetime', value: 20240101 })]
-	/** A host whose patient is exactly `weeks` weeks and `days` days pregnant at the consultation. */
-	const at = (weeks: number, days = 0) => hostWith({ 'CD-GYNECOLOGY|duedate': lastPeriodService }, new Date(LAST_PERIOD.year, LAST_PERIOD.month, LAST_PERIOD.day + weeks * 7 + days - 1))
 
 	const T2T3 = 'gynecology-fr/bb-t2-t3.json'
 	const LONG = 'gynecology-fr/suivi-obstetrical-long.json'
@@ -445,5 +449,75 @@ describe('the percentile family', () => {
 		// The CRL table maps millimetres straight to days: 54 mm sits on the 86-day
 		// point, so the term is 280 - 86 = 194 days after the consultation.
 		expect(await evaluate(bodyOf('gynecology-fr/bb-t1.json', 'Terme CRL'), { CRL: measure(54, 'mm') }, { consultDate: consultation })).toEqual(new Date(2024, 7, 1 + 194))
+	})
+})
+
+/**
+ * The antenatal screening checkboxes on grossesse.json. Each answers "does this
+ * test still need doing?", and ticks its own single option when it does. What is
+ * worth pinning here is the shape: the option id has to appear as a key of the
+ * compound content, or the box renders empty however cleanly the value stored.
+ * `computed-value-types.spec.ts` covers that end of it against the real bridge.
+ */
+describe('the antenatal screening checkboxes', () => {
+	const GROSSESSE = 'gynecology-fr/grossesse.json'
+	const bodyOf = (field: string) => {
+		const found = computedFields.find((computed) => computed.file === GROSSESSE && computed.field === field)
+		if (!found) throw new Error(`${GROSSESSE} has no computed field '${field}'`)
+		return found.body
+	}
+	/** The option ids a returned value would tick. */
+	const ticks = (value: unknown): string[] => {
+		const compound = (value as any)?.content?.['*']
+		return compound?.type === 'compound' ? Object.keys(compound.value) : []
+	}
+	const noServices = hostWith({}, new Date(2024, 7, 1))
+
+	it('ticks the blood group box only while no blood group is on record', async () => {
+		const body = bodyOf('Groupe ABO & Rhésus')
+		expect(ticks(await evaluate(body, {}, noServices))).toEqual(['Groupe ABO & Rhésus'])
+		expect(await evaluate(body, {}, hostWith({ 'ICURE|GS': [hostService('Groupe', { type: 'string', value: 'O+' })] }))).toBeUndefined()
+	})
+
+	it('ticks the Rhesus subgroup box on the same rule, under its own option id', async () => {
+		const body = bodyOf('Sous groupes Rhésus')
+		// The option id is an abbreviation, not the field name.
+		expect(ticks(await evaluate(body, {}, noServices))).toEqual(['Ss gr. Rh'])
+		expect(await evaluate(body, {}, hostWith({ 'ICURE|RH': [hostService('Rh', { type: 'string', value: 'ccD.ee' })] }))).toBeUndefined()
+	})
+
+	it('unticks a serology only when the recorded result reads protégée', async () => {
+		const body = bodyOf('Sérologie Rubéole (Ig G)')
+		const result = (value: string) => hostWith({ 'ICURE|RUBEOLE': [hostService('Rubéole', { type: 'string', value })] })
+		expect(await evaluate(body, {}, result('protégée'))).toBeUndefined()
+		// Anything else leaves the test on the list, as the legacy's exact match did.
+		expect(ticks(await evaluate(body, {}, result('non protégée')))).toEqual(['Rubéole (Ig G)'])
+		expect(ticks(await evaluate(body, {}, result('douteux')))).toEqual(['Rubéole (Ig G)'])
+		expect(ticks(await evaluate(body, {}, noServices))).toEqual(['Rubéole (Ig G)'])
+	})
+
+	it('applies the same rule to toxoplasmosis, under its own option id', async () => {
+		const body = bodyOf('Sérologie Toxoplasmose (Ig M & Ig G)')
+		expect(await evaluate(body, {}, hostWith({ 'ICURE|TOXO': [hostService('Toxo', { type: 'string', value: 'protégée' })] }))).toBeUndefined()
+		expect(ticks(await evaluate(body, {}, noServices))).toEqual(['Toxo (Ig M&G)'])
+	})
+
+	it('closes the CMV window at 20 weeks and the thyroid window at 22', async () => {
+		const cmv = bodyOf('Sérologie CMV')
+		const thyroid = bodyOf(' T4 & TSH')
+		// 140 days is 20 weeks exactly, and the test is `gaInDays < 140`.
+		expect(ticks(await evaluate(cmv, {}, at(19, 6)))).toEqual(['CMV'])
+		expect(await evaluate(cmv, {}, at(20, 0))).toBeUndefined()
+		// 154 days is 22 weeks, so the thyroid box is still ticked when CMV has closed.
+		expect(ticks(await evaluate(thyroid, {}, at(20, 0)))).toEqual([' T4 & TSH'])
+		expect(ticks(await evaluate(thyroid, {}, at(21, 6)))).toEqual([' T4 & TSH'])
+		expect(await evaluate(thyroid, {}, at(22, 0))).toBeUndefined()
+	})
+
+	it('keeps both windows open when the pregnancy has no recorded due date', async () => {
+		// Not knowing how far along she is is not a reason to drop the test, which is
+		// what the legacy's resolve(true) said.
+		expect(ticks(await evaluate(bodyOf('Sérologie CMV'), {}, noServices))).toEqual(['CMV'])
+		expect(ticks(await evaluate(bodyOf(' T4 & TSH'), {}, noServices))).toEqual([' T4 & TSH'])
 	})
 })

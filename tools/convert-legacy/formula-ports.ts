@@ -39,6 +39,8 @@ export type PortContext = {
 	item: (legacyIdent: string) => string
 	/** `parseContent(self['<field>']?.[0]?.content)` — its parsed primitive. */
 	value: (legacyIdent: string) => string
+	/** The option ids of a field that has them, in the order the form declares them. */
+	options: (legacyIdent: string) => string[]
 }
 
 export type FormulaPort = {
@@ -345,6 +347,68 @@ const percentileFromServices = (c: PortContext, ident: string, desc: string, sca
 /** Weight for gestational age in grams, 5th/50th/95th centile — used by `06518025` and `3dbc4c2f`. */
 const BIRTH_WEIGHT_CHART =
 	'5>16,120;17,150;18,185;19,226;20,275;21,331;22,395;23,468;24,549;25,640;26,740;27,850;28,968;29,1095;30,1231;31,1374;32,1524;33,1680;34,1840;35,2005;36,2172;37,2341;38,2511;39,2680;40,2848;41,3013;42,3176|50>16,142;17,176;18,218;19,267;20,324;21,390;22,465;23,551;24,647;25,754;26,872;27,1001;28,1140;29,1290;30,1450;31,1618;32,1795;33,1978;34,2168;35,2361;36,2558;37,2757;38,2957;39,3156;40,3354;41,3549;42,3741|95>16,163;17,203;18,251;19,307;20,373;21,448;22,535;23,634;24,744;25,867;26,1003;27,1152;28,1312;29,1485;30,1669;31,1863;32,2066;33,2277;34,2495;35,2718;36,2945;37,3174;38,3403;39,3633;40,3860;41,4085;42,4305'
+
+/**
+ * The `FieldValue` that ticks a single-option checkbox.
+ *
+ * A bare boolean will not do here, however faithful it looks. `convertRawValue`
+ * turns one into `{ type: 'boolean' }`, and `icure-button-group` ticks an option
+ * only when it finds the option id among the compound content's keys — so a
+ * boolean stores perfectly cleanly and renders as an empty box, for either
+ * answer. Returning a whole `FieldValue` is the supported route: `convertRawValue`
+ * passes an object carrying `content` through untouched, and the bridge then moves
+ * `'*'` to the form language, which is the key the button group reads.
+ *
+ * No `codes`, deliberately, even though the button group would also tick from
+ * them: a code id has to be a normalisable `TYPE|CODE|VERSION` stub, and these
+ * option ids are plain labels like `Toxo (Ig M&G)`. Passing one throws in
+ * `normalizeCode`, and the throw is caught upstream of the write, so the field
+ * silently stores nothing at all — strictly worse than the boolean it replaced.
+ */
+const tickedValue = (c: PortContext, ident: string) => `{ content: { '*': { type: 'compound', value: { [${JSON.stringify(c.options(ident)[0])}]: { type: 'boolean', value: true } } } } }`
+
+/**
+ * Resolves the ticked checkbox when `condition` holds and nothing otherwise —
+ * the shape of all six antenatal screening boxes on
+ * `gynecology-fr/grossesse.json`, whose legacy formulas resolved `true` when the
+ * test still needs doing and `false` when it does not.
+ *
+ * The false branch resolves `undefined` rather than an unticked compound: the
+ * bridge stores nothing for a falsy value in any case, and an empty box is what
+ * "no longer needed" should look like.
+ */
+const resolveTickWhen = (c: PortContext, ident: string, condition: string) => lines(`if (!(${condition})) { resolve(undefined); return }`, `resolve(${tickedValue(c, ident)})`)
+
+/**
+ * "This screening has not been recorded yet" — ticked when the patient has no
+ * service under the given code at all. The legacy asked for one service and only
+ * looked at whether it came back.
+ */
+const screeningMissing = (c: PortContext, ident: string, codeType: string, code: string) =>
+	deferred(lines(`const recorded = await services({ codeType: '${codeType}', code: '${code}', limit: 1 })`, resolveTickWhen(c, ident, '!recorded.length')))
+
+/**
+ * "This serology has not shown immunity yet" — ticked unless a recorded service
+ * reads `protégée`. The legacy looped over the services, but asked for a single
+ * one, so the loop could only ever see it; the meaning is the same either way.
+ */
+const serologyUnprotected = (c: PortContext, ident: string, code: string) =>
+	deferred(
+		lines(
+			`const recorded = await services({ codeType: 'ICURE', code: '${code}', limit: 1 })`,
+			"const immune = recorded.some((svc) => parseContent(svc.content) === 'protégée')",
+			resolveTickWhen(c, ident, '!immune'),
+		),
+	)
+
+/**
+ * "The window for this screening is still open" — ticked below `limitInDays` of
+ * gestational age, and ticked when the patient has no due-date service at all, as
+ * the legacy's `resolve(true)` did: not knowing how far along she is is not a
+ * reason to drop the test from the list.
+ */
+const screeningWindowOpen = (c: PortContext, ident: string, limitInDays: number) =>
+	deferred(lines(gestationalAgeFromServices(tickedValue(c, ident)), resolveTickWhen(c, ident, `gaInDays < ${limitInDays}`)))
 
 const CRL_TABLE =
 	'2,42;4,45;6,48;8,51;10,53;12,55;14,58;16,59;18,61;20,63;22,65;24,66;26,68;28,69;30,71;32,72;34,74;36,75;38,76;40,77;42,79;44,80;46,81;48,82;50,83;52,85;54,86;56,87;58,88;60,89;62,90;64,91;66,92;68,93;70,94;72,95;74,96;76,97;78,98'
@@ -814,6 +878,44 @@ export const FORMULA_PORTS: FormulaPort[] = [
 				`const days = Math.round(interpolate('${CRL_TABLE}', toMm(crl)))`,
 				'return addDays(consultDate ? consultDate : new Date(), 280 - days)',
 			),
+	},
+	{
+		hash: '897e7228',
+		legacy: 'withServices(p.id,"ICURE","GS",{"direction":"descending","limit":1}, function(services) { if (services.length) { resolve(false); } else { resolve(true …',
+		notes: 'Ticks the blood-group box until a blood group has been recorded for the patient. Needs the host `services`.',
+		build: (c) => screeningMissing(c, 'GroupeABORhesus', 'ICURE', 'GS'),
+	},
+	{
+		hash: '1877e4cd',
+		legacy: 'withServices(p.id,"ICURE","RH",{"direction":"descending","limit":1}, function(services) { if (services.length) { resolve(false); } else { resolve(true …',
+		notes: 'Ticks the Rhesus subgroup box until a subgroup has been recorded. Same shape as 897e7228, different code.',
+		build: (c) => screeningMissing(c, 'SousgroupesRhesus', 'ICURE', 'RH'),
+	},
+	{
+		hash: '526ce117',
+		legacy: 'withServices(p.id,"ICURE","TOXO",{"direction":"descending","limit":1}, function(services) { if (services.length) { var i; for(i=0;i<services.length;i+ …',
+		notes:
+			'Ticks the toxoplasmosis box until a recorded serology reads ‘protégée’. The comparison is against that exact string, as the legacy did; anything else, including an absent result, leaves the test on the list.',
+		build: (c) => serologyUnprotected(c, 'SerologieToxoplasmoseIgMIgG', 'TOXO'),
+	},
+	{
+		hash: '3bd3cac4',
+		legacy: 'withServices(p.id,"ICURE","RUBEOLE",{"direction":"descending","limit":1}, function(services) { if (services.length) { var i; for(i=0;i<services.length …',
+		notes: 'Ticks the rubella box until a recorded serology reads ‘protégée’. Same shape as 526ce117, different code.',
+		build: (c) => serologyUnprotected(c, 'SerologieRubeoleIgG', 'RUBEOLE'),
+	},
+	{
+		hash: '9336362b',
+		legacy: 'withServices(p.id,"CD-GYNECOLOGY","duedate",{"direction":"descending","limit":3}, function(services) { if (services.length) { var ddr = null; var dov  …',
+		notes:
+			"Ticks the CMV box while the pregnancy is under 140 days — 20 weeks. The gestational age comes from the reconciled preamble rather than this formula's own basis, which took the term as a full 40 weeks after the last period and counted 279 from it; that read two days lower than the rest of the corpus, so the window now closes two days earlier than the legacy closed it. Ticked when no due-date service exists at all, as the legacy did.",
+		build: (c) => screeningWindowOpen(c, 'SerologieCMV', 140),
+	},
+	{
+		hash: '514075c0',
+		legacy: 'withServices(p.id,"CD-GYNECOLOGY","duedate",{"direction":"descending","limit":3}, function(services) { if (services.length) { var ddr = null; var dov  …',
+		notes: 'Ticks the thyroid box while the pregnancy is under 154 days — 22 weeks. Same two-day shift as 9336362b, and the same reason; see the note there.',
+		build: (c) => screeningWindowOpen(c, 'T4TSH', 154),
 	},
 ]
 

@@ -78,12 +78,12 @@ expression or a care path, neither of which anything here can reach.
 
 ### The ported formulas that need a host
 
-Fifteen of the translations — the obstetric percentile family, the gestational
-ages and the projected birth weights — reach outside their own form, for the
-patient's earlier services and for the date of the consultation. They read them
-through two names the form itself does not provide, `services(filter)` and
-`consultDate`, which reach the sandbox through `<icure-form>`'s
-`interpreterContext`.
+Twenty-one of the translations — the obstetric percentile family, the gestational
+ages, the projected birth weights and the antenatal screening checkboxes — reach
+outside their own form, for the patient's earlier services and for the date of
+the consultation. They read them through two names the form itself does not
+provide, `services(filter)` and `consultDate`, which reach the sandbox through
+`<icure-form>`'s `interpreterContext`.
 
 **Only the demo app provides them.** `app/formula-host.ts` answers them out of
 the in-memory contacts in `app/decorated-form.ts`; there is no implementation in

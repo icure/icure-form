@@ -761,10 +761,15 @@ span {
 .suggestion-palette {
 	position: absolute;
 	z-index: 20;
-	max-width: 380px;
+	// Sized by the palette itself: the field's width, at least 300px wide and 300px tall. Never taller than 80% of the
+	// viewport; scrolls.
+	box-sizing: border-box;
+	min-width: 300px;
+	min-height: 300px;
+	max-height: 80vh;
+	overflow-x: hidden;
+	overflow-y: auto;
 	font-size: 11px;
-	overflow: hidden;
-	text-overflow: ellipsis;
 	padding: 4px;
 	border: none;
 	border-radius: 8px;
@@ -798,7 +803,9 @@ span {
 			box-sizing: border-box;
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
+			justify-content: flex-start;
+			// Hierarchical suggestions: rows below the root are indented by depth (`--depth` is only set on tree rows).
+			padding-left: calc(8px + var(--depth, 0) * 12px);
 			border-radius: 4px;
 			color: rgb(39, 71, 104);
 
@@ -819,6 +826,49 @@ span {
 				path {
 					fill: rgb(128, 154, 180);
 				}
+			}
+
+			// The row's text: one line, ellipsed when it overflows the palette.
+			.label {
+				flex: 1 1 auto;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.icn-container {
+				flex: 0 0 auto;
+				margin-left: auto;
+				display: flex;
+				align-items: center;
+			}
+
+			// Binary chevron in front of a node that has children.
+			.chevron {
+				display: inline-flex;
+				flex: 0 0 auto;
+				margin-right: 4px;
+				cursor: pointer;
+
+				svg {
+					transition: transform 0.1s ease-in-out;
+
+					path {
+						fill: none;
+						stroke: rgb(128, 154, 180);
+					}
+				}
+
+				&[aria-expanded='true'] svg {
+					transform: rotate(90deg);
+				}
+			}
+
+			// "N more" row: the siblings hidden by the match markers.
+			&.more {
+				font-style: italic;
+				color: rgb(128, 154, 180);
 			}
 		}
 	}
@@ -975,6 +1025,57 @@ app-date-picker {
 		color: #656565;
 		background-color: #ededed;
 	}
+}
+
+// Hierarchical suggestions in the options popover: one row per node, indented by depth, a binary chevron in
+// front of nodes that have children (a spacer otherwise), and an "N more" row for the siblings hidden by the
+// match markers. Flat options never get the wrapper and keep the plain `.option` markup.
+.option-row {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	padding-left: calc(var(--depth, 0) * 16px);
+
+	.option {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
+.chevron {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #545454;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+
+	svg {
+		width: 12px;
+		height: 12px;
+		transition: transform 0.1s ease-in-out;
+	}
+
+	&[aria-expanded='true'] svg {
+		transform: rotate(90deg);
+	}
+
+	&--spacer {
+		cursor: default;
+	}
+}
+
+.option--more {
+	font-style: italic;
+	color: #8a8a8a;
+	padding-left: calc(var(--depth, 0) * 16px + 28px);
 }
 
 .select-arrow {

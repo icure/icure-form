@@ -97,7 +97,9 @@ The Field class represents a generic field within a form. It is designed to be e
 - span: number - Optional property indicating the column span of the field (out of a 24-column grid). Defaults to 6.
 - rowSpan: number - Optional property indicating the row span of the field. Defaults to 1.
 - tags: string[] - Optional tags associated with the field.
-- codifications: string[] - Optional codifications for the field.
+- codifications: string[] - Optional codifications for the field. On a text, token or items-list field they also opt the field in to the host `suggestionProvider` / `linksProvider` (see [Hierarchical suggestions](#hierarchical-suggestions)).
+- suggestions: boolean - Optional. Opts a text, token or items-list field in to the host `suggestionProvider` without declaring `codifications`.
+- links: boolean - Optional. Opts a text, token or items-list field in to the host `linksProvider` without declaring `codifications`.
 - readonly: boolean - Optional property indicating if the field is read-only.
 - options: Record<string,unknown> - Optional field options.
 - labels: Labels - Optional labels for the field. Labels is `Partial<Record<'top' | 'left' | 'right' | 'bottom' | 'float' | 'add' | 'remove', string>>`.
@@ -317,11 +319,86 @@ The icure-form component accepts the following properties:
 - formValuesContainer: FormValuesContainer<FieldValue, FieldMetadata> - the form values container that contains the values of the form
 - language: string - the language in which the form should be displayed
 - languages: { [iso: string]: string } - a map of ISO language codes to display names for multi-language support
-- optionsProvider: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]> - an optional provider that provides options for some fields of the form (like dropdown fields)
+- optionsProvider: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]> - an optional provider that provides options for some fields of the form (like dropdown fields). May return a tree: see [Hierarchical suggestions](#hierarchical-suggestions).
 - translationProvider: (language: string, text: string) => string - an optional provider that provides translations for the form
-- ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> - an optional provider that provides owner suggestions
+- ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> - an optional provider that provides owner suggestions. Always read as a flat list (`children` is ignored).
+- suggestionProvider: (terms: string[], codifications: string[]) => Promise<Suggestion[]> - an optional provider feeding the suggestion palette of text, token and items-list fields that opt in — fields declaring `codifications`, or `suggestions: true`. Receives the field's `codifications`. May return a tree: see [Hierarchical suggestions](#hierarchical-suggestions).
+- linksProvider: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined> - an optional builder for the link carried by an inserted suggestion (and for fields with `links: true`). Applies to the same fields as `suggestionProvider`, plus fields declaring `links: true`.
+- codeColorProvider: (type: string, code: string) => string - an optional colour category for the codes shown in text, token and items-list fields (e.g. the ICD chapter numeral). Applies to every such field; a `codeColorProvider` function on a field's `options` takes precedence.
 - revisionsFilter: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[] - an optional callback to customize which revisions of a field value are visible. By default, revisions are filtered by matching field tags or label (see `getRevisionsFilter` in `src/utils/fields-values-provider.ts`). When provided, this callback replaces the default logic, receiving the field definition, the value id, and its full version history, and must return the list of revision strings to display.
 - actionListener: (event: string, payload: unknown, domEvent?: Event) => void - an optional listener for action/button events. The third argument is the originating DOM event (e.g. the `MouseEvent` of the click that triggered it), forwarded so the handler can read modifier keys, cursor position, or call `preventDefault()`. See [Action events and delegated edition](#action-events-and-delegated-edition).
+
+### Hierarchical suggestions
+
+Two surfaces propose codes to the user: the **dropdown popover** (fed by `optionsProvider`) and the **suggestion palette** that opens under a text or token field while typing (fed by the field's `suggestionProvider`). Both accept a **tree** instead of a flat list. A `Suggestion` carries two optional properties for this:
+
+```ts
+type Suggestion = {
+	id: string // `type|code|version`
+	code?: string
+	text: string // what the palette inserts
+	terms: string[] // the query terms this suggestion answers (the palette replaces their typed occurrence)
+	label: { [lng: string]: string }
+	children?: Suggestion[] // the node's children, to any depth, returned together with the node
+	matched?: boolean // whether this node itself matched the search; absent means matched
+}
+```
+
+The provider owns matching. It sets `matched` on every node it returns and the library never compares labels to the search terms, so accent folding, prefix search, synonyms and code-number lookup all stay on the host side. Return a root only when something in its subtree matched, and return the **full** child list of every node you return: the non-matching children are what the "… N more" row hides. A node returned with `matched: false` is context for a matching descendant. Providers that keep returning flat lists are unaffected.
+
+Both surfaces apply the same rules:
+
+- A node with a matching descendant opens automatically and shows only the children whose subtree matched, followed by a **"… N more"** row. Activating that row reveals the hidden children (collapsed) until the search changes.
+- A node that matched by its own title and has no matching descendant stays **collapsed**; expanding it shows all its children.
+- The chevron in front of a node toggles it; manual toggles and reveals are forgotten when the search changes.
+- Opening a dropdown with an empty search box lists the roots collapsed; markers are ignored.
+- A dropdown field's `sortOptions` apply within each sibling group, at every level.
+- Selecting a node — root, intermediate or leaf — does exactly what a flat selection does. The dropdown stores that node's code alone (no ancestor path, no children); the palette replaces the typed words with the node's `text`, linked through the field's `linksProvider`. A node without `terms` (typically an unmatched ancestor) replaces the same range as its first matched descendant.
+
+Palette keys: **Tab** focuses the list (or inserts the focused row once the list is focused), **↑/↓** move across the visible rows, **→** expands a collapsed node, **←** collapses an expanded node or moves to the parent, **Enter** inserts (or reveals, on a "N more" row). Rows, chevrons and "N more" rows are also clickable. The palette is as wide as its field (at least 300px wide, and at least 300px tall), never taller than 80% of the viewport (it scrolls, keeping the focused row in view), and ellipses rows that do not fit on one line.
+
+The palette providers are set once on `<icure-form>`, like `optionsProvider`, and reach the fields that opt in:
+
+```html
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+```
+
+```yaml
+- field: Diagnosis note
+  type: text-field
+  schema: styled-text-with-codes
+  codifications: [ICD]      # opts in; the provider receives ['ICD']
+- field: Free note
+  type: text-field
+  suggestions: true         # opts in without a codification; the provider receives []
+  links: true               # opts in to the links provider only
+```
+
+A field opts in to `suggestionProvider` by declaring `codifications` or `suggestions: true`; it opts in to `linksProvider` by any of those or `links: true`. Fields that declare neither get no palette, as before. A `suggestionProvider` / `linksProvider` function set on a field's `options` (the original wiring) still takes precedence over the host-level ones. When no links provider applies, or it returns nothing, the selected suggestion is inserted as plain text.
+
+Example result for the query `allergic`, two levels deep:
+
+```json
+[
+	{
+		"id": "ICD|J45|10",
+		"code": "J45",
+		"text": "J45 Asthma",
+		"terms": [],
+		"label": { "en": "J45 Asthma" },
+		"matched": false,
+		"children": [
+			{ "id": "ICD|J45.0|10", "code": "J45.0", "text": "Predominantly allergic asthma", "terms": ["allergic"], "label": { "en": "Predominantly allergic asthma" }, "matched": true },
+			{ "id": "ICD|J45.1|10", "code": "J45.1", "text": "Nonallergic asthma", "terms": [], "label": { "en": "Nonallergic asthma" }, "matched": false },
+			{ "id": "ICD|J45.9|10", "code": "J45.9", "text": "Asthma, unspecified", "terms": [], "label": { "en": "Asthma, unspecified" }, "matched": false }
+		]
+	}
+]
+```
+
+This renders as *J45 Asthma* expanded over *Predominantly allergic asthma* and "… 2 more". Inline `codifications` declared in the form stay flat. Sample 12 of the demo app shows both surfaces on an ICD-10 chapter → code → thesaurus-term tree.
+
+What an inserted suggestion leaves in the value: the field's `content` is stored as inline markdown for the `styled-text`, `text-with-codes` and `styled-text-with-codes` schemas (`[text](href "title")`, `**bold**`, `*italic*` — what the field's parser already reads), so links and styling survive a save and re-render; and the value's `codes` lists the codes named by the links, one per `c-<type>://<code>` entry of a link's `href` (`<code>` may also be a full `type|code|version` id; the version defaults to `1`). `text-document` behaves the same for codes; the plain `text` schema stays plain.
 
 ### Themes
 

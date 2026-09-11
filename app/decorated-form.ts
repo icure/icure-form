@@ -8,6 +8,7 @@ import { makeFormValuesContainer } from './form-values-container'
 import { makeInterpreter } from '../src/utils/interpreter'
 import MiniSearch, { SearchResult } from 'minisearch'
 import { codes, icd10, icpc2 } from './codes'
+import { buildIcdTree, IcdSuggestion, markIcdTree, normaliseTerm } from './icd-tree'
 import { Field, FieldMetadata, Form, Group, Subform, Validator } from '../src/components/model'
 import { CodeStub, DecryptedContact, DecryptedContent, DecryptedForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
 import { Suggestion, Version } from '../src/generic'
@@ -144,6 +145,9 @@ export class DecoratedForm extends LitElement {
 	override set role(_value: string | null) {
 		// derived from `renderer`; explicit sets are intentionally ignored.
 	}
+
+	// Hierarchical suggestions sample: ICD chapter → code → thesaurus term, built once from the thesaurus links.
+	private icdTree: IcdSuggestion[] = []
 
 	private undoStack: BridgedFormValuesContainer[] = []
 	private redoStack: BridgedFormValuesContainer[] = []
@@ -410,7 +414,9 @@ export class DecoratedForm extends LitElement {
 			}, 10000)
 		})
 		this.miniSearch.addAll(codes.map((x) => ({ id: x.id, code: x.code, text: x.label?.fr, links: x.links })))
+		this.icdTree = buildIcdTree(codes, icd10)
 	}
+
 
 	codeColorProvider(type: string, code: string) {
 		if (!code) {
@@ -419,13 +425,22 @@ export class DecoratedForm extends LitElement {
 		return type === 'ICD' ? (icd10.find((x) => code.match(x[1])) || [])[0] || 'XXII' : icpc2[code.substring(0, 1)] || 'XXII'
 	}
 
-	async suggestionProvider(terms: string[]) {
-		let normalisedTerms = terms.map((x) =>
-			x
-				.normalize('NFD')
-				.replace(/[\u0300-\u036f]/g, '')
-				.toLowerCase(),
-		)
+	/**
+	 * Host-level text suggestions, bound on <icure-form>: fields opting in with `codifications: [ICD]` get the ICD tree
+	 * marked for the query (terms by MiniSearch hit, codes by number prefix), followed by the thesaurus hits that carry
+	 * no ICD link as flat roots; any other opted-in field gets the flat thesaurus hits.
+	 */
+	async suggestionProvider(terms: string[], codifications: string[] = []) {
+		const hits = this.searchThesaurus(terms)
+		if (!this.icdTree.length || !codifications.includes('ICD')) return hits
+		const tree = markIcdTree(this.icdTree, terms, new Set(hits.map((h) => h.id)))
+		const unlinked = hits.filter((h) => !((h.links as string[] | undefined) ?? []).some((l) => l.startsWith('ICD|')))
+		return [...tree, ...unlinked]
+	}
+
+	/** MiniSearch hits for the query: exact terms first, then prefixes, dropping leading terms while fewer than 20 hits. */
+	private searchThesaurus(terms: string[]): (SearchResult & { terms: string[] })[] {
+		let normalisedTerms = terms.map(normaliseTerm)
 		const res: (SearchResult & { terms: string[] })[] = []
 		if (this.miniSearch) {
 			while (normalisedTerms.length && res.length < 20) {
@@ -453,14 +468,26 @@ export class DecoratedForm extends LitElement {
 		return res
 	}
 
-	async linksProvider(sug: { id: string; code: string; text: string; terms: string[]; links: string[] }) {
-		const links = (await Promise.all((sug.links || []).map((id) => codes.find((c) => c.id === id))))
-			.map((c) => ({ id: c?.id, code: c?.code, text: c?.label?.fr, type: c?.type }))
-			.concat([Object.assign({ type: sug.id.split('|')[0] }, sug)])
+	/**
+	 * The link mark of an inserted suggestion: one `c-<type>://<code>` per linked code (ICPC, ICD) plus the suggestion
+	 * itself. Linked ids are `type|code|version` and are not thesaurus entries, so type and code come from the id; the
+	 * thesaurus label is used as title when the id happens to be one.
+	 */
+	async linksProvider(sug: { id: string; code?: string; text: string; terms: string[]; links?: string[] }) {
+		const fromId = (id: string) => {
+			const [type, code] = id.split('|')
+			return { type, code, text: codes.find((c) => c.id === id)?.label?.fr ?? code }
+		}
+		const links = (sug.links ?? []).map(fromId).concat([{ type: sug.id.split('|')[0], code: sug.code ?? sug.id.split('|')[1], text: sug.text }])
 		return { href: links.map((c) => `c-${c.type}://${c.code}`).join(','), title: links.map((c) => c.text).join('; ') }
 	}
 
 	async optionsProvider(language: string, codifications: string[], searchTerms: string[]) {
+		if (codifications?.includes('ICD') && this.icdTree.length) {
+			// The same tree as the palette; unmarked (roots collapsed) when the popover is opened without a search.
+			const terms = searchTerms ?? []
+			return markIcdTree(this.icdTree, terms, new Set(this.searchThesaurus(terms).map((h) => h.id)))
+		}
 		const codeSplited: string[][] = codifications?.map((codification) => codification.split('|'))
 		if (codeSplited.some((codification) => codification[0] === 'ENTITY-LIST')) {
 			return [
@@ -552,6 +579,9 @@ export class DecoratedForm extends LitElement {
 				.formValuesContainer="${this.formValuesContainer}"
 				.ownersProvider="${this.ownersProvider.bind(this)}"
 				.optionsProvider="${this.optionsProvider.bind(this)}"
+				.suggestionProvider="${this.suggestionProvider.bind(this)}"
+				.linksProvider="${this.linksProvider.bind(this)}"
+				.codeColorProvider="${this.codeColorProvider.bind(this)}"
 				.actionListener="${this.handleAction}"
 			></icure-form>
 		`

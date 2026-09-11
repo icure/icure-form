@@ -7,13 +7,14 @@ import '../../../src/components/icure-form/renderer/card/register'
 import { Form, Field, Group, Subform, FieldMetadata, Validator, Code, PrimitiveType } from '../../../src/components/model'
 import { flatten as cardFlatten } from '../../../src/components/icure-form/renderer/card/flatten'
 import { ContactFormValuesContainer, BridgedFormValuesContainer } from '../../../src/icure'
-import { Version } from '../../../src/generic'
+import { Suggestion, Version } from '../../../src/generic'
 import { makeInterpreter } from '../../../src/utils/interpreter'
 import { getRevisionsFilter } from '../../../src/utils/fields-values-provider'
 import { normalizeCode } from '../../../src/utils/code-utils'
 import { defaultTranslationProvider } from '../../../src/utils/languages'
 import { CodeStub, DecryptedContact, DecryptedForm, DecryptedService } from '@icure/cardinal-sdk'
 import YAML from 'yaml'
+import { fixtureProvider } from './suggestion-fixtures'
 
 let formCounter = 0
 
@@ -49,6 +50,16 @@ interface InitFormOptions {
 	 * (a measure, a timestamp…), and `codes` for the coded answer of a dropdown / radio / checkbox.
 	 */
 	prefill?: Array<{ label: string; language?: string; value?: string; primitive?: PrimitiveType; codes?: Code[] }>
+	/**
+	 * Name of a tree in test/e2e/test-page/suggestion-fixtures.ts served as the form's `optionsProvider` for every
+	 * codification (dropdown popover tests). Functions cannot cross the Playwright boundary, hence named fixtures.
+	 */
+	optionsFixture?: string
+	/**
+	 * Name of a tree in test/e2e/test-page/suggestion-fixtures.ts served as the form's host-level `suggestionProvider`
+	 * (with a matching `linksProvider`); fields opt in through `codifications` or `suggestions: true` (palette tests).
+	 */
+	suggestionsFixture?: string
 }
 
 interface InitFormResult {
@@ -111,7 +122,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, readonly, hideEmptyFields } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, readonly, hideEmptyFields, optionsFixture, suggestionsFixture } = options
 
 	// Parse the form
 	let parsed: any
@@ -295,7 +306,15 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	}
 
 	icureFormEl.ownersProvider = async () => []
-	icureFormEl.optionsProvider = async () => []
+	icureFormEl.optionsProvider = optionsFixture ? async (_language: string, _codifications: string[], terms?: string[]) => fixtureProvider(optionsFixture)(terms ?? []) : async () => []
+	// Suggestion palette tests: the named fixture is the host-level provider; the fixture form opts fields in through
+	// `codifications` or `suggestions: true`. A links provider goes with it so insertions carry a link.
+	if (suggestionsFixture) {
+		icureFormEl.suggestionProvider = async (terms: string[], _codifications: string[]) => fixtureProvider(suggestionsFixture)(terms)
+		icureFormEl.linksProvider = async (sug: Suggestion) => ({ href: `c-FIXTURE://${sug.id}`, title: sug.text })
+		// A colour category outside the built-in table is echoed verbatim into the code's style, which the spec asserts.
+		icureFormEl.codeColorProvider = (_type: string, _code: string) => '#123456'
+	}
 
 	container.appendChild(icureFormEl)
 
@@ -311,6 +330,94 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 
 // Expose on window for Playwright
 ;(window as any).initForm = initForm
+// ---- Hierarchical-suggestions specs -------------------------------------------------------------------------------
+// The shadow root of the first dropdown's inner <icure-dropdown-field>, where the popover (#menu), its search box
+// (#editor) and its click target (#test) live.
+const dropdownRoot = (): ShadowRoot | null => {
+	const dd = document.querySelector('icure-form')?.shadowRoot?.querySelector('icure-form-dropdown-field') as HTMLElement | null
+	const inner = dd?.shadowRoot?.querySelector('icure-dropdown-field') as HTMLElement | null
+	return inner?.shadowRoot ?? null
+}
+// The shadow root of the n-th text field's inner <icure-text-field>, where the ProseMirror editor and its palette live.
+const textFieldRoot = (index = 0): ShadowRoot | null => {
+	const tf = document.querySelector('icure-form')?.shadowRoot?.querySelectorAll('icure-form-text-field')[index] as HTMLElement | undefined
+	const inner = tf?.shadowRoot?.querySelector('icure-text-field') as HTMLElement | null
+	return inner?.shadowRoot ?? null
+}
+// Focuses that editor so `page.keyboard` types into it. Returns false while it is not mounted yet.
+const focusEditor = (index = 0): boolean => {
+	const editor = textFieldRoot(index)?.querySelector('.ProseMirror[contenteditable="true"]') as HTMLElement | null
+	if (!editor) return false
+	editor.focus()
+	return true
+}
+// A snapshot of the palette: visibility, focus, one entry per row in display order, and the editor's content.
+const paletteSnapshot = (index = 0) => {
+	const root = textFieldRoot(index)
+	const palette = root?.querySelector('.suggestion-palette') as HTMLElement | null
+	if (!palette) return null
+	const lis = Array.from(palette.querySelectorAll('li'))
+	const editor = root?.querySelector('.ProseMirror') as HTMLElement | null
+	return {
+		visible: palette.style.display !== 'none',
+		ulFocused: !!palette.querySelector('ul.focused'),
+		focus: lis.findIndex((li) => li.classList.contains('focused')),
+		rows: lis.map((li) => ({
+			kind: li.classList.contains('more') ? 'more' : 'node',
+			text: (li.querySelector('.label')?.textContent ?? li.textContent ?? '').trim(),
+			depth: Number(li.style.getPropertyValue('--depth') || 0),
+			expanded: li.querySelector('.chevron')?.getAttribute('aria-expanded') ?? null,
+			hasChevron: !!li.querySelector('.chevron'),
+			path: li.dataset.path ?? null,
+			id: li.id || null,
+		})),
+		editorText: editor?.textContent ?? '',
+		editorHtml: editor?.innerHTML ?? '',
+	}
+}
+// Viewport centre of a palette row (by text) or of its chevron, for real pointer events.
+const paletteRect = (text: string, part: 'row' | 'chevron', index = 0) => {
+	const palette = textFieldRoot(index)?.querySelector('.suggestion-palette') as HTMLElement | null
+	const li = Array.from(palette?.querySelectorAll('li') ?? []).find((el) => (el.textContent ?? '').trim().startsWith(text))
+	const target = part === 'chevron' ? li?.querySelector('.chevron') : li
+	if (!target) return null
+	const r = target.getBoundingClientRect()
+	return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+}
+// Viewport centre of the n-th text field's editor, for a real pointer click back into it.
+const editorRect = (index = 0) => {
+	const r = textFieldRoot(index)?.querySelector('.ProseMirror')?.getBoundingClientRect()
+	return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+}
+// Geometry of the n-th text field's palette against its editor and the viewport (sizing tests).
+const paletteGeometry = (index = 0) => {
+	const root = textFieldRoot(index)
+	const palette = root?.querySelector('.suggestion-palette') as HTMLElement | null
+	const editor = root?.querySelector('.ProseMirror') as HTMLElement | null
+	if (!palette || !editor) return null
+	const rect = (el: Element) => {
+		const r = el.getBoundingClientRect()
+		return { left: r.left, top: r.top, width: r.width, height: r.height, bottom: r.bottom }
+	}
+	const labels = Array.from(palette.querySelectorAll('li .label')) as HTMLElement[]
+	const focused = palette.querySelector('li.focused')
+	const pr = palette.getBoundingClientRect()
+	const fr = focused?.getBoundingClientRect()
+	return {
+		palette: rect(palette),
+		editor: rect(editor),
+		viewportHeight: window.innerHeight,
+		viewportWidth: document.documentElement.clientWidth,
+		scrollHeight: palette.scrollHeight,
+		clientHeight: palette.clientHeight,
+		labelCount: labels.length,
+		// Labels whose text is wider than their box, i.e. ellipsed by CSS.
+		overflowingLabels: labels.filter((l) => l.scrollWidth > l.clientWidth + 1).length,
+		labelTextOverflow: labels[0] ? getComputedStyle(labels[0]).textOverflow : null,
+		focusedInView: fr ? fr.top >= pr.top - 1 && fr.bottom <= pr.bottom + 1 : null,
+	}
+}
+Object.assign(window as any, { __dropdownRoot: dropdownRoot, __focusEditor: focusEditor, __palette: paletteSnapshot, __paletteRect: paletteRect, __editorRect: editorRect, __paletteGeometry: paletteGeometry })
 ;(window as any).getFormValues = () => {
 	const fvc = (window as any).__currentFvc as BridgedFormValuesContainer | undefined
 	if (!fvc) return null

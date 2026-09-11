@@ -36,6 +36,11 @@ export class IcureForm extends LitElement {
 	@property() revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[]
 	@property() ownersProvider?: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>
 	@property() optionsProvider?: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>
+	// Palette providers for text, token and items-list fields that opt in (`codifications`, or `suggestions: true` / `links: true`).
+	@property() suggestionProvider?: (terms: string[], codifications: string[]) => Promise<Suggestion[]>
+	@property() linksProvider?: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
+	// Colour category of the codes shown in text, token and items-list fields; `options.codeColorProvider` on a field wins.
+	@property() codeColorProvider?: (type: string, code: string) => string
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 	@property({ type: Number }) questionsPerCard = 1
 
@@ -82,6 +87,9 @@ export class IcureForm extends LitElement {
 					questionsPerCard: this.questionsPerCard,
 					role: this.role ?? undefined,
 					hideEmptyFields: !!(this.readonly && this.hideEmptyFields),
+					suggestionProvider: this.suggestionProvider,
+					linksProvider: this.linksProvider,
+					codeColorProvider: this.codeColorProvider,
 				},
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),

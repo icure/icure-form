@@ -294,3 +294,72 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(summary(p)).toEqual(['Chapter IX — Circulatory [-]', '  I10 [-]', '    Essential hypertension', '    … 1 more', '  … 2 more'])
 	})
 })
+
+test.describe('Suggestion palette / sizing', () => {
+	type Geometry = {
+		palette: { left: number; width: number; height: number }
+		editor: { left: number; width: number }
+		viewportHeight: number
+		viewportWidth: number
+		scrollHeight: number
+		clientHeight: number
+		labelCount: number
+		overflowingLabels: number
+		labelTextOverflow: string | null
+		focusedInView: boolean | null
+	}
+	const geometry = async (page: Page): Promise<Geometry> => {
+		const g = (await page.evaluate(() => (window as any).__paletteGeometry(0))) as Geometry | null
+		if (!g) throw new Error('no palette geometry')
+		return g
+	}
+
+	test('the palette is as wide as its field and aligned on it', async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'wide')
+		await typeText(page, 'wide')
+		const p = await palette(page)
+		expect(p.visible).toBe(true)
+		expect(p.rows.length).toBe(60)
+		const g = await geometry(page)
+		expect(g.editor.width).toBeGreaterThan(300)
+		expect(g.palette.width).toBeCloseTo(g.editor.width, 0)
+		expect(g.palette.left).toBeCloseTo(g.editor.left, 0)
+	})
+
+	test('a short list still gets the 300px minimum height', async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'flat')
+		await typeText(page, 'alp')
+		const p = await palette(page)
+		expect(p.rows.length).toBe(1)
+		const g = await geometry(page)
+		expect(g.palette.height).toBeCloseTo(300, 0)
+	})
+
+	test('in a narrow viewport the palette keeps a 300px minimum, caps its height at 80% of the viewport, ellipses its rows and scrolls the focused row into view', async ({ page }) => {
+		await page.setViewportSize({ width: 360, height: 400 })
+		await gotoHarness(page)
+		await initForm(page, 'wide')
+		await typeText(page, 'wide')
+		let g = await geometry(page)
+		expect(g.editor.width).toBeLessThan(300)
+		expect(g.palette.width).toBeCloseTo(300, 0)
+		expect(g.palette.left + g.palette.width).toBeLessThanOrEqual(g.viewportWidth + 1)
+		expect(g.palette.height).toBeLessThanOrEqual(0.8 * g.viewportHeight + 1)
+		expect(g.palette.height).toBeGreaterThan(0.5 * g.viewportHeight)
+		expect(g.scrollHeight).toBeGreaterThan(g.clientHeight)
+		expect(g.labelCount).toBe(60)
+		expect(g.overflowingLabels).toBe(60)
+		expect(g.labelTextOverflow).toBe('ellipsis')
+
+		// The last row is far below the fold; walking down to it scrolls the palette, not the page.
+		await press(page, 'Tab')
+		await press(page, 'ArrowDown', 59)
+		const p = await palette(page)
+		expect(p.focus).toBe(59)
+		g = await geometry(page)
+		expect(g.focusedInView).toBe(true)
+		expect(g.palette.height).toBeLessThanOrEqual(0.8 * g.viewportHeight + 1)
+	})
+})

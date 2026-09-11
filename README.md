@@ -355,7 +355,7 @@ Both surfaces apply the same rules:
 - A dropdown field's `sortOptions` apply within each sibling group, at every level.
 - Selecting a node — root, intermediate or leaf — does exactly what a flat selection does. The dropdown stores that node's code alone (no ancestor path, no children); the palette replaces the typed words with the node's `text`, linked through the field's `linksProvider`. A node without `terms` (typically an unmatched ancestor) replaces the same range as its first matched descendant.
 
-Palette keys: **Tab** focuses the list (or inserts the focused row once the list is focused), **↑/↓** move across the visible rows, **→** expands a collapsed node, **←** collapses an expanded node or moves to the parent, **Enter** inserts (or reveals, on a "N more" row). Rows, chevrons and "N more" rows are also clickable.
+Palette keys: **Tab** focuses the list (or inserts the focused row once the list is focused), **↑/↓** move across the visible rows, **→** expands a collapsed node, **←** collapses an expanded node or moves to the parent, **Enter** inserts (or reveals, on a "N more" row). Rows, chevrons and "N more" rows are also clickable. The palette is as wide as its field (at least 300px wide, and at least 300px tall), never taller than 80% of the viewport (it scrolls, keeping the focused row in view), and ellipses rows that do not fit on one line.
 
 The palette providers are set once on `<icure-form>`, like `optionsProvider`, and reach the fields that opt in:
 

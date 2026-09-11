@@ -18,6 +18,9 @@ const node = (code: string, text: string, children?: Suggestion[]): Suggestion =
 
 export const fixtureTrees: Record<string, () => Suggestion[]> = {
 	flat: () => [node('A', 'Alpha'), node('B', 'Bravo'), node('C', 'Charlie')],
+	// Sixty flat rows with long labels: the palette must cap its height and ellipse the rows.
+	wide: () =>
+		Array.from({ length: 60 }, (_, i) => node(`W${i}`, `Wide ${i} — a deliberately long suggestion label that keeps going well past the width of any reasonable field so the row has to be ellipsed`)),
 	// Two chapters → codes → terms. `T4` (Chest pain) deliberately appears under I20 and J45.
 	'icd-mini': () => [
 		node('CH-IX', 'Chapter IX — Circulatory', [

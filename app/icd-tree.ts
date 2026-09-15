@@ -1,7 +1,12 @@
 import { Suggestion } from '../src/generic'
+import { suggestionLabel } from '../src/utils/suggestions'
 
 // Demo-only: turns the BE-THESAURUS terms and their ICD links into a chapter → ICD code → term tree for the
 // hierarchical-suggestions sample. The demo holds no labelled ICD categories, so codes are labelled by their number.
+//
+// Doubles as the worked example of the two localized maps. Code nodes carry a wildcard label (`{ '*': code }`): a bare
+// ICD number reads the same in every language, so there is nothing to translate. Term nodes show their thesaurus label
+// but insert that label prefixed with the ICD code, so what the palette lists and what lands in the record differ.
 
 type ThesaurusEntry = { id: string; code?: string; label?: { [lng: string]: string }; links?: string[] }
 
@@ -18,7 +23,7 @@ export const icdChapter = (code: string, icd10: ChapterTable): string => `${(icd
 
 const chapterLabel = (numeral: string) => ({ fr: `Chapitre ${numeral}`, nl: `Hoofdstuk ${numeral}`, en: `Chapter ${numeral}` })
 
-const byText = (a: Suggestion, b: Suggestion) => a.text.localeCompare(b.text)
+const byLabel = (a: Suggestion, b: Suggestion) => suggestionLabel(a, 'fr').localeCompare(suggestionLabel(b, 'fr'))
 
 export const buildIcdTree = (entries: ThesaurusEntry[], icd10: ChapterTable): IcdSuggestion[] => {
 	// numeral → code → terms
@@ -39,9 +44,10 @@ export const buildIcdTree = (entries: ThesaurusEntry[], icd10: ChapterTable): Ic
 					terms.push({
 						id: entry.id,
 						code: entry.code,
-						text: fr,
 						terms: [],
 						label: { fr, nl: entry.label?.nl ?? fr, en: entry.label?.en ?? fr },
+						// The record gets the code in front of the term; the palette row shows the term alone.
+						insertion: { fr: `${code} ${fr}`, nl: `${code} ${entry.label?.nl ?? fr}`, en: `${code} ${entry.label?.en ?? fr}` },
 						links: entry.links,
 					})
 				}
@@ -56,7 +62,6 @@ export const buildIcdTree = (entries: ThesaurusEntry[], icd10: ChapterTable): Ic
 		.map(([numeral, byCode]) => ({
 			id: `ICD-CHAPTER|${numeral}|1`,
 			code: numeral,
-			text: `Chapitre ${numeral}`,
 			terms: [],
 			label: chapterLabel(numeral),
 			children: Array.from(byCode.entries())
@@ -64,10 +69,9 @@ export const buildIcdTree = (entries: ThesaurusEntry[], icd10: ChapterTable): Ic
 				.map(([code, terms]) => ({
 					id: `ICD|${code}|10`,
 					code,
-					text: code,
 					terms: [],
-					label: { fr: code, nl: code, en: code },
-					children: terms.sort(byText),
+					label: { '*': code },
+					children: terms.sort(byLabel),
 				})),
 		}))
 }

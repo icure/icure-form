@@ -9,6 +9,7 @@ import { toResolvedDate } from '@icure/motss-app-datepicker/dist/helpers/to-reso
 import { CustomEventDetail } from '@icure/motss-app-datepicker/dist/typings.js'
 import { MAX_DATE } from '@icure/motss-app-datepicker/dist/constants.js'
 import { languageName } from '../../utils/languages'
+import { suggestionLabel } from '../../utils/suggestions'
 
 // @ts-ignore
 import baseCss from '../common/styles/style.scss'
@@ -63,12 +64,20 @@ export class MetadataButtonBar extends LitElement {
 		document.removeEventListener('click', this._handleClickOutside.bind(this))
 	}
 
+	/**
+	 * An owner's display name: their `label` for the current language. A person's name is usually language-neutral, so
+	 * a provider typically fills the wildcard key: `label: { '*': 'Dr Smith' }`.
+	 */
+	private ownerName(owner?: Suggestion): string {
+		return owner ? suggestionLabel(owner, this.selectedLanguage ?? this.defaultLanguage ?? 'en') : ''
+	}
+
 	render() {
 		const revisionDate = this.versions.find((x) => x.revision === this.revision)?.modified
 
 		const owner = this.metadata?.owner
 		if (owner && !this.loadedOwners[owner]) {
-			this.loadedOwners = { ...this.loadedOwners, [owner]: { id: owner, text: '', terms: [], label: {} } } // Make sure we do not loop endlessly
+			this.loadedOwners = { ...this.loadedOwners, [owner]: { id: owner, terms: [], label: {} } } // Make sure we do not loop endlessly
 			this.ownersProvider && this.ownersProvider([], [owner]).then((availableOwners) => (this.loadedOwners = availableOwners.reduce((acc, o) => ({ ...acc, [o.id]: o }), this.loadedOwners)))
 		}
 
@@ -89,7 +98,7 @@ export class MetadataButtonBar extends LitElement {
 				${this.handleReset ? html`<button @click="${() => this.handleReset?.()}" class="btn forced">${resetPicto}</button>` : nothing}
 				<div class="menu-container">
 					<button
-						data-content="${(this.metadata?.owner ? this.loadedOwners[this.metadata?.owner]?.text : '') ?? ''}"
+						data-content="${this.metadata?.owner ? this.ownerName(this.loadedOwners[this.metadata.owner]) : ''}"
 						@click="${() => this.toggleOwnersMenu(this.metadata?.owner)}"
 						class="btn menu-trigger author ${forcedByOwner ? 'forced' : ''}"
 					>
@@ -101,12 +110,8 @@ export class MetadataButtonBar extends LitElement {
 									<div id="menu" class="menu">
 										<div class="input-container">${searchPicto} <input id="ownerSearch" @input="${this.searchOwner}" /></div>
 										${(this.availableOwners?.length ? this.availableOwners : Object.values(this.loadedOwners))?.map(
-											(x) => html` <button
-												@click="${() => this.handleOwnerButtonClicked(x.id)}"
-												id="${x.id}"
-												class="${this.metadata?.owner && this.loadedOwners[this.metadata?.owner]?.text === x.text ? 'item selected' : 'item'}"
-											>
-												${x.text}
+											(x) => html` <button @click="${() => this.handleOwnerButtonClicked(x.id)}" id="${x.id}" class="${this.metadata?.owner === x.id ? 'item selected' : 'item'}">
+												${this.ownerName(x)}
 											</button>`,
 										)}
 									</div>

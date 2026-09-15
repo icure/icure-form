@@ -331,13 +331,32 @@ Two surfaces propose codes to the user: the **dropdown popover** (fed by `option
 type Suggestion = {
 	id: string // `type|code|version`
 	code?: string
-	text: string // what the palette inserts
-	terms: string[] // the query terms this suggestion answers (the palette replaces their typed occurrence)
-	label: { [lng: string]: string }
+	terms: string[] // the query terms this suggestion answers (the palette replaces their typed occurrence). The search on the terms is case-sensitive, it is important they will be found otherwise no suggestion will be inserted
+	label: { [lng: string]: string } // what the user reads; the key `'*'` matches any language
+	insertion?: { [lng: string]: string } // what replaces the matched terms, or what the dropdown stores; falls back to `label`
 	children?: Suggestion[] // the node's children, to any depth, returned together with the node
 	matched?: boolean // whether this node itself matched the search; absent means matched
+	text?: string // deprecated: the monolingual predecessor of `insertion`, still accepted
 }
 ```
+
+#### Label, insertion, and the `'*'` language
+
+A suggestion carries two localized maps, for two different jobs.
+
+- **`label`** is what the user reads: the palette row, the dropdown option.
+- **`insertion`** is what the choice produces: the text that replaces the typed terms in a text field, or the value a dropdown stores. When a provider omits it, it falls back to `label`, so a provider that wants both to be the same fills `label` alone.
+
+Both maps accept the key **`'*'`**, which matches any language. An exact language key always wins over it. Use it for content that is the same everywhere — a person's name, a bare code number — instead of repeating it under every language:
+
+```ts
+{ id: 'ICD|J45.0|10', code: 'J45.0', terms: ['allergic'], label: { en: 'Predominantly allergic asthma', fr: 'Asthme allergique' }, insertion: { '*': 'J45.0' } }
+{ id: 'owner-7', terms: [], label: { '*': 'Dr Smith' } } // an owner; no translation to give
+```
+
+A label with no entry for the current language falls back to `'*'`, then to the deprecated `text`, then to any other language it does hold, then to the id — a row in the wrong language beats a blank one. An **insertion** is stricter: it resolves `insertion` for the language, then `'*'`, then the deprecated `text`, then `label` **for that same language**, and stops there. It never falls back to another language, because the result is written into the record; when nothing resolves, nothing is inserted.
+
+`text` still works. A provider that only fills it keeps behaving as before: it is read as a fallback for both roles. New code should fill `label` and, when the two differ, `insertion`.
 
 The provider owns matching. It sets `matched` on every node it returns and the library never compares labels to the search terms, so accent folding, prefix search, synonyms and code-number lookup all stay on the host side. Return a root only when something in its subtree matched, and return the **full** child list of every node you return: the non-matching children are what the "… N more" row hides. A node returned with `matched: false` is context for a matching descendant. Providers that keep returning flat lists are unaffected.
 
@@ -348,14 +367,14 @@ Both surfaces apply the same rules:
 - The chevron in front of a node toggles it; manual toggles and reveals are forgotten when the search changes.
 - Opening a dropdown with an empty search box lists the roots collapsed; markers are ignored.
 - A dropdown field's `sortOptions` apply within each sibling group, at every level.
-- Selecting a node — root, intermediate or leaf — does exactly what a flat selection does. The dropdown stores that node's code alone (no ancestor path, no children); the palette replaces the typed words with the node's `text`, linked through the field's `linksProvider`. A node without `terms` (typically an unmatched ancestor) replaces the same range as its first matched descendant.
+- Selecting a node — root, intermediate or leaf — does exactly what a flat selection does. The dropdown stores that node's code alone (no ancestor path, no children) with its `insertion` as the field's value; the palette replaces the typed words with the node's `insertion`, linked through the field's `linksProvider`. A node without `terms` (typically an unmatched ancestor) replaces the same range as its first matched descendant.
 
 Palette keys: **Tab** focuses the list (or inserts the focused row once the list is focused), **↑/↓** move across the visible rows, **→** expands a collapsed node, **←** collapses an expanded node or moves to the parent, **Enter** inserts (or reveals, on a "N more" row). Rows, chevrons and "N more" rows are also clickable. The palette is as wide as its field (at least 300px wide, and at least 300px tall), never taller than 80% of the viewport (it scrolls, keeping the focused row in view), and ellipses rows that do not fit on one line.
 
 The palette providers are set once on `<icure-form>`, like `optionsProvider`, and reach the fields that opt in:
 
 ```html
-<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.label.en })}"></icure-form>
 ```
 
 ```yaml
@@ -378,20 +397,19 @@ Example result for the query `allergic`, two levels deep:
 	{
 		"id": "ICD|J45|10",
 		"code": "J45",
-		"text": "J45 Asthma",
 		"terms": [],
 		"label": { "en": "J45 Asthma" },
 		"matched": false,
 		"children": [
-			{ "id": "ICD|J45.0|10", "code": "J45.0", "text": "Predominantly allergic asthma", "terms": ["allergic"], "label": { "en": "Predominantly allergic asthma" }, "matched": true },
-			{ "id": "ICD|J45.1|10", "code": "J45.1", "text": "Nonallergic asthma", "terms": [], "label": { "en": "Nonallergic asthma" }, "matched": false },
-			{ "id": "ICD|J45.9|10", "code": "J45.9", "text": "Asthma, unspecified", "terms": [], "label": { "en": "Asthma, unspecified" }, "matched": false }
+			{ "id": "ICD|J45.0|10", "code": "J45.0", "terms": ["allergic"], "label": { "en": "Predominantly allergic asthma" }, "insertion": { "*": "J45.0" }, "matched": true },
+			{ "id": "ICD|J45.1|10", "code": "J45.1", "terms": [], "label": { "en": "Nonallergic asthma" }, "matched": false },
+			{ "id": "ICD|J45.9|10", "code": "J45.9", "terms": [], "label": { "en": "Asthma, unspecified" }, "matched": false }
 		]
 	}
 ]
 ```
 
-This renders as *J45 Asthma* expanded over *Predominantly allergic asthma* and "… 2 more". Inline `codifications` declared in the form stay flat. Sample 12 of the demo app shows both surfaces on an ICD-10 chapter → code → thesaurus-term tree.
+This renders as *J45 Asthma* expanded over *Predominantly allergic asthma* and "… 2 more"; picking the allergic-asthma row writes `J45.0` — its `insertion` — not the label it displayed. Inline `codifications` declared in the form stay flat. Sample 12 of the demo app shows both surfaces on an ICD-10 chapter → code → thesaurus-term tree.
 
 What an inserted suggestion leaves in the value: the field's `content` is stored as inline markdown for the `styled-text`, `text-with-codes` and `styled-text-with-codes` schemas (`[text](href "title")`, `**bold**`, `*italic*` — what the field's parser already reads), so links and styling survive a save and re-render; and the value's `codes` lists the codes named by the links, one per `c-<type>://<code>` entry of a link's `href` (`<code>` may also be a full `type|code|version` id; the version defaults to `1`). `text-document` behaves the same for codes; the plain `text` schema stays plain.
 

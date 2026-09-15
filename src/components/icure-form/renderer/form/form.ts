@@ -7,6 +7,7 @@ import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 import { defaultTranslationProvider } from '../../../../utils/languages'
 import { getLabels } from '../../../common/utils'
 import { filterAndSortOptionsFromFieldDefinition, sortSuggestions } from '../../../../utils/code-utils'
+import { localized } from '../../../../utils/suggestions'
 import { isEmptyFieldValues, VALUE_BEARING_FIELD_TYPES } from '../../../../utils/field-emptiness'
 
 import './form-selection-button'
@@ -62,8 +63,8 @@ const renderInternal = async (
 								?.filter((c) => codifications.includes(c.type))
 								?.flatMap((c) =>
 									c.codes
-										.filter((c) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => (c.label?.[language] ?? c.id).toLowerCase().includes(st)))
-										.map((c) => ({ id: c.id, label: c.label ?? { [language]: c.id }, text: c.label?.[language] ?? c.id, terms: terms ?? [] })),
+										.filter((c) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => (localized(c.label, language) ?? c.id).toLowerCase().includes(st)))
+										.map((c) => ({ id: c.id, label: c.label ?? { [language]: c.id }, terms: terms ?? [] })),
 								) ?? [],
 						),
 						language,

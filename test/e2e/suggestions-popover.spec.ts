@@ -114,6 +114,11 @@ async function storedCodes(page: Page): Promise<any[] | null> {
 	})
 }
 
+// The text the closed field shows: the value it stored, i.e. the insertion.
+async function inputValue(page: Page): Promise<string | null> {
+	return await page.evaluate(() => ((window as any).__dropdownRoot()?.querySelector('#editor') as HTMLInputElement | null)?.value ?? null)
+}
+
 const summary = (rs: Row[] | null) => (rs ?? []).map((r) => `${'  '.repeat(r.depth)}${r.kind === 'more' ? r.text : r.text + (r.expanded === null ? '' : r.expanded ? ' [-]' : ' [+]')}`)
 
 test.describe('Dropdown popover / flat provider (regression)', () => {
@@ -124,7 +129,7 @@ test.describe('Dropdown popover / flat provider (regression)', () => {
 
 		expect(await menuOpen(page)).toBe(true)
 		expect(await treeMarkupCount(page)).toBe(0)
-		expect(summary(await rows(page))).toEqual(['Alpha', 'Bravo', 'Charlie'])
+		expect(summary(await rows(page))).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta (long form)', 'Echo'])
 
 		await clickOption(page, 'Bravo')
 		expect(await menuOpen(page)).toBe(false)
@@ -132,6 +137,31 @@ test.describe('Dropdown popover / flat provider (regression)', () => {
 		expect(codes?.[0]?.id).toBe('FIXTURE|B|1')
 		expect(codes?.[0]).not.toHaveProperty('children')
 		expect(codes?.[0]).not.toHaveProperty('matched')
+		// With no insertion of its own, an option still stores its label: the pre-split behaviour.
+		expect(await inputValue(page)).toBe('Bravo')
+	})
+
+	// The 'D' fixture is the only option whose label and insertion differ, which is what makes this assertion mean something.
+	test('lists the label but stores the insertion when the two differ', async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'flat')
+		await openMenu(page)
+
+		await clickOption(page, 'Delta (long form)')
+		expect(await menuOpen(page)).toBe(false)
+		expect(await inputValue(page)).toBe('Delta')
+		expect((await storedCodes(page))?.[0]?.id).toBe('FIXTURE|D|1')
+	})
+
+	// The 'E' fixture carries `label: { '*': 'Echo' }` and no language key at all.
+	test("resolves an option whose label is held only under the '*' wildcard", async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'flat')
+		await openMenu(page)
+
+		await clickOption(page, 'Echo')
+		expect(await inputValue(page)).toBe('Echo')
+		expect((await storedCodes(page))?.[0]?.id).toBe('FIXTURE|E|1')
 	})
 })
 

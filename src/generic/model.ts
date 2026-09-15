@@ -93,6 +93,12 @@ export interface FormValuesContainerMutation<Value, Metadata, FVC extends FormVa
 /**
  * An item proposed to the user by a suggestion provider (text suggestions, dropdown options, owners).
  *
+ * Two roles, two localized maps. `label` is what the user reads while searching; `insertion` is what replaces the
+ * matched terms in a text field (or what a dropdown stores as the field's value). A provider that wants the two to be
+ * the same fills `label` alone: `insertion` falls back to it. Both maps accept the wildcard key `'*'`, which matches
+ * any language — the home for content that is language-neutral, such as a person's name or a bare code number. An
+ * exact language key always wins over `'*'`.
+ *
  * Hierarchical suggestions: a provider may return a tree by filling `children` on any node, to arbitrary depth. The whole
  * subtree is returned together with its root; children are never fetched later. `matched` states whether the node itself
  * matched the search (as opposed to being present only because a descendant matched). When absent it is read as `true`,
@@ -100,7 +106,22 @@ export interface FormValuesContainerMutation<Value, Metadata, FVC extends FormVa
  * when markers are used; unmatched children of a returned node are expected (they are what the "N more" row hides). The
  * library never matches labels against the search itself: expansion and pruning of the tree derive from `matched` only.
  */
-export type Suggestion = { id: string; code?: string; text: string; terms: string[]; label: { [lng: string]: string }; children?: Suggestion[]; matched?: boolean }
+export type Suggestion = {
+	id: string
+	code?: string
+	/** The query terms this suggestion answers; the palette replaces their typed occurrence. Matched case-sensitively. */
+	terms: string[]
+	/** What the user reads in the palette or the dropdown popover. The key `'*'` matches any language. */
+	label: { [lng: string]: string }
+	/** What replaces the matched terms, or what the dropdown stores. Falls back to `label`. The key `'*'` matches any language. */
+	insertion?: { [lng: string]: string }
+	/** @deprecated Replaced by the multilingual `insertion`. Still accepted from providers and read as a fallback for both `insertion` and `label`. */
+	text?: string
+	/** The node's children, to any depth, returned together with the node. */
+	children?: Suggestion[]
+	/** Whether this node itself matched the search; absent means matched. */
+	matched?: boolean
+}
 
 export interface ComputationResult<T> {
 	value: T | undefined

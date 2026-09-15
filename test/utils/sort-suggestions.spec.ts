@@ -2,8 +2,8 @@ import { Code } from '../../src/components/model'
 import { Suggestion } from '../../src/generic'
 import { sortSuggestions } from '../../src/utils/code-utils'
 
-const leaf = (id: string, en: string, extra: Partial<Suggestion> = {}): Suggestion => ({ id, text: en, terms: [], label: { en }, ...extra })
-const branch = (id: string, en: string, children: Suggestion[], extra: Partial<Suggestion> = {}): Suggestion => ({ id, text: en, terms: [], label: { en }, children, ...extra })
+const leaf = (id: string, en: string, extra: Partial<Suggestion> = {}): Suggestion => ({ id, terms: [], label: { en }, ...extra })
+const branch = (id: string, en: string, children: Suggestion[], extra: Partial<Suggestion> = {}): Suggestion => ({ id, terms: [], label: { en }, children, ...extra })
 
 // Deliberately unsorted at every level. `T2` sits inside a child group; a root is also called `T2-root` to prove promotion is per group.
 const tree = (): Suggestion[] => [
@@ -25,18 +25,27 @@ describe('sortSuggestions: flat input (regression)', () => {
 			{ id: 'a', label: { en: 'Ay' } },
 		]
 		expect(sortSuggestions(codes, 'en', { sort: 'asc' })).toStrictEqual([
-			{ id: 'a', label: { en: 'Ay' }, text: 'Ay', terms: [] },
-			{ id: 'b', label: { en: 'Bee' }, text: 'Bee', terms: [] },
+			{ id: 'a', label: { en: 'Ay' }, terms: [] },
+			{ id: 'b', label: { en: 'Bee' }, terms: [] },
 		])
 	})
 
-	it('label defaults to { [language]: id } and text to the id when no label is given', () => {
-		expect(sortSuggestions([{ id: 'x' }], 'fr')).toStrictEqual([{ id: 'x', label: { fr: 'x' }, text: 'x', terms: [] }])
+	it('label defaults to { [language]: id } when no label is given', () => {
+		expect(sortSuggestions([{ id: 'x' }], 'fr')).toStrictEqual([{ id: 'x', label: { fr: 'x' }, terms: [] }])
 	})
 
-	it('text follows the label in the requested language, as before', () => {
-		expect(sortSuggestions([leaf('x', 'Ex')], 'en')[0].text).toBe('Ex')
-		expect(sortSuggestions([leaf('x', 'Ex')], 'fr')[0].text).toBe('x')
+	it('derives no display text of its own: label is carried through untouched', () => {
+		expect(sortSuggestions([leaf('x', 'Ex')], 'fr')[0]).toStrictEqual({ id: 'x', label: { en: 'Ex' }, terms: [] })
+	})
+
+	it('carries insertion through, and the deprecated text a legacy provider still sends', () => {
+		expect(sortSuggestions([leaf('x', 'Ex', { insertion: { en: 'X' } })], 'en')[0]).toStrictEqual({ id: 'x', label: { en: 'Ex' }, insertion: { en: 'X' }, terms: [] })
+		expect(sortSuggestions([{ id: 'y', label: { en: 'Why' }, terms: [], text: 'Why' }], 'en')[0]).toStrictEqual({ id: 'y', label: { en: 'Why' }, text: 'Why', terms: [] })
+	})
+
+	it("sorts a '*'-only label by its wildcard value rather than to one end", () => {
+		const codes = [leaf('c', 'Charlie'), { id: 'b', terms: [], label: { '*': 'Bravo' } }, leaf('a', 'Alpha')]
+		expect(ids(sortSuggestions(codes, 'en', { sort: 'asc' }))).toEqual(['a', 'b', 'c'])
 	})
 
 	it('natural sort keeps input order', () => {
@@ -76,6 +85,13 @@ describe('sortSuggestions: hierarchical input', () => {
 		expect(childIds(chB?.children ?? [], 'I10')).toEqual(['T1', 'T2'])
 	})
 
+	it('preserves insertion at every depth', () => {
+		const withInsertion = (): Suggestion[] => [branch('CH', 'Chapter', [leaf('T', 'Term', { insertion: { en: 'CODE Term' } })], { insertion: { '*': 'CH' } })]
+		const out = sortSuggestions(withInsertion(), 'en', { sort: 'asc' })
+		expect(out[0].insertion).toEqual({ '*': 'CH' })
+		expect(out[0].children?.[0].insertion).toEqual({ en: 'CODE Term' })
+	})
+
 	it('preserves matched, code and terms on every node', () => {
 		const out = sortSuggestions(tree(), 'en', { sort: 'asc' })
 		const chB = out.find((x) => x.id === 'CH-B')
@@ -85,15 +101,15 @@ describe('sortSuggestions: hierarchical input', () => {
 		expect(i20?.code).toBe('I20')
 		const t3 = i20?.children?.find((x) => x.id === 'T3')
 		const t4 = i20?.children?.find((x) => x.id === 'T4')
-		expect(t3).toStrictEqual({ id: 'T3', label: { en: 'Zulu' }, text: 'Zulu', terms: ['zulu'], matched: true })
-		expect(t4).toStrictEqual({ id: 'T4', label: { en: 'Alpha' }, text: 'Alpha', terms: ['alpha'], matched: false })
+		expect(t3).toStrictEqual({ id: 'T3', label: { en: 'Zulu' }, terms: ['zulu'], matched: true })
+		expect(t4).toStrictEqual({ id: 'T4', label: { en: 'Alpha' }, terms: ['alpha'], matched: false })
 	})
 
 	it('does not invent children, matched or code on nodes that had none', () => {
 		const out = sortSuggestions(tree(), 'en', { sort: 'asc' })
 		const chA = out.find((x) => x.id === 'CH-A')
-		expect(chA?.children?.find((x) => x.id === 'J40')).toStrictEqual({ id: 'J40', label: { en: 'Bravo' }, text: 'Bravo', terms: [] })
-		expect(out.find((x) => x.id === 'T2-root')).toStrictEqual({ id: 'T2-root', label: { en: 'Mike' }, text: 'Mike', terms: [] })
+		expect(chA?.children?.find((x) => x.id === 'J40')).toStrictEqual({ id: 'J40', label: { en: 'Bravo' }, terms: [] })
+		expect(out.find((x) => x.id === 'T2-root')).toStrictEqual({ id: 'T2-root', label: { en: 'Mike' }, terms: [] })
 	})
 
 	it('a promotion applies within its own sibling group only', () => {

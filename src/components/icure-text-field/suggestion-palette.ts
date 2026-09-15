@@ -6,6 +6,7 @@ import { Schema } from 'prosemirror-model'
 import { Suggestion } from '../../generic'
 import { emptyTreeState, parentPath, replacementTerms, reveal, SuggestionRow, toggleExpanded, TreePath, TreeUiState, visibleRows } from '../../utils/suggestion-tree'
 import { suggestionQueryStart } from './suggestion-query'
+import { suggestionLabel } from '../../utils/suggestions'
 
 export type SuggestionInsertHandler = (from: number, to: number, sug: Suggestion) => Promise<Transaction | undefined>
 
@@ -27,6 +28,9 @@ const CHEVRON_SVG = '<svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke-widt
  * inserts (or reveals on a "N more" row). Pointer: `mousedown` on a chevron toggles, on a "N more" row reveals, on a row
  * inserts; the event is prevented so the editor keeps focus and selection (the palette hides itself on any editor
  * update where the text did not change). Flat results render the same elements and classes as before hierarchy existed.
+ *
+ * A row shows the suggestion's `label` resolved for the field's language; what an insertion puts in the document is the
+ * `insertion` (see src/utils/suggestions.ts), so the two need not be the same string.
  */
 export class SuggestionPalette {
 	private readonly palette: HTMLDivElement
@@ -45,16 +49,19 @@ export class SuggestionPalette {
 	private treeState: TreeUiState = emptyTreeState()
 	private lastQueryTerms: string[] = []
 	private schema: Schema
+	private readonly language: () => string
 
 	constructor(
 		schema: Schema,
 		view: EditorView,
 		suggestionProvider: (terms: string[]) => Promise<Suggestion[]>,
 		suggestionStopWordsProvider: () => Set<string>,
+		language: () => string,
 		delay?: () => boolean,
 		insertHandler?: SuggestionInsertHandler,
 	) {
 		this.schema = schema
+		this.language = language
 		this.view = view
 		this.insertHandler = insertHandler
 		this.suggestionStopWordsProvider = suggestionStopWordsProvider
@@ -278,7 +285,8 @@ export class SuggestionPalette {
 			chevron.innerHTML = CHEVRON_SVG
 			li.appendChild(chevron)
 		}
-		li.appendChild(this.label(sug.text, sug.text))
+		const text = suggestionLabel(sug, this.language())
+		li.appendChild(this.label(text, text))
 		const icons = document.createElement('div')
 		icons.className = 'icn-container'
 		icons.innerHTML = TAB_ICN + RETURN_ICN

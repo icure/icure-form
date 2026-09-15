@@ -1,5 +1,6 @@
 import { html, TemplateResult } from 'lit'
 import { Code, Field, Labels, Position } from '../model'
+import { localized } from '../../utils/suggestions'
 
 const labelCache = new WeakMap<Field, Labels>()
 
@@ -40,6 +41,9 @@ export const makePromoter = (promotions: string[]) => {
 	}
 }
 
+// Deliberately reads `label.en` exactly, not through `localized`: it matches the literals 'other' / 'none' / 'empty',
+// and letting a `'*'` label reach those comparisons would start promoting a wildcard label reading "None" in every
+// language — new behaviour, not wildcard support.
 export const defaultCodePromoter = (code: Code): number =>
 	code?.label?.en?.toLowerCase() === 'other' ? 2 : code?.label?.en?.toLowerCase() === 'none' ? 1 : code?.label?.en?.toLowerCase() === 'empty' ? -1 : 0
 
@@ -51,7 +55,7 @@ export const defaultCodesComparator =
 		if (aPromoted !== bPromoted) {
 			return (aPromoted - bPromoted) * (ascending ? 1 : -1)
 		}
-		return (a?.label?.[language] || '').localeCompare(b?.label?.[language] || '') * (ascending ? 1 : -1)
+		return (localized(a?.label, language) || '').localeCompare(localized(b?.label, language) || '') * (ascending ? 1 : -1)
 	}
 
 export const naturalCodesComparator =

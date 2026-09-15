@@ -15,6 +15,7 @@ import { defaultTranslationProvider } from '../../../src/utils/languages'
 import { CodeStub, DecryptedContact, DecryptedForm, DecryptedService } from '@icure/cardinal-sdk'
 import YAML from 'yaml'
 import { fixtureProvider } from './suggestion-fixtures'
+import { suggestionLabel } from '../../../src/utils/suggestions'
 
 let formCounter = 0
 
@@ -311,7 +312,7 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 	// `codifications` or `suggestions: true`. A links provider goes with it so insertions carry a link.
 	if (suggestionsFixture) {
 		icureFormEl.suggestionProvider = async (terms: string[], _codifications: string[]) => fixtureProvider(suggestionsFixture)(terms)
-		icureFormEl.linksProvider = async (sug: Suggestion) => ({ href: `c-FIXTURE://${sug.id}`, title: sug.text })
+		icureFormEl.linksProvider = async (sug: Suggestion) => ({ href: `c-FIXTURE://${sug.id}`, title: suggestionLabel(sug, 'en') })
 		// A colour category outside the built-in table is echoed verbatim into the code's style, which the spec asserts.
 		icureFormEl.codeColorProvider = (_type: string, _code: string) => '#123456'
 	}

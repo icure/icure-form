@@ -25,6 +25,7 @@ import { format } from 'date-fns'
 import { Field } from '../common'
 import { Code, FieldMetadata, FieldValue, IcureTextFieldSchema, PrimitiveType, pteq, StringType } from '../model'
 import { Suggestion, Version } from '../../generic'
+import { suggestionInsertion } from '../../utils/suggestions'
 import { generateLabels } from '../common/utils'
 
 // @ts-ignore
@@ -449,10 +450,14 @@ export class IcureTextField extends Field {
 
 			const replaceRangeWithSuggestion = async (from: number, to: number, sug: Suggestion) => {
 				if (!cmp.view) return undefined
+				// What gets inserted is the suggestion's `insertion` for this language, not the label the palette displayed.
+				// A suggestion that resolves to nothing in this language inserts nothing rather than text in another one.
+				const insertion = suggestionInsertion(sug, this.language())
+				if (!insertion) return undefined
 				// Linked text when a links provider yields a link and the schema has the mark; the plain text otherwise.
 				const link = this.linksProvider ? await this.linksProvider(sug) : undefined
 				const marks = link && pms.marks['link'] ? [pms.mark('link', link)] : []
-				return cmp.view.state.tr.replaceWith(from, to, pms.text(sug.text, marks))
+				return cmp.view.state.tr.replaceWith(from, to, pms.text(insertion, marks))
 			}
 
 			const headingsKeymap = keymap(
@@ -483,6 +488,7 @@ export class IcureTextField extends Field {
 											editorView,
 											(terms: string[]) => cmp.suggestionProvider(terms),
 											() => cmp.suggestionStopWords,
+											() => cmp.language(),
 											undefined,
 											replaceRangeWithSuggestion,
 										))

@@ -11,6 +11,7 @@ import { icureFormLogging } from '../../index'
 import { FieldMetadata } from '../model'
 import { Suggestion } from '../../generic'
 import { emptyTreeState, nodeAtPath, reveal, SuggestionRow, toggleExpanded, TreePath, TreeUiState, visibleRows } from '../../utils/suggestion-tree'
+import { suggestionInsertion, suggestionLabel } from '../../utils/suggestions'
 
 type NodeRow = Extract<SuggestionRow, { kind: 'node' }>
 
@@ -91,7 +92,8 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 			const code: Suggestion = { ...node }
 			delete code.children
 			delete code.matched
-			const inputValue = node.label?.[language] ?? ''
+			// The popover row showed the label; what is stored is the insertion, which falls back to that same label.
+			const inputValue = suggestionInsertion(node, language) ?? ''
 			this.displayMenu = false
 			this.textInputValue = undefined
 			this.treeState = emptyTreeState()
@@ -155,7 +157,8 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 			if (valueForLanguage && valueForLanguage.type === 'string' && valueForLanguage.value) {
 				return [id, valueForLanguage.value]
 			} else if (value?.codes?.length) {
-				return [id, value?.codes?.[0]?.label?.[this.language()] ?? '']
+				// Mirror what handleOptionClicked stored: the code's insertion for this language, else its label.
+				return [id, suggestionInsertion(value.codes[0], this.language()) ?? '']
 			}
 		}
 		return [undefined, undefined]
@@ -173,8 +176,9 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 			</button>`
 		}
 		const x = row.suggestion
-		const option = html`<button @click="${this.handleOptionClicked(row.path)}" id="${x.id}" class="option ${x?.['label']?.[language] === inputValue ? 'selected' : ''}">
-			${x?.['label']?.[language] || ''}
+		// The row reads the label; `inputValue` is the stored value, so the selected marker compares against the insertion.
+		const option = html`<button @click="${this.handleOptionClicked(row.path)}" id="${x.id}" class="option ${suggestionInsertion(x, language) === inputValue ? 'selected' : ''}">
+			${suggestionLabel(x, language)}
 		</button>`
 		if (!row.hasChildren && row.depth === 0) {
 			return option

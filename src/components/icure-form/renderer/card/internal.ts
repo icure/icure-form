@@ -8,6 +8,7 @@ import { fieldValuesProvider, getValidationErrorProvider, handleMetadataChangedP
 import { defaultTranslationProvider } from '../../../../utils/languages'
 import { getLabels } from '../../../common/utils'
 import { filterAndSortOptionsFromFieldDefinition, sortSuggestions } from '../../../../utils/code-utils'
+import { localized } from '../../../../utils/suggestions'
 import { currentDate, currentDateTime, currentTime } from '../../../../utils/dates'
 import { parsePrimitive } from '../../../../utils/primitive'
 
@@ -847,8 +848,8 @@ export class IcureCardInternal extends LitElement {
 						?.filter((c) => codifications.includes(c.type))
 						?.flatMap((c) =>
 							c.codes
-								.filter((c) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => (c.label?.[language] ?? c.id).toLowerCase().includes(st)))
-								.map((c) => ({ id: c.id, label: c.label ?? { [language]: c.id }, text: c.label?.[language] ?? c.id, terms: terms ?? [] })),
+								.filter((c) => (terms ?? []).map((st) => st.toLowerCase()).every((st) => (localized(c.label, language) ?? c.id).toLowerCase().includes(st)))
+								.map((c) => ({ id: c.id, label: c.label ?? { [language]: c.id }, terms: terms ?? [] })),
 						) ?? [],
 				),
 				language,

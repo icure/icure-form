@@ -1,23 +1,32 @@
 import { Suggestion } from '../../../src/generic'
+import { suggestionLabel } from '../../../src/utils/suggestions'
 
 // Deterministic suggestion trees for the e2e harness. Ids are `type|code|version` because the iCure bridge normalises
 // stored codes from their id and rejects any other shape.
 //
-// The fixture provider marks a node `matched` when a query term is a case-insensitive substring of its text. That is a
+// The fixture provider marks a node `matched` when a query term is a case-insensitive substring of its label. That is a
 // fixture convenience standing in for a host's search index: the library itself never matches labels (constraint 1 of
 // plans/hierarchical-suggestions.md), so nothing like this may appear under src/.
 
-const node = (code: string, text: string, children?: Suggestion[]): Suggestion => ({
+const node = (code: string, text: string, children?: Suggestion[], extra: Partial<Suggestion> = {}): Suggestion => ({
 	id: `FIXTURE|${code}|1`,
 	code,
-	text,
 	terms: [],
 	label: { en: text },
 	...(children ? { children } : {}),
+	...extra,
 })
 
 export const fixtureTrees: Record<string, () => Suggestion[]> = {
-	flat: () => [node('A', 'Alpha'), node('B', 'Bravo'), node('C', 'Charlie')],
+	flat: () => [
+		node('A', 'Alpha'),
+		node('B', 'Bravo'),
+		node('C', 'Charlie'),
+		// The row reads "Delta (long form)" while the document receives "Delta"; nothing but an insertion differs.
+		node('D', 'Delta (long form)', undefined, { insertion: { en: 'Delta' } }),
+		// No `en` key at all: only the wildcard, which must serve every language.
+		node('E', 'Echo', undefined, { label: { '*': 'Echo' } }),
+	],
 	// Sixty flat rows with long labels: the palette must cap its height and ellipse the rows.
 	wide: () =>
 		Array.from({ length: 60 }, (_, i) => node(`W${i}`, `Wide ${i} — a deliberately long suggestion label that keeps going well past the width of any reasonable field so the row has to be ellipsed`)),
@@ -46,7 +55,7 @@ export const fixtureProvider =
 		const roots = fixtureTrees[name]?.() ?? []
 		if (!terms.length) return roots
 		const needles = terms.map((t) => t.toLowerCase())
-		const matches = (s: Suggestion) => needles.some((n) => s.text.toLowerCase().includes(n))
+		const matches = (s: Suggestion) => needles.some((n) => suggestionLabel(s, 'en').toLowerCase().includes(n))
 		const anyMatch = (s: Suggestion): boolean => matches(s) || (s.children ?? []).some(anyMatch)
 		const mark = (s: Suggestion): Suggestion => ({
 			...s,

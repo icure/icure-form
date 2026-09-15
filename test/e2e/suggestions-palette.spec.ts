@@ -96,6 +96,39 @@ test.describe('Suggestion palette / flat provider (regression)', () => {
 		// The host-level codeColorProvider reaches the editor: its category colours the inserted code.
 		expect(p.editorHtml).toContain('--bg-code-color-1: #123456')
 	})
+
+	// The row reads the suggestion's label, the document receives its insertion. The 'D' fixture is the only node where
+	// the two differ, so this is the assertion that actually pins the separation.
+	test('shows the label and inserts the insertion when the two differ', async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'flat')
+		await typeText(page, 'del')
+
+		let p = await palette(page)
+		expect(summary(p)).toEqual(['Delta (long form)'])
+
+		await press(page, 'Tab')
+		await press(page, 'Enter')
+		p = await afterInsert(page)
+		expect(p.editorText).toContain('Delta')
+		expect(p.editorText).not.toContain('long form')
+		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|D|1')
+	})
+
+	// The 'E' fixture carries `label: { '*': 'Echo' }` and no language key at all.
+	test("renders and inserts a label held only under the '*' wildcard", async ({ page }) => {
+		await gotoHarness(page)
+		await initForm(page, 'flat')
+		await typeText(page, 'ech')
+
+		let p = await palette(page)
+		expect(summary(p)).toEqual(['Echo'])
+
+		await press(page, 'Tab')
+		await press(page, 'Enter')
+		p = await afterInsert(page)
+		expect(p.editorText).toContain('Echo')
+	})
 })
 
 test.describe('Suggestion palette / hierarchical provider', () => {
@@ -146,7 +179,7 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(p.visible).toBe(true)
 	})
 
-	test('Enter on the unmatched ancestor replaces the typed words with its text and links its id', async ({ page }) => {
+	test('Enter on the unmatched ancestor replaces the typed words with its insertion and links its id', async ({ page }) => {
 		await typeText(page, 'hypertension')
 		await press(page, 'Tab')
 		await press(page, 'Enter')
@@ -157,7 +190,7 @@ test.describe('Suggestion palette / hierarchical provider', () => {
 		expect(p.editorHtml).toContain('c-FIXTURE://FIXTURE|CH-IX|1')
 	})
 
-	test('Enter on a term inserts its text and links its id', async ({ page }) => {
+	test('Enter on a term inserts its insertion and links its id', async ({ page }) => {
 		await typeText(page, 'hypertension')
 		await press(page, 'Tab')
 		await press(page, 'ArrowDown', 2)

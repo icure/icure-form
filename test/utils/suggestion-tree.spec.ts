@@ -15,8 +15,8 @@ import {
 } from '../../src/utils/suggestion-tree'
 
 // Fixture: two chapters, codes, thesaurus terms. `T4` is deliberately present under two parents (0/1/1 and 1/0/1).
-const term = (id: string, text: string, terms: string[] = []): Suggestion => ({ id, text, terms, label: { fr: text } })
-const node = (id: string, text: string, children: Suggestion[]): Suggestion => ({ id, text, terms: [], label: { fr: text }, children })
+const term = (id: string, text: string, terms: string[] = []): Suggestion => ({ id, terms, label: { fr: text } })
+const node = (id: string, text: string, children: Suggestion[]): Suggestion => ({ id, terms: [], label: { fr: text }, children })
 
 const tree = (): Suggestion[] => [
 	node('CH-IX', 'Chapitre IX', [

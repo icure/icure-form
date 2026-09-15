@@ -12,7 +12,7 @@ export class TextField extends Field {
 	@property() grows = false
 	@property() unit?: string = ''
 	@property() suggestionStopWords: Set<string> = new Set<string>()
-	@property() linksProvider: (sug: { id: string; code: string; text: string; terms: string[] }) => Promise<{ href: string; title: string } | undefined> = () => Promise.resolve(undefined)
+	@property() linksProvider: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined> = () => Promise.resolve(undefined)
 	@property() suggestionProvider: (terms: string[]) => Promise<Suggestion[]> = async () => []
 	@property() codeColorProvider: (type: string, code: string) => string = () => 'XI'
 	@property() linkColorProvider: (type: string, code: string) => string = () => 'cat1'

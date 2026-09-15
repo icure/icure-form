@@ -12,6 +12,7 @@ import { buildIcdTree, IcdSuggestion, markIcdTree, normaliseTerm } from './icd-t
 import { Field, FieldMetadata, Form, Group, Subform, Validator } from '../src/components/model'
 import { CodeStub, DecryptedContact, DecryptedContent, DecryptedForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
 import { Suggestion, Version } from '../src/generic'
+import { suggestionLabel } from '../src/utils/suggestions'
 import { getRevisionsFilter } from '../src/utils/fields-values-provider'
 import { v4 as uuid } from 'uuid'
 import { normalizeCode } from '../src/utils/code-utils'
@@ -417,7 +418,6 @@ export class DecoratedForm extends LitElement {
 		this.icdTree = buildIcdTree(codes, icd10)
 	}
 
-
 	codeColorProvider(type: string, code: string) {
 		if (!code) {
 			return 'XXII'
@@ -430,12 +430,15 @@ export class DecoratedForm extends LitElement {
 	 * marked for the query (terms by MiniSearch hit, codes by number prefix), followed by the thesaurus hits that carry
 	 * no ICD link as flat roots; any other opted-in field gets the flat thesaurus hits.
 	 */
-	async suggestionProvider(terms: string[], codifications: string[] = []) {
+	async suggestionProvider(terms: string[], codifications: string[] = []): Promise<Suggestion[]> {
 		const hits = this.searchThesaurus(terms)
-		if (!this.icdTree.length || !codifications.includes('ICD')) return hits
+		// A MiniSearch hit is indexed on the French label only, so its display text is language-neutral here: the wildcard
+		// key serves it to every language, and the insertion follows the label.
+		const asSuggestion = (h: (typeof hits)[number]): IcdSuggestion => ({ id: h.id, code: h.code, terms: h.terms, label: { '*': h.text }, links: h.links })
+		if (!this.icdTree.length || !codifications.includes('ICD')) return hits.map(asSuggestion)
 		const tree = markIcdTree(this.icdTree, terms, new Set(hits.map((h) => h.id)))
 		const unlinked = hits.filter((h) => !((h.links as string[] | undefined) ?? []).some((l) => l.startsWith('ICD|')))
-		return [...tree, ...unlinked]
+		return [...tree, ...unlinked.map(asSuggestion)]
 	}
 
 	/** MiniSearch hits for the query: exact terms first, then prefixes, dropping leading terms while fewer than 20 hits. */
@@ -473,12 +476,12 @@ export class DecoratedForm extends LitElement {
 	 * itself. Linked ids are `type|code|version` and are not thesaurus entries, so type and code come from the id; the
 	 * thesaurus label is used as title when the id happens to be one.
 	 */
-	async linksProvider(sug: { id: string; code?: string; text: string; terms: string[]; links?: string[] }) {
+	async linksProvider(sug: IcdSuggestion) {
 		const fromId = (id: string) => {
 			const [type, code] = id.split('|')
 			return { type, code, text: codes.find((c) => c.id === id)?.label?.fr ?? code }
 		}
-		const links = (sug.links ?? []).map(fromId).concat([{ type: sug.id.split('|')[0], code: sug.code ?? sug.id.split('|')[1], text: sug.text }])
+		const links = (sug.links ?? []).map(fromId).concat([{ type: sug.id.split('|')[0], code: sug.code ?? sug.id.split('|')[1], text: suggestionLabel(sug, 'fr') }])
 		return { href: links.map((c) => `c-${c.type}://${c.code}`).join(','), title: links.map((c) => c.text).join('; ') }
 	}
 
@@ -506,18 +509,21 @@ export class DecoratedForm extends LitElement {
 	}
 
 	async ownersProvider(terms: string[], ids?: string[], specialties?: string[]): Promise<Suggestion[]> {
-		return [
-			{ id: '1', name: 'Dr. John Doe', specialties: ['General Medicine'] },
-			{ id: '2', name: 'Dr. Jane Doe', specialties: ['ORL'] },
-		]
-			.filter((hcp) => {
-				return (
-					terms.every((t) => hcp.name.toLowerCase().includes(t.toLowerCase())) &&
-					(!ids?.length || ids.includes(hcp.id)) &&
-					(!specialties?.length || specialties.some((s) => hcp.specialties.includes(s)))
-				)
-			})
-			.map((x) => ({ id: x.id, text: x.name, terms: terms, label: {} }))
+		return (
+			[
+				{ id: '1', name: 'Dr. John Doe', specialties: ['General Medicine'] },
+				{ id: '2', name: 'Dr. Jane Doe', specialties: ['ORL'] },
+			]
+				.filter((hcp) => {
+					return (
+						terms.every((t) => hcp.name.toLowerCase().includes(t.toLowerCase())) &&
+						(!ids?.length || ids.includes(hcp.id)) &&
+						(!specialties?.length || specialties.some((s) => hcp.specialties.includes(s)))
+					)
+				})
+				// A person's name is the same in every language: the wildcard key spares the provider from repeating it.
+				.map((x) => ({ id: x.id, terms: terms, label: { '*': x.name } }))
+		)
 	}
 
 	// Default action listener: alert() for every event, plus dedicated handlers

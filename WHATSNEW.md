@@ -4,6 +4,25 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 3.5.0 (2026-09-15)
+
+### Suggestions: a multilingual `insertion`, separate from the label
+
+A `Suggestion` now carries two localized maps instead of one map and one monolingual string. `label` is what the user reads — the palette row, the dropdown option — and the new `insertion` is what the choice produces: the text that replaces the typed words in a text field, or the value a dropdown stores. A provider that wants both to be the same fills `label` alone; `insertion` falls back to it. This is what lets a palette row read *Predominantly allergic asthma* while the record receives *J45.0*, and it lets what gets inserted be translated, which the old monolingual `text` could not.
+
+Both maps accept the key `'*'`, which matches any language, with an exact language key always winning over it. It is for content with no translation to give — a person's name, a bare code number — which previously had to be repeated under every language, or smuggled through `text`:
+
+```ts
+// an ICD term: shown by name, inserted as a code, in any language
+{ id: 'ICD|J45.0|10', code: 'J45.0', terms: ['allergic'], label: { en: 'Predominantly allergic asthma', fr: 'Asthme allergique' }, insertion: { '*': 'J45.0' } }
+// an owner: one name, every language
+{ id: 'owner-7', terms: [], label: { '*': 'Dr Smith' } }
+```
+
+`Suggestion.text` is deprecated but still works, so no provider has to change: it is read as a fallback for both roles, and `optionsProvider`, `suggestionProvider`, `ownersProvider` and `linksProvider` all keep their signatures. One behaviour does change with it — the **owner picker** now reads its names from `label` rather than `text`, so an `ownersProvider` that fills only `text` still works, but `label: { '*': name }` is the shape to move to. A label with no entry for the current language falls back to `'*'`, then to `text`, then to any other language it holds, then to the id; an insertion is stricter and never falls back to another language, because its result is written into the record. See [Label, insertion, and the `'*'` language](./README.md#label-insertion-and-the--language).
+
+---
+
 ## 3.4.0 (2026-09-11)
 
 ### `suggestionProvider` and `linksProvider` on `<icure-form>`
@@ -11,7 +30,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 The suggestion palette's providers are host-level properties of `<icure-form>`, like `optionsProvider`, instead of functions the host had to set on each parsed field's `options`. `suggestionProvider(terms, codifications)` receives the field's `codifications`; `linksProvider(sug)` builds the link carried by an inserted suggestion. Fields opt in by declaring `codifications`, or with the field flags `suggestions: true` (palette) and `links: true` (links); fields declaring neither are unchanged. Functions set on a field's `options` keep precedence, so existing hosts are unaffected. Token and items-list fields receive both providers too. `codeColorProvider(type, code)` joins them as a host-level property colouring the codes shown in those fields (a field's `options.codeColorProvider` still wins).
 
 ```html
-<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.text })}"></icure-form>
+<icure-form .form="${form}" .suggestionProvider="${(terms, codifications) => search(terms, codifications)}" .linksProvider="${(sug) => ({ href: `c-ICD://${sug.code}`, title: sug.label.en })}"></icure-form>
 ```
 
 Selecting a suggestion when no links provider applies (or it returns nothing) inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](./README.md#hierarchical-suggestions).

@@ -1084,7 +1084,7 @@ computedProperties:
   alwaysVisible: "return self['flagged-for-review']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
 ```
 
-## [MISSING] 3.5.0 (2026-09-16)
+## 3.5.0 (2026-09-16)
 <!-- tag: 3.5.0 | target: 78d7a38f69d27971da1620a85b36d1831c8cbeaf | prerelease: false -->
 
 ### Suggestions: a multilingual `insertion`, separate from the label

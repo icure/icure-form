@@ -1083,3 +1083,21 @@ On `Field`, `Group` and `Subform`, `alwaysVisible` can also be computed, just li
 computedProperties:
   alwaysVisible: "return self['flagged-for-review']?.some((item) => item?.codes.some(code => code.id === 'yes'))"
 ```
+
+## [MISSING] 3.5.0 (2026-09-16)
+<!-- tag: 3.5.0 | target: 78d7a38f69d27971da1620a85b36d1831c8cbeaf | prerelease: false -->
+
+### Suggestions: a multilingual `insertion`, separate from the label
+
+A `Suggestion` now carries two localized maps instead of one map and one monolingual string. `label` is what the user reads — the palette row, the dropdown option — and the new `insertion` is what the choice produces: the text that replaces the typed words in a text field, or the value a dropdown stores. A provider that wants both to be the same fills `label` alone; `insertion` falls back to it. This is what lets a palette row read *Predominantly allergic asthma* while the record receives *J45.0*, and it lets what gets inserted be translated, which the old monolingual `text` could not.
+
+Both maps accept the key `'*'`, which matches any language, with an exact language key always winning over it. It is for content with no translation to give — a person's name, a bare code number — which previously had to be repeated under every language, or smuggled through `text`:
+
+```ts
+// an ICD term: shown by name, inserted as a code, in any language
+{ id: 'ICD|J45.0|10', code: 'J45.0', terms: ['allergic'], label: { en: 'Predominantly allergic asthma', fr: 'Asthme allergique' }, insertion: { '*': 'J45.0' } }
+// an owner: one name, every language
+{ id: 'owner-7', terms: [], label: { '*': 'Dr Smith' } }
+```
+
+`Suggestion.text` is deprecated but still works, so no provider has to change: it is read as a fallback for both roles, and `optionsProvider`, `suggestionProvider`, `ownersProvider` and `linksProvider` all keep their signatures. One behaviour does change with it — the **owner picker** now reads its names from `label` rather than `text`, so an `ownersProvider` that fills only `text` still works, but `label: { '*': name }` is the shape to move to. A label with no entry for the current language falls back to `'*'`, then to `text`, then to any other language it holds, then to the id; an insertion is stricter and never falls back to another language, because its result is written into the record. See [Label, insertion, and the `'*'` language](https://github.com/icure/icure-form/blob/cardinal/README.md#label-insertion-and-the--language).

@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## 3.5.0 (2026-09-15)
+## 3.5.0 (2026-09-16)
 
 ### Suggestions: a multilingual `insertion`, separate from the label
 

@@ -1047,7 +1047,7 @@ Two defects made inserting a palette suggestion impossible in a text field rende
 
 Sample 12 shows both surfaces on an ICD-10 chapter → code → BE-THESAURUS term tree, and the demo's ICD-10 chapter table now matches real code ranges (its regexes used en-dashes, so every code fell into chapter XXII).
 
-## [MISSING] 2.4.1 (2026-09-11)
+## 2.4.1 (2026-09-11)
 <!-- tag: 2.4.1 | target: 002eb30c469859603bc8d586faed32c09a2e7e8d | prerelease: false -->
 
 ### `suggestionProvider` and `linksProvider` on `<icure-form>`
@@ -1060,7 +1060,7 @@ The suggestion palette's providers are now host-level properties of `<icure-form
 
 Selecting a suggestion when no links provider applies (or it returns nothing) now inserts the suggestion's plain text; previously nothing was inserted. See [Hierarchical suggestions](https://github.com/icure/icure-form/blob/main/README.md#hierarchical-suggestions).
 
-## [MISSING] 2.5.0 (2026-09-16)
+## 2.5.0 (2026-09-16)
 <!-- tag: 2.5.0 | target: 7b52f291aeb969ab4328fc3f9d688d98e7b7d00a | prerelease: false -->
 
 ### Suggestions: a multilingual `insertion`, separate from the label

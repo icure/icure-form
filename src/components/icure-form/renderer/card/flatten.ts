@@ -137,7 +137,7 @@ function walkForm(form: Form, ctx: FlattenCtx, visited: Set<Form>): void {
 function walkChild(child: Field | Group | Subform, sectionTitle: string, groupTitle: string | undefined, ctx: FlattenCtx, visited: Set<Form>): void {
 	if (!isVisibleForRole((child as any).roles, ctx.role)) return
 	if (isGroup(child)) {
-		const nextGroupTitle = groupTitle ? `${groupTitle} / ${child.group}` : child.group
+		const nextGroupTitle = child.hideTitle ? groupTitle : groupTitle ? `${groupTitle} / ${child.group}` : child.group
 		const groupSamePage = !!child.samePage
 		// When `samePage`, do NOT commit before entering — the group's content joins the previous card.
 		if (!groupSamePage) commitCard(ctx)
@@ -230,7 +230,7 @@ async function walkChildAsync(
 	if (!isVisibleForRole((child as any).roles, ctx.role)) return
 	if (await isComputedHidden(child, container)) return
 	if (isGroup(child)) {
-		const nextGroupTitle = groupTitle ? `${groupTitle} / ${child.group}` : child.group
+		const nextGroupTitle = child.hideTitle ? groupTitle : groupTitle ? `${groupTitle} / ${child.group}` : child.group
 		const groupSamePage = !!child.samePage
 		if (!groupSamePage) commitCard(ctx)
 		if (groupSamePage) {

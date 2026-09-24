@@ -229,6 +229,7 @@ sections:
             multiline: false
             translate: true
         borderless: false
+        hideTitle: false
         translate: true
       - clazz: group
         group: And you can add tags and codes
@@ -281,6 +282,7 @@ sections:
             multiline: false
             translate: true
         borderless: false
+        hideTitle: false
         translate: true
 `,
 		)
@@ -428,6 +430,7 @@ sections:
 			'            multiline: false\n' +
 			'            translate: true\n' +
 			'        borderless: false\n' +
+			'        hideTitle: false\n' +
 			'        translate: true\n' +
 			'      - clazz: group\n' +
 			'        group: And you can add tags and codes\n' +
@@ -495,6 +498,7 @@ sections:
 			'            multiline: false\n' +
 			'            translate: true\n' +
 			'        borderless: false\n' +
+			'        hideTitle: false\n' +
 			'        translate: true\n'
 		const form = Form.parse(YAML.parse(original))
 		const text = YAML.stringify(JSON.parse(JSON.stringify(form)))

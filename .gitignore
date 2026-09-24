@@ -14,6 +14,9 @@
 # E2E test build artifacts
 test/e2e/test-page/harness.bundle.js
 test/e2e/test-results/
+
+# Raw legacy form dumps extracted from production template DBs (not for commit)
+/app/samples/legacy/
 .yarn/*
 .yarn/cache
 .yarn/patches

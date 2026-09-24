@@ -315,6 +315,7 @@ export abstract class Field {
 					'time-picker': () => new TimePicker(json.field, { ...json }),
 					'date-time-picker': () => new DateTimePicker(json.field, { ...json }),
 					dropdown: () => new DropdownField(json.field, { ...json }),
+					'dropdown-field': () => new DropdownField(json.field, { ...json }),
 					'radio-button': () => new RadioButton(json.field, { ...json }),
 					checkbox: () => new CheckBox(json.field, { ...json }),
 					label: () => new Label(json.field, { ...json }),
@@ -1186,6 +1187,12 @@ export class Group {
 	clazz = 'group' as const
 	group: string
 	borderless: boolean
+	/**
+	 * When `true`, the group's title is not displayed (but its border/background still is,
+	 * unless `borderless` is also set) — for groups whose title is a generated placeholder
+	 * (e.g. legacy-conversion "Section N" headings) rather than a meaningful label.
+	 */
+	hideTitle: boolean
 	translate: boolean
 	fields?: Array<Field | Group | Subform>
 	span?: number
@@ -1215,6 +1222,7 @@ export class Group {
 			span,
 			rowSpan,
 			borderless,
+			hideTitle,
 			translate,
 			computedProperties,
 			width,
@@ -1224,6 +1232,7 @@ export class Group {
 			alwaysVisible,
 		}: {
 			borderless?: boolean
+			hideTitle?: boolean
 			translate?: boolean
 			span?: number
 			rowSpan?: number
@@ -1238,6 +1247,7 @@ export class Group {
 		this.group = title
 		this.fields = fields
 		this.borderless = borderless ?? false
+		this.hideTitle = hideTitle ?? false
 		this.translate = translate ?? true
 		this.fields = fields
 		this.span = span
@@ -1256,6 +1266,7 @@ export class Group {
 
 	static parse({
 		borderless,
+		hideTitle,
 		span,
 		computedProperties,
 		fields,
@@ -1269,6 +1280,7 @@ export class Group {
 		group: string
 		fields?: Array<Field | Group | Subform>
 		borderless?: boolean
+		hideTitle?: boolean
 		translate?: boolean
 		span?: number
 		rowSpan?: number
@@ -1290,6 +1302,7 @@ export class Group {
 			{
 				span: span,
 				borderless: borderless,
+				hideTitle: hideTitle,
 				translate: translate,
 				computedProperties: computedProperties,
 				width: width,
@@ -1306,6 +1319,7 @@ export class Group {
 			computedProperties: this.computedProperties,
 			fields: this.fields?.map((f: Field | Group) => f.toJson()),
 			borderless: this.borderless,
+			hideTitle: this.hideTitle,
 			translatable: this.translate,
 			span: this.span,
 			width: this.width,
@@ -1439,14 +1453,20 @@ export class Section {
 	 * computed `hidden`.
 	 */
 	alwaysVisible?: boolean
+	/**
+	 * Renders the section's grid with the `compact` CSS class: no vertical margin or padding
+	 * on its fields and a much tighter row pitch, for e.g. several rows of checkboxes.
+	 */
+	compact?: boolean
 
-	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[], alwaysVisible?: boolean) {
+	constructor(title: string, fields: Array<Field | Group | Subform>, description?: string, keywords?: string[], roles?: string[], alwaysVisible?: boolean, compact?: boolean) {
 		this.section = title
 		this.fields = fields
 		this.description = description
 		this.keywords = keywords
 		this.roles = roles
 		this.alwaysVisible = alwaysVisible
+		this.compact = compact
 	}
 
 	static parse(json: {
@@ -1458,6 +1478,7 @@ export class Section {
 		keywords?: string[]
 		roles?: string[]
 		alwaysVisible?: boolean
+		compact?: boolean
 	}): Section {
 		return new Section(
 			json.section,
@@ -1472,6 +1493,7 @@ export class Section {
 			json.keywords,
 			Array.isArray(json.roles) ? json.roles : undefined,
 			json.alwaysVisible !== undefined ? !!json.alwaysVisible : undefined,
+			json.compact === true ? true : undefined,
 		)
 	}
 
@@ -1482,6 +1504,7 @@ export class Section {
 		fields: (Field | Group | Subform)[]
 		roles?: string[]
 		alwaysVisible?: boolean
+		compact?: boolean
 	} {
 		return {
 			section: this.section,
@@ -1490,6 +1513,7 @@ export class Section {
 			keywords: this.keywords,
 			roles: this.roles,
 			alwaysVisible: this.alwaysVisible,
+			compact: this.compact,
 		}
 	}
 }

@@ -99,7 +99,7 @@ const renderInternal = async (
 		const groupTitle = fg.translate && tp && props.language ? tp(props.language, fg.group) : fg.group
 		const shell = (children: unknown) =>
 			html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
-				${fg.borderless ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
+				${fg.borderless || fg.hideTitle ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
 				<div class="icure-form">${children}</div>
 			</div>`
 		// Read-only review: a group whose children all dropped goes with them, unless it opts out with
@@ -144,7 +144,7 @@ const renderInternal = async (
 		return {
 			template: html`<div class="subform" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
 				<div class="subform__heading">
-					${h(level, 'subform__heading__title', html`${(props.language && fg.shortLabel ? tp?.(props.language, fg.shortLabel) : fg.shortLabel) ?? ''}`)}
+					${h(level, 'subform__heading__title', html`${(fg.shortLabel && tp && props.language ? tp(props.language, fg.shortLabel) : fg.shortLabel) ?? ''}`)}
 					${readonly
 						? nothing
 						: html`<form-selection-button
@@ -568,7 +568,7 @@ const renderInternal = async (
 				// Narrower than `RenderedNode`: a section always has a template of its own, its grid.
 				const renderSection = async (): Promise<{ template: TemplateResult; content: boolean }> => {
 					const results = await Promise.all(s.fields.map((fieldOrGroup: Field | Group | Subform) => renderFieldGroupOrSubform(fieldOrGroup, 3)))
-					return { template: html` <div class="icure-form">${results.map((r) => r.template)}</div>`, content: results.some((r) => r.content) }
+					return { template: html` <div class="${s.compact ? 'icure-form compact' : 'icure-form'}">${results.map((r) => r.template)}</div>`, content: results.some((r) => r.content) }
 				}
 				if (sectionWrapper) {
 					// `form:tab`: the wrapper is always called — every section keeps its tab — and it alone

@@ -138,6 +138,8 @@ export interface Validator {
 	message: string
 }
 
+const setIndex = (field: Field, index?: string) => Object.defineProperty(field, 'index', { value: index, writable: true, configurable: true, enumerable: false })
+
 export abstract class Field {
 	clazz = 'field' as const
 	field: string
@@ -203,9 +205,25 @@ export abstract class Field {
 	// action handler is then responsible for mutating the form values and
 	// triggering a re-render. Currently honoured by token-field.
 	delegatedEdition?: boolean
+	/** Exposed as `aria-required` on the field's editor. Purely declarative: validation stays in `validators`. */
+	required?: boolean
+	/**
+	 * Path of the field in the JSON it was parsed from (`<section>-<field>[-<sub-field>…]`), set by `Form.parse`.
+	 * Derived: never serialised, and non-enumerable so it stays out of dumps, spreads and change detection. Used to build ids that are stable across renders, such as the label id that
+	 * `aria-labelledby` points to; several instances of one subform share it, which is safe because each field
+	 * renders its label and editor in its own shadow root.
+	 */
+	index?: string
 
 	label(): string {
 		return this.field
+	}
+
+	/** The subclass constructors don't know the properties `parse` sets after construction; copies keep them. */
+	protected carryOver<T extends Field>(copy: T, properties: Partial<Field>): T {
+		copy.required = 'required' in properties ? properties.required : this.required
+		setIndex(copy, 'index' in properties ? properties.index : this.index)
+		return copy
 	}
 
 	protected constructor(
@@ -302,7 +320,7 @@ export abstract class Field {
 
 	abstract copyIfNeeded(properties: Partial<Field>): Field
 
-	static parse(json: Field): Field {
+	static parse(json: Field, index?: string): Field {
 		const result =
 			(
 				{
@@ -334,6 +352,10 @@ export abstract class Field {
 		if ((json as any).samePage !== undefined) {
 			result.samePage = !!(json as any).samePage
 		}
+		if ((json as any).required !== undefined) {
+			result.required = !!(json as any).required
+		}
+		setIndex(result, index)
 		return result
 	}
 
@@ -383,6 +405,7 @@ export abstract class Field {
 		readOnlyEvent?: string
 		payload?: unknown
 		delegatedEdition?: boolean
+		required?: boolean
 	} {
 		return {
 			field: this.field,
@@ -405,6 +428,7 @@ export abstract class Field {
 			...(this.readOnlyEvent !== undefined ? { readOnlyEvent: this.readOnlyEvent } : {}),
 			...(this.payload !== undefined ? { payload: this.payload } : {}),
 			...(this.delegatedEdition ? { delegatedEdition: true } : {}),
+			...(this.required ? { required: true } : {}),
 			computedProperties: this.computedProperties,
 			now: this.now,
 			translate: this.translate,
@@ -494,7 +518,7 @@ export class TextField extends Field {
 	}
 
 	override copyIfNeeded(properties: Partial<TextField>): TextField {
-		return hasChanges(this, properties) ? new TextField(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new TextField(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -557,7 +581,7 @@ export class MeasureField extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<MeasureField>): MeasureField {
-		return hasChanges(this, properties) ? new MeasureField(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new MeasureField(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -620,7 +644,7 @@ export class NumberField extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<NumberField>): NumberField {
-		return hasChanges(this, properties) ? new NumberField(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new NumberField(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -701,7 +725,7 @@ export class TokenField extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<TokenField>): TokenField {
-		return hasChanges(this, properties) ? new TokenField(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new TokenField(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -770,7 +794,7 @@ export class ItemsListField extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<ItemsListField>): ItemsListField {
-		return hasChanges(this, properties) ? new ItemsListField(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new ItemsListField(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -836,7 +860,7 @@ export class DatePicker extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<DatePicker>): DatePicker {
-		return hasChanges(this, properties) ? new DatePicker(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new DatePicker(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -902,7 +926,7 @@ export class TimePicker extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<TimePicker>): TimePicker {
-		return hasChanges(this, properties) ? new TimePicker(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new TimePicker(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -968,7 +992,7 @@ export class DateTimePicker extends Field {
 		})
 	}
 	override copyIfNeeded(properties: Partial<DateTimePicker>): DateTimePicker {
-		return hasChanges(this, properties) ? new DateTimePicker(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new DateTimePicker(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -1012,7 +1036,7 @@ export class DropdownField extends Field {
 		this.sortOptions = options.sortOptions ?? undefined
 	}
 	override copyIfNeeded(properties: Partial<DropdownField>): DropdownField {
-		return hasChanges(this, properties) ? new DropdownField(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new DropdownField(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -1075,7 +1099,7 @@ export class RadioButton extends Field {
 		this.sortOptions = sortOptions ?? undefined
 	}
 	override copyIfNeeded(properties: Partial<RadioButton>): RadioButton {
-		return hasChanges(this, properties) ? new RadioButton(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new RadioButton(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -1135,7 +1159,7 @@ export class CheckBox extends Field {
 		this.sortOptions = sortOptions ?? undefined
 	}
 	override copyIfNeeded(properties: Partial<CheckBox>): CheckBox {
-		return hasChanges(this, properties) ? new CheckBox(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new CheckBox(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 export class Label extends Field {
@@ -1143,7 +1167,7 @@ export class Label extends Field {
 		super('label', label, { shortLabel, grows, span })
 	}
 	override copyIfNeeded(properties: Partial<Label>): Label {
-		return hasChanges(this, properties) ? new Label(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new Label(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -1179,7 +1203,7 @@ export class Button extends Field {
 		super('action', label, { shortLabel, grows, span, rowSpan, readonly, computedProperties, styleOptions, validators, translate, event, payload })
 	}
 	override copyIfNeeded(properties: Partial<Button>): Button {
-		return hasChanges(this, properties) ? new Button(this.field, { ...this, ...properties }) : this
+		return hasChanges(this, properties) ? this.carryOver(new Button(this.field, { ...this, ...properties }), properties) : this
 	}
 }
 
@@ -1264,41 +1288,38 @@ export class Group {
 		return hasChanges(this, properties) ? new Group(this.group, this.fields ?? [], { ...this, ...properties }) : this
 	}
 
-	static parse({
-		borderless,
-		hideTitle,
-		span,
-		computedProperties,
-		fields,
-		group,
-		translate,
-		width,
-		roles,
-		samePage,
-		alwaysVisible,
-	}: {
-		group: string
-		fields?: Array<Field | Group | Subform>
-		borderless?: boolean
-		hideTitle?: boolean
-		translate?: boolean
-		span?: number
-		rowSpan?: number
-		computedProperties?: { [_key: string]: string }
-		width?: number
-		roles?: string[]
-		samePage?: boolean
-		alwaysVisible?: boolean
-	}): Group {
+	static parse(
+		{
+			borderless,
+			hideTitle,
+			span,
+			computedProperties,
+			fields,
+			group,
+			translate,
+			width,
+			roles,
+			samePage,
+			alwaysVisible,
+		}: {
+			group: string
+			fields?: Array<Field | Group | Subform>
+			borderless?: boolean
+			hideTitle?: boolean
+			translate?: boolean
+			span?: number
+			rowSpan?: number
+			computedProperties?: { [_key: string]: string }
+			width?: number
+			roles?: string[]
+			samePage?: boolean
+			alwaysVisible?: boolean
+		},
+		index?: string,
+	): Group {
 		return new Group(
 			group,
-			(fields || []).map((s: Field | Group | Subform) =>
-				(s as Group)['group']
-					? Group.parse(s as Group)
-					: (s as unknown as { subform: string })['subform'] || (s as Subform)['forms'] || (s as Subform)['refs']
-					? Subform.parse(s as Subform & { subform: string })
-					: Field.parse(s as Field),
-			),
+			(fields || []).map((s: Field | Group | Subform, i) => parseFormItem(s, index !== undefined ? `${index}-${i}` : undefined)),
 			{
 				span: span,
 				borderless: borderless,
@@ -1440,6 +1461,17 @@ export class Subform {
 		}
 	}
 }
+/**
+ * Parses one entry of a section's or group's `fields`. `index` is the entry's path in the form JSON; fields keep it
+ * (see `Field.index`) and groups hand it down to their children.
+ */
+const parseFormItem = (s: Field | Group | Subform, index?: string): Field | Group | Subform =>
+	(s as Group)['group']
+		? Group.parse(s as Group, index)
+		: (s as unknown as { subform: string })['subform'] || (s as Subform)['forms'] || (s as Subform)['refs']
+		? Subform.parse(s as Subform & { subform: string })
+		: Field.parse(s as Field, index)
+
 export class Section {
 	section: string
 	fields: Array<Field | Group | Subform>
@@ -1469,26 +1501,23 @@ export class Section {
 		this.compact = compact
 	}
 
-	static parse(json: {
-		section: string
-		fields?: Array<Field | Group | Subform>
-		groups?: Array<Field | Group | Subform>
-		sections?: Array<Field | Group | Subform>
-		description?: string
-		keywords?: string[]
-		roles?: string[]
-		alwaysVisible?: boolean
-		compact?: boolean
-	}): Section {
+	static parse(
+		json: {
+			section: string
+			fields?: Array<Field | Group | Subform>
+			groups?: Array<Field | Group | Subform>
+			sections?: Array<Field | Group | Subform>
+			description?: string
+			keywords?: string[]
+			roles?: string[]
+			alwaysVisible?: boolean
+			compact?: boolean
+		},
+		index?: string,
+	): Section {
 		return new Section(
 			json.section,
-			(json.fields ?? json.groups ?? json.sections ?? []).map((s: Field | Group | Subform) =>
-				(s as Group)['group']
-					? Group.parse(s as Group)
-					: (s as unknown as { subform: string })['subform'] || (s as Subform)['forms'] || (s as Subform)['refs']
-					? Subform.parse(s as Subform & { subform: string })
-					: Field.parse(s as Field),
-			),
+			(json.fields ?? json.groups ?? json.sections ?? []).map((s: Field | Group | Subform, i) => parseFormItem(s, index !== undefined ? `${index}-${i}` : undefined)),
 			json.description,
 			json.keywords,
 			Array.isArray(json.roles) ? json.roles : undefined,
@@ -1609,7 +1638,7 @@ export class Form {
 	): Form {
 		const parsed = new Form(
 			json.form,
-			(json.sections || []).map((s: Section) => Section.parse(s)),
+			(json.sections || []).map((s: Section, i) => Section.parse(s, `${i}`)),
 			json.id,
 			json.description,
 			json.keywords,

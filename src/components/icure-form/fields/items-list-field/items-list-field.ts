@@ -13,6 +13,8 @@ export class ItemsListField extends Field {
 		return html`<icure-text-field
 			schema="items-list"
 			.readonly="${this.readonly}"
+			.required="${this.required}"
+			.fieldIndex="${this.fieldIndex}"
 			label="${this.label}"
 			.multiline="${this.multiline}"
 			.lines="${this.lines}"

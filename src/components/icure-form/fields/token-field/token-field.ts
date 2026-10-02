@@ -31,6 +31,8 @@ export class TokenField extends Field {
 			class="${clickable ? 'delegated-edition' : ''}"
 			style="${clickable ? 'cursor: pointer;' : ''}"
 			.readonly="${this.readonly || this.delegatedEdition}"
+			.required="${this.required}"
+			.fieldIndex="${this.fieldIndex}"
 			.delegatedEdition="${!this.readonly && this.delegatedEdition}"
 			.event="${this.event}"
 			.readOnlyEvent="${this.readOnlyEvent}"

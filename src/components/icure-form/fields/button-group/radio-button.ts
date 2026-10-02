@@ -12,6 +12,8 @@ export class RadioButton extends Field {
 			return html`
 				<icure-button-group
 					.readonly="${this.readonly}"
+					.required="${this.required}"
+					.fieldIndex="${this.fieldIndex}"
 					.displayMetadata="${this.displayMetadata}"
 					type="radio"
 					.displayedLabels="${this.displayedLabels}"

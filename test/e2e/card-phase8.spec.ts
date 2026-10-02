@@ -356,8 +356,8 @@ test.describe('Phase 8 / keyboard navigation', () => {
 // axe-core WCAG 2.1 AA scan
 // ============================================================
 test.describe('Phase 8 / axe-core a11y scan', () => {
-	// Helper: scan and filter violations originating in the card markup (not the harness page
-	// and not embedded field components like icure-form-text-field which we don't ship the styles for).
+	// Helper: scan and filter violations originating in the card markup, embedded field components
+	// included (they expose roles and names since #17), not the harness page.
 	async function cardViolations(page: Page) {
 		// Let animations finish so opacity-tweening doesn't trip color-contrast checks.
 		await page.waitForTimeout(600)
@@ -367,30 +367,7 @@ test.describe('Phase 8 / axe-core a11y scan', () => {
 				const html = n.html ?? ''
 				const target = (n.target ?? []).join(' ')
 				const inPatient = html.includes('card') || target.includes('card')
-				const inFieldComponent =
-					html.startsWith('<icure-form-text-field') ||
-					html.startsWith('<icure-form-measure-field') ||
-					html.startsWith('<icure-form-number-field') ||
-					html.startsWith('<icure-form-token-field') ||
-					html.startsWith('<icure-form-items-list-field') ||
-					html.startsWith('<icure-form-date-picker') ||
-					html.startsWith('<icure-form-time-picker') ||
-					html.startsWith('<icure-form-date-time-picker') ||
-					html.startsWith('<icure-form-dropdown-field') ||
-					html.startsWith('<icure-form-radio-button') ||
-					html.startsWith('<icure-form-checkbox') ||
-					target.includes('icure-form-text-field') ||
-					target.includes('icure-form-measure-field') ||
-					target.includes('icure-form-number-field') ||
-					target.includes('icure-form-token-field') ||
-					target.includes('icure-form-items-list-field') ||
-					target.includes('icure-form-date-picker') ||
-					target.includes('icure-form-time-picker') ||
-					target.includes('icure-form-date-time-picker') ||
-					target.includes('icure-form-dropdown-field') ||
-					target.includes('icure-form-radio-button') ||
-					target.includes('icure-form-checkbox')
-				return inPatient && !inFieldComponent
+				return inPatient
 			}),
 		)
 	}

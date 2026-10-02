@@ -14,6 +14,8 @@ export class CheckBox extends Field {
 					style="display: block; width: 100%; min-width: 0;"
 					type="checkbox"
 					.readonly="${this.readonly}"
+					.required="${this.required}"
+					.fieldIndex="${this.fieldIndex}"
 					.displayMetadata="${this.displayMetadata}"
 					.displayedLabels="${this.displayedLabels}"
 					label="${this.label}"

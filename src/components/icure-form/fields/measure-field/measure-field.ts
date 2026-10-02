@@ -8,6 +8,8 @@ export class MeasureField extends Field {
 			return html`
 				<icure-text-field
 					.readonly="${this.readonly}"
+					.required="${this.required}"
+					.fieldIndex="${this.fieldIndex}"
 					.displayMetadata="${this.displayMetadata}"
 					label="${this.label}"
 					.displayedLabels="${this.displayedLabels}"

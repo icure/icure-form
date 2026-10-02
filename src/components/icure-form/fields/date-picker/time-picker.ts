@@ -7,6 +7,8 @@ export class TimePicker extends Field {
 		return (versionedValues && Object.keys(versionedValues).length ? Object.keys(versionedValues) : [undefined]).map((id) => {
 			return html`<icure-text-field
 				.readonly="${this.readonly}"
+				.required="${this.required}"
+				.fieldIndex="${this.fieldIndex}"
 				.displayMetadata="${this.displayMetadata}"
 				label="${this.label}"
 				.displayedLabels="${this.displayedLabels}"

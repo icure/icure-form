@@ -103,6 +103,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 											.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
 											.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
 											.ownersProvider="${this.ownersProvider}"
+											.translationProvider="${this.translationProvider}"
 									  />`
 									: nothing}
 							</div>

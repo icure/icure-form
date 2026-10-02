@@ -7,6 +7,8 @@ import { PropertyValues } from '@lit/reactive-element'
 /**
  * Base class for all fields.
  */
+let instanceCount = 0
+
 export abstract class Field extends LitElement {
 	/**
 	 * The label of the field. This is a unique per form property that is used to create data in the formValuesContainer.
@@ -53,6 +55,22 @@ export abstract class Field extends LitElement {
 
 	@property() public visible = true
 	@property() readonly = false
+	/** Exposed as `aria-required`; see `Field.required` in the model. */
+	@property({ type: Boolean }) required = false
+	/** `Field.index` of the rendered field, used to build its label id. */
+	@property() fieldIndex?: string
+
+	private readonly instanceSeq = ++instanceCount
+
+	/**
+	 * Id of the field's primary label, the target of its editor's `aria-labelledby`. Built from `fieldIndex` so it is
+	 * stable across renders; a component used outside `<icure-form>` has no index and falls back to a per-instance
+	 * number. Repeated subform instances share an index: no collision, because the label and the element referencing
+	 * it are rendered in this component's own shadow root.
+	 */
+	get labelId(): string {
+		return `icure-label-${this.fieldIndex ?? `i${this.instanceSeq}`}`
+	}
 	@property() displayMetadata = false
 
 	@state() selectedLanguage?: string = undefined

@@ -1,0 +1,52 @@
+form: A11y fields
+description: One field of each editor kind, a required field, a range validator and a repeatable subform (issue #17).
+sections:
+  - section: Fields
+    fields:
+      - field: fullName
+        type: text-field
+        shortLabel: Full name
+        span: 12
+        required: true
+        validators:
+          - validation: |
+              return validate.notBlank(self, 'fullName')
+            message: Please enter the patient's full name.
+      - field: weight
+        type: measure-field
+        shortLabel: Weight
+        span: 12
+      - field: count
+        type: number-field
+        shortLabel: Count
+        span: 12
+        validators:
+          - validation: |
+              const m = parseContent(self['count']?.[0]?.content)
+              return m === undefined || m === null || (m >= 1 && m <= 10)
+            message: Count must be between 1 and 10.
+      - field: visit
+        type: date-time-picker
+        shortLabel: Visit
+        span: 12
+      - field: birthDate
+        type: date-picker
+        shortLabel: Birth date
+        span: 12
+        required: true
+  - section: Repeated
+    fields:
+      - subform: Notes
+        id: notes
+        shortLabel: Notes
+        span: 24
+        forms:
+          note:
+            form: Note
+            sections:
+              - section: Note
+                fields:
+                  - field: noteText
+                    type: text-field
+                    shortLabel: Note
+                    span: 24

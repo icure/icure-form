@@ -102,6 +102,7 @@ The Field class represents a generic field within a form. It is designed to be e
 - suggestions: boolean - Optional. Opts a text, token or items-list field in to the host `suggestionProvider` without declaring `codifications`.
 - links: boolean - Optional. Opts a text, token or items-list field in to the host `linksProvider` without declaring `codifications`.
 - readonly: boolean - Optional property indicating if the field is read-only.
+- required: boolean - Optional. Exposes the field as required to assistive technology (`aria-required`). Purely declarative: pair it with a validator, such as `validate.notBlank`, to enforce it. Can be computed via `computedProperties.required`. See [Accessibility](#accessibility).
 - options: Record<string,unknown> - Optional field options.
 - labels: Labels - Optional labels for the field. Labels is `Partial<Record<'top' | 'left' | 'right' | 'bottom' | 'float' | 'add' | 'remove', string>>`.
 - value: string - Optional value of the field.
@@ -157,6 +158,8 @@ interface Validator {
 ```
 
 Validators are evaluated using the same sandbox as computed properties. The `self` object gives access to all field values in the form.
+
+A field with a failing validator is exposed as `aria-invalid`, its editor described by the error messages.
 
 Example:
 ```yaml
@@ -495,6 +498,18 @@ sections:
 ```
 
 There is no built-in migration for the legacy `hiddenForPatient` flag; any `hiddenForPatient: true` in saved YAML/JSON is silently dropped on parse. Update existing form definitions to use `roles` directly.
+
+### Accessibility
+
+Each field's editor exposes a role and an accessible name taken from the field's label:
+
+- text, measure, number, date-time, time, token and items-list fields are a `textbox` (`aria-readonly` when readonly);
+- the date-only field is a `combobox` whose popup is the calendar `dialog`. Enter, Space or Alt+ArrowDown open it, Escape closes it, and picking a day closes it and gives the focus back;
+- the dropdown's input is named by its label too.
+
+`aria-required` comes from the field's `required` property, `aria-invalid` and `aria-describedby` from its validators. Icon-only buttons (reset, metadata bar, dropdown and calendar triggers) carry an `aria-label`, translated through the form's translations when they define `Reset`, `Author`, `Value date`, `Version`, `Language`, `Show options` or `Choose date`.
+
+A label's id is built from the field's position in the form definition (`Field.index`). Instances of one subform therefore share ids, which is safe: each field renders its label and its editor in its own shadow root, and `aria-*` references never cross it.
 
 ### Read-only review: hiding empty fields
 

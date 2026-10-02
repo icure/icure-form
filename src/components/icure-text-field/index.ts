@@ -88,6 +88,8 @@ export class IcureTextField extends Field {
 	@state() private view?: EditorView
 	@state() private pasteWarning = false
 	@state() private invalidValue = false
+	/** Whether the validators reported errors at the last render; read by `editorAttributes`. */
+	private hasValidationErrors = false
 
 	/** Whether this field currently holds a non-empty date/time value that cannot be parsed. */
 	public get hasInvalidValue(): boolean {
@@ -264,6 +266,7 @@ export class IcureTextField extends Field {
 		let rev: string | null | undefined
 		let versions: Version<FieldValue>[] | undefined
 		const validationError = validationErrors.length
+		this.hasValidationErrors = !!validationError
 		let valueForExistingLanguages: string[] | undefined = undefined
 
 		if (icureFormLogging) {
@@ -332,11 +335,23 @@ export class IcureTextField extends Field {
 		}
 		return html`
 			<div id="root" class="${this.visible ? 'icure-text-field' : 'hidden'}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined, this.labelId) : nothing}
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
 						<div id="editor" class="${this.schema}${this.tokenDeleteButton && (!this.readonly || this.delegatedEdition) ? ' with-token-delete' : ''}" style="min-height: calc( ${this.lines}rem + 2px )"></div>
-						${!this.displayMetadata && this.defaultValueProvider ? html`<div id="reset" class="reset-button" @click="${async () => await this.reset(renderHash)}">${resetPicto}</div` : nothing}
+						${
+							!this.displayMetadata && this.defaultValueProvider
+								? html`<button
+										type="button"
+										id="reset"
+										class="reset-button"
+										aria-label="${this.translationProvider?.(this.language(), 'Reset') ?? 'Reset'}"
+										@click="${async () => await this.reset(renderHash)}"
+								  >
+										${resetPicto}
+								  </button>`
+								: nothing
+						}
 					</div>
 						${
 							this.displayMetadata && metadata
@@ -355,6 +370,7 @@ export class IcureTextField extends Field {
 												.handleLanguageSelected="${(iso: string) => (this.selectedLanguage = iso)}"
 												.handleRevisionSelected="${(rev: string) => (this.selectedRevision = rev)}"
 												.ownersProvider="${this.ownersProvider}"
+												.translationProvider="${this.translationProvider}"
 												.existingLanguages="${valueForExistingLanguages ?? undefined}"
 											/>
 										</div>
@@ -363,8 +379,8 @@ export class IcureTextField extends Field {
 						}
 					</div>
 					${this.pasteWarning ? html`<div class="paste-warning">⚠️ Invalid paste content. The pasted content could not be inserted into this field.</div>` : nothing}
-					${this.invalidValue ? html`<div class="error invalid-value-error"><div>${this.invalidValueMessage()}</div></div>` : nothing}
-					<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
+					${this.invalidValue ? html`<div id="invalid-value-error" class="error invalid-value-error"><div>${this.invalidValueMessage()}</div></div>` : nothing}
+					<div id="errors" class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 				</div>
 			</div>
 		`
@@ -686,7 +702,26 @@ export class IcureTextField extends Field {
 				editable: () => {
 					return !this.readonly
 				},
+				attributes: () => this.editorAttributes(),
 			})
+		}
+	}
+
+	/**
+	 * ARIA attributes of the contenteditable root, re-evaluated by ProseMirror on every state update (each render
+	 * updates the state). Absent keys rather than `undefined` values: ProseMirror would stringify those. The ids
+	 * referenced are in this component's shadow root, as are the elements they point to.
+	 */
+	private editorAttributes(): Record<string, string> {
+		const describedBy = [this.invalidValue ? 'invalid-value-error' : undefined, this.hasValidationErrors ? 'errors' : undefined].filter((id) => !!id).join(' ')
+		return {
+			role: 'textbox',
+			...(this.multiline === true || this.multiline === 'true' ? { 'aria-multiline': 'true' } : {}),
+			...(this.displayedLabels && Object.keys(this.displayedLabels).length ? { 'aria-labelledby': this.labelId } : {}),
+			...(this.required ? { 'aria-required': 'true' } : {}),
+			...(describedBy ? { 'aria-invalid': 'true', 'aria-describedby': describedBy } : {}),
+			...(this.readonly ? { 'aria-readonly': 'true' } : {}),
+			...(this.placeholder ? { 'aria-placeholder': this.placeholder } : {}),
 		}
 	}
 
@@ -986,6 +1021,6 @@ export class MetadataButtonBarWrapper extends LitElement {
 		return html`<icure-metadata-buttons-bar .metadata="${metadata}" .revision="${rev}" .versions="${versions}" .valueId="${extractSingleValue(parent.valueProvider?.())?.[0]}"
 		.defaultLanguage="${parent.defaultLanguage}" .selectedLanguage="${parent.selectedLanguage}" .languages="${parent.languages}" .handleMetadataChanged="${parent.handleMetadataChanged}"
 		.handleLanguageSelected="${(iso: string) => (parent.selectedLanguage = iso)}" .handleRevisionSelected="${(rev: string) => (parent.selectedRevision = rev)}" .ownersProvider="${op}"
-		style="white-space: nowrap; padding-top: 1px" " />`
+		.translationProvider="${parent.translationProvider}" style="white-space: nowrap; padding-top: 1px" " />`
 	}
 }

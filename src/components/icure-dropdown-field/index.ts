@@ -207,17 +207,38 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 
 		return html`
 			<div id="root" class="icure-text-field ${inputValue != '' ? 'has-content' : ''}" data-placeholder=${this.placeholder}>
-				${this.displayedLabels ? generateLabels(this.displayedLabels, language, this.translate ? this.translationProvider : undefined) : nothing}
+				${this.displayedLabels ? generateLabels(this.displayedLabels, language, this.translate ? this.translationProvider : undefined, this.labelId) : nothing}
 				<div class="icure-input ${validationError && 'icure-input__validationError'}" id="test" @click="${(event: MouseEvent) => this.togglePopup(event, true)}">
-					<input type="text" id="editor" style="outline: none" .value=${this.textInputValue ?? inputValue ?? ''} @input="${this.textInputChanged()}" autocomplete="off" />
+					<input
+						type="text"
+						id="editor"
+						style="outline: none"
+						aria-labelledby="${this.displayedLabels ? this.labelId : nothing}"
+						aria-required="${this.required ? 'true' : nothing}"
+						aria-invalid="${validationError ? 'true' : nothing}"
+						aria-describedby="${validationError ? 'errors' : nothing}"
+						aria-readonly="${this.readonly ? 'true' : nothing}"
+						.value=${this.textInputValue ?? inputValue ?? ''}
+						@input="${this.textInputChanged()}"
+						autocomplete="off"
+					/>
 					<div id="extra" class=${'extra forced'}>
-						<button class="btn select-arrow" @click="${this.togglePopup}">${dropdownPicto}</button>
+						<button
+							type="button"
+							class="btn select-arrow"
+							aria-label="${this.translationProvider?.(language, 'Show options') ?? 'Show options'}"
+							aria-haspopup="listbox"
+							aria-expanded="${this.displayMenu}"
+							@click="${this.togglePopup}"
+						>
+							${dropdownPicto}
+						</button>
 						${this.displayMenu
 							? html` <div id="menu" class="options" popover="manual" @click="${(event: Event) => event.stopPropagation()}">${rows.map((row) => this.renderRow(row, inputValue, language))}</div> `
 							: ''}
 					</div>
 				</div>
-				<div class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(language, error) ?? error}</div>`)}</div>
+				<div id="errors" class="error">${validationErrors.map(([, error]) => html`<div>${this.translationProvider?.(language, error) ?? error}</div>`)}</div>
 			</div>
 		`
 	}

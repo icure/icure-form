@@ -286,6 +286,12 @@ li.ProseMirror-selectednode {
 	justify-content: space-between;
 }
 
+// The date field's combobox spans the whole input even while empty, so that its focus outline is visible.
+#editor[role='combobox'] {
+	align-self: stretch;
+	align-items: center;
+}
+
 #editor {
 	display: flex;
 	color: rgb(101, 101, 101);

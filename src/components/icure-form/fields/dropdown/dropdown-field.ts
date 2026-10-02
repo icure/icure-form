@@ -12,6 +12,8 @@ export class DropdownField extends Field {
 			return html`
 				<icure-dropdown-field
 					.readonly="${this.readonly}"
+					.required="${this.required}"
+					.fieldIndex="${this.fieldIndex}"
 					.displayMetadata="${this.displayMetadata}"
 					.translate="${this.translate}"
 					label="${this.label}"

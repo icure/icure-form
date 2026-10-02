@@ -214,6 +214,8 @@ const renderInternal = async (
 			.readOnlyEvent="${fg.readOnlyEvent}"
 			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-text-field>`
 	}
 
@@ -245,6 +247,8 @@ const renderInternal = async (
 			.readOnlyEvent="${fg.readOnlyEvent}"
 			.actionListener="${actionListener}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-token-field>`
 	}
 
@@ -271,6 +275,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-items-list-field>`
 	}
 
@@ -292,6 +298,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-measure-field>`
 	}
 
@@ -312,6 +320,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-number-field>`
 	}
 
@@ -332,6 +342,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-date-picker>`
 	}
 
@@ -352,6 +364,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-time-picker>`
 	}
 
@@ -372,6 +386,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-date-time-picker>`
 	}
 
@@ -398,6 +414,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-dropdown-field>`
 	}
 
@@ -424,6 +442,8 @@ const renderInternal = async (
 			.handleMetadataChanged=${handleMetadataChangedProvider(formsValueContainer)}
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-radio-button>`
 	}
 
@@ -451,6 +471,8 @@ const renderInternal = async (
 			.handleMetadataChanged="${handleMetadataChangedProvider(formsValueContainer)}"
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-checkbox>`
 	}
 
@@ -467,6 +489,8 @@ const renderInternal = async (
 			.payload="${fg.payload !== undefined ? fg.payload : fg.computedProperties?.payload ? (await formsValueContainer?.compute(fg.computedProperties?.payload))?.value : undefined}"
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-button>`
 	}
 
@@ -481,6 +505,8 @@ const renderInternal = async (
 			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
 			.styleOptions="${fg.styleOptions}"
 			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
 		></icure-form-label>`
 	}
 

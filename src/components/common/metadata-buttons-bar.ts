@@ -28,6 +28,8 @@ export class MetadataButtonBar extends LitElement {
 	@property() handleMetadataChanged?: (metadata: FieldMetadata, id?: string) => string | undefined = undefined
 	@property() handleLanguageSelected?: (iso?: string) => void = undefined
 	@property() handleRevisionSelected?: (rev?: string | null) => void = undefined
+	/** Translates the buttons' accessible names; they stay in English without one. */
+	@property() translationProvider?: (language: string, text: string) => string = undefined
 	@property() ownersProvider: (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]> = async () => []
 
 	@state() protected displayOwnersMenu = false
@@ -72,6 +74,10 @@ export class MetadataButtonBar extends LitElement {
 		return owner ? suggestionLabel(owner, this.selectedLanguage ?? this.defaultLanguage ?? 'en') : ''
 	}
 
+	private t(text: string): string {
+		return this.translationProvider?.(this.defaultLanguage ?? 'en', text) ?? text
+	}
+
 	render() {
 		const revisionDate = this.versions.find((x) => x.revision === this.revision)?.modified
 
@@ -93,11 +99,15 @@ export class MetadataButtonBar extends LitElement {
 		console.log('handle reset', this.handleReset)
 
 		return html` <div id="extra" class=${'extra extra--metadataButtonsBar' + (forcedByMenu ? ' forced' : '')}>
-			<div class="info ${forcedByOwner || forcedByLanguage || forcedByValueDate ? 'hidden' : ''}">&#9432</div>
+			<div class="info ${forcedByOwner || forcedByLanguage || forcedByValueDate ? 'hidden' : ''}" aria-hidden="true">&#9432</div>
 			<div class="buttons-container">
-				${this.handleReset ? html`<button @click="${() => this.handleReset?.()}" class="btn forced">${resetPicto}</button>` : nothing}
+				${this.handleReset ? html`<button type="button" aria-label="${this.t('Reset')}" @click="${() => this.handleReset?.()}" class="btn forced">${resetPicto}</button>` : nothing}
 				<div class="menu-container">
 					<button
+						type="button"
+						aria-label="${this.t('Author')}"
+						aria-haspopup="menu"
+						aria-expanded="${this.displayOwnersMenu}"
 						data-content="${this.metadata?.owner ? this.ownerName(this.loadedOwners[this.metadata.owner]) : ''}"
 						@click="${() => this.toggleOwnersMenu(this.metadata?.owner)}"
 						class="btn menu-trigger author ${forcedByOwner ? 'forced' : ''}"
@@ -121,6 +131,10 @@ export class MetadataButtonBar extends LitElement {
 				</div>
 				<div class="menu-container">
 					<button
+						type="button"
+						aria-label="${this.t('Value date')}"
+						aria-haspopup="dialog"
+						aria-expanded="${this.displayValueDateMenu}"
 						data-content="${this.metadata?.valueDate ? format(anyDateToDate(this.metadata.valueDate)!, 'yyyy-MM-dd HH:mm:ss').replace(/ 00:00:00$/, '') : ''}"
 						class="btn date ${forcedByValueDate ? 'forced' : ''}"
 						@click="${() => this.toggleValueDateMenu()}"
@@ -139,6 +153,10 @@ export class MetadataButtonBar extends LitElement {
 				</div>
 				<div class="menu-container">
 					<button
+						type="button"
+						aria-label="${this.t('Version')}"
+						aria-haspopup="menu"
+						aria-expanded="${this.displayVersionsMenu}"
 						data-content="${this.revision === null ? 'latest' : this.revision ? `rev-${this.revision.split('-')[0]} ${revisionDate ? `(${format(new Date(revisionDate), 'yyyy-MM-dd')})` : ''}` : ''}"
 						@click="${this.toggleVersionsMenu}"
 						class="btn version  ${forcedByVersion ? 'forced' : ''}"
@@ -160,6 +178,10 @@ export class MetadataButtonBar extends LitElement {
 				</div>
 				<div class="menu-container">
 					<button
+						type="button"
+						aria-label="${this.t('Language')}"
+						aria-haspopup="menu"
+						aria-expanded="${this.displayLanguagesMenu}"
 						data-content="${this.selectedLanguage ? languageName(this.selectedLanguage) ?? this.selectedLanguage : languageName(this.defaultLanguage) ?? this.defaultLanguage}"
 						@click="${this.toggleLanguagesMenu}"
 						class="btn menu-trigger language ${forcedByLanguage ? 'forced' : ''}"

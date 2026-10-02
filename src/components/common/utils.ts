@@ -1,4 +1,4 @@
-import { html, TemplateResult } from 'lit'
+import { html, nothing, TemplateResult } from 'lit'
 import { Code, Field, Labels, Position } from '../model'
 import { localized } from '../../utils/suggestions'
 
@@ -14,8 +14,14 @@ export const getLabels = (field: Field): Labels => {
 	return labels
 }
 
-export function generateLabels(labels: Labels, language: string, translationProvider?: (language: string, text: string) => string): TemplateResult[] {
-	return Object.keys(labels).map((position: Position) => generateLabel(labels[position] as string, position, language, translationProvider))
+/**
+ * `labelId`, when given, goes on the primary label only: `float`, or the first displayed label when there is none.
+ * It is the target of the field editor's `aria-labelledby`; see `Field.labelId`.
+ */
+export function generateLabels(labels: Labels, language: string, translationProvider?: (language: string, text: string) => string, labelId?: string): TemplateResult[] {
+	const positions = Object.keys(labels) as Position[]
+	const primary = positions.includes('float') ? 'float' : positions[0]
+	return positions.map((position: Position) => generateLabel(labels[position] as string, position, language, translationProvider, position === primary ? labelId : undefined))
 }
 
 export function generateLabel(
@@ -23,13 +29,14 @@ export function generateLabel(
 	labelPosition: string,
 	language: string,
 	translationProvider: (language: string, text: string) => string = (language: string, text) => text,
+	id?: string,
 ): TemplateResult {
 	switch (labelPosition) {
 		case 'right':
 		case 'left':
-			return html` <label class="icure-label side above ${labelPosition}">${translationProvider(language, label)}</label> `
+			return html` <label id=${id ?? nothing} class="icure-label side above ${labelPosition}">${translationProvider(language, label)}</label> `
 		default:
-			return html` <label class="icure-label ${labelPosition}">${translationProvider(language, label)}</label> `
+			return html` <label id=${id ?? nothing} class="icure-label ${labelPosition}">${translationProvider(language, label)}</label> `
 	}
 }
 

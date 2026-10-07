@@ -4,6 +4,48 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 3.6.0 (2026-10-07)
+
+### Accessibility: fields expose a role and an accessible name
+
+Field editors were invisible to assistive technology: the ProseMirror editor behind text, measure, number and date fields had no `role`, and nothing linked it to its `<label>`. Every field now exposes a role and the name of its label, so screen readers announce it and `getByRole('textbox', { name: 'Weight' })` finds it.
+
+- Text, measure, number, date-time, time, token and items-list fields are a `textbox`, `aria-readonly` when readonly.
+- The date-only field is a `combobox` whose popup is the calendar `dialog`. Enter, Space or Alt+↓ open it; Escape closes it; picking a day closes it and gives the focus back.
+- A field whose validators fail is `aria-invalid`, and its error messages describe it.
+- Icon-only buttons (reset, metadata bar, dropdown and calendar triggers) carry an `aria-label`. It goes through the form's translations when they define `Reset`, `Author`, `Value date`, `Version`, `Language`, `Show options` or `Choose date`.
+
+A new `required` field property drives `aria-required`. It is declarative only: keep a validator to enforce it.
+
+```yaml
+- field: fullName
+  type: text-field
+  shortLabel: Full name
+  required: true
+  validators:
+    - validation: |
+        return validate.notBlank(self, 'fullName')
+      message: Please enter the patient's full name.
+```
+
+`required` can also be computed through `computedProperties.required`. See [Accessibility](./README.md#accessibility).
+
+### Compact sections
+
+A section can set `compact: true` to render its grid without vertical margin or padding on its fields and with a row pitch at least halved. It's meant for dense layouts such as several rows of checkboxes. A group can now set `hideTitle` to keep its border but drop its heading. See [Section](./README.md#section).
+
+### Layout fixes
+
+The renderer and themes handle larger form corpora better:
+- `dropdown-field` is parsed as a dropdown
+- side labels lay out correctly
+- checkbox columns align, and long labels are ellipsed
+- fields on one row get the same height
+- subform sections show their titles
+- action buttons align with checkboxes
+
+---
+
 ## 3.5.0 (2026-09-16)
 
 ### Suggestions: a multilingual `insertion`, separate from the label

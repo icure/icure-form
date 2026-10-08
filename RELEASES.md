@@ -1102,7 +1102,7 @@ Both maps accept the key `'*'`, which matches any language, with an exact langua
 
 `Suggestion.text` is deprecated but still works, so no provider has to change: it is read as a fallback for both roles, and `optionsProvider`, `suggestionProvider`, `ownersProvider` and `linksProvider` all keep their signatures. One behaviour does change with it — the **owner picker** now reads its names from `label` rather than `text`, so an `ownersProvider` that fills only `text` still works, but `label: { '*': name }` is the shape to move to. A label with no entry for the current language falls back to `'*'`, then to `text`, then to any other language it holds, then to the id; an insertion is stricter and never falls back to another language, because its result is written into the record. See [Label, insertion, and the `'*'` language](https://github.com/icure/icure-form/blob/cardinal/README.md#label-insertion-and-the--language).
 
-## [MISSING] 3.6.0 (2026-10-07)
+## 3.6.0 (2026-10-07)
 <!-- tag: 3.6.0 | target: 96a830b8def025f7662c0604d5a66da16f9f0f22 | prerelease: false -->
 
 ### Accessibility: fields expose a role and an accessible name

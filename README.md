@@ -506,8 +506,9 @@ Each field's editor exposes a role and an accessible name taken from the field's
 - text, measure, number, date-time, time, token and items-list fields are a `textbox` (`aria-readonly` when readonly);
 - the date-only field is a `combobox` whose popup is the calendar `dialog`. Enter, Space or Alt+ArrowDown open it, Escape closes it, and picking a day closes it and gives the focus back;
 - the dropdown's input is named by its label too.
+- radio buttons form a `radiogroup` and checkboxes a `group`, named by the field's label. When that label isn't shown (a lone option repeating it, or a checkbox with no options), a checkbox with no text of its own is named after the field.
 
-`aria-required` comes from the field's `required` property, `aria-invalid` and `aria-describedby` from its validators. Icon-only buttons (reset, metadata bar, dropdown and calendar triggers) carry an `aria-label`, translated through the form's translations when they define `Reset`, `Author`, `Value date`, `Version`, `Language`, `Show options` or `Choose date`.
+`aria-required` comes from the field's `required` property (on a radio group, not on a checkbox group, where ARIA doesn't allow it), `aria-invalid` and `aria-describedby` from its validators. Icon-only buttons (reset, metadata bar, dropdown and calendar triggers) carry an `aria-label`, translated through the form's translations when they define `Reset`, `Author`, `Value date`, `Version`, `Language`, `Show options` or `Choose date`.
 
 A label's id is built from the field's position in the form definition (`Field.index`). Instances of one subform therefore share ids, which is safe: each field renders its label and its editor in its own shadow root, and `aria-*` references never cross it.
 

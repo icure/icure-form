@@ -6,7 +6,7 @@ import { Field } from '../common'
 import { generateLabels } from '../common/utils'
 import { extractSingleValue } from '../icure-form/fields/utils'
 import { FieldWithOptionsMixin } from '../common/field-with-options'
-import { FieldMetadata, FieldValue } from '../model'
+import { FieldMetadata, FieldValue, Labels } from '../model'
 import { Version } from '../../generic'
 import { icureFormLogging } from '../../index'
 
@@ -74,22 +74,26 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 		const rev = version?.revision
 		const metadata = id && rev !== undefined ? this.metadataProvider?.(id, versions?.map((v) => v.revision) ?? [])?.[id]?.find((m) => m.revision === rev)?.value : undefined
 
+		const groupLabels: Labels = this.displayedOptions?.length
+			? Object.entries(this.displayedLabels ?? {})
+					.filter(
+						//If we have less than 2 options, we don't need to display the label except if it is different from the first option
+						([, l]) => (this.displayedOptions?.length ?? 0) > 1 || (this.displayedOptions?.length && l !== (this.displayedOptions[0].label?.[this.language()] ?? this.displayedOptions[0].id)),
+					)
+					.reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
+			: {}
+		// The group is named by its label when one is shown. When none is (a lone option repeating the label, or a
+		// checkbox with no options at all), an option without text of its own is named after the field instead.
+		const groupNamed = Object.keys(groupLabels).length > 0
+		const fieldName = this.primaryLabelText()
+		const validationError = validationErrors.length > 0
+
 		return html`
 			<div class="icure-text-field icure-button-group">
 				${this.displayedLabels && this.displayedOptions?.length
 					? html`
 							<div class="icure-label-extra">
-								${generateLabels(
-									Object.entries(this.displayedLabels ?? {})
-										.filter(
-											//If we have less than 2 options, we don't need to display the label except if it is different from the first option
-											([, l]) =>
-												(this.displayedOptions?.length ?? 0) > 1 || (this.displayedOptions?.length && l !== (this.displayedOptions[0].label?.[this.language()] ?? this.displayedOptions[0].id)),
-										)
-										.reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
-									this.language(),
-									this.translate ? this.translationProvider : undefined,
-								)}
+								${generateLabels(groupLabels, this.language(), this.translate ? this.translationProvider : undefined, this.labelId)}
 								${this.displayMetadata && metadata
 									? html` <icure-metadata-buttons-bar
 											.metadata="${metadata}"
@@ -109,14 +113,22 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 							</div>
 					  `
 					: nothing}
-				<div style="${this.generateStyle()}">
+				<div
+					style="${this.generateStyle()}"
+					role="${this.type === 'radio' ? 'radiogroup' : 'group'}"
+					aria-labelledby="${groupNamed ? this.labelId : nothing}"
+					aria-required="${this.required && this.type === 'radio' ? 'true' : nothing}"
+					aria-invalid="${validationError ? 'true' : nothing}"
+					aria-describedby="${validationError ? 'errors' : nothing}"
+				>
 					${(this.displayedOptions?.length ? this.displayedOptions : [{ id: this.label, label: {} }]).map((x, idx) => {
 						const text = (x.label ?? {})[this.language()] ?? ''
+						const ariaLabel = !text && !groupNamed && fieldName ? fieldName : nothing
 						const hint = this.keyboardHints?.[idx]
 						const hintBadge = hint !== undefined && hint !== '' ? html`<span class="icure-button-group-keyboard-hint" aria-hidden="true">${hint}</span>` : nothing
 						if (this.readonly) {
 							return html` <div>
-								<input class="icure-checkbox" disabled type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" .checked="${inputValues?.includes(x.id)}" />
+								<input class="icure-checkbox" disabled type="${this.type}" id="${x.id}" name="${this.label}" value="${text}" aria-label="${ariaLabel}" .checked="${inputValues?.includes(x.id)}" />
 								<label class="icure-button-group-label" for="${x.id}"><span>${text}</span></label>
 								${hintBadge}
 							</div>`
@@ -128,6 +140,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 								id="${x.id}"
 								name="${this.label}"
 								value="${text}"
+								aria-label="${ariaLabel}"
 								.checked="${inputValues?.includes(x.id)}"
 								@change="${() => this.checkboxChange()}"
 							/><label class="icure-button-group-label" for="${x.id}"><span>${text}</span></label>
@@ -135,9 +148,16 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 						</div>`
 					})}
 				</div>
-				<div class="error">${validationErrors.map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
+				<div id="errors" class="error">${validationErrors.map(([, error]) => html` <div>${this.translationProvider?.(this.language(), error) ?? error}</div>`)}</div>
 			</div>
 		`
+	}
+
+	/** The text of the field's primary label (`float`, else the first), translated like the label itself. */
+	private primaryLabelText(): string | undefined {
+		const labels = this.displayedLabels ?? {}
+		const text = labels.float ?? Object.values(labels)[0]
+		return text && this.translate && this.translationProvider ? this.translationProvider(this.language(), text) : text
 	}
 
 	private generateStyle() {

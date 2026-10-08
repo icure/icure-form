@@ -50,3 +50,35 @@ sections:
                     type: text-field
                     shortLabel: Note
                     span: 24
+  - section: Choices
+    fields:
+      - field: size
+        type: radio-button
+        shortLabel: Size
+        span: 12
+        required: true
+        options:
+          size|s|1: Small
+          size|m|1: Medium
+          size|l|1: Large
+      - field: fruits
+        type: checkbox
+        shortLabel: Fruits
+        span: 12
+        options:
+          fruits|a|1: Apples
+          fruits|b|1: Bread
+        validators:
+          - validation: |
+              return (self['fruits']?.[0]?.codes?.length ?? 0) <= 1
+            message: Pick one fruit at most.
+      - field: consent
+        type: checkbox
+        shortLabel: I consent
+        span: 12
+      - field: smoker
+        type: checkbox
+        shortLabel: Smoker
+        span: 12
+        options:
+          smoker|yes|1: Smoker

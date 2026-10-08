@@ -132,6 +132,36 @@ test.describe('Issue #17 / field roles and accessible names', () => {
 	})
 })
 
+test.describe('Radio and checkbox groups', () => {
+	test('a radio group is a radiogroup named by its label, and carries aria-required', async ({ page }) => {
+		await initFixture(page)
+		const group = page.getByRole('radiogroup', { name: 'Size', exact: true })
+		await expect(group).toHaveCount(1)
+		await expect(group).toHaveAttribute('aria-required', 'true')
+		await expect(group.getByRole('radio')).toHaveCount(3)
+		await expect(group.getByRole('radio', { name: 'Medium', exact: true })).toHaveCount(1)
+	})
+
+	test('a checkbox group is a group named by its label, with aria-invalid from its validators', async ({ page }) => {
+		await initFixture(page)
+		const group = page.getByRole('group', { name: 'Fruits', exact: true })
+		await expect(group.getByRole('checkbox')).toHaveCount(2)
+		await expect(group).not.toHaveAttribute('aria-invalid', /.*/)
+		await expect(group).not.toHaveAttribute('aria-required', /.*/)
+
+		await group.getByRole('checkbox', { name: 'Apples', exact: true }).check()
+		await group.getByRole('checkbox', { name: 'Bread', exact: true }).check()
+		await expect(group).toHaveAttribute('aria-invalid', 'true')
+		await expect(group).toHaveAccessibleDescription('Pick one fruit at most.')
+	})
+
+	test('a checkbox with no options, or a lone option repeating the label, is named after the field', async ({ page }) => {
+		await initFixture(page)
+		await expect(page.getByRole('checkbox', { name: 'I consent', exact: true })).toHaveCount(1)
+		await expect(page.getByRole('checkbox', { name: 'Smoker', exact: true })).toHaveCount(1)
+	})
+})
+
 test.describe('Issue #17 / repeated subform instances', () => {
 	test('each instance has its own named textbox, and the label ids do not collide', async ({ page }) => {
 		await initFixture(page)

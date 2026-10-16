@@ -405,6 +405,13 @@ export class IcureTextField extends Field {
 				selection: undefined,
 			})
 			this.view.updateState(newState)
+			// updateState bypasses dispatchTransaction, so persist the recomputed value (and its codes) explicitly
+			this.trToSave = undefined
+			if (!this.schemaSpec?.multivalue) {
+				const [valueId] = extractSingleValue(this.valueProvider?.())
+				this.handleValueChanged?.(this.label, this.language(), contentForLanguage ? { content: { [this.language()]: contentForLanguage }, codes: defaultValue?.codes ?? [] } : undefined, valueId) &&
+					(this.selectedRevision = undefined)
+			}
 		}
 	}
 

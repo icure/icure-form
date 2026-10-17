@@ -226,7 +226,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		const formula = this.initialValuesProvider(this.contactFormValuesContainer.rootForm.descr, this.contactFormValuesContainer.rootForm.formTemplateId).find(
 			({ metadata }) => metadata.label === label,
 		)?.formula
-		return formula ? async () => this.convertRawValue(await this.compute(formula)) : undefined
+		return formula ? async () => this.convertRawValue((await this.compute(formula)).value) : undefined
 	}
 
 	getValues(revisionsFilter: (id: string, history: Version<FieldMetadata>[]) => (string | null)[]): VersionedData<FieldValue> {

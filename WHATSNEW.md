@@ -28,6 +28,14 @@ The value is a new primitive, `{ type: 'schema', value: SchemaDrawing }`: a vers
 
 See [Schema fields](./README.md#schema-fields).
 
+### Named radio and checkbox groups
+
+Radio buttons now sit in a `radiogroup` and checkboxes in a `group`, both named by the field's label. A required radio group carries `aria-required`, and a failing validator sets `aria-invalid` and points `aria-describedby` at the errors. A checkbox with no text of its own, such as one with no options, is named after the field; it previously had no accessible name. See [Accessibility](./README.md#accessibility).
+
+### Bug fixes
+
+- The reset button of a field with a `defaultValue` now recomputes the default and saves it, with its codes. It used to blank the field and save nothing.
+
 ---
 
 ## 3.6.0 (2026-10-07)

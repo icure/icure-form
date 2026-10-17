@@ -4,6 +4,9 @@ import { ItemsListSchema } from '../icure-text-field/schema/items-list-schema'
 import { DateSchema, DateTimeSchema, TimeSchema } from '../icure-text-field/schema/date-time-schema'
 import { DecimalSchema } from '../icure-text-field/schema/decimal-schema'
 import { MeasureSchema } from '../icure-text-field/schema/measure-schema'
+import { SchemaDrawing, schemaDrawingsEqual, StencilRef } from './schema-drawing'
+
+export * from './schema-drawing'
 
 export interface Code {
 	id: string
@@ -29,7 +32,7 @@ export interface FieldValue {
 	codes?: Code[]
 }
 
-export type PrimitiveType = StringType | NumberType | BooleanType | TimestampType | DateTimeType | MeasureType | CompoundType
+export type PrimitiveType = StringType | NumberType | BooleanType | TimestampType | DateTimeType | MeasureType | CompoundType | SchemaType
 
 export interface StringType {
 	type: 'string'
@@ -65,6 +68,12 @@ export interface MeasureType {
 export interface CompoundType {
 	type: 'compound'
 	value: { [label: string]: PrimitiveType }
+}
+
+/** The drawing of a `schema-field`. */
+export interface SchemaType {
+	type: 'schema'
+	value: SchemaDrawing
 }
 
 function hasChanges<T>(target: T, properties: Partial<T>): boolean {
@@ -112,6 +121,9 @@ export const pteq = (a: PrimitiveType | undefined, b: PrimitiveType | undefined)
 	if (a.type === 'compound' && b.type === 'compound') {
 		return Object.keys(a.value).every((k) => pteq(a.value[k], b.value[k]))
 	}
+	if (a.type === 'schema' && b.type === 'schema') {
+		return schemaDrawingsEqual(a.value, b.value)
+	}
 	return false
 }
 
@@ -132,6 +144,7 @@ type FieldType =
 	| 'checkbox'
 	| 'label'
 	| 'action'
+	| 'schema-field'
 
 export interface Validator {
 	validation: string
@@ -338,6 +351,7 @@ export abstract class Field {
 					checkbox: () => new CheckBox(json.field, { ...json }),
 					label: () => new Label(json.field, { ...json }),
 					action: () => new Button(json.field, { ...json }),
+					'schema-field': () => new SchemaField(json.field, { ...(json as Partial<SchemaField>) }),
 				} as { [key: string]: () => Field }
 			)[json.type as string]?.() ?? new TextField(json.field, { ...json })
 		if (Array.isArray((json as any).roles)) {
@@ -380,6 +394,7 @@ export abstract class Field {
 			| 'checkbox'
 			| 'label'
 			| 'action'
+			| 'schema-field'
 		translate: boolean | undefined
 		tags: string[] | undefined
 		labels: Labels | undefined
@@ -406,6 +421,11 @@ export abstract class Field {
 		payload?: unknown
 		delegatedEdition?: boolean
 		required?: boolean
+		readonly?: boolean
+		stencils?: StencilRef[]
+		defaultStencil?: string
+		colors?: string[]
+		strokeWidths?: number[]
 	} {
 		return {
 			field: this.field,
@@ -1204,6 +1224,96 @@ export class Button extends Field {
 	}
 	override copyIfNeeded(properties: Partial<Button>): Button {
 		return hasChanges(this, properties) ? this.carryOver(new Button(this.field, { ...this, ...properties }), properties) : this
+	}
+}
+
+/**
+ * A clinical schema: a freehand drawing over a background image (a Stencil), such as a body outline or a face.
+ * Its value is a `SchemaDrawing` (primitive type `schema`).
+ */
+export class SchemaField extends Field {
+	/** Stencil references: ids the host resolves through `stencilProvider`, or inline stencils. */
+	stencils?: StencilRef[]
+	/** Id of the stencil a new drawing starts on; else the first of `stencils`; none → a blank canvas. */
+	defaultStencil?: string
+	/** Palette offered to the clinician, `#rrggbb`; the first is the default. */
+	colors?: string[]
+	/** Stroke widths offered to the clinician, in stencil pixels; the first is the default. */
+	strokeWidths?: number[]
+
+	constructor(
+		label: string,
+		{
+			shortLabel,
+			grows,
+			span,
+			rowSpan,
+			readonly,
+			required,
+			tags,
+			codifications,
+			labels,
+			computedProperties,
+			validators,
+			roles,
+			alwaysVisible,
+			samePage,
+			styleOptions,
+			options,
+			stencils,
+			defaultStencil,
+			colors,
+			strokeWidths,
+		}: {
+			shortLabel?: string
+			grows?: boolean
+			span?: number
+			rowSpan?: number
+			readonly?: boolean
+			required?: boolean
+			tags?: string[]
+			codifications?: string[]
+			labels?: Labels
+			computedProperties?: { [_key: string]: string }
+			validators?: Validator[]
+			roles?: string[]
+			alwaysVisible?: boolean
+			samePage?: boolean
+			styleOptions?: { width: number; direction: string; span: number; rows: number; alignItems: string }
+			options?: { [_key: string]: unknown }
+			stencils?: StencilRef[]
+			defaultStencil?: string
+			colors?: string[]
+			strokeWidths?: number[]
+		},
+	) {
+		super('schema-field', label, { shortLabel, grows, span, rowSpan, readonly, tags, codifications, labels, computedProperties, validators, styleOptions, options })
+		this.required = required
+		this.roles = roles
+		this.alwaysVisible = alwaysVisible
+		this.samePage = samePage
+		this.stencils = Array.isArray(stencils) ? stencils.filter((s) => typeof s === 'string' || (!!s && typeof s === 'object' && typeof s.id === 'string')) : undefined
+		this.defaultStencil = typeof defaultStencil === 'string' ? defaultStencil : undefined
+		this.colors = Array.isArray(colors) ? colors.filter((c) => typeof c === 'string') : undefined
+		this.strokeWidths = Array.isArray(strokeWidths) ? strokeWidths.filter((w) => typeof w === 'number' && w > 0) : undefined
+	}
+
+	override copyIfNeeded(properties: Partial<SchemaField>): SchemaField {
+		return hasChanges(this, properties) ? this.carryOver(new SchemaField(this.field, { ...this, ...properties }), properties) : this
+	}
+
+	override toJson(): ReturnType<Field['toJson']> {
+		return {
+			...super.toJson(),
+			...(this.rowSpan !== undefined ? { rowSpan: this.rowSpan } : {}),
+			...(this.readonly ? { readonly: true } : {}),
+			...(this.labels !== undefined ? { labels: this.labels } : {}),
+			...(this.validators !== undefined ? { validators: this.validators } : {}),
+			...(this.stencils !== undefined ? { stencils: this.stencils } : {}),
+			...(this.defaultStencil !== undefined ? { defaultStencil: this.defaultStencil } : {}),
+			...(this.colors !== undefined ? { colors: this.colors } : {}),
+			...(this.strokeWidths !== undefined ? { strokeWidths: this.strokeWidths } : {}),
+		}
 	}
 }
 

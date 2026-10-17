@@ -306,6 +306,13 @@
 	color: #bbb;
 }
 
+.card__review-thumbnail {
+	display: block;
+	width: 160px;
+	max-width: 100%;
+	margin-bottom: 4px;
+}
+
 .card__review-edit {
 	background: transparent;
 	color: var(--icure-card-accent);

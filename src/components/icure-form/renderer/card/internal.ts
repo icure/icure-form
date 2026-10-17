@@ -2,7 +2,7 @@ import { html, LitElement, nothing, PropertyValues, TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { keyed } from 'lit/directives/keyed.js'
 
-import { Field, FieldMetadata, FieldValue, Form, SortOptions } from '../../../model'
+import { Field, FieldMetadata, FieldValue, Form, SchemaField, SortOptions, Stencil } from '../../../model'
 import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 import { fieldValuesProvider, getValidationErrorProvider, handleMetadataChangedProvider, handleValueChangedProvider } from '../../../../utils/fields-values-provider'
 import { defaultTranslationProvider } from '../../../../utils/languages'
@@ -11,6 +11,7 @@ import { filterAndSortOptionsFromFieldDefinition, sortSuggestions } from '../../
 import { localized } from '../../../../utils/suggestions'
 import { currentDate, currentDateTime, currentTime } from '../../../../utils/dates'
 import { parsePrimitive } from '../../../../utils/primitive'
+import { schemaText } from '../../../icure-schema/translation-keys'
 
 import { Card, flatten, flattenWithVisibility } from './flatten'
 import { resolveChrome } from './translation-keys'
@@ -27,6 +28,7 @@ type RevisionsFilter = (field: Field, id: string, history: Version<FieldMetadata
 type OwnersProvider = (terms: string[], ids?: string[], specialties?: string[]) => Promise<Suggestion[]>
 type OptionsProvider = (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]>
 type ActionListener = (event: string, payload: unknown) => void
+type StencilProvider = (ids: string[], language: string) => Promise<Stencil[]>
 
 /**
  * Phase 1 stateful card element. Owns the current-card index and Continue/Back navigation.
@@ -43,6 +45,7 @@ export class IcureCardInternal extends LitElement {
 	@property({ attribute: false }) ownersProvider?: OwnersProvider
 	@property({ attribute: false }) optionsProvider?: OptionsProvider
 	@property({ attribute: false }) actionListener?: ActionListener
+	@property({ attribute: false }) stencilProvider?: StencilProvider
 	@property({ attribute: false }) languages?: { [iso: string]: string }
 	@property() language?: string
 	@property({ type: Boolean }) readonly = false
@@ -168,6 +171,7 @@ export class IcureCardInternal extends LitElement {
 			const primitive = fv?.content?.[lang] ?? fv?.content?.['*']
 			if (!primitive) return false
 			if (primitive.type === 'string') return primitive.value !== undefined && primitive.value !== ''
+			if (primitive.type === 'schema') return !!primitive.value?.strokes?.length
 			return true
 		} catch {
 			return false
@@ -395,7 +399,9 @@ export class IcureCardInternal extends LitElement {
 													return html`
 														<li class="card__review-row" data-field-label="${field.field}" data-card-index="${e.index}">
 															<span class="card__review-label" title="${localisedLabel}">${localisedLabel}</span>
-															<span class="card__review-value">${value || html`<span class="card__review-empty">${reviewEmpty}</span>`}</span>
+															<span class="card__review-value"
+																>${value && field.type === 'schema-field' ? this.renderSchemaThumbnail(field) : nothing}${value || html`<span class="card__review-empty">${reviewEmpty}</span>`}</span
+															>
 															<button class="card__review-edit" type="button" aria-label="${editLabel} ${localisedLabel}" @click="${() => this.onEditJump(e.index)}">${editLabel}</button>
 														</li>
 													`
@@ -812,6 +818,11 @@ export class IcureCardInternal extends LitElement {
 		const fv = versions[0]?.value
 		const primitive = fv?.content?.[language] ?? fv?.content?.['*']
 		if (!primitive) return ''
+		if (primitive.type === 'schema') {
+			const count = primitive.value?.strokes?.length ?? 0
+			if (!count) return ''
+			return schemaText(this.translation(), language, count === 1 ? 'schema.drawing-one' : 'schema.drawing', { count })
+		}
 		// Radio/checkbox values arrive as a compound primitive whose entries are `true` per selected
 		// option id. `parsePrimitive` on those just yields ["true", ...]; the human-readable choice
 		// labels live on `fv.codes` (populated by IcureButtonGroup.checkboxChange).
@@ -831,6 +842,31 @@ export class IcureCardInternal extends LitElement {
 	}
 
 	// ---- Field rendering ----
+
+	private fieldStencilProvider(fg: Field): StencilProvider | undefined {
+		return (fg.options?.stencilProvider as StencilProvider | undefined) ?? this.stencilProvider
+	}
+
+	/** A read-only rendering of a schema field's drawing, for the review card. */
+	private renderSchemaThumbnail(fg: Field): TemplateResult {
+		const fvc = this.formValuesContainer
+		const schema = fg as SchemaField
+		// The row already names the field and reads "Drawing (N strokes)": the picture is for sighted users only.
+		return html`<icure-form-schema-field
+			class="card__review-thumbnail"
+			aria-hidden="true"
+			.label="${fg.field}"
+			.displayedLabels="${{}}"
+			.defaultLanguage="${this.language}"
+			.translate="${fg.translate}"
+			.stencils="${schema.stencils}"
+			.defaultStencil="${schema.defaultStencil}"
+			.stencilProvider="${this.fieldStencilProvider(fg)}"
+			.translationProvider="${this.translation()}"
+			.valueProvider="${fvc && fieldValuesProvider(fvc, fg, this.revisionsFilter)}"
+			.readonly="${true}"
+		></icure-form-schema-field>`
+	}
 
 	private composedOptionsProvider(): ((language: string, codifications: string[], terms?: string[], sortOptions?: SortOptions) => Promise<Suggestion[]>) | undefined {
 		const optionsProvider = this.optionsProvider
@@ -1133,6 +1169,32 @@ export class IcureCardInternal extends LitElement {
 					.readonly="${common.readonly}"
 					.keyboardHints=${CARD_DIGIT_HINTS}
 				></icure-form-checkbox>`
+			case 'schema-field': {
+				const schema = fg as SchemaField
+				return html`<icure-form-schema-field
+					class="${common.class}"
+					.label="${common.label}"
+					.displayedLabels="${common.displayedLabels}"
+					.displayMetadata="${common.displayMetadata}"
+					.defaultLanguage="${common.defaultLanguage}"
+					.translate="${fg.translate}"
+					.stencils="${schema.stencils}"
+					.defaultStencil="${schema.defaultStencil}"
+					.colors="${schema.colors}"
+					.strokeWidths="${schema.strokeWidths}"
+					.stencilProvider="${this.fieldStencilProvider(fg)}"
+					.ownersProvider="${this.ownersProvider}"
+					.translationProvider="${common.translationProvider}"
+					.validationErrorsProvider="${common.validationErrorsProvider}"
+					.valueProvider="${common.valueProvider}"
+					.metadataProvider="${common.metadataProvider}"
+					.handleValueChanged="${common.handleValueChanged}"
+					.handleMetadataChanged="${common.handleMetadataChanged}"
+					.styleOptions="${common.styleOptions}"
+					.readonly="${common.readonly}"
+					.required="${!!fg.required}"
+				></icure-form-schema-field>`
+			}
 			case 'label':
 				return html`<icure-form-label
 					class="${common.class} card__label-field"

@@ -1,0 +1,35 @@
+form: demo.schema-field
+id: 10000014-0000-0000-0000-000000000014
+description: Freehand drawings over a stencil image, stored as vector strokes.
+sections:
+  - section: Clinical schemas
+    fields:
+      - field: intro
+        type: label
+        span: 24
+        shortLabel: Draw with a mouse, a finger or a pen. A pen records pressure, a resting palm is ignored, and two fingers never draw. Every stroke is saved as one change of the field.
+      - field: Schéma visage
+        type: schema-field
+        shortLabel: Face schema
+        span: 12
+        stencils: [face]
+        colors: ['#1a1a1a', '#d32f2f', '#1976d2', '#388e3c']
+        strokeWidths: [2, 4, 8]
+        tags: [CD-ITEM|schema-face|1]
+      - field: Schéma corps
+        type: schema-field
+        shortLabel: Body schema
+        span: 12
+        stencils: [body-male, body-female]
+        defaultStencil: body-female
+        tags: [CD-ITEM|schema-body|1]
+      - field: outro
+        type: label
+        span: 24
+        shortLabel: This last schema names a stencil the demo host does not know, so it falls back to a blank canvas and says so.
+      - field: Schéma col
+        type: schema-field
+        shortLabel: Cervix schema
+        span: 24
+        stencils: [cervix]
+        tags: [CD-ITEM|schema-cervix|1]

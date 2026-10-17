@@ -42,7 +42,13 @@ export const normalizeUnit = (value: number, unit?: string): number => {
 	return value
 }
 
-export type ParsedPrimitiveType = number | string | boolean | Date | ParsedPrimitiveType[]
+/** What a formula sees of a schema drawing: its stencil and its number of strokes, nothing else. */
+export interface ParsedSchemaDrawing {
+	stencil: string | null
+	strokes: number
+}
+
+export type ParsedPrimitiveType = number | string | boolean | Date | ParsedSchemaDrawing | ParsedPrimitiveType[]
 export const parsePrimitive = (value: PrimitiveType, toString = false, language?: string): ParsedPrimitiveType | undefined => {
 	switch (value.type) {
 		case 'measure':
@@ -61,5 +67,9 @@ export const parsePrimitive = (value: PrimitiveType, toString = false, language?
 			return Object.values(value.value)
 				.map((x) => parsePrimitive(x, toString, language))
 				.filter((x) => x !== undefined) as ParsedPrimitiveType[]
+		case 'schema': {
+			const strokes = value.value?.strokes?.length ?? 0
+			return toString ? `${strokes}` : { stencil: value.value?.stencil ?? null, strokes }
+		}
 	}
 }

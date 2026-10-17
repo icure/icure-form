@@ -1,5 +1,18 @@
 import { CodeStub, DecryptedContent, DecryptedService, Measure } from '@icure/cardinal-sdk'
-import { BooleanType, CompoundType, DateTimeType, MeasureType, NumberType, PrimitiveType, StringType, TimestampType } from '../components/model'
+import {
+	BooleanType,
+	CompoundType,
+	DateTimeType,
+	MeasureType,
+	NumberType,
+	parseSchemaDrawing,
+	PrimitiveType,
+	SCHEMA_DRAWING_FORMAT,
+	SchemaDrawing,
+	SchemaType,
+	StringType,
+	TimestampType,
+} from '../components/model'
 
 export function isCodeEqual(c1: CodeStub, c2: CodeStub): boolean {
 	const idParts1 = c1.id?.split('|')
@@ -73,6 +86,34 @@ export function isServiceContentEqual(content1: { [language: string]: DecryptedC
 	return Object.keys(content1).reduce((isEqual, lng) => isEqual && isContentEqual(content1[lng], content2[lng]), true as boolean)
 }
 
+/** The `binaryValue` of a schema drawing: the UTF-8 bytes of its JSON. */
+export const schemaDrawingToBinary = (drawing: SchemaDrawing): Int8Array => {
+	const bytes = new TextEncoder().encode(JSON.stringify(drawing))
+	return new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+}
+
+// Decoding runs on every `getValues`; keyed on the content's array, the cache also keeps the drawing's identity stable.
+const decodedDrawings = new WeakMap<object, SchemaDrawing | null>()
+
+/** The schema drawing held by a `binaryValue`, or `null` when the bytes are not an icure-schema JSON. */
+export const binaryToSchemaDrawing = (binary: ArrayBufferView | ArrayLike<number> | undefined | null): SchemaDrawing | null => {
+	if (!binary || typeof binary !== 'object') return null
+	if (decodedDrawings.has(binary)) return decodedDrawings.get(binary) ?? null
+	let drawing: SchemaDrawing | null = null
+	try {
+		const bytes = ArrayBuffer.isView(binary) ? new Uint8Array(binary.buffer, binary.byteOffset, binary.byteLength) : Uint8Array.from(binary as ArrayLike<number>, (b) => b & 0xff)
+		// A cheap check before decoding: the JSON of a drawing starts with an object.
+		if (bytes.length && bytes[0] === 0x7b) {
+			const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+			if (text.includes(`"${SCHEMA_DRAWING_FORMAT}"`)) drawing = parseSchemaDrawing(text)
+		}
+	} catch {
+		drawing = null
+	}
+	decodedDrawings.set(binary, drawing)
+	return drawing
+}
+
 export const primitiveTypeToContent = (language: string, value: PrimitiveType): DecryptedContent => {
 	return new DecryptedContent({
 		...(value.type === 'number' ? { numberValue: (value as NumberType).value } : {}),
@@ -88,6 +129,7 @@ export const primitiveTypeToContent = (language: string, value: PrimitiveType): 
 		...(value.type === 'datetime' ? { fuzzyDateValue: (value as DateTimeType).value } : {}),
 		...(value.type === 'boolean' ? { booleanValue: (value as BooleanType).value } : {}),
 		...(value.type === 'timestamp' ? { instantValue: (value as TimestampType).value } : {}),
+		...(value.type === 'schema' ? { binaryValue: schemaDrawingToBinary((value as SchemaType).value) } : {}),
 		...(value.type === 'compound'
 			? {
 					compoundValue: Object.entries((value as CompoundType).value).map(
@@ -132,6 +174,14 @@ export const contentToPrimitiveType = (language: string, content: DecryptedConte
 				const primitiveValue = contentToPrimitiveType(language, content?.[language])
 				return label && primitiveValue ? { ...acc, [label]: primitiveValue } : acc
 			}, {}),
+		}
+	}
+	// Last, so that no other kind of content changes: only an icure-schema JSON reads as a schema; any other binary
+	// still reads as no value.
+	if (content.binaryValue) {
+		const drawing = binaryToSchemaDrawing(content.binaryValue)
+		if (drawing) {
+			return { type: 'schema', value: drawing }
 		}
 	}
 

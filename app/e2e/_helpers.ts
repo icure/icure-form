@@ -15,6 +15,7 @@ export const ALL_SLUGS = [
 	'08-rich-text',
 	'10-clinical-workflow',
 	'11-delegated-edition',
+	'14-schema-field',
 ] as const
 
 export type SampleSlug = (typeof ALL_SLUGS)[number]

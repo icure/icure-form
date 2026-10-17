@@ -2,7 +2,7 @@ import { CodeStub, DecryptedContact, DecryptedForm, DecryptedForm as CardinalFor
 import { sortedBy } from '../utils/no-lodash'
 import { ComputationResult, FormValuesContainer, Version, VersionedData } from '../generic'
 import { ServiceMetadata } from './model'
-import { FieldMetadata, FieldValue, PrimitiveType, Validator } from '../components/model'
+import { FieldMetadata, FieldValue, parseSchemaDrawing, PrimitiveType, Validator } from '../components/model'
 import { areCodesEqual, codeStubToCode, contentToPrimitiveType, isContentEqual, primitiveTypeToContent } from './icure-utils'
 import { parsePrimitive } from '../utils/primitive'
 import { anyDateToDate, dateToFuzzyDate } from '../utils/dates'
@@ -44,6 +44,8 @@ function primitiveTypeToString(pt: PrimitiveType): string {
 			return Object.entries(pt.value)
 				.map(([k, v]) => `${k}: ${primitiveTypeToString(v)}`)
 				.join(', ')
+		case 'schema':
+			return `${pt.value?.strokes?.length ?? 0}`
 	}
 }
 
@@ -1294,6 +1296,11 @@ const validatePrimitiveType = (pt: PrimitiveType, path: string): void => {
 			}
 			for (const [key, subValue] of Object.entries(v as { [label: string]: PrimitiveType })) {
 				validatePrimitiveType(subValue, `${path}.compound[${key}]`)
+			}
+			break
+		case 'schema':
+			if (!parseSchemaDrawing(v)) {
+				throw new Error(`${path}: expected an icure-schema drawing for schema`)
 			}
 			break
 		default:

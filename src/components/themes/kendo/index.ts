@@ -1,5 +1,21 @@
-import { CheckBox, DatePicker, DateTimePicker, DropdownField, ItemsListField, Label, Button, MeasureField, NumberField, RadioButton, TextField, TimePicker, TokenField } from '../../icure-form/fields'
+import {
+	CheckBox,
+	DatePicker,
+	DateTimePicker,
+	DropdownField,
+	ItemsListField,
+	Label,
+	Button,
+	MeasureField,
+	NumberField,
+	RadioButton,
+	SchemaField,
+	TextField,
+	TimePicker,
+	TokenField,
+} from '../../icure-form/fields'
 import { IcureButtonGroup } from '../../icure-button-group'
+import { IcureSchema } from '../../icure-schema'
 import { IcureDatePickerField } from '../../icure-date-picker'
 import { IcureDropdownField } from '../../icure-dropdown-field'
 import { IcureForm } from '../../icure-form'
@@ -36,5 +52,7 @@ export const registerTheme = buildThemeRegistrar([
 	{ tag: 'icure-form-text-field', baseClass: TextField },
 	{ tag: 'icure-form-time-picker', baseClass: TimePicker },
 	{ tag: 'icure-form-token-field', baseClass: TokenField },
+	{ tag: 'icure-form-schema-field', baseClass: SchemaField },
+	{ tag: 'icure-schema', baseClass: IcureSchema, themeCss: kendoCss },
 	{ tag: 'form-selection-button', baseClass: FormSelectionButton },
 ])

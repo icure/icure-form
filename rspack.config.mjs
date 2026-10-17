@@ -60,6 +60,10 @@ export default {
 				type: 'asset/source',
 			},
 			{
+				test: /\.svg$/,
+				type: 'asset/inline',
+			},
+			{
 				test: /\.s([ca])ss$/,
 				use: [
 					{

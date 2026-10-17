@@ -1,0 +1,20 @@
+form: Schema fields
+id: schema-field-fixture
+sections:
+  - section: Drawings
+    fields:
+      - field: Face schema
+        type: schema-field
+        shortLabel: Face
+        span: 24
+        stencils: [face, body-male]
+        defaultStencil: face
+        colors: ['#1a1a1a', '#d32f2f', '#1976d2']
+        strokeWidths: [2, 6]
+        required: true
+      - field: Cervix schema
+        type: schema-field
+        shortLabel: Cervix
+        span: 24
+        stencils: [cervix]
+        tags: [CD-ITEM|schema-cervix|1]

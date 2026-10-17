@@ -4,6 +4,32 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 3.7.0 (2026-10-17)
+
+### Schema fields: drawing over a stencil
+
+Forms had no way to hold a clinical schema, the drawing a practitioner makes over a body outline, a face or a cervix to locate a lesion. Legacy layouts carried them as `TKSchema` editors with no equivalent here, and an unknown `schema-field` type silently became a text field.
+
+The new `schema-field` type is a freehand drawing over a background image, the **stencil**. It is built for tablets (pen pressure, palm rejection, one finger draws and two never do) and works with a mouse. The toolbar offers a pen, a highlighter, an eraser, a palette, stroke widths, undo/redo, clear, and a stencil selector. Each stroke is one `setValue`, so history, revisions and read-only review work as for any field.
+
+```yaml
+- field: Schéma
+  type: schema-field
+  shortLabel: Schéma visage
+  span: 24
+  stencils: [face]
+  colors: ['#1a1a1a', '#d32f2f', '#1976d2', '#388e3c']
+  strokeWidths: [2, 4, 8]
+```
+
+The images belong to the host, which resolves stencil ids through the new `stencilProvider` property of `<icure-form>`. icure-form ships none. A stencil that can't be resolved leaves a working blank canvas.
+
+The value is a new primitive, `{ type: 'schema', value: SchemaDrawing }`: a versioned vector drawing whose strokes are delta-encoded, typically under 20 KB. The iCure bridge stores it as UTF-8 JSON in the service content's `binaryValue`. The model entry point exports DOM-free helpers for printing and PDFs: `parseSchemaDrawing`, `schemaDrawingToSvg`, `encodeStroke` and `decodeStroke`.
+
+See [Schema fields](./README.md#schema-fields).
+
+---
+
 ## 3.6.0 (2026-10-07)
 
 ### Accessibility: fields expose a role and an accessible name

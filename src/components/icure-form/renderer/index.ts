@@ -1,6 +1,6 @@
 import { TemplateResult } from 'lit'
 import { FormValuesContainer, Suggestion, Version } from '../../../generic'
-import { Field, FieldMetadata, FieldValue, Form } from '../../model'
+import { Field, FieldMetadata, FieldValue, Form, Stencil } from '../../model'
 
 export interface RendererProps {
 	language?: string
@@ -29,6 +29,11 @@ export interface RendererProps {
 	 * Applies to every such field; a `codeColorProvider` function set on a field's `options` takes precedence.
 	 */
 	codeColorProvider?: (type: string, code: string) => string
+	/**
+	 * Host-level stencil resolver of schema fields: turns the stencil ids of a field definition into images. A
+	 * `stencilProvider` function set on a field's `options` takes precedence.
+	 */
+	stencilProvider?: (ids: string[], language: string) => Promise<Stencil[]>
 }
 
 export type Renderer = (

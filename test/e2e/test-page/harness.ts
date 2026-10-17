@@ -61,7 +61,25 @@ interface InitFormOptions {
 	 * (with a matching `linksProvider`); fields opt in through `codifications` or `suggestions: true` (palette tests).
 	 */
 	suggestionsFixture?: string
+	/**
+	 * Serves the form's host-level `stencilProvider` with two outline stencils, `face` (300×400) and `body-male`
+	 * (200×500), drawn as inline SVG data URIs. Any other id stays unresolved.
+	 */
+	stencilsFixture?: boolean
 }
+
+const outlineStencil = (id: string, width: number, height: number, shape: string) => ({
+	id,
+	label: id === 'face' ? 'Face' : 'Body',
+	width,
+	height,
+	src: `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><g fill="none" stroke="#888" stroke-width="2">${shape}</g></svg>`)}`,
+})
+
+const fixtureStencils = [
+	outlineStencil('face', 300, 400, '<ellipse cx="150" cy="200" rx="120" ry="170"/><circle cx="105" cy="160" r="15"/><circle cx="195" cy="160" r="15"/><path d="M110 280q40 30 80 0"/>'),
+	outlineStencil('body-male', 200, 500, '<circle cx="100" cy="50" r="35"/><path d="M100 85v200M40 130h120M100 285l-40 200M100 285l40 200"/>'),
+]
 
 interface InitFormResult {
 	fieldCount: number
@@ -123,7 +141,7 @@ const extractFormulas = (
 	}) ?? []
 
 async function initForm(options: InitFormOptions): Promise<InitFormResult> {
-	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, readonly, hideEmptyFields, optionsFixture, suggestionsFixture } = options
+	const { yaml: yamlContent, language = 'en', renderer = 'form', prefill, questionsPerCard, role, readonly, hideEmptyFields, optionsFixture, suggestionsFixture, stencilsFixture } = options
 
 	// Parse the form
 	let parsed: any
@@ -315,6 +333,10 @@ async function initForm(options: InitFormOptions): Promise<InitFormResult> {
 		icureFormEl.linksProvider = async (sug: Suggestion) => ({ href: `c-FIXTURE://${sug.id}`, title: suggestionLabel(sug, 'en') })
 		// A colour category outside the built-in table is echoed verbatim into the code's style, which the spec asserts.
 		icureFormEl.codeColorProvider = (_type: string, _code: string) => '#123456'
+	}
+
+	if (stencilsFixture) {
+		icureFormEl.stencilProvider = async (ids: string[]) => fixtureStencils.filter((s) => ids.includes(s.id))
 	}
 
 	container.appendChild(icureFormEl)

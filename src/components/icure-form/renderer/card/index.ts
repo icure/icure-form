@@ -32,6 +32,7 @@ export const render: Renderer = async (
 		.ownersProvider=${ownersProvider}
 		.optionsProvider=${optionsProvider}
 		.actionListener=${actionListener}
+		.stencilProvider=${props.stencilProvider}
 		.languages=${languages}
 		.language=${props.language}
 		.labelPosition=${props.labelPosition}

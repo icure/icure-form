@@ -23,6 +23,7 @@ const VALUE_BEARING_FIELD_TYPES_MAP: Record<Exclude<FieldType, NonValueBearingFi
 	'dropdown-field': true,
 	'radio-button': true,
 	checkbox: true,
+	'schema-field': true,
 }
 
 export const VALUE_BEARING_FIELD_TYPES: ReadonlySet<FieldType> = new Set(Object.keys(VALUE_BEARING_FIELD_TYPES_MAP) as FieldType[])
@@ -31,6 +32,7 @@ export const VALUE_BEARING_FIELD_TYPES: ReadonlySet<FieldType> = new Set(Object.
  * A primitive is blank when it carries no displayable answer: absent, an empty/whitespace-only
  * string, a NaN number or measure magnitude, or an unset boolean/timestamp/datetime.
  * A compound is blank when every one of its members is blank (a compound with no members is blank).
+ * A schema drawing is blank when it has no strokes.
  *
  * The type annotations on `PrimitiveType`'s members mark most `value`s as required, but data coming
  * from parsed/external sources is not guaranteed to honor that, so every branch below tolerates an
@@ -54,6 +56,8 @@ export function isBlankPrimitive(p: PrimitiveType | undefined): boolean {
 		}
 		case 'compound':
 			return Object.values(p.value ?? {}).every((member) => isBlankPrimitive(member))
+		case 'schema':
+			return !p.value?.strokes?.length
 	}
 }
 

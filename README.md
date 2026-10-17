@@ -122,6 +122,10 @@ The Field class represents a generic field within a form. It is designed to be e
 - width: number - Optional fixed width of the field in pixels.
 - styleOptions: { width: number, direction: string, span: number, rows: number, alignItems: string } - Optional style options for the field.
 - roles: string[] - Optional list of viewer roles that may see this field. Same semantics as `Section.roles`. Also available on `Group` and `Subform`. See [Role-based visibility](#role-based-visibility).
+- stencils: (string | InlineStencil)[] - Schema fields only. The stencils (background images) the field can be drawn on: ids the host resolves through `stencilProvider`, or inline `{ id, label?, src, width, height }` objects. See [Schema fields](#schema-fields).
+- defaultStencil: string - Schema fields only. The stencil a new drawing starts on. Defaults to the first of `stencils`; with none, the field is a blank canvas.
+- colors: string[] - Schema fields only. The `#rrggbb` palette offered to the clinician; the first is the default.
+- strokeWidths: number[] - Schema fields only. The stroke widths offered, in stencil pixels; the first is the default.
 - alwaysVisible: boolean - Optional property that exempts the field from `hideEmptyFields` when it holds no answer; it then renders as a blank read-only box. Also available on `Group` and `Subform`, where it exempts a container with no surviving content. Can be computed via `computedProperties.alwaysVisible`. Does not override `roles` or computed `hidden`. See [Read-only review: hiding empty fields](#read-only-review-hiding-empty-fields).
 
 #### Implementations
@@ -143,6 +147,7 @@ The Field class has several specific implementations, each tailored to handle di
 | CheckBox       | `checkbox`         | A field that allows the user to select one or more options from a list of checkboxes.                                                          |
 | Label          | `label`            | A static label/text element.                                                                                                                   |
 | Button         | `action`           | A button that can trigger events with an optional payload.                                                                                     |
+| SchemaField    | `schema-field`     | A clinical schema: a freehand drawing over a background image (a stencil). See [Schema fields](#schema-fields).                                |
 
 Note: When a type string is not recognized during parsing, it defaults to TextField.
 
@@ -329,6 +334,7 @@ The icure-form component accepts the following properties:
 - suggestionProvider: (terms: string[], codifications: string[]) => Promise<Suggestion[]> - an optional provider feeding the suggestion palette of text, token and items-list fields that opt in — fields declaring `codifications`, or `suggestions: true`. Receives the field's `codifications`. May return a tree: see [Hierarchical suggestions](#hierarchical-suggestions).
 - linksProvider: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined> - an optional builder for the link carried by an inserted suggestion (and for fields with `links: true`). Applies to the same fields as `suggestionProvider`, plus fields declaring `links: true`.
 - codeColorProvider: (type: string, code: string) => string - an optional colour category for the codes shown in text, token and items-list fields (e.g. the ICD chapter numeral). Applies to every such field; a `codeColorProvider` function on a field's `options` takes precedence.
+- stencilProvider: (ids: string[], language: string) => Promise<Stencil[]> - an optional resolver of the stencil ids of schema fields to background images. A `stencilProvider` function on a field's `options` takes precedence. See [Schema fields](#schema-fields).
 - revisionsFilter: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[] - an optional callback to customize which revisions of a field value are visible. By default, revisions are filtered by matching field tags or label (see `getRevisionsFilter` in `src/utils/fields-values-provider.ts`). When provided, this callback replaces the default logic, receiving the field definition, the value id, and its full version history, and must return the list of revision strings to display.
 - actionListener: (event: string, payload: unknown, domEvent?: Event) => void - an optional listener for action/button events. The third argument is the originating DOM event (e.g. the `MouseEvent` of the click that triggered it), forwarded so the handler can read modifier keys, cursor position, or call `preventDefault()`. See [Action events and delegated edition](#action-events-and-delegated-edition).
 
@@ -508,7 +514,11 @@ Each field's editor exposes a role and an accessible name taken from the field's
 - the dropdown's input is named by its label too.
 - radio buttons form a `radiogroup` and checkboxes a `group`, named by the field's label. When that label isn't shown (a lone option repeating it, or a checkbox with no options), a checkbox with no text of its own is named after the field.
 
+- a schema field's canvas is an `img` named by the field's label and described by a live summary of the drawing ("Face: 3 strokes, red and blue"). Its toolbar is a `toolbar`, a single tab stop walked with the arrow keys, Home and End; tools, colours, widths and stencils are radio groups inside it. Ctrl/Cmd+Z undoes and Ctrl/Cmd+Shift+Z (or Ctrl+Y) redoes.
+
 `aria-required` comes from the field's `required` property (on a radio group, not on a checkbox group, where ARIA doesn't allow it), `aria-invalid` and `aria-describedby` from its validators. Icon-only buttons (reset, metadata bar, dropdown and calendar triggers) carry an `aria-label`, translated through the form's translations when they define `Reset`, `Author`, `Value date`, `Version`, `Language`, `Show options` or `Choose date`.
+
+Freehand drawing on a schema field cannot be done from the keyboard: it needs a pointer (mouse, finger or pen). Everything else can — choosing the tool, the colour and the width, undo, redo, clear and its confirmation, and switching stencil. ARIA does not allow `aria-required` on an image, so a required schema field says "required" in its summary instead.
 
 A label's id is built from the field's position in the form definition (`Field.index`). Instances of one subform therefore share ids, which is safe: each field renders its label and its editor in its own shadow root, and `aria-*` references never cross it.
 
@@ -739,6 +749,78 @@ interface SchemaSpec {
 ```
 
 Returning `true` from `onEditRequest` tells the field the host has taken over the edition (the inline editor is suppressed); returning `false` lets the default inline editing proceed. The `delegatedEdition` flag described above is the built-in, declarative path for the common token-field case; `onEditRequest` is the lower-level programmatic hook for fully custom editors.
+
+### Schema fields
+
+A `schema-field` is a clinical schema: a freehand drawing over a background image, the **stencil**, such as a body outline, a face, a cervix or a breast. It is meant for tablets during consultations (dermatology, gynaecology, plastic surgery), and works with a mouse too. It is a value-bearing field like any other: its value is stored through the form values container, versioned like other values, and shown read-only in past forms.
+
+```yaml
+- field: Schéma                 # label and identifier, like every field
+  type: schema-field
+  shortLabel: Schéma visage
+  span: 24
+  stencils: [face]              # ids the host resolves, or inline { id, label, src, width, height }
+  defaultStencil: face          # optional; else the first of `stencils`; none → a blank canvas
+  colors: ['#1a1a1a', '#d32f2f', '#1976d2', '#388e3c']   # optional palette, first = default
+  strokeWidths: [2, 4, 8]       # optional, in stencil pixels
+  tags: [SK-NATURE|observation|1]
+  required: false
+```
+
+**Stencils.** icure-form ships no images: they belong to the host, which resolves stencil ids through a `stencilProvider` set on `<icure-form>` (or per field, in `options.stencilProvider`):
+
+```ts
+form.stencilProvider = async (ids: string[], language: string): Promise<Stencil[]> => myLibrary.filter((s) => ids.includes(s.id))
+// interface Stencil { id: string; label?: string; src: string; width: number; height: number; mime?: string }
+```
+
+`width` and `height` are the image's natural size, and they become the coordinate space of drawings made on it. `src` is an `http(s)` URL, a relative URL or a `data:image/…` URI; any other scheme is ignored. When a stencil cannot be resolved — no provider, an unknown id, a load error — the field still works on a blank canvas of the stored size (800 × 600 for a new drawing) and says "Background image unavailable". It never throws.
+
+The ids a consumer already uses are `body-female`, `body-male`, `face`, `abdomen`, `cervix`, `uterus-hysteroscopy`, `perineum`, `breasts` and `breast-front`.
+
+**Drawing.**
+- Strokes are drawn with Pointer Events.
+- A pen records pressure, and a palm resting on the screen while a pen draws is ignored.
+- A single finger draws; two fingers never do. The canvas takes every touch (`touch-action: none`), so the page scrolls and zooms from outside it.
+- The toolbar offers a pen, a translucent highlighter, an eraser (it removes the stroke under the pointer), the colours, the widths, undo and redo, clear (confirmed inline), and a stencil selector when the field has more than one stencil. Switching stencil on a drawing asks first, because the coordinate space changes and the drawing starts over.
+- Each stroke, erase, undo, redo or clear is one `setValue` on the container, never one per pointer move.
+- A field that is read-only — the form, the field, a computed `readonly`, or a past revision chosen in the metadata bar — shows the drawing with no toolbar. Under `hideEmptyFields`, a drawing without strokes is empty.
+
+**The stored value** is the primitive `{ type: 'schema', value: SchemaDrawing }`: a compact, versioned vector drawing, never an image.
+
+```ts
+interface SchemaDrawing {
+  format: 'icure-schema'
+  v: 1
+  stencil: string | null        // the stencil id drawn on; null for a blank canvas
+  width: number; height: number // the coordinate space: the stencil's natural size
+  strokes: Stroke[]
+}
+interface Stroke {
+  tool: 'pen' | 'highlighter'   // the eraser removes strokes; it is not stored
+  color: string                 // #rrggbb
+  width: number                 // in drawing units
+  points: string                // base64 of a little-endian Int16 array: x,y[,pressure] per point, delta-encoded
+  pressure?: true               // set when every point carries a pressure (0–1023)
+}
+```
+
+Coordinates are integers in stencil pixels, so a drawing looks the same at any display size. The first point of a stroke is absolute; every next one is a delta from the previous. The editor drops points closer than 1.5 units to the previous one and simplifies each stroke within 0.75 units, so no line moves by more than its integer rounding already does. A typical drawing of about 50 strokes stays under 20 KB.
+
+Formulas see a drawing as `{ stencil, strokes }`: its stencil id and its number of strokes, nothing else.
+
+In the iCure bridge, the drawing is the UTF-8 JSON in `DecryptedContent.binaryValue` (an `Int8Array`), encrypted by Cardinal like any other content. A version is a service revision, as for any field; the service has no `documentId` and no attachment. Only a `binaryValue` holding an `icure-schema` JSON reads back as a drawing: any other binary still reads as no value.
+
+**Helpers.** The model entry point exports pure, DOM-free helpers, usable in Node and in workers to print, build PDFs or thumbnails:
+
+- `encodeStroke(points, withPressure?)` and `decodeStroke(stroke)` convert between `{ x, y, p? }` points and a stroke's `points`;
+- `parseSchemaDrawing(input)` reads a drawing from an object or its JSON text, and returns `null` — never throws — on anything it cannot read (garbage, another `format`, a future `v`, a malformed stroke);
+- `schemaDrawingToSvg(drawing, stencil?)` returns a standalone SVG document. Colours are validated, every other value is escaped, and an unsafe stencil `src` is left out;
+- `simplifyStroke(points, tolerance?)` is the simplification the editor applies.
+
+Import them from `@icure/form/components/model`, not from the package root: the root reads `localStorage` when it loads, which Node and workers don't have.
+
+The library makes no network call of its own (only the stencil `<img>` loads its `src`). It never sets `innerHTML` with a value, and it never logs values.
 
 ### JSON/YAML representation
 

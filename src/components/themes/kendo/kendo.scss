@@ -241,3 +241,20 @@ app-date-picker {
 		width: auto;
 	}
 }
+
+.icure-schema-field {
+	.icure-schema-tool {
+		border-radius: $border-radius;
+
+		&[aria-checked='true'] {
+			border-color: rgba(0, 0, 0, 0.3);
+			background: rgba(0, 0, 0, 0.08);
+		}
+	}
+
+	.icure-schema-canvas,
+	.icure-schema-confirm {
+		border-color: $border-color;
+		border-radius: $border-radius;
+	}
+}

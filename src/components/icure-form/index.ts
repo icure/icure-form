@@ -5,7 +5,7 @@ import { property, state } from 'lit/decorators.js'
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form/form'
 import { render as renderAsCard } from './renderer/card'
-import { Field, FieldMetadata, FieldValue, Form } from '../model'
+import { Field, FieldMetadata, FieldValue, Form, Stencil } from '../model'
 import { FormValuesContainer, Suggestion, Version } from '../../generic'
 
 // @ts-ignore
@@ -41,6 +41,8 @@ export class IcureForm extends LitElement {
 	@property() linksProvider?: (sug: Suggestion) => Promise<{ href: string; title: string } | undefined>
 	// Colour category of the codes shown in text, token and items-list fields; `options.codeColorProvider` on a field wins.
 	@property() codeColorProvider?: (type: string, code: string) => string
+	// Resolves the stencil ids of schema fields to background images; `options.stencilProvider` on a field wins.
+	@property() stencilProvider?: (ids: string[], language: string) => Promise<Stencil[]>
 	@property() actionListener?: (event: string, payload: unknown, domEvent?: Event) => void = () => undefined
 	@property({ type: Number }) questionsPerCard = 1
 
@@ -90,6 +92,7 @@ export class IcureForm extends LitElement {
 					suggestionProvider: this.suggestionProvider,
 					linksProvider: this.linksProvider,
 					codeColorProvider: this.codeColorProvider,
+					stencilProvider: this.stencilProvider,
 				},
 				formValuesContainer,
 				this.translationProvider ?? (translationTables ? defaultTranslationProvider(translationTables) : undefined),

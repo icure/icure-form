@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="700" viewBox="0 0 300 700">
+	<!-- Human body outline, front view. Drawn for the @icure/form demo; dedicated to the public domain (CC0 1.0). -->
+	<g fill="none" stroke="#7a7a7a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+		<ellipse cx="150" cy="60" rx="38" ry="46"/>
+		<path d="M135 105v18M165 105v18"/>
+		<path d="M135 123c-35 5-60 15-70 35l-25 160 18 4 30-140 2 110-10 120 22 230h30l8-200 8 200h30l22-230-10-120 2-110 30 140 18-4-25-160c-10-20-35-30-70-35"/>
+	</g>
+</svg>

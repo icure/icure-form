@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500">
+	<!-- Face outline, front view. Drawn for the @icure/form demo; dedicated to the public domain (CC0 1.0). -->
+	<g fill="none" stroke="#7a7a7a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M200 30c-90 0-150 70-150 180 0 70 20 140 60 190 25 30 55 60 90 60s65-30 90-60c40-50 60-120 60-190 0-110-60-180-150-180z"/>
+		<path d="M50 220c-15-5-25 10-22 35 3 30 15 50 32 50M350 220c15-5 25 10 22 35-3 30-15 50-32 50"/>
+		<path d="M110 200q30-18 60 0M230 200q30-18 60 0"/>
+		<path d="M120 225q20-12 40 0q-20 12-40 0zM240 225q20-12 40 0q-20 12-40 0"/>
+		<path d="M200 230v80q-8 15-25 12M200 310q8 15 25 12"/>
+		<path d="M150 375q50 30 100 0"/>
+	</g>
+</svg>

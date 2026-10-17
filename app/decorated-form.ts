@@ -19,6 +19,7 @@ import { normalizeCode } from '../src/utils/code-utils'
 import { defaultTranslationProvider } from '../src/utils/languages'
 import { getAge, getAgeDescription } from './date'
 import { makeFormulaHostContext } from './formula-host'
+import { demoStencilProvider } from './stencils'
 
 const stopWords = new Set(['du', 'au', 'le', 'les', 'un', 'la', 'des', 'sur', 'de'])
 
@@ -613,6 +614,7 @@ export class DecoratedForm extends LitElement {
 				.suggestionProvider="${this.suggestionProvider.bind(this)}"
 				.linksProvider="${this.linksProvider.bind(this)}"
 				.codeColorProvider="${this.codeColorProvider.bind(this)}"
+				.stencilProvider="${demoStencilProvider}"
 				.actionListener="${this.handleAction}"
 			></icure-form>
 		`

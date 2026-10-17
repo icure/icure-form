@@ -14,7 +14,11 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 
 **Subform** — A Form embedded inside another Form by reference. Allows reusing form fragments (e.g., a shared demographic block) across multiple Forms.
 
-**Field** — A leaf question. Has a label, a type (Text, Number, Measure, Date, Time, DateTime, Dropdown, Radio, Checkbox, Token, ItemsList, Label, Button), optional validators, optional computed properties, and optional value schema (for Text fields).
+**Field** — A leaf question. Has a label, a type (Text, Number, Measure, Date, Time, DateTime, Dropdown, Radio, Checkbox, Token, ItemsList, Schema, Label, Button), optional validators, optional computed properties, and optional value schema (for Text fields).
+
+**Schema** (clinical schema) — A Field whose answer is a freehand drawing over a Stencil: the clinician marks a lesion on a body outline, a face, a cervix. The answer is a vector drawing (strokes in the Stencil's own coordinates), never an image, so it looks the same at any size and stays small. A drawing with no strokes is no answer. Drawn with a pointer — mouse, finger or pen — and therefore the one answer that cannot be given from the keyboard.
+
+**Stencil** — The background image a Schema is drawn on, such as a body outline or a face. A Field names its Stencils by id; the host application owns the images (they are licensed content) and resolves the ids, or the form author declares a Stencil inline. A drawing records the Stencil it was made on, and its size is the drawing's coordinate space, so changing the Stencil of a drawing starts it over. A Stencil the host cannot resolve leaves a blank canvas.
 
 **Computed property** — A sandboxed expression on a Field/Group/Section that evaluates at render time against current form values. Common uses: `hidden`, `readonly`, `span`. Re-evaluated whenever dependent values change.
 
@@ -26,7 +30,7 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 
 **Renderer** — A strategy for translating a Form into Lit templates. The `<icure-form>` element dispatches to one renderer per render pass, selected by its `renderer` prop. Today: `form` (clinician-dense layout) and `patient-cards` (patient-friendly card sequence).
 
-**Empty field** — A Field that holds no displayable answer. A Field is empty when it has no stored value at all, or when every stored value's most recent version has no codes and no non-blank primitive in any language. Non-blank means: a string with non-whitespace characters, a defined number, boolean or timestamp, a measure with a numeric value (a unit alone does not count), a compound with at least one non-blank member. Preserved-but-invalid date or time text is a non-blank string, so such a Field is not empty. Language is not considered: an answer written in one language keeps the Field non-empty for a viewer in another. Label and action Fields carry no answer and are outside this definition.
+**Empty field** — A Field that holds no displayable answer. A Field is empty when it has no stored value at all, or when every stored value's most recent version has no codes and no non-blank primitive in any language. Non-blank means: a string with non-whitespace characters, a defined number, boolean or timestamp, a measure with a numeric value (a unit alone does not count), a compound with at least one non-blank member, a Schema drawing with at least one stroke. Preserved-but-invalid date or time text is a non-blank string, so such a Field is not empty. Language is not considered: an answer written in one language keeps the Field non-empty for a viewer in another. Label and action Fields carry no answer and are outside this definition.
 
 **Patient renderer** / **patient-cards renderer** — The renderer that presents a Form to a patient as a linear sequence of Typeform-style cards. Optimized for pre-visit intake.
 

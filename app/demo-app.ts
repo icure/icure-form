@@ -22,6 +22,8 @@ import delegatedEdition from './samples/11-delegated-edition.yaml'
 import hierarchicalSuggestions from './samples/12-hierarchical-suggestions.yaml'
 // @ts-ignore
 import hostLookups from './samples/13-host-lookups.yaml'
+// @ts-ignore
+import schemaField from './samples/14-schema-field.yaml'
 import specialtyIndexJson from './samples/curated/index.json'
 
 import { css, html, LitElement } from 'lit'
@@ -182,6 +184,12 @@ class DemoApp extends LitElement {
 			title: '13 — Host lookups',
 			description: 'Formulas reading services, the patient and the consultation date from the host.',
 			form: Form.parse(YAML.parse(hostLookups)),
+		},
+		{
+			slug: '14-schema-field',
+			title: '14 — Schema fields',
+			description: 'Freehand drawings over a stencil image (face, body), with a blank-canvas fallback.',
+			form: Form.parse(YAML.parse(schemaField)),
 		},
 	]
 

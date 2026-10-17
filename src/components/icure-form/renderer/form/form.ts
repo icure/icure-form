@@ -1,7 +1,7 @@
 import { html, nothing, TemplateResult } from 'lit'
 import { Renderer, RendererProps } from '../index'
 import { fieldValuesProvider, getValidationErrorProvider, handleMetadataChangedProvider, handleValueChangedProvider } from '../../../../utils/fields-values-provider'
-import { FieldMetadata, FieldValue, Form, Field, Group, Subform, SortOptions, isVisibleForRole } from '../../../model'
+import { FieldMetadata, FieldValue, Form, Field, Group, Subform, SortOptions, isVisibleForRole, SchemaField, Stencil } from '../../../model'
 import { FormValuesContainer, Suggestion, Version } from '../../../../generic'
 
 import { defaultTranslationProvider } from '../../../../utils/languages'
@@ -476,6 +476,36 @@ const renderInternal = async (
 		></icure-form-checkbox>`
 	}
 
+	async function renderSchemaField(fgSpan: number, fgRowSpan: number, fg: Field) {
+		const schema = fg as SchemaField
+		return html`<icure-form-schema-field
+			style="${calculateFieldOrGroupSize(fgSpan, fgRowSpan)}"
+			class="icure-form-field"
+			.label="${fg.field}"
+			.displayedLabels="${getLabels(fg)}"
+			.displayMetadata="${displayMetadata}"
+			.defaultLanguage="${props.language}"
+			.languages="${languages}"
+			.translate="${fg.translate}"
+			.stencils="${schema.stencils}"
+			.defaultStencil="${schema.defaultStencil}"
+			.colors="${schema.colors}"
+			.strokeWidths="${schema.strokeWidths}"
+			.stencilProvider="${(fg.options?.stencilProvider as ((ids: string[], language: string) => Promise<Stencil[]>) | undefined) ?? props.stencilProvider}"
+			.ownersProvider="${ownersProvider}"
+			.translationProvider="${translationProvider ?? (form.translations && defaultTranslationProvider(form.translations))}"
+			.validationErrorsProvider="${getValidationErrorProvider(formsValueContainer, fg)}"
+			.valueProvider="${formsValueContainer && fieldValuesProvider(formsValueContainer, fg, revisionsFilter)}"
+			.metadataProvider="${formsValueContainer && formsValueContainer.getMetadata.bind(formsValueContainer)}"
+			.handleValueChanged="${handleValueChangedProvider(formsValueContainer, fg, props.defaultOwner)}"
+			.handleMetadataChanged="${handleMetadataChangedProvider(formsValueContainer)}"
+			.styleOptions="${fg.styleOptions}"
+			.readonly="${readonly || fg.readonly || (fg.computedProperties?.readonly ? !!(await formsValueContainer?.compute(fg.computedProperties?.readonly))?.value : false)}"
+			.required="${!!fg.required}"
+			.fieldIndex="${fg.index}"
+		></icure-form-schema-field>`
+	}
+
 	async function renderButton(fgSpan: number, fgRowSpan: number, fg: Field) {
 		return html`<icure-form-button
 			style="${calculateFieldOrGroupSize(fgSpan, fgRowSpan)}"
@@ -570,6 +600,8 @@ const renderInternal = async (
 				? await renderLabel(fgSpan, fgRowSpan, field)
 				: fg.type === 'action'
 				? await renderButton(fgSpan, fgRowSpan, field)
+				: fg.type === 'schema-field'
+				? await renderSchemaField(fgSpan, fgRowSpan, field)
 				: ''}`
 			// A label or an action button renders whenever it is reached, but never counts as surviving
 			// content: a group or section holding nothing else still collapses around it.

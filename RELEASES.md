@@ -1077,3 +1077,20 @@ Both maps accept the key `'*'`, which matches any language, with an exact langua
 ```
 
 `Suggestion.text` is deprecated but still works, so no provider has to change: it is read as a fallback for both roles, and `optionsProvider`, `suggestionProvider`, `ownersProvider` and `linksProvider` all keep their signatures. One behaviour does change with it — the **owner picker** now reads its names from `label` rather than `text`, so an `ownersProvider` that fills only `text` still works, but `label: { '*': name }` is the shape to move to. A label with no entry for the current language falls back to `'*'`, then to `text`, then to any other language it holds, then to the id; an insertion is stricter and never falls back to another language, because its result is written into the record. See [Label, insertion, and the `'*'` language](https://github.com/icure/icure-form/blob/main/README.md#label-insertion-and-the--language).
+
+## [MISSING] 2.6.0 (2026-10-21)
+<!-- tag: 2.6.0 | target: af911ce0f1fd2ad1a1745cf9e42158e33d3c237a | prerelease: false -->
+
+### Language fallback: `languageFallback` on `<icure-form>`
+
+A form filled in one language and reopened in another used to show empty text, dropdown and radio/checkbox fields, because each field read only the content stored for the current language. The new `languageFallback` property of `<icure-form>` lets a field show the content of another language instead:
+
+```html
+<icure-form language="nl" languageFallback="fr"></icure-form>
+```
+
+- `false` (default): no fallback; the behaviour is unchanged.
+- `true` or `'*'`: any language that has content.
+- a language iso code, e.g. `'fr'`: that language only.
+
+Content stored under the `'*'` key matches every language, so it is always shown, with or without the property; text fields used to leave text stored only under `'*'` empty. The setting only concerns text: numbers, measures, dates, booleans and code selections read the same in any language, and always fall back. Edits are written to the current language only, and the content of the other languages is kept. See [the renderer](https://github.com/icure/icure-form/blob/main/README.md#the-renderer).

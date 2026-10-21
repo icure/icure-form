@@ -4,6 +4,24 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 3.8.0 (2026-10-21)
+
+### Language fallback: `languageFallback` on `<icure-form>`
+
+A form filled in one language and reopened in another used to show empty text, dropdown and radio/checkbox fields, because each field read only the content stored for the current language. The new `languageFallback` property of `<icure-form>` lets a field show the content of another language instead:
+
+```html
+<icure-form language="nl" languageFallback="fr"></icure-form>
+```
+
+- `false` (default): no fallback; the behaviour is unchanged.
+- `true` or `'*'`: any language that has content.
+- a language iso code, e.g. `'fr'`: that language only.
+
+Content stored under the `'*'` key matches every language, so it is always shown, with or without the property; text fields used to leave text stored only under `'*'` empty. The setting only concerns text: numbers, measures, dates, booleans and code selections read the same in any language, and always fall back. Edits are written to the current language only, and the content of the other languages is kept. The card renderer follows the setting too, in its cards and on its review page. See [the renderer](./README.md#the-renderer).
+
+---
+
 ## 3.7.0 (2026-10-17)
 
 ### Schema fields: drawing over a stencil

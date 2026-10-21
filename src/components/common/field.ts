@@ -1,8 +1,9 @@
 import { property, state } from 'lit/decorators.js'
 import { LitElement, TemplateResult } from 'lit'
-import { FieldMetadata, FieldValue, Labels, pteq } from '../model'
+import { FieldMetadata, FieldValue, Labels, PrimitiveType, pteq } from '../model'
 import { Suggestion, Version, VersionedData } from '../../generic'
 import { PropertyValues } from '@lit/reactive-element'
+import { contentForLanguage, LanguageFallback } from '../../utils/language-fallback'
 
 /**
  * Base class for all fields.
@@ -37,6 +38,12 @@ export abstract class Field extends LitElement {
 	 * Iso code and names of the supported languages
 	 */
 	@property() languages: { [iso: string]: string } = {}
+
+	/**
+	 * What text content is shown when the value has none in the current language (see `<icure-form languageFallback>`).
+	 * Language-neutral content (numbers, dates, ...) always falls back.
+	 */
+	@property() languageFallback: LanguageFallback = false
 
 	@property() translationProvider: (language: string, text: string) => string = (language, text) => text
 
@@ -80,6 +87,11 @@ export abstract class Field extends LitElement {
 
 	language(): string {
 		return (this.translate ? this.selectedLanguage ?? this.defaultLanguage : this.defaultLanguage) ?? 'en'
+	}
+
+	/** The content of `value` to display in the current language, falling back as configured by `languageFallback`. */
+	contentForLanguage(value?: FieldValue): PrimitiveType | undefined {
+		return contentForLanguage(value?.content, this.language(), this.languageFallback)
 	}
 
 	shouldUpdate(changedProperties: PropertyValues) {

@@ -313,6 +313,7 @@ The icure-form component accepts the following properties:
 - labelPosition: string - the favoured position of the labels in the form. Valid values: `'top'`, `'left'`, `'right'`, `'bottom'`, `'float'`. This option can or cannot be honoured by the renderer.
 - formValuesContainer: FormValuesContainer<FieldValue, FieldMetadata> - the form values container that contains the values of the form
 - language: string - the language in which the form should be displayed
+- languageFallback: `false` | `true` | `'*'` | string - which text a field shows when its value has no content in `language` (e.g. a form filled in `fr`, reopened in `nl`). `false` (default): none, the field looks empty. `true` or `'*'`: the `'*'` wildcard content, then any language. A language iso code (e.g. `'fr'`): that language, then `'*'`. Only text content is concerned: numbers, measures, dates, booleans and code selections read the same in any language and always fall back. Edits are written to `language` only; the other languages are kept.
 - languages: { [iso: string]: string } - a map of ISO language codes to display names for multi-language support
 - optionsProvider: (language: string, codifications: string[], terms?: string[]) => Promise<Suggestion[]> - an optional provider that provides options for some fields of the form (like dropdown fields). May return a tree: see [Hierarchical suggestions](#hierarchical-suggestions).
 - translationProvider: (language: string, text: string) => string - an optional provider that provides translations for the form

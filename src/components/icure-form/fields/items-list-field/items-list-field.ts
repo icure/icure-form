@@ -18,6 +18,7 @@ export class ItemsListField extends Field {
 			.lines="${this.lines}"
 			.displayedLabels="${this.displayedLabels}"
 			.defaultLanguage="${this.defaultLanguage}"
+			.languageFallback="${this.languageFallback}"
 			.languages="${this.languages}"
 			?suggestions=${!!this.suggestionProvider}
 			?links=${!!this.linksProvider}

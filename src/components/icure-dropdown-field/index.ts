@@ -131,7 +131,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
 			const value = versions[0]?.value
-			const valueForLanguage = value?.content?.[this.language()] ?? ''
+			const valueForLanguage = this.contentForLanguage(value) ?? ''
 			if (valueForLanguage && valueForLanguage.type === 'string' && valueForLanguage.value) {
 				return [id, valueForLanguage.value]
 			} else if (value?.codes?.length) {

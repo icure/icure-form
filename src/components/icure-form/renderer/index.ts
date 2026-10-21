@@ -1,9 +1,12 @@
 import { TemplateResult } from 'lit'
 import { FormValuesContainer, Suggestion, Version } from '../../../generic'
 import { Field, FieldMetadata, FieldValue, Form } from '../../model'
+import { LanguageFallback } from '../../../utils/language-fallback'
 
 export interface RendererProps {
 	language?: string
+	/** Which language text fields fall back to when a value has no content in `language` (see `<icure-form languageFallback>`). */
+	languageFallback?: LanguageFallback
 	labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
 	defaultOwner?: string
 	/** Effective read-only flag: `<icure-form>` passes `readonly && hideEmptyFields`. Form renderers omit empty fields when set. */

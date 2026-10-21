@@ -22,7 +22,7 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
 			const value = versions[0]?.value
-			const valueForLanguage = value?.content?.[this.language()] ?? ''
+			const valueForLanguage = this.contentForLanguage(value) ?? ''
 			const fromValue = valueForLanguage && valueForLanguage.type === 'compound' && valueForLanguage.value ? Object.keys(valueForLanguage.value) : []
 			return [id, fromValue.concat(value?.codes?.map((c) => c.id)?.filter((id) => !fromValue.includes(id)) ?? []), versions]
 		}

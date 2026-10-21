@@ -11,6 +11,7 @@ export class TimePicker extends Field {
 				label="${this.label}"
 				.displayedLabels="${this.displayedLabels}"
 				.defaultLanguage="${this.defaultLanguage}"
+				.languageFallback="${this.languageFallback}"
 				.languages="${this.languages}"
 				schema="time"
 				.ownersProvider=${this.ownersProvider}

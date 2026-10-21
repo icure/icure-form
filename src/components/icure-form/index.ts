@@ -11,6 +11,7 @@ import { FormValuesContainer, Suggestion, Version } from '../../generic'
 import baseCss from '../common/styles/style.scss'
 import { defaultTranslationProvider, languages } from '../../utils/languages'
 import { Task } from '@lit/task'
+import { parseLanguageFallback } from '../../utils/language-fallback'
 
 /**
  * Form element
@@ -25,6 +26,8 @@ export class IcureForm extends LitElement {
 	@property() labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float' | undefined = undefined
 	@property() language?: string
 	@property() languages?: { [iso: string]: string } = languages
+	// Text shown when a value has no content in `language`: false (none), true or '*' (any language), or a language iso code.
+	@property() languageFallback?: string | boolean = false
 	@property() formValuesContainer?: FormValuesContainer<FieldValue, FieldMetadata> = undefined
 	@property() translationProvider?: (language: string, text: string) => string
 	@property() revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[]
@@ -77,6 +80,7 @@ export class IcureForm extends LitElement {
 				{
 					labelPosition: this.labelPosition,
 					language,
+					languageFallback: parseLanguageFallback(this.languageFallback),
 					hideEmptyFields: !!(this.readonly && this.hideEmptyFields),
 					suggestionProvider: this.suggestionProvider,
 					linksProvider: this.linksProvider,
@@ -94,7 +98,7 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.selectedTab, this.renderer, this.readonly, this.hideEmptyFields],
+		args: () => [this.form, this.formValuesContainer, this.language, this.languageFallback, this.selectedTab, this.renderer, this.readonly, this.hideEmptyFields],
 	})
 
 	render() {

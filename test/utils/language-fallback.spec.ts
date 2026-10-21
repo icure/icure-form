@@ -31,17 +31,20 @@ describe('contentForLanguage', () => {
 
 	it('shows no text in another language when the fallback is off', () => {
 		expect(contentForLanguage({ fr: str('Bonjour') }, 'nl', false)).toBeUndefined()
-		expect(contentForLanguage({ '*': str('Bonjour') }, 'nl', false)).toBeUndefined()
 	})
 
-	it("falls back to the '*' wildcard, then to any language, when the fallback is '*'", () => {
-		expect(contentForLanguage({ fr: str('Bonjour'), '*': str('Hi') }, 'nl', '*')).toEqual(str('Hi'))
+	it("always reads the '*' wildcard, which matches every language, after the exact language", () => {
+		expect(contentForLanguage({ '*': str('Dr Smith') }, 'nl', false)).toEqual(str('Dr Smith'))
+		expect(contentForLanguage({ fr: str('Bonjour'), '*': str('Hi') }, 'nl', 'fr')).toEqual(str('Hi'))
+		expect(contentForLanguage({ nl: str('Hallo'), '*': str('Hi') }, 'nl', false)).toEqual(str('Hallo'))
+	})
+
+	it("falls back to any language when the fallback is '*'", () => {
 		expect(contentForLanguage({ fr: str('Bonjour') }, 'nl', '*')).toEqual(str('Bonjour'))
 	})
 
-	it("falls back to the configured language, then to '*', and nothing else", () => {
+	it('falls back to the configured language and nothing else', () => {
 		expect(contentForLanguage({ en: str('Hello'), fr: str('Bonjour') }, 'nl', 'fr')).toEqual(str('Bonjour'))
-		expect(contentForLanguage({ en: str('Hello'), '*': str('Hi') }, 'nl', 'fr')).toEqual(str('Hi'))
 		expect(contentForLanguage({ en: str('Hello') }, 'nl', 'fr')).toBeUndefined()
 	})
 

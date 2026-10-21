@@ -13,6 +13,7 @@ export class DatePicker extends Field {
 				label="${this.label}"
 				.displayedLabels="${this.displayedLabels}"
 				.defaultLanguage="${this.defaultLanguage}"
+				.languageFallback="${this.languageFallback}"
 				.languages="${this.languages}"
 				schema="decimal"
 				.ownersProvider=${this.ownersProvider}

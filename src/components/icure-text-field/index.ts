@@ -188,7 +188,7 @@ export class IcureTextField extends Field {
 			const newAndModifiedValues: typeof valuesFromField = []
 			valuesFromField.forEach(([tid, value]) => {
 				const id = tid.length > 0 ? tid : undefined
-				const oldValue = id && values.find(([vid, v]) => vid === id && pteq(v[0].value?.content?.[this.language()], value))
+				const oldValue = id && values.find(([vid, v]) => vid === id && pteq(this.contentForLanguage(v[0].value), value))
 				const idPresent = newAndModifiedValues.some(([ttid]) => ttid === tid)
 				if (!oldValue || idPresent) {
 					newAndModifiedValues.push([idPresent ? '' : tid, value])
@@ -286,13 +286,13 @@ export class IcureTextField extends Field {
 				parsedDoc =
 					this.proseMirrorSchema?.topNodeType.createAndFill(
 						{},
-						values.map(([id, value]) => this.parser?.parse(value?.[0]?.value?.content?.[this.language()] ?? '', id, renderHash)).filter((x) => !!x) as ProsemirrorNode[],
+						values.map(([id, value]) => this.parser?.parse(this.contentForLanguage(value?.[0]?.value) ?? { type: 'string', value: '' }, id, renderHash)).filter((x) => !!x) as ProsemirrorNode[],
 					) ?? undefined
 			} else {
 				let id
 				;[id, versions] = extractSingleValue(data)
 				const version = this.selectedRevision ? versions?.find((v) => v.revision === this.selectedRevision) : versions?.[0]
-				const valueForLanguage = version?.value?.content?.[this.language()] ?? ''
+				const valueForLanguage = this.contentForLanguage(version?.value) ?? ''
 				valueForExistingLanguages = Object.keys(version?.value?.content ?? {})
 
 				parsedDoc = valueForLanguage ? this.parser?.parse(valueForLanguage) ?? undefined : undefined

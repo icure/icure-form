@@ -35,6 +35,7 @@ export const render: Renderer = async (
 		.stencilProvider=${props.stencilProvider}
 		.languages=${languages}
 		.language=${props.language}
+		.languageFallback=${props.languageFallback ?? false}
 		.labelPosition=${props.labelPosition}
 		.questionsPerCard=${props.questionsPerCard ?? 1}
 		.role=${props.role}

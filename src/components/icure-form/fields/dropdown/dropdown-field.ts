@@ -19,6 +19,7 @@ export class DropdownField extends Field {
 					label="${this.label}"
 					.displayedLabels="${this.displayedLabels}"
 					.defaultLanguage="${this.defaultLanguage}"
+					.languageFallback="${this.languageFallback}"
 					.languages="${this.languages}"
 					.valueProvider=${this.singleValueProvider(id)}
 					.validationErrorsProvider=${this.validationErrorsProvider}

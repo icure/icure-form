@@ -14,6 +14,7 @@ export class DateTimePicker extends Field {
 				label="${this.label}"
 				.displayedLabels="${this.displayedLabels}"
 				.defaultLanguage="${this.defaultLanguage}"
+				.languageFallback="${this.languageFallback}"
 				.languages="${this.languages}"
 				schema="date-time"
 				.ownersProvider=${this.ownersProvider}

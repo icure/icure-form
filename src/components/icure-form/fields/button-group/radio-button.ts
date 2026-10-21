@@ -19,6 +19,7 @@ export class RadioButton extends Field {
 					.displayedLabels="${this.displayedLabels}"
 					label="${this.label}"
 					.defaultLanguage="${this.defaultLanguage}"
+					.languageFallback="${this.languageFallback}"
 					.languages="${this.languages}"
 					.translate="${this.translate}"
 					.optionsProvider=${this.optionsProvider}

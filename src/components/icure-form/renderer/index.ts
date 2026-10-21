@@ -1,9 +1,12 @@
 import { TemplateResult } from 'lit'
 import { FormValuesContainer, Suggestion, Version } from '../../../generic'
 import { Field, FieldMetadata, FieldValue, Form, Stencil } from '../../model'
+import { LanguageFallback } from '../../../utils/language-fallback'
 
 export interface RendererProps {
 	language?: string
+	/** Which language text fields fall back to when a value has no content in `language` (see `<icure-form languageFallback>`). */
+	languageFallback?: LanguageFallback
 	labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
 	defaultOwner?: string
 	/** Card renderer only: max interactive fields per card (1 or 2, default 1). */

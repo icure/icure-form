@@ -53,8 +53,7 @@ export class IcureDatePickerField extends Field {
 	getValueFromProvider(): string | undefined {
 		const [, versions] = extractSingleValue(this.valueProvider?.())
 		if (versions) {
-			const content = versions[0]?.value?.content
-			const valueForLanguage = content?.[this.language()] ?? content?.[this.defaultLanguage] ?? content?.['*'] ?? content?.[Object.keys(content)[0]]
+			const valueForLanguage = this.contentForLanguage(versions[0]?.value)
 			if (valueForLanguage && (valueForLanguage.type === 'timestamp' || valueForLanguage.type === 'datetime') && valueForLanguage.value) {
 				const date = anyDateToDate(valueForLanguage.value)
 				return date ? format(date, 'dd/MM/yyyy') : ''

@@ -11,6 +11,7 @@ import { filterAndSortOptionsFromFieldDefinition, sortSuggestions } from '../../
 import { localized } from '../../../../utils/suggestions'
 import { currentDate, currentDateTime, currentTime } from '../../../../utils/dates'
 import { parsePrimitive } from '../../../../utils/primitive'
+import { contentForLanguage, LanguageFallback } from '../../../../utils/language-fallback'
 import { schemaText } from '../../../icure-schema/translation-keys'
 
 import { Card, flatten, flattenWithVisibility } from './flatten'
@@ -48,6 +49,7 @@ export class IcureCardInternal extends LitElement {
 	@property({ attribute: false }) stencilProvider?: StencilProvider
 	@property({ attribute: false }) languages?: { [iso: string]: string }
 	@property() language?: string
+	@property({ attribute: false }) languageFallback: LanguageFallback = false
 	@property({ type: Boolean }) readonly = false
 	@property({ type: Boolean }) displayMetadata = false
 	@property() labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
@@ -167,8 +169,7 @@ export class IcureCardInternal extends LitElement {
 			const ids = Object.keys(versioned)
 			if (!ids.length) return false
 			const fv = versioned[ids[0]]?.[0]?.value
-			const lang = this.language ?? 'en'
-			const primitive = fv?.content?.[lang] ?? fv?.content?.['*']
+			const primitive = contentForLanguage(fv?.content, this.language ?? 'en', this.languageFallback)
 			if (!primitive) return false
 			if (primitive.type === 'string') return primitive.value !== undefined && primitive.value !== ''
 			if (primitive.type === 'schema') return !!primitive.value?.strokes?.length
@@ -816,7 +817,7 @@ export class IcureCardInternal extends LitElement {
 		const versions = versioned[ids[0]]
 		if (!versions?.length) return ''
 		const fv = versions[0]?.value
-		const primitive = fv?.content?.[language] ?? fv?.content?.['*']
+		const primitive = contentForLanguage(fv?.content, language, this.languageFallback)
 		if (!primitive) return ''
 		if (primitive.type === 'schema') {
 			const count = primitive.value?.strokes?.length ?? 0
@@ -937,6 +938,7 @@ export class IcureCardInternal extends LitElement {
 			displayedLabels: getLabels(fg),
 			displayMetadata: this.displayMetadata,
 			defaultLanguage: this.language,
+			languageFallback: this.languageFallback,
 			translationProvider: tp,
 			validationErrorsProvider: getValidationErrorProvider(fvc, fg),
 			valueProvider: fvc && fieldValuesProvider(fvc, fg, this.revisionsFilter),
@@ -957,6 +959,7 @@ export class IcureCardInternal extends LitElement {
 					.multiline="${fg.multiline || false}"
 					.lines=${fg.rowSpan ?? 1}
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.languages="${this.languages}"
 					.linksProvider=${fg.options?.linksProvider}
 					.suggestionProvider=${fg.options?.suggestionProvider}
@@ -983,6 +986,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translationProvider=${common.translationProvider}
 					.validationErrorsProvider="${common.validationErrorsProvider}"
 					.valueProvider="${common.valueProvider}"
@@ -1000,6 +1004,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translationProvider=${common.translationProvider}
 					.validationErrorsProvider="${common.validationErrorsProvider}"
 					.valueProvider="${common.valueProvider}"
@@ -1019,6 +1024,7 @@ export class IcureCardInternal extends LitElement {
 					.multiline="${fg.multiline || false}"
 					.lines=${fg.rowSpan ?? 1}
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.suggestionProvider=${fg.options?.suggestionProvider}
 					.ownersProvider=${this.ownersProvider}
 					.translationProvider=${common.translationProvider}
@@ -1040,6 +1046,7 @@ export class IcureCardInternal extends LitElement {
 					.multiline="${fg.multiline || false}"
 					.lines=${fg.rowSpan ?? 1}
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.suggestionProvider=${fg.options?.suggestionProvider}
 					.ownersProvider=${this.ownersProvider}
 					.translationProvider=${common.translationProvider}
@@ -1059,6 +1066,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translationProvider=${common.translationProvider}
 					.validationErrorsProvider="${common.validationErrorsProvider}"
 					.valueProvider="${common.valueProvider}"
@@ -1076,6 +1084,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translationProvider=${common.translationProvider}
 					.validationErrorsProvider="${common.validationErrorsProvider}"
 					.valueProvider="${common.valueProvider}"
@@ -1093,6 +1102,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translationProvider=${common.translationProvider}
 					.validationErrorsProvider="${common.validationErrorsProvider}"
 					.valueProvider="${common.valueProvider}"
@@ -1109,6 +1119,7 @@ export class IcureCardInternal extends LitElement {
 					.label=${common.label}
 					.displayedLabels=${common.displayedLabels}
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translate="${fg.translate}"
 					.sortOptions="${fg.sortOptions}"
 					value="${fg.value ?? ''}"
@@ -1131,6 +1142,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translate="${fg.translate}"
 					.sortOptions="${fg.sortOptions}"
 					.codifications="${fg.codifications}"
@@ -1153,6 +1165,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translate="${fg.translate}"
 					.sortOptions="${fg.sortOptions}"
 					value="${fg.value ?? ''}"
@@ -1177,6 +1190,7 @@ export class IcureCardInternal extends LitElement {
 					.displayedLabels="${common.displayedLabels}"
 					.displayMetadata="${common.displayMetadata}"
 					.defaultLanguage="${common.defaultLanguage}"
+					.languageFallback="${common.languageFallback}"
 					.translate="${fg.translate}"
 					.stencils="${schema.stencils}"
 					.defaultStencil="${schema.defaultStencil}"

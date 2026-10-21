@@ -87,3 +87,7 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 **Chevron** — The binary expand/collapse control shown in front of a hierarchical suggestion that has children. Its two states are *expanded* and *collapsed*; whether an expanded node's children are filtered is derived from the Match markers, never from the chevron.
 
 **"N more" row** — The trailing row of an expanded hierarchical suggestion when some of its children are hidden by the Match marker filter. Shows the count of hidden children; activating it reveals them for that node until the search changes. It is the only way to reach non-matching siblings without changing the search.
+
+## Values
+
+**Language fallback** — What a field displays when its stored value has no content in the form's language, e.g. a form filled in French reopened in Dutch. Set once on the form element (`languageFallback`): none (the default — the field looks empty), any language, or one named language. Content under the Wildcard language `'*'` is not a fallback: it matches every language and is always shown. It concerns text only: numbers, measures, dates, booleans and code selections read the same in every language and always fall back. It never changes what is written — an edit made in Dutch adds the Dutch content and keeps the French.

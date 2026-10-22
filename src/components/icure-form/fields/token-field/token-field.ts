@@ -42,6 +42,7 @@ export class TokenField extends Field {
 			.displayMetadata="${this.displayMetadata}"
 			.defaultLanguage="${this.defaultLanguage}"
 			.languageFallback="${this.languageFallback}"
+			.contentLanguage="${this.contentLanguage}"
 			.tokenDeleteButton="${this.tokenDeleteButton}"
 			schema="tokens-list"
 			.handleMetadataChanged=${this.handleMetadataChanged}

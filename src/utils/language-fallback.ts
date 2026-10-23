@@ -28,3 +28,16 @@ export const contentForLanguage = (content: { [lng: string]: PrimitiveType } | u
 	const configured = fallback === false ? [] : fallback === '*' ? allLanguages : [fallback]
 	return configured.map((lng) => content[lng]).find((c) => c !== undefined) ?? allLanguages.map((lng) => content[lng]).find((c) => c !== undefined && c.type !== 'string')
 }
+
+/**
+ * The `content` key a field reads and writes: the language picked in the field's metadata bar while translating, else
+ * the form's `contentLanguage`, else the form's language. `'*'` is a valid key: content shared by every language.
+ */
+export const contentKeyOf = (selectedLanguage: string | undefined, contentLanguage: string | undefined, defaultLanguage: string | undefined): string =>
+	selectedLanguage ?? contentLanguage ?? defaultLanguage ?? 'en'
+
+/**
+ * The language in which a code's insertion or label is resolved into text stored under `contentKey`: that key when it
+ * is a language, the UI language when it is the `'*'` wildcard (which names no language to resolve in).
+ */
+export const textLanguageOf = (contentKey: string, uiLanguage: string): string => (contentKey === '*' ? uiLanguage : contentKey)

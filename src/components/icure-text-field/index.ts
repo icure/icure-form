@@ -196,10 +196,10 @@ export class IcureTextField extends Field {
 				const op = operations[i]
 				this.handleValueChanged?.(
 					this.label,
-					this.language(),
+					this.contentKey(),
 					op.value
 						? {
-								content: { [this.language()]: op.value },
+								content: { [this.contentKey()]: op.value },
 								codes: [],
 						  }
 						: undefined,
@@ -218,10 +218,10 @@ export class IcureTextField extends Field {
 			const value = this.primitiveTypeExtractor?.(tr.doc)
 			this.handleValueChanged?.(
 				this.label,
-				this.language(),
+				this.contentKey(),
 				value
 					? {
-							content: { [this.language()]: value },
+							content: { [this.contentKey()]: value },
 							codes: this.codesExtractor?.(tr.doc) ?? [],
 					  }
 					: undefined,
@@ -339,7 +339,7 @@ export class IcureTextField extends Field {
 	private async reset(renderHash: number) {
 		if (this.view) {
 			const defaultValue = await this.defaultValueProvider?.()
-			const contentForLanguage = defaultValue?.content?.[this.language()] ?? defaultValue?.content?.[this.defaultLanguage] ?? defaultValue?.content?.['*']
+			const contentForLanguage = defaultValue?.content?.[this.contentKey()] ?? defaultValue?.content?.[this.defaultLanguage] ?? defaultValue?.content?.['*']
 			const newState = EditorState.create({
 				schema: this.view.state.schema,
 				doc:
@@ -416,9 +416,9 @@ export class IcureTextField extends Field {
 
 			const replaceRangeWithSuggestion = async (from: number, to: number, sug: Suggestion) => {
 				if (!cmp.view) return undefined
-				// What gets inserted is the suggestion's `insertion` for this language, not the label the palette displayed.
-				// A suggestion that resolves to nothing in this language inserts nothing rather than text in another one.
-				const insertion = suggestionInsertion(sug, this.language())
+				// What gets inserted is the suggestion's `insertion` in the language of the stored text, not the label the palette
+				// displayed. A suggestion that resolves to nothing in that language inserts nothing rather than text in another one.
+				const insertion = suggestionInsertion(sug, this.textLanguage())
 				if (!insertion) return undefined
 				// Linked text when a links provider yields a link and the schema has the mark; the plain text otherwise.
 				const link = this.linksProvider ? await this.linksProvider(sug) : undefined

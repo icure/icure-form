@@ -37,10 +37,10 @@ export class IcureButtonGroup extends FieldWithOptionsMixin(Field) {
 			const selectedOptions = this.displayedOptions?.filter((option) => inputs.some((i) => i.id === option.id))
 			this.handleValueChanged?.(
 				this.label,
-				this.language(),
+				this.contentKey(),
 				{
 					content: {
-						[this.language()]: {
+						[this.contentKey()]: {
 							type: 'compound',
 							value: selectedOptions?.reduce(
 								(acc, c) => ({

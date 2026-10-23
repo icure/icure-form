@@ -4,6 +4,32 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## 3.9.0 (2026-10-23)
+
+### Content language: `contentLanguage` on `<icure-form>`
+
+Fields used the form's `language` for two jobs: the language of labels and options, and the key of the content they read and write. The new `contentLanguage` property separates them: it sets the key of the content that fields display and save, while `language` keeps driving labels and options. `'*'` is supported, for content shared by every language:
+
+```html
+<icure-form language="nl" contentLanguage="*"></icure-form>
+```
+
+When `contentLanguage` is not set, fields use `language`, as before. A code picked in a dropdown or in the suggestion palette is turned into text in `contentLanguage`, or in `language` when `contentLanguage` is `'*'`. `languageFallback` applies on top of it. Values computed by formulas are still saved in the language of the `formValuesContainer`, so build it with the same language as `contentLanguage`.
+
+### Erasing obsolete languages: `clearOtherLanguagesOnModify`
+
+Saving a value used to add or replace one language and keep the others, so a value edited in Dutch kept its now obsolete French text. With `clearOtherLanguagesOnModify`, a save keeps only the saved key and erases the content held under every other one, `'*'` included. Re-saving an unchanged value erases them too, and emptying the field removes the value.
+
+```html
+<icure-form language="nl" clearOtherLanguagesOnModify></icure-form>
+```
+
+Both properties also apply to schema fields, whose drawing is read and saved under `contentLanguage`, and to the card renderer: its cards, its review page, and the values it saves.
+
+For custom `FormValuesContainer` implementations, `setValue` takes a new optional last argument, `options?: SetValueOptions` (`{ clearOtherLanguages?: boolean }`), and `handleValueChangedProvider` passes it through. See [the renderer](./README.md#the-renderer).
+
+---
+
 ## 3.8.0 (2026-10-21)
 
 ### Language fallback: `languageFallback` on `<icure-form>`

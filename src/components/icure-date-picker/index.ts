@@ -134,9 +134,9 @@ export class IcureDatePickerField extends Field {
 			const [valueId] = this.getValueFromProvider() ?? ''
 			this.handleValueChanged?.(
 				this.label,
-				this.language(),
+				this.contentKey(),
 				{
-					content: { [this.language()]: { type: 'datetime', value: fuzzyDateValue } },
+					content: { [this.contentKey()]: { type: 'datetime', value: fuzzyDateValue } },
 				},
 				valueId,
 			)

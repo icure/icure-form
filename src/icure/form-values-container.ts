@@ -1,6 +1,6 @@
 import { CodeStub, DecryptedContact, DecryptedForm, DecryptedForm as CardinalForm, DecryptedService, DecryptedSubContact, ServiceLink } from '@icure/cardinal-sdk'
 import { sortedBy } from '../utils/no-lodash'
-import { ComputationResult, FormValuesContainer, Version, VersionedData } from '../generic'
+import { ComputationResult, FormValuesContainer, SetValueOptions, Version, VersionedData } from '../generic'
 import { ServiceMetadata } from './model'
 import { FieldMetadata, FieldValue, parseSchemaDrawing, PrimitiveType, Validator } from '../components/model'
 import { areCodesEqual, codeStubToCode, contentToPrimitiveType, isContentEqual, primitiveTypeToContent } from './icure-utils'
@@ -431,8 +431,17 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		return allChangedKeys
 	}
 
-	setValue(label: string, language: string, fv?: FieldValue, id?: string, metadata?: FieldMetadata): void {
-		setValueOnContactFormValuesContainer(this.contactFormValuesContainer, label, language, fv, id, metadata)
+	setValue(
+		label: string,
+		language: string,
+		fv?: FieldValue,
+		id?: string,
+		metadata?: FieldMetadata,
+		// Not supported by the bridge: its own listener re-initialises a new bridge on every change.
+		_changeListenersOverrider?: unknown,
+		options?: SetValueOptions,
+	): void {
+		setValueOnContactFormValuesContainer(this.contactFormValuesContainer, label, language, fv, id, metadata, undefined, options)
 	}
 
 	setMetadata(meta: FieldMetadata, id?: string | undefined): void {
@@ -912,6 +921,7 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		id?: string,
 		metadata?: ServiceMetadata,
 		changeListenersOverrider?: (fvc: ContactFormValuesContainer, changedKeys: string[] | null) => void,
+		options?: SetValueOptions,
 	): void {
 		const service = (id && this.getServicesInHistory((sid: string, history) => (sid === id ? history.map((x) => x.revision) : []))[id]?.[0]?.value) || this.serviceFactory(label, id)
 		if (!service.id) {
@@ -924,14 +934,17 @@ export class ContactFormValuesContainer implements FormValuesContainer<Decrypted
 		const newContent = value?.content?.[language]
 
 		const newCodes = value?.codes ? normalizeCodes(value.codes) : []
-		if (!isContentEqual(service.content?.[language], newContent) || (newCodes && !areCodesEqual(newCodes, service.codes ?? []))) {
+		// Content under other keys (other languages, '*') that `clearOtherLanguages` makes obsolete: erasing it is a change.
+		const hasObsoleteContent = !!options?.clearOtherLanguages && Object.keys(service.content ?? {}).some((lng) => lng !== language)
+		if (hasObsoleteContent || !isContentEqual(service.content?.[language], newContent) || (newCodes && !areCodesEqual(newCodes, service.codes ?? []))) {
 			const newService = new DecryptedService({ ...service, modified: Date.now() })
+			const keptContents = options?.clearOtherLanguages ? {} : { ...(service.content || {}) }
 			const newContents = newContent
 				? {
-						...(service.content || {}),
+						...keptContents,
 						[language]: newContent,
 				  }
-				: { ...(service.content || {}) }
+				: keptContents
 			if (!newContent) {
 				delete newContents[language]
 			}
@@ -1333,6 +1346,7 @@ const setValueOnContactFormValuesContainer = (
 	id?: string,
 	metadata?: FieldMetadata,
 	changeListenersOverrider?: (fvc: ContactFormValuesContainer, changedKeys: string[] | null) => void,
+	options?: SetValueOptions,
 ) => {
 	if (fv) {
 		validateFieldValue(fv, language, label)
@@ -1360,5 +1374,6 @@ const setValueOnContactFormValuesContainer = (
 			  }
 			: undefined,
 		changeListenersOverrider,
+		options,
 	)
 }

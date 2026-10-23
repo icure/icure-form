@@ -7,6 +7,10 @@ export interface RendererProps {
 	language?: string
 	/** Which language text fields fall back to when a value has no content in `language` (see `<icure-form languageFallback>`). */
 	languageFallback?: LanguageFallback
+	/** Key of the fields' content that is displayed and saved (`'*'` included); `language` when unset. */
+	contentLanguage?: string
+	/** When a value is saved, erase the content the service holds under any other key. */
+	clearOtherLanguagesOnModify?: boolean
 	labelPosition?: 'top' | 'left' | 'right' | 'bottom' | 'float'
 	defaultOwner?: string
 	/** Card renderer only: max interactive fields per card (1 or 2, default 1). */

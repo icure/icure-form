@@ -91,3 +91,7 @@ Only terms meaningful to domain experts (clinicians, form authors, integrators) 
 ## Values
 
 **Language fallback** — What a field displays when its stored value has no content in the form's language, e.g. a form filled in French reopened in Dutch. Set once on the form element (`languageFallback`): none (the default — the field looks empty), any language, or one named language. Content under the Wildcard language `'*'` is not a fallback: it matches every language and is always shown. It concerns text only: numbers, measures, dates, booleans and code selections read the same in every language and always fall back. It never changes what is written — an edit made in Dutch adds the Dutch content and keeps the French.
+
+**Content language** — The key of a value's content that fields display and save, set once on the form element (`contentLanguage`). It defaults to the form's language, but may differ from it: a Dutch interface can read and write content shared by every language, under the Wildcard language `'*'`. The language picked in a field's metadata bar to edit a translation overrides it for that field. The Language fallback applies on top of it.
+
+**Clearing other languages** — An option of the form element (`clearOtherLanguagesOnModify`): saving a value erases the content its service holds under every other key, other languages and `'*'` included, because the saved value makes it obsolete. Without it, saving adds or replaces one language and keeps the others.

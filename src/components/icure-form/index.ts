@@ -34,6 +34,10 @@ export class IcureForm extends LitElement {
 	@property() languages?: { [iso: string]: string } = languages
 	// Text shown when a value has no content in `language`: false (none), true or '*' (any language), or a language iso code.
 	@property() languageFallback?: string | boolean = false
+	// Key of the fields' content that is displayed and saved, '*' included; defaults to `language`.
+	@property() contentLanguage?: string
+	// When a value is saved, erase the content the service holds under any other key.
+	@property({ type: Boolean }) clearOtherLanguagesOnModify = false
 	@property() formValuesContainer?: FormValuesContainer<FieldValue, FieldMetadata> = undefined
 	@property() translationProvider?: (language: string, text: string) => string
 	@property() revisionsFilter?: (field: Field, id: string, history: Version<FieldMetadata>[]) => string[]
@@ -90,6 +94,8 @@ export class IcureForm extends LitElement {
 					labelPosition: this.labelPosition,
 					language,
 					languageFallback: parseLanguageFallback(this.languageFallback),
+					contentLanguage: this.contentLanguage || undefined,
+					clearOtherLanguagesOnModify: this.clearOtherLanguagesOnModify,
 					questionsPerCard: this.questionsPerCard,
 					role: this.role ?? undefined,
 					hideEmptyFields: !!(this.readonly && this.hideEmptyFields),
@@ -110,7 +116,20 @@ export class IcureForm extends LitElement {
 				sectionWrapper,
 			)
 		},
-		args: () => [this.form, this.formValuesContainer, this.language, this.languageFallback, this.selectedTab, this.renderer, this.questionsPerCard, this.role, this.readonly, this.hideEmptyFields],
+		args: () => [
+			this.form,
+			this.formValuesContainer,
+			this.language,
+			this.languageFallback,
+			this.contentLanguage,
+			this.clearOtherLanguagesOnModify,
+			this.selectedTab,
+			this.renderer,
+			this.questionsPerCard,
+			this.role,
+			this.readonly,
+			this.hideEmptyFields,
+		],
 	})
 
 	render() {

@@ -132,7 +132,7 @@ export class IcureSchema extends Field {
 		const [id, versions] = extractSingleValue(this.valueProvider?.())
 		const version = this.selectedRevision ? versions?.find((v) => v.revision === this.selectedRevision) ?? versions?.[0] : versions?.[0]
 		const historical = !!versions?.length && !!version && version !== versions[0]
-		return { id, versions, drawing: schemaOf(version?.value?.content, this.language()), historical }
+		return { id, versions, drawing: schemaOf(version?.value?.content, this.contentKey()), historical }
 	}
 
 	/** What is shown: an erase in progress, else a change not yet reflected by the container, else the stored drawing. */
@@ -147,8 +147,8 @@ export class IcureSchema extends Field {
 
 	private send(drawing: SchemaDrawing, id: string | undefined) {
 		this.recentCommits = [...this.recentCommits.slice(-19), drawing]
-		const language = this.language()
-		this.handleValueChanged?.(this.label, language, { content: { [language]: { type: 'schema', value: drawing } } }, id)
+		const contentKey = this.contentKey()
+		this.handleValueChanged?.(this.label, contentKey, { content: { [contentKey]: { type: 'schema', value: drawing } } }, id)
 	}
 
 	private commit(drawing: SchemaDrawing, recordHistory = true) {

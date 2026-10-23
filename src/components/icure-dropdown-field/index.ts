@@ -87,21 +87,21 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 			const node = nodeAtPath(this.displayedOptions ?? [], path)
 			if (!node) return false
 			const [valueId] = this.getValueFromProvider() ?? ''
-			const language = this.language()
+			const contentKey = this.contentKey()
 			// Store the node exactly as a flat provider would have produced it: never persist the subtree or the marker.
 			const code: Suggestion = { ...node }
 			delete code.children
 			delete code.matched
 			// The popover row showed the label; what is stored is the insertion, which falls back to that same label.
-			const inputValue = suggestionInsertion(node, language) ?? ''
+			const inputValue = suggestionInsertion(node, this.textLanguage()) ?? ''
 			this.displayMenu = false
 			this.textInputValue = undefined
 			this.treeState = emptyTreeState()
 			this.handleValueChanged?.(
 				this.label,
-				language,
+				contentKey,
 				{
-					content: { [language]: { type: 'string', value: inputValue } },
+					content: { [contentKey]: { type: 'string', value: inputValue } },
 					codes: [code],
 				},
 				valueId,
@@ -157,8 +157,8 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 			if (valueForLanguage && valueForLanguage.type === 'string' && valueForLanguage.value) {
 				return [id, valueForLanguage.value]
 			} else if (value?.codes?.length) {
-				// Mirror what handleOptionClicked stored: the code's insertion for this language, else its label.
-				return [id, suggestionInsertion(value.codes[0], this.language()) ?? '']
+				// Mirror what handleOptionClicked stored: the code's insertion in the stored text's language, else its label.
+				return [id, suggestionInsertion(value.codes[0], this.textLanguage()) ?? '']
 			}
 		}
 		return [undefined, undefined]
@@ -177,7 +177,7 @@ export class IcureDropdownField extends FieldWithOptionsMixin(Field) {
 		}
 		const x = row.suggestion
 		// The row reads the label; `inputValue` is the stored value, so the selected marker compares against the insertion.
-		const option = html`<button @click="${this.handleOptionClicked(row.path)}" id="${x.id}" class="option ${suggestionInsertion(x, language) === inputValue ? 'selected' : ''}">
+		const option = html`<button @click="${this.handleOptionClicked(row.path)}" id="${x.id}" class="option ${suggestionInsertion(x, this.textLanguage()) === inputValue ? 'selected' : ''}">
 			${suggestionLabel(x, language)}
 		</button>`
 		if (!row.hasChildren && row.depth === 0) {

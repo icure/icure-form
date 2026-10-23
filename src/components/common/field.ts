@@ -3,7 +3,7 @@ import { LitElement, TemplateResult } from 'lit'
 import { FieldMetadata, FieldValue, Labels, PrimitiveType, pteq } from '../model'
 import { Suggestion, Version, VersionedData } from '../../generic'
 import { PropertyValues } from '@lit/reactive-element'
-import { contentForLanguage, LanguageFallback } from '../../utils/language-fallback'
+import { contentForLanguage, contentKeyOf, LanguageFallback, textLanguageOf } from '../../utils/language-fallback'
 
 /**
  * Base class for all fields.
@@ -46,6 +46,12 @@ export abstract class Field extends LitElement {
 	 * Language-neutral content (numbers, dates, ...) always falls back.
 	 */
 	@property() languageFallback: LanguageFallback = false
+
+	/**
+	 * The key of `content` the field displays and saves (see `<icure-form contentLanguage>`); `'*'` is supported.
+	 * Defaults to the form's language.
+	 */
+	@property() contentLanguage?: string
 
 	@property() translationProvider: (language: string, text: string) => string = (language, text) => text
 
@@ -107,9 +113,19 @@ export abstract class Field extends LitElement {
 		return (this.translate ? this.selectedLanguage ?? this.defaultLanguage : this.defaultLanguage) ?? 'en'
 	}
 
-	/** The content of `value` to display in the current language, falling back as configured by `languageFallback`. */
+	/** The key of `content` this field reads and writes. */
+	contentKey(): string {
+		return contentKeyOf(this.translate ? this.selectedLanguage : undefined, this.contentLanguage, this.defaultLanguage)
+	}
+
+	/** The language in which a code's insertion or label is turned into the text stored under `contentKey()`. */
+	textLanguage(): string {
+		return textLanguageOf(this.contentKey(), this.language())
+	}
+
+	/** The content of `value` to display under `contentKey()`, falling back as configured by `languageFallback`. */
 	contentForLanguage(value?: FieldValue): PrimitiveType | undefined {
-		return contentForLanguage(value?.content, this.language(), this.languageFallback)
+		return contentForLanguage(value?.content, this.contentKey(), this.languageFallback)
 	}
 
 	shouldUpdate(changedProperties: PropertyValues) {

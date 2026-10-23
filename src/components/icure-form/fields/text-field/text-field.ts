@@ -48,6 +48,7 @@ export class TextField extends Field {
 					.displayedLabels="${this.displayedLabels}"
 					.defaultLanguage="${this.defaultLanguage}"
 					.languageFallback="${this.languageFallback}"
+					.contentLanguage="${this.contentLanguage}"
 					.languages="${this.languages}"
 					schema="${this.schema ?? (this.multiline ? 'text-document' : 'styled-text-with-codes')}"
 					?suggestions=${!!this.suggestionProvider}
@@ -85,6 +86,7 @@ export class TextField extends Field {
 				.displayedLabels="${this.displayedLabels}"
 				.defaultLanguage="${this.defaultLanguage}"
 				.languageFallback="${this.languageFallback}"
+				.contentLanguage="${this.contentLanguage}"
 				.languages="${this.languages}"
 				schema="${this.schema ?? (this.multiline ? 'text-document' : 'styled-text-with-codes')}"
 				?suggestions=${!!this.suggestionProvider}

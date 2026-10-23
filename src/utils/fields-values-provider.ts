@@ -1,5 +1,5 @@
 import { Field, FieldMetadata, FieldValue } from '../components/model'
-import { FormValuesContainer, Version, VersionedData } from '../generic'
+import { FormValuesContainer, SetValueOptions, Version, VersionedData } from '../generic'
 
 import { dateToFuzzyDate } from './dates'
 
@@ -43,7 +43,7 @@ export const getValidationErrorProvider =
 			  })
 			: []
 
-export const handleValueChangedProvider = (formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>, field?: Field, owner?: string) => {
+export const handleValueChangedProvider = (formsValueContainer?: FormValuesContainer<FieldValue, FieldMetadata>, field?: Field, owner?: string, options?: SetValueOptions) => {
 	return (label: string, language: string, value?: FieldValue, id?: string) => {
 		if (formsValueContainer) {
 			formsValueContainer.setValue(
@@ -54,6 +54,8 @@ export const handleValueChangedProvider = (formsValueContainer?: FormValuesConta
 				!id && field // If the id is not set, we are creating a new value. In this case, we set the metadata.
 					? makeMetadata(field, owner)
 					: undefined,
+				undefined,
+				options,
 			)
 		}
 	}

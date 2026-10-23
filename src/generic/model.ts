@@ -31,9 +31,10 @@ export type ID = string
  * - `getMetadata(id: string, revisions: (string | null)[]): VersionedData<Metadata>` : obtains the metadata of a specific value, for the specified revisions.
  * - `getValidationErrors(): [FieldMetadata, string][]`: returns the validation errors of the form values container for the values that are currently stored in it.
  * - `getChildren(): FormValuesContainer<Value, Metadata>[]` : returns the children of the form values container
- * - `setValue(label: string, language: string, data?: Value, id?: string, metadata?: Metadata): FormValuesContainerMutation<Value, Metadata, FormValuesContainer<Value, Metadata>, ID>` :
+ * - `setValue(label: string, language: string, data?: Value, id?: string, metadata?: Metadata, changeListenersOverrider?, options?: SetValueOptions): FormValuesContainerMutation<Value, Metadata, FormValuesContainer<Value, Metadata>, ID>` :
  * 			modifies the value associated to a field in the form values container. As a form values container is immutable, this method returns a mutation wrapping
- * 			a new form values container along with the modified value.
+ * 			a new form values container along with the modified value. `language` is the content key that is written (`'*'` included); the content stored
+ * 			under other keys is kept, unless `options.clearOtherLanguages` is set, in which case it is erased.
  * - `setMetadata(label: string, metadata: Metadata, id?: string): FormValuesContainerMutation<Value, Metadata, FormValuesContainer<Value, Metadata>, ID>` :
  * 			modifies the metadata associated to a value in the form values container. As a form values container is immutable, this method returns a mutation wrapping
  * 			a new form values container along with the modified metadata.
@@ -51,6 +52,12 @@ export type ID = string
  * - `unregisterChangeListener(listener: (newValue: FormValuesContainer<Value, Metadata>) => void): void` : unregisters a listener that was previously registered.
  *
  */
+/** Options of `FormValuesContainer.setValue`. */
+export interface SetValueOptions {
+	/** Erase the content held under every key other than the one being written (other languages, and `'*'`). */
+	clearOtherLanguages?: boolean
+}
+
 export interface FormValuesContainer<Value, Metadata> {
 	//information retrieval
 	compute<T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox?: S): Promise<ComputationResult<T>>
@@ -69,6 +76,7 @@ export interface FormValuesContainer<Value, Metadata> {
 		id?: string,
 		metadata?: Metadata,
 		changeListenersOverrider?: (fvc: FormValuesContainer<Value, Metadata>, changedKeys: string[] | null) => void,
+		options?: SetValueOptions,
 	): void
 	setMetadata(metadata: Metadata, id?: string): void
 	delete(serviceId: string): void

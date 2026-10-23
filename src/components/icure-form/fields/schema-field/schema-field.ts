@@ -24,6 +24,7 @@ export class SchemaField extends Field {
 					.displayedLabels="${this.displayedLabels}"
 					label="${this.label}"
 					.defaultLanguage="${this.defaultLanguage}"
+					.contentLanguage="${this.contentLanguage}"
 					.languages="${this.languages}"
 					.translate="${this.translate}"
 					.ownersProvider=${this.ownersProvider}

@@ -1143,7 +1143,7 @@ The renderer and themes handle larger form corpora better:
 - subform sections show their titles
 - action buttons align with checkboxes
 
-## [MISSING] 3.7.0 (2026-10-17)
+## 3.7.0 (2026-10-17)
 <!-- tag: 3.7.0 | target: c402793dd6c0b787696aed046dd7592c664639de | prerelease: false -->
 
 ### Schema fields: drawing over a stencil
@@ -1176,7 +1176,7 @@ Radio buttons now sit in a `radiogroup` and checkboxes in a `group`, both named 
 
 - The reset button of a field with a `defaultValue` now recomputes the default and saves it, with its codes. It used to blank the field and save nothing.
 
-## [MISSING] 3.8.0 (2026-10-21)
+## 3.8.0 (2026-10-21)
 <!-- tag: 3.8.0 | target: 46279ad5d88553deae8a966124d2ff7b2dabaa16 | prerelease: false -->
 
 ### Language fallback: `languageFallback` on `<icure-form>`

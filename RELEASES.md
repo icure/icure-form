@@ -1193,7 +1193,7 @@ A form filled in one language and reopened in another used to show empty text, d
 
 Content stored under the `'*'` key matches every language, so it is always shown, with or without the property; text fields used to leave text stored only under `'*'` empty. The setting only concerns text: numbers, measures, dates, booleans and code selections read the same in any language, and always fall back. Edits are written to the current language only, and the content of the other languages is kept. The card renderer follows the setting too, in its cards and on its review page. See [the renderer](https://github.com/icure/icure-form/blob/cardinal/README.md#the-renderer).
 
-## [MISSING] 3.9.0 (2026-10-23)
+## 3.9.0 (2026-10-23)
 <!-- tag: 3.9.0 | target: 723d81b07a74eeac0a2374ac359392c485ec3b8e | prerelease: false -->
 
 ### Content language: `contentLanguage` on `<icure-form>`

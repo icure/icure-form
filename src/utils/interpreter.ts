@@ -474,3 +474,85 @@ export const makeInterpreter = (): Interpreter => {
 		},
 	})
 }
+
+/**
+ * The formula engines a {@link BridgedFormValuesContainer} can be given by name:
+ *  - `quickjs`: formulas run inside QuickJS compiled to WebAssembly, isolated from the page.
+ *  - `insecure`: formulas run in the page's own realm, through `new Function` and `with`, as before
+ *    QuickJS. Faster to start (no WebAssembly to load) but NOT a security boundary: a formula can
+ *    reach the page's globals and modify its built-ins. Only for forms whose formulas are trusted.
+ */
+export type InterpreterKind = 'quickjs' | 'insecure'
+
+/**
+ * The pre-QuickJS interpreter: `with (sandbox) { … }` compiled by `new Function`. The sandbox proxy
+ * claims every identifier, so a formula's bare names resolve to the sandbox and not to the page's
+ * globals, but the page's realm stays within reach. Kept closed are the escapes that do not need a
+ * separate realm:
+ *  - the body is parsed on its own first, so it cannot close the `with` block (`}; fetch(…); {`) and
+ *    run code outside it;
+ *  - `this` is the sandbox, not the global object a sloppy-mode function would get;
+ *  - a trailing line comment no longer swallows the closing brace.
+ * Not closed, and not closable without another realm: a function's `constructor` is the page's
+ * `Function` (`[].constructor.constructor('return window')()`), and the built-ins the sandbox hands out
+ * (`Object`, `Array`, …) are the page's own, so their prototypes can be modified. Runaway code
+ * (`while (true)`) blocks the page: there is no time limit.
+ */
+export const makeInsecureInterpreter = (): Interpreter => {
+	const proxies = new WeakMap<object, object>()
+	const compiled = new Map<string, (sandbox: object) => unknown>()
+	const handler: ProxyHandler<any> = {
+		has: () => true,
+		get: (target, key) => (key === Symbol.unscopables ? undefined : target[key]),
+	}
+
+	const compile = (formula: string) => {
+		const cached = compiled.get(formula)
+		if (cached) return cached
+		// Throws unless the formula is a complete function body on its own: balanced braces, no
+		// unterminated string or comment. Only such a body cannot break out of the `with` block below.
+		new Function(formula)
+		const code = new Function('sandbox', 'with (sandbox) {' + formula + '\n}')
+		const wrapper = (sandbox: object) => {
+			let proxy = proxies.get(sandbox)
+			if (!proxy) proxies.set(sandbox, (proxy = new Proxy(sandbox, handler)))
+			return code.call(proxy, proxy)
+		}
+		compiled.set(formula, wrapper)
+		return wrapper
+	}
+
+	const evaluate = async <T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox: S): Promise<T | undefined> => {
+		let code: (sandbox: object) => unknown
+		try {
+			code = compile(formula)
+		} catch (e) {
+			console.info('Invalid Formula: ' + formula)
+			return undefined
+		}
+		try {
+			return (await code(sandbox)) as T
+		} catch (e) {
+			console.info('Error while executing formula: ' + formula, e)
+			return undefined
+		}
+	}
+	return Object.assign(evaluate, { dispose: () => compiled.clear() })
+}
+
+const shared: { [kind in InterpreterKind]?: Interpreter } = {}
+
+/**
+ * The page-wide interpreter of the given kind, created on first use. Sharing matters for `quickjs`:
+ * each interpreter owns a WebAssembly runtime.
+ */
+export const sharedInterpreter = (kind: InterpreterKind): Interpreter => {
+	switch (kind) {
+		case 'quickjs':
+			return (shared.quickjs = shared.quickjs ?? makeInterpreter())
+		case 'insecure':
+			return (shared.insecure = shared.insecure ?? makeInsecureInterpreter())
+		default:
+			throw new Error(`Unknown interpreter: ${kind}. Expected 'quickjs' or 'insecure'.`)
+	}
+}

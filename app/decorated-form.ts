@@ -1,11 +1,11 @@
 // Theme is dynamically imported and registered by `./bootstrap.ts` based on
 // localStorage, so it is intentionally NOT imported here.
 import { css, html, LitElement } from 'lit'
-import { getStoredLanguage } from './bootstrap'
+import { getStoredInterpreter, getStoredLanguage } from './bootstrap'
 import { BridgedFormValuesContainer } from '../src/icure'
 import { property, state } from 'lit/decorators.js'
 import { makeFormValuesContainer } from './form-values-container'
-import { makeInterpreter } from '../src/utils/interpreter'
+import { InterpreterKind } from '../src/utils/interpreter'
 import MiniSearch, { SearchResult } from 'minisearch'
 import { codes, icd10, icpc2 } from './codes'
 import { buildIcdTree, IcdSuggestion, markIcdTree, normaliseTerm } from './icd-tree'
@@ -107,10 +107,6 @@ const patient = new DecryptedPatient({
 // Answers `services()`, `patient` and `consultDate` inside formulas out of the fixtures
 // above, standing in for the SDK calls a real host would make. The 200 ms is there so the
 // demo defers its answer like a networked host would, rather than resolving on the spot.
-// One QuickJS runtime for every form on the page: an interpreter is a WebAssembly runtime, not
-// a cheap closure, and formulas of different forms are isolated per evaluation anyway.
-const formulaInterpreter = makeInterpreter()
-
 const hostContext = makeFormulaHostContext({
 	patient,
 	contacts: [currentContact, ...history],
@@ -159,6 +155,9 @@ export class DecoratedForm extends LitElement {
 	@property() language?: string = getStoredLanguage()
 	@property() readonly = false
 	@property() hideEmptyFields = false
+	// The formula engine, passed to the container by name: every form on the page then shares one
+	// instance per engine. Read once, when the container is built.
+	@property() interpreter: InterpreterKind = getStoredInterpreter()
 
 	// Viewer role passed to <icure-form>: derived from the renderer string so swapping renderers
 	// also swaps the role filter. Returns `null` (no filter) for any renderer that doesn't match.
@@ -309,7 +308,7 @@ export class DecoratedForm extends LitElement {
 		const initialisedFormValueContainer = new BridgedFormValuesContainer(
 			responsible,
 			contactFormValuesContainer,
-			formulaInterpreter,
+			this.interpreter,
 			undefined,
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)

@@ -1,11 +1,12 @@
 import { readdirSync, readFileSync, statSync } from 'fs'
 import { join, relative, resolve } from 'path'
 import YAML from 'yaml'
-import { makeInterpreter } from '../src/utils/interpreter'
+import { makeInsecureInterpreter, makeInterpreter } from '../src/utils/interpreter'
 import { parsePrimitive } from '../src/utils/primitive'
 import { PrimitiveType } from '../src/components/model'
 
-// Differential test for the switch from the eval-based formula interpreter to QuickJS.
+// Differential test for the switch from the eval-based formula interpreter to QuickJS, and for the
+// `insecure` engine that keeps the eval-based one available.
 // Every formula of every demo form (the numbered samples, the curated specialty forms and
 // the legacy ones) runs on both engines, against a sandbox that mirrors
 // BridgedFormValuesContainer.compute, once with every field empty and once with every field
@@ -191,6 +192,8 @@ const maskClock = (value: unknown): unknown =>
 
 const evalEngine = makeEvalInterpreter()
 const quickjs = makeInterpreter()
+// The `insecure` engine is the old one with escapes closed: on these formulas it must not differ at all.
+const insecure = makeInsecureInterpreter()
 afterAll(() => quickjs.dispose())
 
 const run = async (engine: (formula: string, sandbox: any) => Promise<unknown>, body: string, values: { [label: string]: FieldValue[] }) => {
@@ -215,6 +218,9 @@ describe.each(forms.filter((f) => f.formulas.length > 0).map((f) => [f.file, f] 
 			expect([...after.deps].sort()).toEqual(oldDeps)
 			const masked = (v: unknown) => (readsTheClock(formula.body) ? maskClock(normalize(v)) : normalize(v))
 			expect(masked(after.value)).toEqual(masked(before.value))
+			const unchanged = await run(insecure, formula.body, { ...values })
+			expect([...unchanged.deps].sort()).toEqual([...before.deps].sort())
+			expect(masked(unchanged.value)).toEqual(masked(before.value))
 		}
 	})
 })

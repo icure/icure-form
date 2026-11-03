@@ -291,6 +291,22 @@ It also allows for optimisations as the values of the form values container can 
 It is also very important in the design to keep all code that is not under src/icure and src/conversion completely agnostic in terms of data model.
 For example, it is not a good idea to make assumptions about the kind of data structure that are going to be available to the fields (like relying on it being a DecryptedService).
 
+#### Formula engine
+
+The formula engine is chosen when the container is built, through the third argument of `BridgedFormValuesContainer`:
+
+```typescript
+import { BridgedFormValuesContainer } from '@icure/form/lib/icure'
+
+new BridgedFormValuesContainer(responsible, contactFormValuesContainer, 'quickjs' /* or 'insecure', or a function */, contact, …)
+```
+
+- **`'quickjs'`**: formulas run in QuickJS compiled to WebAssembly, isolated from the page: they only see what the sandbox and `interpreterContext` give them, values are copied in and out, and a runaway formula is interrupted (2 s of continuous synchronous work, 30 s for an async one, 64 MB of memory). Every container naming `'quickjs'` shares one runtime per page. The engine is loaded the first time a formula runs: a small JS glue chunk, then `emscripten-module.wasm` (about 500 KB, 230 KB compressed), which the glue locates with `new URL('emscripten-module.wasm', import.meta.url)`. Webpack 5, rspack and Vite emit that file as an asset without configuration; with other bundlers (esbuild, for one), copy it next to the glue. A Content-Security-Policy must allow `'wasm-unsafe-eval'` in `script-src`.
+- **`'insecure'`**: the engine used before QuickJS — `new Function` with a `with (sandbox)` block, in the page's own realm. Nothing extra to load, and no WebAssembly. **It is not a security boundary**: a formula can reach the page through a function's constructor (`[].constructor.constructor('return window')()`), modify the prototypes of the page's built-ins, and freeze the page with an endless loop. Only use it for forms whose formulas you trust as much as your own code; it needs `'unsafe-eval'` in a Content-Security-Policy.
+- **A function** `(formula, sandbox) => Promise<value>`: your own engine. `makeInterpreter()` and `makeInsecureInterpreter()` (from `@icure/form/lib/utils/interpreter`) build private instances, released with `dispose()`.
+
+Without an interpreter, formulas are not evaluated.
+
 #### Built-in functions
 
 When using the `compute` method, the following functions and objects are available in the sandbox:

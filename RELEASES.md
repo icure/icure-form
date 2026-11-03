@@ -1217,3 +1217,47 @@ Saving a value used to add or replace one language and keep the others, so a val
 Both properties also apply to schema fields, whose drawing is read and saved under `contentLanguage`, and to the card renderer: its cards, its review page, and the values it saves.
 
 For custom `FormValuesContainer` implementations, `setValue` takes a new optional last argument, `options?: SetValueOptions` (`{ clearOtherLanguages?: boolean }`), and `handleValueChangedProvider` passes it through. See [the renderer](https://github.com/icure/icure-form/blob/cardinal/README.md#the-renderer).
+
+## [MISSING] 3.10.0 (2026-11-03)
+<!-- tag: 3.10.0 | target: e97d5682799ff3ae4fb8e6c1abacfbe8b3ecff47 | prerelease: false -->
+
+### Formulas run in QuickJS
+
+Formulas (`computedProperties`, validators, default values) used to run in the page itself, through `new Function` and a `with (sandbox)` block. They now run in [QuickJS](https://bellard.org/quickjs/) compiled to WebAssembly, isolated from the page:
+
+- a formula only sees what the sandbox and `interpreterContext` give it, and values are copied in and out;
+- a runaway formula is stopped after 2 s of continuous synchronous work (30 s for an async one), and memory is capped at 64 MB.
+
+Every formula of the sample and specialty forms gives the same result and dependencies as before.
+
+The WebAssembly ships as a separate file, `emscripten-module.wasm` (about 500 KB, 230 KB compressed), fetched the first time a formula runs. Webpack 5, rspack and Vite include it in the build without configuration; with esbuild or another bundler that does not handle `new URL(…, import.meta.url)`, copy it next to the bundle. A Content-Security-Policy must allow `'wasm-unsafe-eval'` in `script-src`.
+
+### Choosing the formula engine
+
+The third argument of `BridgedFormValuesContainer` now also takes an engine name:
+
+```typescript
+new BridgedFormValuesContainer(responsible, contactFormValuesContainer, 'quickjs' /* or 'insecure', or a function */, contact, …)
+```
+
+- `'quickjs'`: the isolated engine above, shared by every container on the page.
+- `'insecure'`: the previous engine, in the page's own realm, without WebAssembly. It is **not** a security boundary: a formula can still reach the page through a function's constructor, modify the page's built-in prototypes, or freeze the page with an endless loop. The escapes that could be closed are: a formula can no longer close the `with` block and run outside it, and `this` is the sandbox rather than the global object. A trailing `// comment` no longer breaks a formula, compiled formulas are now cached, and evaluations no longer leak memory.
+- a function `(formula, sandbox) => Promise<value>`, as before. `makeInterpreter()` and `makeInsecureInterpreter()` build private instances, released with `dispose()`.
+
+See [Formula engine](https://github.com/icure/icure-form/blob/cardinal/README.md#formula-engine).
+
+### Group alignment: `styleOptions.alignItems`
+
+Checkboxes and buttons sit at the bottom of their cell, to line up with input boxes beside them. A group's `styleOptions.alignItems` (`start`, `center`, `end`, `stretch`) overrides that for all its children:
+
+```yaml
+      - group: line
+        borderless: true
+        styleOptions:
+          alignItems: start
+        fields: […]
+```
+
+### Clinical score samples
+
+Four new demo forms compute cardiovascular and fracture risk scores: SCORE2 (`15-score2.yaml`), Framingham (`16-framingham.yaml`), AGLA (`17-agla.yaml`) and FRAX (`18-frax.yaml`).

@@ -1218,7 +1218,7 @@ Both properties also apply to schema fields, whose drawing is read and saved und
 
 For custom `FormValuesContainer` implementations, `setValue` takes a new optional last argument, `options?: SetValueOptions` (`{ clearOtherLanguages?: boolean }`), and `handleValueChangedProvider` passes it through. See [the renderer](https://github.com/icure/icure-form/blob/cardinal/README.md#the-renderer).
 
-## [MISSING] 3.10.0 (2026-11-03)
+## 3.10.0 (2026-11-03)
 <!-- tag: 3.10.0 | target: e97d5682799ff3ae4fb8e6c1abacfbe8b3ecff47 | prerelease: false -->
 
 ### Formulas run in QuickJS

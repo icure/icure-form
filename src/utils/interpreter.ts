@@ -1,7 +1,9 @@
 import { newQuickJSWASMModuleFromVariant, QuickJSContext, QuickJSDeferredPromise, QuickJSHandle, QuickJSRuntime, QuickJSWASMModule } from 'quickjs-emscripten-core'
-// The browser single-file build embeds the WebAssembly and has no Node imports, so any bundler takes
-// it without configuration. Jest (Node) maps it to the CommonJS single-file build — see package.json.
-import variant from '@jitl/quickjs-singlefile-browser-release-sync'
+// The WebAssembly ships as a separate emscripten-module.wasm file. The variant loads its JS glue with a
+// dynamic import() on first use, and the browser glue fetches the .wasm through
+// `new URL('emscripten-module.wasm', import.meta.url)`, which webpack 5, rspack and Vite emit as an asset.
+// Under Node (Jest) the CommonJS entry reads the file from disk.
+import variant from '@jitl/quickjs-wasmfile-release-sync'
 
 /**
  * Formula interpreter running `computedProperties` bodies inside QuickJS compiled to WebAssembly,

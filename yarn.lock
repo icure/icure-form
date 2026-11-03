@@ -802,8 +802,7 @@ __metadata:
     "@babel/traverse": ^7.26.10
     "@icure/cardinal-sdk": 2.0.0-PREVIEW-24
     "@icure/motss-app-datepicker": ^6.0.0-rc.39
-    "@jitl/quickjs-singlefile-browser-release-sync": 0.32.0
-    "@jitl/quickjs-singlefile-cjs-release-sync": 0.32.0
+    "@jitl/quickjs-wasmfile-release-sync": 0.32.0
     "@lit/task": ^1.0.2
     "@playwright/test": ^1.40.0
     "@rspack/cli": ^1.3.0
@@ -1153,21 +1152,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jitl/quickjs-singlefile-browser-release-sync@npm:0.32.0":
+"@jitl/quickjs-wasmfile-release-sync@npm:0.32.0":
   version: 0.32.0
-  resolution: "@jitl/quickjs-singlefile-browser-release-sync@npm:0.32.0"
+  resolution: "@jitl/quickjs-wasmfile-release-sync@npm:0.32.0"
   dependencies:
     "@jitl/quickjs-ffi-types": 0.32.0
-  checksum: 95a92a7ac5b5baababf504d3cbb945c0e39f76ec95fc71732ab18531d6843aae181ac0f4c80070d9530c4ee52168a26aa26f1c9b2d068cd869696d4232fa30fb
-  languageName: node
-  linkType: hard
-
-"@jitl/quickjs-singlefile-cjs-release-sync@npm:0.32.0":
-  version: 0.32.0
-  resolution: "@jitl/quickjs-singlefile-cjs-release-sync@npm:0.32.0"
-  dependencies:
-    "@jitl/quickjs-ffi-types": 0.32.0
-  checksum: e5ba0e8163fb19e2bcc9951210fbcae54583638b07cf037a4fa62f6baee2dc9316d7bebca3e1af86e013f32db8272a5c06ad14386c1e0d04293be53247d1e978
+  checksum: 821fcc0dfd219dd67198fdb129aa289fa3ccd2cc24bf228a313dc1adda171f7391c9b5838a931cec8a11c61e48b01c3229863dd25479c4b53e297f979c9150a3
   languageName: node
   linkType: hard
 

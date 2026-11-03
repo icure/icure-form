@@ -956,6 +956,16 @@ sections:
           type: measure-field
 ```
 
+A group's `styleOptions.alignItems` sets the vertical alignment of its children in their grid row (CSS `align-items`: `start`, `center`, `end`, `stretch`). By default checkboxes and buttons sit at the bottom of their cell to line up with the input boxes beside them; `alignItems: start` aligns every child to the top instead.
+
+```yaml
+      - group: line
+        borderless: true
+        styleOptions:
+          alignItems: start
+        fields: […]
+```
+
 Sub-forms allow you to include one of several forms in another form. The sub-form content can either be referenced explicitly or obtained through reference from the previously declared subForms. Subforms support a `labels` property with `add` and `remove` keys to customize the button texts.
 
 ```yaml

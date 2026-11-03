@@ -38,6 +38,8 @@ sections:
       - group: line
         borderless: true
         span: 24
+        styleOptions:
+          alignItems: start
         fields:
           - field: sex
             type: radio-button
@@ -87,6 +89,8 @@ sections:
       - group: line
         borderless: true
         span: 24
+        styleOptions:
+          alignItems: start
         fields:
           - field: framinghamRisk
             type: number-field

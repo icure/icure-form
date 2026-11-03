@@ -98,10 +98,13 @@ const renderInternal = async (
 		const subElements = results.map((r) => r.template).filter((x) => !!x && x !== nothing)
 		const hasContent = results.some((r) => r.content)
 		const groupTitle = fg.translate && tp && props.language ? tp(props.language, fg.group) : fg.group
+		// `styleOptions.alignItems` (e.g. `start`) aligns every child of the group's grid the same way,
+		// overriding the bottom alignment checkboxes and buttons get by default.
+		const alignItems = typeof fg.styleOptions?.alignItems === 'string' ? fg.styleOptions.alignItems : undefined
 		const shell = (children: unknown) =>
 			html`<div class="${['group', fg.borderless ? undefined : 'bordered'].filter((x) => !!x).join(' ')}" style="${calculateFieldOrGroupSize(fgSpan, 1)}">
 				${fg.borderless || fg.hideTitle ? nothing : html`<div>${h(level, '', html`${groupTitle}`)}</div>`}
-				<div class="icure-form">${children}</div>
+				<div class="${alignItems ? 'icure-form aligned-items' : 'icure-form'}" style="${alignItems ? `align-items: ${alignItems}` : ''}">${children}</div>
 			</div>`
 		// Read-only review: a group whose children all dropped goes with them, unless it opts out with
 		// `alwaysVisible` — then its shell (title as usual, empty grid) stands in for the missing content.

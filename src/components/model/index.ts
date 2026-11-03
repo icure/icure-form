@@ -1408,6 +1408,7 @@ export class Group {
 			group,
 			translate,
 			width,
+			styleOptions,
 			roles,
 			samePage,
 			alwaysVisible,
@@ -1421,6 +1422,7 @@ export class Group {
 			rowSpan?: number
 			computedProperties?: { [_key: string]: string }
 			width?: number
+			styleOptions?: { [_key: string]: unknown }
 			roles?: string[]
 			samePage?: boolean
 			alwaysVisible?: boolean
@@ -1437,6 +1439,7 @@ export class Group {
 				translate: translate,
 				computedProperties: computedProperties,
 				width: width,
+				styleOptions: styleOptions,
 				roles: Array.isArray(roles) ? roles : undefined,
 				samePage: samePage !== undefined ? !!samePage : undefined,
 				alwaysVisible: alwaysVisible !== undefined ? !!alwaysVisible : undefined,
@@ -1454,6 +1457,7 @@ export class Group {
 			translatable: this.translate,
 			span: this.span,
 			width: this.width,
+			styleOptions: this.styleOptions,
 			roles: this.roles,
 			samePage: this.samePage,
 			alwaysVisible: this.alwaysVisible,

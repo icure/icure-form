@@ -58,6 +58,8 @@ sections:
       - group: line
         borderless: true
         span: 24
+        styleOptions:
+          alignItems: start
         fields:
           - field: country
             type: radio-button
@@ -108,6 +110,8 @@ sections:
       - group: line
         borderless: true
         span: 24
+        styleOptions:
+          alignItems: start
         fields:
           - field: previousFracture
             type: checkbox
@@ -160,6 +164,8 @@ sections:
       - group: line
         borderless: true
         span: 24
+        styleOptions:
+          alignItems: start
         fields:
           - field: riskFactorCount
             type: number-field

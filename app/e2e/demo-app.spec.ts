@@ -13,6 +13,10 @@ const SAMPLE_SLUGS = [
 	'10-clinical-workflow',
 	'11-delegated-edition',
 	'14-schema-field',
+	'15-score2',
+	'16-framingham',
+	'17-agla',
+	'18-frax',
 ] as const
 
 type CapturedConsoleMessage = {

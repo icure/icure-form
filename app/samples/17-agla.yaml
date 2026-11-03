@@ -1,0 +1,166 @@
+form: demo.agla
+id: 10000017-0000-0000-0000-000000000017
+description: AGLA score — Swiss calibration of the PROCAM score, 10-year risk of a fatal or non-fatal myocardial infarction.
+translations:
+  - language: fr
+    translations:
+      Sex: Sexe
+      Female: Femme
+      Male: Homme
+      Age (years): Âge (années)
+      Current smoker: Fumeur actuel
+      Diabetes: Diabète
+      MI before 60 in a first-degree relative: IDM avant 60 ans chez un parent du 1er degré
+      Yes: Oui
+      Systolic BP (mmHg): PA systolique (mmHg)
+      LDL cholesterol (mmol/L): Cholestérol LDL (mmol/L)
+      HDL cholesterol (mmol/L): Cholestérol HDL (mmol/L)
+      Triglycerides (mmol/L): Triglycérides (mmol/L)
+      PROCAM points: Points PROCAM
+      10-year MI risk (AGLA): Risque d'IDM à 10 ans (AGLA)
+      Risk category: Catégorie de risque
+  - language: nl
+    translations:
+      Sex: Geslacht
+      Female: Vrouw
+      Male: Man
+      Age (years): Leeftijd (jaren)
+      Current smoker: Huidige roker
+      Diabetes: Diabetes
+      MI before 60 in a first-degree relative: MI vóór 60 jaar bij eerstegraadsverwant
+      Yes: Ja
+      Systolic BP (mmHg): Systolische BD (mmHg)
+      LDL cholesterol (mmol/L): LDL-cholesterol (mmol/L)
+      HDL cholesterol (mmol/L): HDL-cholesterol (mmol/L)
+      Triglycerides (mmol/L): Triglyceriden (mmol/L)
+      PROCAM points: PROCAM-punten
+      10-year MI risk (AGLA): 10-jaars MI-risico (AGLA)
+      Risk category: Risicocategorie
+sections:
+  - section: Patient
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: sex
+            type: radio-button
+            shortLabel: Sex
+            span: 8
+            styleOptions:
+              direction: row
+            options:
+              female: Female
+              male: Male
+          - field: ageYears
+            type: number-field
+            shortLabel: Age (years)
+            span: 4
+          - field: smoker
+            type: checkbox
+            shortLabel: Current smoker
+            span: 4
+            options:
+              yes: Yes
+          - field: diabetes
+            type: checkbox
+            shortLabel: Diabetes
+            span: 4
+            options:
+              yes: Yes
+          - field: familyHistory
+            type: checkbox
+            shortLabel: MI before 60 in a first-degree relative
+            span: 4
+            options:
+              yes: Yes
+          - field: systolicBp
+            type: number-field
+            shortLabel: Systolic BP (mmHg)
+            span: 6
+          - field: ldlCholesterol
+            type: number-field
+            shortLabel: LDL cholesterol (mmol/L)
+            span: 6
+          - field: hdlCholesterol
+            type: number-field
+            shortLabel: HDL cholesterol (mmol/L)
+            span: 6
+          - field: triglycerides
+            type: number-field
+            shortLabel: Triglycerides (mmol/L)
+            span: 6
+  - section: AGLA
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        fields:
+          - field: procamPoints
+            type: number-field
+            shortLabel: PROCAM points
+            span: 6
+            readonly: true
+            computedProperties:
+              value: |
+                // Read every input before any early return so each one is recorded as a dependency.
+                const age = parseContent(ageYears[0]?.content)
+                const smoking = hasOption(smoker[0], 'yes')
+                const diabetic = hasOption(diabetes[0], 'yes')
+                const family = hasOption(familyHistory[0], 'yes')
+                const sbp = parseContent(systolicBp[0]?.content)
+                const ldl = parseContent(ldlCholesterol[0]?.content)
+                const hdl = parseContent(hdlCholesterol[0]?.content)
+                const tg = parseContent(triglycerides[0]?.content)
+                if (age == null || sbp == null || ldl == null || hdl == null || tg == null) { return undefined }
+                if (age < 35 || age > 65) { return undefined }
+
+                // The PROCAM bands are published in mg/dL
+                const ldlMg = ldl * 38.67
+                const hdlMg = hdl * 38.67
+                const tgMg = tg * 88.57
+                // Assmann, Cullen & Schulte, Circulation 2002;105:310
+                const points =
+                  (age < 40 ? 0 : age < 45 ? 6 : age < 50 ? 11 : age < 55 ? 16 : age < 60 ? 21 : 26) +
+                  (ldlMg < 100 ? 0 : ldlMg < 130 ? 5 : ldlMg < 160 ? 10 : ldlMg < 190 ? 14 : 20) +
+                  (hdlMg < 35 ? 11 : hdlMg < 45 ? 8 : hdlMg < 55 ? 5 : 0) +
+                  (tgMg < 100 ? 0 : tgMg < 150 ? 2 : tgMg < 200 ? 3 : 4) +
+                  (sbp < 120 ? 0 : sbp < 130 ? 2 : sbp < 140 ? 3 : sbp < 160 ? 5 : 8) +
+                  (smoking ? 8 : 0) + (diabetic ? 6 : 0) + (family ? 4 : 0)
+                return { content: { '*': { type: 'number', value: points } }, codes: [] }
+          - field: aglaRisk
+            type: text-field
+            shortLabel: 10-year MI risk (AGLA)
+            span: 9
+            readonly: true
+            computedProperties:
+              value: |
+                const isFemale = hasOption(sex[0], 'female')
+                const isMale = hasOption(sex[0], 'male')
+                const points = parseContent(procamPoints[0]?.content)
+                if ((!isFemale && !isMale) || points == null) { return undefined }
+
+                // PROCAM 10-year risk (%) for 21 to 59 points; ≤20 is <1%, ≥60 is >30%
+                const table = [1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8, 1.9, 2.3, 2.4, 2.8, 2.9, 3.3, 3.5, 4.0, 4.2, 4.8, 5.1, 5.7, 6.1,
+                  7.0, 7.4, 8.0, 8.8, 10.2, 10.5, 10.7, 12.8, 13.2, 15.5, 16.8, 17.5, 19.6, 21.7, 22.2, 23.8, 25.1, 28.0, 29.4]
+                // AGLA 2014: ×0.7 to calibrate PROCAM to the Swiss population, then ×0.25 for women
+                const factor = 0.7 * (isFemale ? 0.25 : 1)
+                const format = (v) => (Math.round(v * factor * 10) / 10).toFixed(1)
+                if (points <= 20) { return '< ' + format(1) + ' %' }
+                if (points >= 60) { return '> ' + format(30) + ' %' }
+                return format(table[points - 21]) + ' %'
+          - field: aglaCategory
+            type: text-field
+            shortLabel: Risk category
+            span: 9
+            readonly: true
+            computedProperties:
+              value: |
+                const age = parseContent(ageYears[0]?.content)
+                const risk = parseFloat(text(aglaRisk[0])?.replace(/[<> %]/g, '') ?? '')
+                if (age != null && (age < 35 || age > 65)) { return 'The PROCAM points table covers 35 to 65 years' }
+                if (Number.isNaN(risk)) { return undefined }
+                return risk < 10 ? 'Low (<10%)' : risk <= 20 ? 'Intermediate (10–20%)' : 'High (>20%)'
+      - field: "AGLA score (Swiss Atherosclerosis Working Group): the PROCAM points score (Assmann 2002 — age, LDL, HDL, triglycerides, systolic BP, smoking, diabetes, family history of premature MI) looked up in the PROCAM 10-year MI risk table, multiplied by 0.7 to calibrate it to the Swiss population and by a further 0.25 for women. Lipids are entered in mmol/L and converted to the mg/dL bands of the table. The points table covers 35 to 65 years. Categories: <10% low, 10–20% intermediate, >20% high. Test: Male, 55 years, smoker, no diabetes, no family history, SBP 145, LDL 4.0, HDL 1.0, triglycerides 1.8 — 21 + 10 + 8 + 3 + 5 + 8 = 55 points, 22.2% × 0.7 = 15.5 %, category Intermediate. Switch to Female — 3.9 %, Low."
+        type: label
+        span: 24

@@ -107,6 +107,10 @@ const patient = new DecryptedPatient({
 // Answers `services()`, `patient` and `consultDate` inside formulas out of the fixtures
 // above, standing in for the SDK calls a real host would make. The 200 ms is there so the
 // demo defers its answer like a networked host would, rather than resolving on the spot.
+// One QuickJS runtime for every form on the page: an interpreter is a WebAssembly runtime, not
+// a cheap closure, and formulas of different forms are isolated per evaluation anyway.
+const formulaInterpreter = makeInterpreter()
+
 const hostContext = makeFormulaHostContext({
 	patient,
 	contacts: [currentContact, ...history],
@@ -305,7 +309,7 @@ export class DecoratedForm extends LitElement {
 		const initialisedFormValueContainer = new BridgedFormValuesContainer(
 			responsible,
 			contactFormValuesContainer,
-			makeInterpreter(),
+			formulaInterpreter,
 			undefined,
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
@@ -360,6 +364,13 @@ export class DecoratedForm extends LitElement {
 				services: hostContext.services,
 				patient: hostContext.patient,
 				consultDate: hostContext.consultDate,
+				// FRAX equations are proprietary: a real host forwards these inputs to a licensed FRAX
+				// service and answers { hip, majorOsteoporotic } in %. The demo has none, so it answers
+				// undefined — after a delay, so the form still exercises the async path.
+				frax: () => async (): Promise<{ hip: number; majorOsteoporotic: number } | undefined> => {
+					await new Promise((resolve) => setTimeout(resolve, 300))
+					return undefined
+				},
 				summarize: () => (domainOrParams: string | Partial<MistralSummarizeParams>, questionsArg?: [string, string][]) => {
 					const params: MistralSummarizeParams =
 						typeof domainOrParams === 'string'

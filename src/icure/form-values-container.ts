@@ -7,6 +7,7 @@ import { areCodesEqual, codeStubToCode, contentToPrimitiveType, isContentEqual, 
 import { parsePrimitive } from '../utils/primitive'
 import { anyDateToDate, dateToFuzzyDate } from '../utils/dates'
 import { normalizeCodes } from '../utils/code-utils'
+import { InterpreterKind, sharedInterpreter } from '../utils/interpreter'
 
 interface ComputedValueChange {
 	serviceId: string | undefined
@@ -49,6 +50,9 @@ function primitiveTypeToString(pt: PrimitiveType): string {
 	}
 }
 
+/** Evaluates a formula against a sandbox answering its bare identifiers. */
+export type FormulaInterpreter = <T, S extends { [key: string | symbol]: unknown }>(formula: string, sandbox: S) => Promise<T | undefined>
+
 /** This class is a bridge between the ICure API and the generic FormValuesContainer interface.
  * It wraps around a ContactFormValuesContainer and provides a series of services:
  * - It computes dependent values when the form is created
@@ -71,6 +75,7 @@ function primitiveTypeToString(pt: PrimitiveType): string {
 export class BridgedFormValuesContainer implements FormValuesContainer<FieldValue, FieldMetadata> {
 	private contact: DecryptedContact
 	private contactFormValuesContainer: ContactFormValuesContainer
+	private interpreter?: FormulaInterpreter
 	private _id = ''
 	private readonly mutateAndNotify: (newContactFormValuesContainer: ContactFormValuesContainer, changedKeys: string[] | null) => void
 	private dependentValuesComputationIteration?: Promise<ComputedValueChange[]> = undefined
@@ -83,7 +88,9 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	 * Creates an instance of BridgedFormValuesContainer.
 	 * @param responsible The id of the data owner responsible for the creation of the values
 	 * @param contactFormValuesContainer The wrapped ContactFormValuesContainer
-	 * @param interpreter A function that can interpret formulas
+	 * @param interpreter The formula engine: `'quickjs'` (formulas isolated in QuickJS/WebAssembly; the page-wide
+	 * instance is shared), `'insecure'` (formulas run in the page through `new Function`; trusted forms only), or a
+	 * function of your own. Without one, formulas are not evaluated.
 	 * @param contact The displayed contact (may be in the past). === to currentContact if the contact is the contact of the day
 	 * @param initialValuesProvider A lambda that provides the initial values of the form
 	 * @param dependentValuesProvider A function that provides the dependent values (computed on the basis of other values) for a given anchorId and templateId
@@ -96,15 +103,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 	constructor(
 		private responsible: string,
 		contactFormValuesContainer: ContactFormValuesContainer,
-		private interpreter?: <
-			T,
-			S extends {
-				[key: string | symbol]: unknown
-			},
-		>(
-			formula: string,
-			sandbox: S,
-		) => Promise<T | undefined>,
+		interpreter?: InterpreterKind | FormulaInterpreter,
 		contact?: DecryptedContact,
 		private initialValuesProvider: (
 			anchorId?: string,
@@ -135,6 +134,7 @@ export class BridgedFormValuesContainer implements FormValuesContainer<FieldValu
 		private dependenciesCache: { [formula: string]: string[] } = {},
 	) {
 		//Before start to broadcast changes, we need to fill in the contactFormValuesContainer with the dependent values
+		this.interpreter = typeof interpreter === 'string' ? sharedInterpreter(interpreter) : interpreter
 		this.contactFormValuesContainer = contactFormValuesContainer
 		this._id = `[${contactFormValuesContainer._id}]`
 		console.log(`+ BFVC ${this._id} created`)

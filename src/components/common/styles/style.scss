@@ -1255,6 +1255,11 @@ icure-form-button {
 	align-self: self-end;
 }
 
+// A group with `styleOptions.alignItems` sets the alignment of all its children, checkboxes and buttons included.
+.icure-form.aligned-items > * {
+	align-self: auto;
+}
+
 .error {
 	color: red;
 	font-size: $label-font-size;

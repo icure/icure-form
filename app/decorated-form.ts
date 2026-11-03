@@ -1,11 +1,11 @@
 // Theme is dynamically imported and registered by `./bootstrap.ts` based on
 // localStorage, so it is intentionally NOT imported here.
 import { css, html, LitElement } from 'lit'
-import { getStoredLanguage } from './bootstrap'
+import { getStoredInterpreter, getStoredLanguage } from './bootstrap'
 import { BridgedFormValuesContainer } from '../src/icure'
 import { property, state } from 'lit/decorators.js'
 import { makeFormValuesContainer } from './form-values-container'
-import { makeInterpreter } from '../src/utils/interpreter'
+import { InterpreterKind } from '../src/utils/interpreter'
 import MiniSearch, { SearchResult } from 'minisearch'
 import { codes, icd10, icpc2 } from './codes'
 import { buildIcdTree, IcdSuggestion, markIcdTree, normaliseTerm } from './icd-tree'
@@ -155,6 +155,9 @@ export class DecoratedForm extends LitElement {
 	@property() language?: string = getStoredLanguage()
 	@property() readonly = false
 	@property() hideEmptyFields = false
+	// The formula engine, passed to the container by name: every form on the page then shares one
+	// instance per engine. Read once, when the container is built.
+	@property() interpreter: InterpreterKind = getStoredInterpreter()
 
 	// Viewer role passed to <icure-form>: derived from the renderer string so swapping renderers
 	// also swaps the role filter. Returns `null` (no filter) for any renderer that doesn't match.
@@ -305,7 +308,7 @@ export class DecoratedForm extends LitElement {
 		const initialisedFormValueContainer = new BridgedFormValuesContainer(
 			responsible,
 			contactFormValuesContainer,
-			makeInterpreter(),
+			this.interpreter,
 			undefined,
 			(anchorId, templateId) => {
 				const form = findForm(this.form, anchorId, templateId)
@@ -360,6 +363,13 @@ export class DecoratedForm extends LitElement {
 				services: hostContext.services,
 				patient: hostContext.patient,
 				consultDate: hostContext.consultDate,
+				// FRAX equations are proprietary: a real host forwards these inputs to a licensed FRAX
+				// service and answers { hip, majorOsteoporotic } in %. The demo has none, so it answers
+				// undefined — after a delay, so the form still exercises the async path.
+				frax: () => async (): Promise<{ hip: number; majorOsteoporotic: number } | undefined> => {
+					await new Promise((resolve) => setTimeout(resolve, 300))
+					return undefined
+				},
 				summarize: () => (domainOrParams: string | Partial<MistralSummarizeParams>, questionsArg?: [string, string][]) => {
 					const params: MistralSummarizeParams =
 						typeof domainOrParams === 'string'

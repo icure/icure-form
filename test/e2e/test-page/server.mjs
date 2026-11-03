@@ -15,6 +15,7 @@ const MIME_TYPES = {
 	'.yaml': 'text/yaml',
 	'.png': 'image/png',
 	'.svg': 'image/svg+xml',
+	'.wasm': 'application/wasm',
 }
 
 const server = http.createServer((req, res) => {

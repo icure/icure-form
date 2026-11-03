@@ -1,0 +1,213 @@
+form: demo.frax
+id: 10000018-0000-0000-0000-000000000018
+description: FRAX — 10-year probability of hip fracture, computed by a host-provided FRAX service from the inputs collected here.
+translations:
+  - language: fr
+    translations:
+      Country: Pays
+      Belgium: Belgique
+      Switzerland: Suisse
+      France: France
+      Netherlands: Pays-Bas
+      Sex: Sexe
+      Female: Femme
+      Male: Homme
+      Age (years): Âge (années)
+      Weight (kg): Poids (kg)
+      Height (cm): Taille (cm)
+      BMI (kg/m²): IMC (kg/m²)
+      Previous fragility fracture: Fracture de fragilité antérieure
+      Parent fractured hip: Parent avec fracture de hanche
+      Current smoking: Tabagisme actuel
+      Glucocorticoids (≥3 months): Glucocorticoïdes (≥3 mois)
+      Rheumatoid arthritis: Polyarthrite rhumatoïde
+      Secondary osteoporosis: Ostéoporose secondaire
+      Alcohol ≥3 units/day: Alcool ≥3 unités/jour
+      Yes: Oui
+      Femoral neck T-score: T-score col fémoral
+      Clinical risk factors: Facteurs de risque cliniques
+      10-year hip fracture probability: Probabilité de fracture de hanche à 10 ans
+  - language: nl
+    translations:
+      Country: Land
+      Belgium: België
+      Switzerland: Zwitserland
+      France: Frankrijk
+      Netherlands: Nederland
+      Sex: Geslacht
+      Female: Vrouw
+      Male: Man
+      Age (years): Leeftijd (jaren)
+      Weight (kg): Gewicht (kg)
+      Height (cm): Lengte (cm)
+      BMI (kg/m²): BMI (kg/m²)
+      Previous fragility fracture: Eerdere fragiliteitsfractuur
+      Parent fractured hip: Ouder met heupfractuur
+      Current smoking: Huidig roken
+      Glucocorticoids (≥3 months): Glucocorticoïden (≥3 maanden)
+      Rheumatoid arthritis: Reumatoïde artritis
+      Secondary osteoporosis: Secundaire osteoporose
+      Alcohol ≥3 units/day: Alcohol ≥3 eenheden/dag
+      Yes: Ja
+      Femoral neck T-score: T-score femurhals
+      Clinical risk factors: Klinische risicofactoren
+      10-year hip fracture probability: 10-jaars kans op heupfractuur
+sections:
+  - section: Patient
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        styleOptions:
+          alignItems: start
+        fields:
+          - field: country
+            type: radio-button
+            shortLabel: Country
+            span: 12
+            styleOptions:
+              direction: row
+            options:
+              be: Belgium
+              ch: Switzerland
+              fr: France
+              nl: Netherlands
+          - field: sex
+            type: radio-button
+            shortLabel: Sex
+            span: 8
+            styleOptions:
+              direction: row
+            options:
+              female: Female
+              male: Male
+          - field: ageYears
+            type: number-field
+            shortLabel: Age (years)
+            span: 4
+          - field: weight
+            type: number-field
+            shortLabel: Weight (kg)
+            span: 8
+          - field: height
+            type: number-field
+            shortLabel: Height (cm)
+            span: 8
+          - field: bmi
+            type: number-field
+            shortLabel: BMI (kg/m²)
+            span: 8
+            readonly: true
+            computedProperties:
+              value: |
+                const w = parseContent(weight[0]?.content)
+                const h = parseContent(height[0]?.content)
+                if (!w || !h) { return undefined }
+                const m = h > 3 ? h / 100 : h
+                return { content: { '*': { type: 'number', value: Math.round((w / (m * m)) * 10) / 10 } }, codes: [] }
+  - section: Clinical risk factors
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        styleOptions:
+          alignItems: start
+        fields:
+          - field: previousFracture
+            type: checkbox
+            shortLabel: Previous fragility fracture
+            span: 6
+            options:
+              yes: Yes
+          - field: parentHipFracture
+            type: checkbox
+            shortLabel: Parent fractured hip
+            span: 6
+            options:
+              yes: Yes
+          - field: currentSmoking
+            type: checkbox
+            shortLabel: Current smoking
+            span: 6
+            options:
+              yes: Yes
+          - field: glucocorticoids
+            type: checkbox
+            shortLabel: Glucocorticoids (≥3 months)
+            span: 6
+            options:
+              yes: Yes
+          - field: rheumatoidArthritis
+            type: checkbox
+            shortLabel: Rheumatoid arthritis
+            span: 6
+            options:
+              yes: Yes
+          - field: secondaryOsteoporosis
+            type: checkbox
+            shortLabel: Secondary osteoporosis
+            span: 6
+            options:
+              yes: Yes
+          - field: alcohol
+            type: checkbox
+            shortLabel: Alcohol ≥3 units/day
+            span: 6
+            options:
+              yes: Yes
+          - field: femoralNeckTScore
+            type: number-field
+            shortLabel: Femoral neck T-score
+            span: 6
+  - section: FRAX
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        styleOptions:
+          alignItems: start
+        fields:
+          - field: riskFactorCount
+            type: number-field
+            shortLabel: Clinical risk factors
+            span: 8
+            readonly: true
+            computedProperties:
+              value: |
+                const ticked = [previousFracture, parentHipFracture, currentSmoking, glucocorticoids, rheumatoidArthritis, secondaryOsteoporosis, alcohol]
+                  .filter((field) => hasOption(field[0], 'yes')).length
+                return { content: { '*': { type: 'number', value: ticked } }, codes: [] }
+          - field: fraxHip
+            type: text-field
+            shortLabel: 10-year hip fracture probability
+            span: 16
+            readonly: true
+            computedProperties:
+              value: |
+                // Read every input up front so each one is recorded as a dependency.
+                const inputs = {
+                  country: ['be', 'ch', 'fr', 'nl'].find((c) => hasOption(country[0], c)),
+                  sex: hasOption(sex[0], 'female') ? 'female' : hasOption(sex[0], 'male') ? 'male' : undefined,
+                  age: parseContent(ageYears[0]?.content),
+                  weightKg: parseContent(weight[0]?.content),
+                  heightCm: parseContent(height[0]?.content),
+                  previousFracture: hasOption(previousFracture[0], 'yes'),
+                  parentHipFracture: hasOption(parentHipFracture[0], 'yes'),
+                  currentSmoking: hasOption(currentSmoking[0], 'yes'),
+                  glucocorticoids: hasOption(glucocorticoids[0], 'yes'),
+                  rheumatoidArthritis: hasOption(rheumatoidArthritis[0], 'yes'),
+                  secondaryOsteoporosis: hasOption(secondaryOsteoporosis[0], 'yes'),
+                  alcohol: hasOption(alcohol[0], 'yes'),
+                  femoralNeckTScore: parseContent(femoralNeckTScore[0]?.content),
+                }
+                if (!inputs.country || !inputs.sex || inputs.age == null || !inputs.weightKg || !inputs.heightCm) { return undefined }
+                if (inputs.age < 40 || inputs.age > 90) { return 'FRAX applies from 40 to 90 years' }
+                // FRAX equations are not published: the probability comes from the host, which calls a
+                // licensed FRAX service. The demo host has none and answers undefined.
+                return new Promise(async (resolve) => {
+                  const result = await frax(inputs)
+                  resolve(result?.hip != null ? result.hip.toFixed(1) + ' %' : 'No FRAX service configured — use the official calculator at frax.shef.ac.uk')
+                })
+      - field: "FRAX (University of Sheffield) gives the 10-year probability of a hip fracture from country, age, sex, BMI, seven clinical risk factors and, optionally, the femoral neck T-score. Its country-specific equations are proprietary and unpublished, so the form collects the inputs and computes what it can (BMI, number of risk factors), and the probability itself comes from an async host function, frax(inputs), that a real host connects to a licensed FRAX service. The demo host has no such service and answers undefined after a short delay. Test: Belgium, Female, 70 years, 60 kg, 160 cm, previous fracture ticked — BMI 23.4, 1 risk factor, and after a moment the probability says no FRAX service is configured."
+        type: label
+        span: 24

@@ -1,0 +1,139 @@
+form: demo.framingham
+id: 10000016-0000-0000-0000-000000000016
+description: Framingham general cardiovascular risk profile (D'Agostino 2008) — 10-year risk of any CVD event, lipid model.
+translations:
+  - language: fr
+    translations:
+      Sex: Sexe
+      Female: Femme
+      Male: Homme
+      Age (years): Âge (années)
+      Current smoker: Fumeur actuel
+      Diabetes: Diabète
+      Treated hypertension: HTA traitée
+      Yes: Oui
+      Systolic BP (mmHg): PA systolique (mmHg)
+      Total cholesterol (mmol/L): Cholestérol total (mmol/L)
+      HDL cholesterol (mmol/L): Cholestérol HDL (mmol/L)
+      10-year CVD risk (%): Risque CV à 10 ans (%)
+      Risk category: Catégorie de risque
+  - language: nl
+    translations:
+      Sex: Geslacht
+      Female: Vrouw
+      Male: Man
+      Age (years): Leeftijd (jaren)
+      Current smoker: Huidige roker
+      Diabetes: Diabetes
+      Treated hypertension: Behandelde hypertensie
+      Yes: Ja
+      Systolic BP (mmHg): Systolische BD (mmHg)
+      Total cholesterol (mmol/L): Totale cholesterol (mmol/L)
+      HDL cholesterol (mmol/L): HDL-cholesterol (mmol/L)
+      10-year CVD risk (%): 10-jaars CV-risico (%)
+      Risk category: Risicocategorie
+sections:
+  - section: Patient
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        styleOptions:
+          alignItems: start
+        fields:
+          - field: sex
+            type: radio-button
+            shortLabel: Sex
+            span: 8
+            styleOptions:
+              direction: row
+            options:
+              female: Female
+              male: Male
+          - field: ageYears
+            type: number-field
+            shortLabel: Age (years)
+            span: 4
+          - field: smoker
+            type: checkbox
+            shortLabel: Current smoker
+            span: 4
+            options:
+              yes: Yes
+          - field: diabetes
+            type: checkbox
+            shortLabel: Diabetes
+            span: 4
+            options:
+              yes: Yes
+          - field: treatedHypertension
+            type: checkbox
+            shortLabel: Treated hypertension
+            span: 4
+            options:
+              yes: Yes
+          - field: systolicBp
+            type: number-field
+            shortLabel: Systolic BP (mmHg)
+            span: 8
+          - field: totalCholesterol
+            type: number-field
+            shortLabel: Total cholesterol (mmol/L)
+            span: 8
+          - field: hdlCholesterol
+            type: number-field
+            shortLabel: HDL cholesterol (mmol/L)
+            span: 8
+  - section: Framingham
+    fields:
+      - group: line
+        borderless: true
+        span: 24
+        styleOptions:
+          alignItems: start
+        fields:
+          - field: framinghamRisk
+            type: number-field
+            shortLabel: 10-year CVD risk (%)
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                // Read every input before any early return so each one is recorded as a dependency.
+                const isFemale = hasOption(sex[0], 'female')
+                const isMale = hasOption(sex[0], 'male')
+                const age = parseContent(ageYears[0]?.content)
+                const smoking = hasOption(smoker[0], 'yes') ? 1 : 0
+                const diabetic = hasOption(diabetes[0], 'yes') ? 1 : 0
+                const treated = hasOption(treatedHypertension[0], 'yes')
+                const sbp = parseContent(systolicBp[0]?.content)
+                const tchol = parseContent(totalCholesterol[0]?.content)
+                const hdl = parseContent(hdlCholesterol[0]?.content)
+                if ((!isFemale && !isMale) || age == null || sbp == null || tchol == null || hdl == null) { return undefined }
+                if (age < 30 || age > 74 || sbp <= 0 || tchol <= 0 || hdl <= 0) { return undefined }
+
+                // The published equation takes cholesterol in mg/dL
+                const tcholMg = tchol * 38.67
+                const hdlMg = hdl * 38.67
+                // D'Agostino et al., Circulation 2008;117:743 — sex-specific coefficients, baseline survival and mean
+                const b = isMale
+                  ? { age: 3.06117, tchol: 1.1237, hdl: -0.93263, sbp: treated ? 1.99881 : 1.93303, smk: 0.65451, dm: 0.57367, s0: 0.88936, mean: 23.9802 }
+                  : { age: 2.32888, tchol: 1.20904, hdl: -0.70833, sbp: treated ? 2.82263 : 2.76157, smk: 0.52873, dm: 0.69154, s0: 0.95012, mean: 26.1931 }
+                const x = b.age * Math.log(age) + b.tchol * Math.log(tcholMg) + b.hdl * Math.log(hdlMg) + b.sbp * Math.log(sbp) + b.smk * smoking + b.dm * diabetic
+                const risk = 1 - Math.pow(b.s0, Math.exp(x - b.mean))
+                return { content: { '*': { type: 'number', value: Math.round(risk * 1000) / 10 } }, codes: [] }
+          - field: framinghamCategory
+            type: text-field
+            shortLabel: Risk category
+            span: 12
+            readonly: true
+            computedProperties:
+              value: |
+                const age = parseContent(ageYears[0]?.content)
+                const risk = parseContent(framinghamRisk[0]?.content)
+                if (age != null && (age < 30 || age > 74)) { return 'The Framingham equation applies from 30 to 74 years' }
+                if (risk == null) { return undefined }
+                return risk < 10 ? 'Low (<10%)' : risk < 20 ? 'Intermediate (10–20%)' : 'High (≥20%)'
+      - field: "Framingham general CVD risk (D'Agostino 2008, lipid model): sex-specific Cox model on ln(age), ln(total cholesterol), ln(HDL), ln(systolic BP) — with a different coefficient when hypertension is treated — smoking and diabetes. Cholesterol is entered in mmol/L and converted to mg/dL (×38.67) for the equation. Valid from 30 to 74 years without CVD; it was derived in a US cohort and overestimates risk in Western Europe. Test: Male, 55 years, non-smoker, no diabetes, untreated, SBP 140, total cholesterol 5.5, HDL 1.3 — risk ≈ 13.4%, category Intermediate."
+        type: label
+        span: 24

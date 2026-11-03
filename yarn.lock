@@ -802,6 +802,7 @@ __metadata:
     "@babel/traverse": ^7.26.10
     "@icure/cardinal-sdk": 2.0.0-PREVIEW-24
     "@icure/motss-app-datepicker": ^6.0.0-rc.39
+    "@jitl/quickjs-wasmfile-release-sync": 0.32.0
     "@lit/task": ^1.0.2
     "@playwright/test": ^1.40.0
     "@rspack/cli": ^1.3.0
@@ -842,6 +843,7 @@ __metadata:
     prosemirror-state: ^1.4.3
     prosemirror-transform: ^1.10.3
     prosemirror-view: ^1.38.1
+    quickjs-emscripten-core: 0.32.0
     sass: ^1.85.1
     sass-loader: ^16.0.5
     ts-jest: ^29.0.0
@@ -1140,6 +1142,22 @@ __metadata:
     "@types/yargs": ^17.0.8
     chalk: ^4.0.0
   checksum: a0bcf15dbb0eca6bdd8ce61a3fb055349d40268622a7670a3b2eb3c3dbafe9eb26af59938366d520b86907b9505b0f9b29b85cec11579a9e580694b87cd90fcc
+  languageName: node
+  linkType: hard
+
+"@jitl/quickjs-ffi-types@npm:0.32.0":
+  version: 0.32.0
+  resolution: "@jitl/quickjs-ffi-types@npm:0.32.0"
+  checksum: 13585ed51916713a091ac1c0776f6bd3e5d8ba2c0b7750d50058a78cf035d2a499209cb9d6afabd0a4badfc9da2cf201b7d884abe77170c236fb2801a6c15bc6
+  languageName: node
+  linkType: hard
+
+"@jitl/quickjs-wasmfile-release-sync@npm:0.32.0":
+  version: 0.32.0
+  resolution: "@jitl/quickjs-wasmfile-release-sync@npm:0.32.0"
+  dependencies:
+    "@jitl/quickjs-ffi-types": 0.32.0
+  checksum: 821fcc0dfd219dd67198fdb129aa289fa3ccd2cc24bf228a313dc1adda171f7391c9b5838a931cec8a11c61e48b01c3229863dd25479c4b53e297f979c9150a3
   languageName: node
   linkType: hard
 
@@ -8305,6 +8323,15 @@ __metadata:
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
   checksum: b676f8c040cdc5b12723ad2f91414d267605b26419d5c821ff03befa817ddd10e238d22b25d604920340fd73efd8ba795465a0377c4adf45a4a41e4234e42dc4
+  languageName: node
+  linkType: hard
+
+"quickjs-emscripten-core@npm:0.32.0":
+  version: 0.32.0
+  resolution: "quickjs-emscripten-core@npm:0.32.0"
+  dependencies:
+    "@jitl/quickjs-ffi-types": 0.32.0
+  checksum: 9476542b4e742b20a176ea19e5753596f98003cb8c1d9e876790ea94455ae1b4a612b10308b320b6465ea36d3429d3f50a4816cac52545a2cd8640d9782352d9
   languageName: node
   linkType: hard
 

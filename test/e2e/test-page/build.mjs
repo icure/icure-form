@@ -70,4 +70,8 @@ await esbuild.build({
 	logLevel: 'info',
 })
 
+// esbuild leaves QuickJS's `new URL('emscripten-module.wasm', import.meta.url)` as is: the glue then
+// fetches the WebAssembly next to the bundle, so it is copied there.
+fs.copyFileSync(path.resolve(projectRoot, 'node_modules/@jitl/quickjs-wasmfile-release-sync/dist/emscripten-module.wasm'), path.resolve(__dirname, 'emscripten-module.wasm'))
+
 console.log('Build complete: harness.bundle.js')

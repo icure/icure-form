@@ -40,7 +40,8 @@
 		],
 		"moduleNameMapper": {
 			"^lit$": "<rootDir>/test/__mocks__/lit.js",
-			"^lit/(.*)$": "<rootDir>/test/__mocks__/lit.js"
+			"^lit/(.*)$": "<rootDir>/test/__mocks__/lit.js",
+			"^@jitl/quickjs-wasmfile-release-sync$": "<rootDir>/test/__mocks__/quickjs-variant.js"
 		},
 		"moduleFileExtensions": [
 			"ts",
@@ -84,6 +85,7 @@
 	"access": "public",
 	"dependencies": {
 		"@icure/motss-app-datepicker": "^6.0.0-rc.39",
+		"@jitl/quickjs-wasmfile-release-sync": "0.32.0",
 		"@lit/task": "^1.0.2",
 		"@webcomponents/webcomponentsjs": "^2.7.0",
 		"date-fns": "^2.23.0",
@@ -101,6 +103,7 @@
 		"prosemirror-state": "^1.4.3",
 		"prosemirror-transform": "^1.10.3",
 		"prosemirror-view": "^1.38.1",
+		"quickjs-emscripten-core": "0.32.0",
 		"uuid": "^11.1.1"
 	},
 	"devDependencies": {

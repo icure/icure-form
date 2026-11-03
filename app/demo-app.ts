@@ -24,6 +24,14 @@ import hierarchicalSuggestions from './samples/12-hierarchical-suggestions.yaml'
 import hostLookups from './samples/13-host-lookups.yaml'
 // @ts-ignore
 import schemaField from './samples/14-schema-field.yaml'
+// @ts-ignore
+import score2 from './samples/15-score2.yaml'
+// @ts-ignore
+import framingham from './samples/16-framingham.yaml'
+// @ts-ignore
+import agla from './samples/17-agla.yaml'
+// @ts-ignore
+import frax from './samples/18-frax.yaml'
 import specialtyIndexJson from './samples/curated/index.json'
 
 import { css, html, LitElement } from 'lit'
@@ -190,6 +198,30 @@ class DemoApp extends LitElement {
 			title: '14 — Schema fields',
 			description: 'Freehand drawings over a stencil image (face, body), with a blank-canvas fallback.',
 			form: Form.parse(YAML.parse(schemaField)),
+		},
+		{
+			slug: '15-score2',
+			title: '15 — SCORE2 cardiovascular risk',
+			description: 'ESC SCORE2 10-year CVD risk with regional recalibration.',
+			form: Form.parse(YAML.parse(score2)),
+		},
+		{
+			slug: '16-framingham',
+			title: '16 — Framingham risk score',
+			description: "D'Agostino 2008 general CVD 10-year risk.",
+			form: Form.parse(YAML.parse(framingham)),
+		},
+		{
+			slug: '17-agla',
+			title: '17 — AGLA score',
+			description: 'Swiss-calibrated PROCAM 10-year myocardial infarction risk.',
+			form: Form.parse(YAML.parse(agla)),
+		},
+		{
+			slug: '18-frax',
+			title: '18 — FRAX hip fracture',
+			description: 'FRAX inputs, with the probability delegated to an async host service.',
+			form: Form.parse(YAML.parse(frax)),
 		},
 	]
 

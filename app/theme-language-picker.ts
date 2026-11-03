@@ -1,10 +1,28 @@
 import { css, html, LitElement } from 'lit'
-import { DemoLanguage, DemoTheme, SUPPORTED_LANGUAGES, SUPPORTED_THEMES, getStoredLanguage, getStoredTheme, setStoredLanguage, setStoredTheme } from './bootstrap'
+import {
+	DemoInterpreter,
+	DemoLanguage,
+	DemoTheme,
+	SUPPORTED_INTERPRETERS,
+	SUPPORTED_LANGUAGES,
+	SUPPORTED_THEMES,
+	getStoredInterpreter,
+	getStoredLanguage,
+	getStoredTheme,
+	setStoredInterpreter,
+	setStoredLanguage,
+	setStoredTheme,
+} from './bootstrap'
 
 const THEME_LABELS: Record<DemoTheme, string> = {
 	default: 'Default',
 	'icure-blue': 'iCure blue',
 	kendo: 'Kendo',
+}
+
+const INTERPRETER_LABELS: Record<DemoInterpreter, string> = {
+	quickjs: 'QuickJS (isolated)',
+	insecure: 'Insecure (page realm)',
 }
 
 const LANGUAGE_LABELS: Record<DemoLanguage, string> = {
@@ -63,9 +81,16 @@ export class ThemeLanguagePicker extends LitElement {
 		location.reload()
 	}
 
+	private onInterpreterChange(event: Event) {
+		const value = (event.target as HTMLSelectElement).value as DemoInterpreter
+		setStoredInterpreter(value)
+		location.reload()
+	}
+
 	render() {
 		const theme = getStoredTheme()
 		const language = getStoredLanguage()
+		const interpreter = getStoredInterpreter()
 		return html`
 			<label>
 				<span>Theme</span>
@@ -77,6 +102,12 @@ export class ThemeLanguagePicker extends LitElement {
 				<span>Language</span>
 				<select @change="${this.onLanguageChange}">
 					${SUPPORTED_LANGUAGES.map((l) => html`<option value="${l}" ?selected="${l === language}">${LANGUAGE_LABELS[l]}</option>`)}
+				</select>
+			</label>
+			<label>
+				<span>Formulas</span>
+				<select @change="${this.onInterpreterChange}">
+					${SUPPORTED_INTERPRETERS.map((i) => html`<option value="${i}" ?selected="${i === interpreter}">${INTERPRETER_LABELS[i]}</option>`)}
 				</select>
 			</label>
 		`

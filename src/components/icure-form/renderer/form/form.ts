@@ -48,6 +48,7 @@ const renderInternal = async (
 	readonly?: boolean,
 	displayMetadata?: boolean,
 	sectionWrapper?: SectionWrapper,
+	condensed = false,
 ): Promise<RenderedNode> => {
 	// Read-only review mode. When off, every cascade rule below is a pass-through: `content` is still
 	// computed but never changes what is emitted.
@@ -124,7 +125,21 @@ const renderInternal = async (
 			if (!childForm) {
 				continue
 			}
-			const rendered = await renderInternal(childForm, props, child, translationProvider, revisionsFilter, ownersProvider, optionsProvider, actionListener, languages, readonly, displayMetadata)
+			const rendered = await renderInternal(
+				childForm,
+				props,
+				child,
+				translationProvider,
+				revisionsFilter,
+				ownersProvider,
+				optionsProvider,
+				actionListener,
+				languages,
+				readonly,
+				displayMetadata,
+				undefined,
+				condensed,
+			)
 			// Read-only review: an instance whose whole child form dropped is skipped entirely — no title
 			// and no remove button either.
 			if (hide && !rendered.content) {
@@ -593,7 +608,10 @@ const renderInternal = async (
 		}
 
 		const fgSpan = (computedProperties['span'] ?? fg.span ?? 6) as number
-		const fgRowSpan = (computedProperties['rowSpan'] ?? fg.rowSpan ?? 1) as number
+		// Condensed layout: a field is as tall as its content, so a multi-line field's `rowSpan` no longer
+		// reserves rows (nor editor lines). A schema field keeps it: its drawing surface is sized by it.
+		const declaredRowSpan = (computedProperties['rowSpan'] ?? fg.rowSpan ?? 1) as number
+		const fgRowSpan = condensed && !(fg.clazz === 'field' && fg.type === 'schema-field') ? 1 : declaredRowSpan
 
 		if (fg.clazz === 'group' && fg.fields?.length) {
 			return await renderGroup((fg as Group).copyIfNeeded({ ...computedProperties }), fgSpan, level, alwaysVisible)
@@ -676,35 +694,31 @@ const renderInternal = async (
 	return { template: html`${sections.map((s) => s.template)}`, content: sections.some((s) => s.content) }
 }
 
-export const render: Renderer = async (
-	form,
-	props,
-	formsValueContainer,
-	translationProvider,
-	revisionsFilter,
-	ownersProvider,
-	optionsProvider,
-	actionListener,
-	languages,
-	readonly,
-	displayMetadata,
-	sectionWrapper,
-) => {
-	const rendered = await renderInternal(
-		form,
-		props,
-		formsValueContainer,
-		translationProvider,
-		revisionsFilter,
-		ownersProvider,
-		optionsProvider,
-		actionListener,
-		languages,
-		readonly,
-		displayMetadata,
-		sectionWrapper,
-	)
-	// The whole-form node always carries a template (`html`${sections}``); the `nothing` arm of
-	// `RenderedNode` only ever describes a dropped child, so the public contract stays a bare template.
-	return rendered.template as TemplateResult
-}
+/**
+ * Builds the `form` renderer. `condensed` is the layout of the `condensed` renderer
+ * (`renderer/condensed`): every field on a single row whatever its `rowSpan`, the rest unchanged.
+ */
+export const makeFormRenderer =
+	(condensed: boolean): Renderer =>
+	async (form, props, formsValueContainer, translationProvider, revisionsFilter, ownersProvider, optionsProvider, actionListener, languages, readonly, displayMetadata, sectionWrapper) => {
+		const rendered = await renderInternal(
+			form,
+			props,
+			formsValueContainer,
+			translationProvider,
+			revisionsFilter,
+			ownersProvider,
+			optionsProvider,
+			actionListener,
+			languages,
+			readonly,
+			displayMetadata,
+			sectionWrapper,
+			condensed,
+		)
+		// The whole-form node always carries a template (`html`${sections}``); the `nothing` arm of
+		// `RenderedNode` only ever describes a dropped child, so the public contract stays a bare template.
+		return rendered.template as TemplateResult
+	}
+
+export const render: Renderer = makeFormRenderer(false)

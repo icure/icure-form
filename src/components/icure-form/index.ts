@@ -5,6 +5,7 @@ import { property, state } from 'lit/decorators.js'
 import { Renderer } from './renderer'
 import { render as renderAsForm } from './renderer/form/form'
 import { render as renderAsCard } from './renderer/card'
+import { render as renderAsCondensed } from './renderer/condensed'
 import { Field, FieldMetadata, FieldValue, Form, Stencil } from '../model'
 import { FormValuesContainer, Suggestion, Version } from '../../generic'
 
@@ -72,7 +73,9 @@ export class IcureForm extends LitElement {
 			}
 
 			const variant = this.renderer?.split(':')
-			const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : variant[0] === 'card' ? renderAsCard : undefined
+			const renderer: Renderer | undefined = variant[0] === 'form' ? renderAsForm : variant[0] === 'card' ? renderAsCard : variant[0] === 'condensed' ? renderAsCondensed : undefined
+			// The condensed renderer is a read-only review whatever `readonly` says, `hideEmptyFields` included.
+			const readonly = this.readonly || variant[0] === 'condensed'
 
 			if (!renderer) {
 				return html`<p>unknown renderer</p>`
@@ -98,7 +101,7 @@ export class IcureForm extends LitElement {
 					clearOtherLanguagesOnModify: this.clearOtherLanguagesOnModify,
 					questionsPerCard: this.questionsPerCard,
 					role: this.role ?? undefined,
-					hideEmptyFields: !!(this.readonly && this.hideEmptyFields),
+					hideEmptyFields: !!(readonly && this.hideEmptyFields),
 					suggestionProvider: this.suggestionProvider,
 					linksProvider: this.linksProvider,
 					codeColorProvider: this.codeColorProvider,
@@ -111,7 +114,7 @@ export class IcureForm extends LitElement {
 				this.optionsProvider,
 				this.actionListener,
 				this.languages,
-				this.readonly,
+				readonly,
 				this.displayMetadata,
 				sectionWrapper,
 			)

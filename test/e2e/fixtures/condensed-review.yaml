@@ -1,0 +1,66 @@
+form: Condensed review
+description: A consultation-like section (short text, a multi-line text reserving four rows, measures, a dropdown) to compare the condensed renderer with the read-only form renderer
+sections:
+  - section: Main
+    fields:
+      - field: Reason
+        type: text-field
+        span: 24
+      - field: History
+        type: text-field
+        multiline: true
+        rowSpan: 4
+        span: 24
+      - field: Weight
+        type: measure-field
+        span: 8
+      - field: Height
+        type: measure-field
+        span: 8
+      - field: Dropdown
+        type: dropdown
+        span: 8
+        options:
+          Dropdown|1|1: Red
+          Dropdown|2|1: Green
+      - field: Reasons
+        type: token-field
+        span: 12
+      - field: Diagnoses
+        type: items-list-field
+        span: 12
+      - field: Count
+        type: number-field
+        span: 6
+      - field: Date
+        type: date-picker
+        span: 6
+      - field: Time
+        type: time-picker
+        span: 6
+      - field: Date and time
+        type: date-time-picker
+        span: 6
+      - field: Radio
+        type: radio-button
+        span: 12
+        options:
+          Radio|1|1: Yes
+          Radio|2|1: No
+      - field: Checkbox
+        type: checkbox
+        span: 12
+        options:
+          Checkbox|1|1: Apples
+          Checkbox|2|1: Bread
+      - group: Vitals
+        span: 24
+        fields:
+          - field: Pulse
+            type: measure-field
+            span: 12
+  - section: Second
+    fields:
+      - field: Notes
+        type: text-field
+        span: 24

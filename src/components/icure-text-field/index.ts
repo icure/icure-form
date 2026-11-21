@@ -338,7 +338,9 @@ export class IcureTextField extends Field {
 				${this.displayedLabels ? generateLabels(this.displayedLabels, this.language(), this.translate ? this.translationProvider : undefined, this.labelId) : nothing}
 				<div class="icure-input-metadata-container">
 					<div class="icure-input ${validationError ? 'icure-input__validationError' : ''} ${this.displayMetadata && metadata ? 'icure-input__withMetadata' : ''}">
-						<div id="editor" class="${this.schema}${this.tokenDeleteButton && (!this.readonly || this.delegatedEdition) ? ' with-token-delete' : ''}" style="min-height: calc( ${this.lines}rem + 2px )"></div>
+						<div id="editor" class="${this.schema}${this.tokenDeleteButton && (!this.readonly || this.delegatedEdition) ? ' with-token-delete' : ''}" style="min-height: var(--icure-editor-min-height, calc( ${
+			this.lines
+		}rem + 2px ))"></div>
 						${
 							!this.displayMetadata && this.defaultValueProvider
 								? html`<button
@@ -409,8 +411,12 @@ export class IcureTextField extends Field {
 			this.trToSave = undefined
 			if (!this.schemaSpec?.multivalue) {
 				const [valueId] = extractSingleValue(this.valueProvider?.())
-				this.handleValueChanged?.(this.label, this.contentKey(), contentForLanguage ? { content: { [this.contentKey()]: contentForLanguage }, codes: defaultValue?.codes ?? [] } : undefined, valueId) &&
-					(this.selectedRevision = undefined)
+				this.handleValueChanged?.(
+					this.label,
+					this.contentKey(),
+					contentForLanguage ? { content: { [this.contentKey()]: contentForLanguage }, codes: defaultValue?.codes ?? [] } : undefined,
+					valueId,
+				) && (this.selectedRevision = undefined)
 			}
 		}
 	}

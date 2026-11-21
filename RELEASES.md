@@ -1261,3 +1261,12 @@ Checkboxes and buttons sit at the bottom of their cell, to line up with input bo
 ### Clinical score samples
 
 Four new demo forms compute cardiovascular and fracture risk scores: SCORE2 (`15-score2.yaml`), Framingham (`16-framingham.yaml`), AGLA (`17-agla.yaml`) and FRAX (`18-frax.yaml`).
+
+## [MISSING] 3.11.0 (2026-11-21)
+<!-- tag: 3.11.0 | target: 74a26799f739f42a01e5a95fd961edf566fffb32 | prerelease: false -->
+
+### The condensed renderer: a read-only review as text
+
+`<icure-form renderer="condensed">` (and `condensed:tab`) shows a filled form for review: the `form` layout, always read-only, with no field frame or input background, multi-line fields as tall as their text and tightened spacing. A host skin that redraws the fields reads the `--icure-input-*`, `--icure-editor-min-height`, `--icure-label-min-height` and `--icure-dropdown-arrow-display` custom properties to stay frameless there. The `form` and `card` renderers are unchanged.
+
+See [Read-only review: the condensed renderer](https://github.com/icure/icure-form/blob/main/README.md#read-only-review-the-condensed-renderer).

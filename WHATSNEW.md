@@ -4,7 +4,7 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
-## Unreleased
+## 3.11.0 (2026-11-21)
 
 ### The condensed renderer: a read-only review as text
 

@@ -1,0 +1,30 @@
+form: Condensed review
+description: A consultation-like section (short text, a multi-line text reserving four rows, measures, a dropdown) to compare the condensed renderer with the read-only form renderer
+sections:
+  - section: Main
+    fields:
+      - field: Reason
+        type: text-field
+        span: 24
+      - field: History
+        type: text-field
+        multiline: true
+        rowSpan: 4
+        span: 24
+      - field: Weight
+        type: measure-field
+        span: 8
+      - field: Height
+        type: measure-field
+        span: 8
+      - field: Dropdown
+        type: dropdown
+        span: 8
+        options:
+          Dropdown|1|1: Red
+          Dropdown|2|1: Green
+  - section: Second
+    fields:
+      - field: Notes
+        type: text-field
+        span: 24

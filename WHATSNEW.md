@@ -4,6 +4,16 @@ This file summarises the user-facing features introduced in each version of `@ic
 
 ---
 
+## Unreleased
+
+### The condensed renderer: a read-only review as text
+
+`<icure-form renderer="condensed">` (and `condensed:tab`) shows a filled form for review: the `form` layout, always read-only, with no field frame or input background, multi-line fields as tall as their text and tightened spacing. A host skin that redraws the fields reads the `--icure-input-*`, `--icure-editor-min-height`, `--icure-label-min-height` and `--icure-dropdown-arrow-display` custom properties to stay frameless there. The `form` and `card` renderers are unchanged.
+
+See [Read-only review: the condensed renderer](./README.md#read-only-review-the-condensed-renderer).
+
+---
+
 ## 3.10.0 (2026-11-03)
 
 ### Formulas run in QuickJS

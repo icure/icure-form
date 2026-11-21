@@ -334,6 +334,7 @@ The icure-form component accepts the following properties:
 - renderer: string - the name of the renderer to be used. Supported values:
   - `"form"` — standard 24-column grid layout
   - `"form:tab"` — renders each section as a tab
+  - `"condensed"` — read-only review of a filled form as condensed text: the `form` grid and fields, always read-only (whatever `readonly` says), with no field frame or input background, multi-line fields as tall as their text (`rowSpan` no longer reserves rows, except on schema fields) and tightened spacing. `"condensed:tab"` renders each section as a tab. See [Read-only review: the condensed renderer](#read-only-review-the-condensed-renderer).
   - `"card"` — Typeform-style card sequence; defaults to one question per card. Equivalent to `"card:sparse"` (the only variant currently implemented). A `"card:dense"` variant that packs multiple questions per card will follow.
 - visible: boolean - a boolean indicating if the form should be visible or not. Defaults to true.
 - readonly: boolean - a boolean indicating if the form should be read-only or not. Defaults to false.
@@ -601,6 +602,44 @@ sections:
 	.hideEmptyFields="${true}"
 	.formValuesContainer="${this.formValuesContainer}"
 ></icure-form>
+```
+
+### Read-only review: the condensed renderer
+
+`renderer="condensed"` shows a filled form as text, for reviewing a past encounter:
+
+```html
+<icure-form .form="${form}" .formValuesContainer="${fvc}" renderer="condensed" hideEmptyFields></icure-form>
+```
+
+It renders the same grid, sections, groups, subforms and fields as `form`, always read-only, so `hideEmptyFields` applies even without `readonly`. The look differs:
+
+- no field draws a frame, an input background or a focus shadow, and the dropdown's arrow is hidden;
+- a multi-line field is as tall as its text: the editor no longer reserves `rowSpan` lines and the field no longer spans `rowSpan` grid rows (a schema field keeps its `rowSpan`, which sizes its drawing);
+- rows, labels, group titles and subform instances are closer together.
+
+The fields' internals live in nested shadow roots, so the look travels as CSS custom properties set on the renderer's `.icure-form-condensed` wrapper. They inherit across shadow boundaries, and each rule that reads one falls back to the regular value. A host that redraws the fields with its own stylesheet (a theme `overrides` entry) reads the same properties to stay frameless in this renderer:
+
+| Property | Condensed value | Reads it |
+|---|---|---|
+| `--icure-input-border-width` | `0px` | the frame of an input |
+| `--icure-input-background` | `transparent` | the ground of an input |
+| `--icure-input-padding` | `0px` | the inner padding of an input |
+| `--icure-input-focus-shadow` | `none` | the shadow of a focused input |
+| `--icure-input-min-height` | `0px` | the minimum height of an input |
+| `--icure-editor-min-height` | `0px` | the minimum height of a text editor (otherwise its lines) |
+| `--icure-label-min-height` | `0px` | the minimum height of a field label |
+| `--icure-dropdown-arrow-display` | `none` | the dropdown's arrow |
+| `--icure-form-row-gap`, `--icure-field-gap`, `--icure-field-padding-top`, `--icure-field-option-height`, `--icure-field-error-margin-top` | as in a `compact` section | the spacing of rows, options and errors |
+
+For instance, a host stylesheet that frames inputs itself:
+
+```css
+:host .icure-input {
+	border: var(--icure-input-border-width, 1px) solid var(--line);
+	background: var(--icure-input-background, var(--surface));
+	min-height: var(--icure-input-min-height, 44px);
+}
 ```
 
 ### Listeners and notifications

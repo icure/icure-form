@@ -19,7 +19,17 @@ const prefill = [
 	{ label: 'Height', primitive: { type: 'measure', value: 180, unit: 'cm' } },
 	{ label: 'Dropdown', value: 'Red', codes: [{ id: 'Dropdown|1|1', label: { en: 'Red' } }] },
 	{ label: 'Notes', value: 'Follow-up in a week' },
+	{ label: 'Reasons', value: 'Cough' },
+	{ label: 'Diagnoses', value: 'Bronchitis' },
+	{ label: 'Count', primitive: { type: 'measure', value: 3 } },
+	{ label: 'Radio', value: 'Yes', codes: [{ id: 'Radio|1|1', label: { en: 'Yes' } }] },
+	{ label: 'Pulse', primitive: { type: 'measure', value: 72, unit: 'bpm' } },
 ]
+
+const longHistory =
+	'Dry cough for three days, worse at night, with a mild fever on the second day and no shortness of breath. ' +
+	'No recent travel. The patient has been taking paracetamol twice a day, with some relief of the fever but not of the cough, ' +
+	'and asks whether an X-ray is needed before going back to work next week.'
 
 async function mount(page: Page, options: Record<string, unknown>) {
 	await gotoHarness(page)
@@ -42,7 +52,7 @@ const deepQueryScript = `(selector) => {
 async function inputStyles(page: Page) {
 	return await page.evaluate((script: string) => {
 		const deepQuery = eval(script)
-		return (deepQuery('.icure-input') as HTMLElement[]).map((el) => {
+		return (deepQuery('.icure-input, .input-container') as HTMLElement[]).map((el) => {
 			const style = getComputedStyle(el)
 			return { borderTop: style.borderTopWidth, borderBottom: style.borderBottomWidth, background: style.backgroundColor, paddingLeft: style.paddingLeft }
 		})
@@ -122,6 +132,34 @@ test.describe('condensed renderer', () => {
 		expect(hugged.inputHeight).toBeLessThan(hugged.lineHeight * 1.8)
 		// The `form` renderer reserves the field's four rows of editor lines.
 		expect(reserved.inputHeight).toBeGreaterThan(hugged.inputHeight * 2)
+	})
+
+	test('a multi-line field holding a long text grows to show all of it', async ({ page }) => {
+		await gotoHarness(page)
+		await page.setViewportSize({ width: 375, height: 800 })
+		await page.evaluate(async (opts: Record<string, unknown>) => await (window as any).initForm(opts), {
+			yaml: fixture,
+			language: 'en',
+			prefill: prefill.map((p) => (p.label === 'History' ? { ...p, value: longHistory } : p)),
+			renderer: 'condensed',
+		})
+		await waitForFormRender(page)
+		const box = await page.evaluate((script: string) => {
+			const deepQuery = eval(script)
+			const field = (deepQuery('icure-form-text-field') as HTMLElement[]).find((el) => el.getAttribute('label') === 'History')
+			const input = field?.shadowRoot?.querySelector('icure-text-field')?.shadowRoot?.querySelector('.icure-input') as HTMLElement | null
+			const editor = input?.querySelector('.ProseMirror') as HTMLElement | null
+			return {
+				height: input?.getBoundingClientRect().height ?? -1,
+				scrollHeight: input?.scrollHeight ?? -1,
+				clientHeight: input?.clientHeight ?? -1,
+				lineHeight: editor ? parseFloat(getComputedStyle(editor).lineHeight) : -1,
+				text: editor?.textContent ?? '',
+			}
+		}, deepQueryScript)
+		expect(box.text).toContain('next week')
+		expect(box.height).toBeGreaterThan(box.lineHeight * 3)
+		expect(box.scrollHeight).toBeLessThanOrEqual(box.clientHeight + 1)
 	})
 
 	test('the same filled form is shorter than in the read-only form renderer', async ({ page }) => {

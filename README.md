@@ -632,6 +632,8 @@ The fields' internals live in nested shadow roots, so the look travels as CSS cu
 | `--icure-dropdown-arrow-display` | `none` | the dropdown's arrow |
 | `--icure-form-row-gap`, `--icure-field-gap`, `--icure-field-padding-top`, `--icure-field-option-height`, `--icure-field-error-margin-top` | as in a `compact` section | the spacing of rows, options and errors |
 
+The default theme reads them. The `kendo` and `icure-blue` themes draw their own input frames with fixed values and are not frameless in this renderer yet.
+
 For instance, a host stylesheet that frames inputs itself:
 
 ```css
